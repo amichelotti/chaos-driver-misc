@@ -1,0 +1,263 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		53AEE1391B9DE52F00D10C27 /* ChaosDatasetAttribute.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53AEE1381B9DE52F00D10C27 /* ChaosDatasetAttribute.cpp */; };
+		53AEE13B1B9DE54000D10C27 /* ChaosDatasetAttribute.h in Headers */ = {isa = PBXBuildFile; fileRef = 53AEE13A1B9DE54000D10C27 /* ChaosDatasetAttribute.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		53AEE1311B9DE32300D10C27 /* libdriver-misc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libdriver-misc.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
+		53AEE1381B9DE52F00D10C27 /* ChaosDatasetAttribute.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChaosDatasetAttribute.cpp; path = ../src/ChaosDatasetAttribute.cpp; sourceTree = "<group>"; };
+		53AEE13A1B9DE54000D10C27 /* ChaosDatasetAttribute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChaosDatasetAttribute.h; path = ../src/ChaosDatasetAttribute.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		53AEE12E1B9DE32300D10C27 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		53AEE1281B9DE32300D10C27 = {
+			isa = PBXGroup;
+			children = (
+				53AEE13A1B9DE54000D10C27 /* ChaosDatasetAttribute.h */,
+				53AEE1381B9DE52F00D10C27 /* ChaosDatasetAttribute.cpp */,
+				53AEE1321B9DE32300D10C27 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		53AEE1321B9DE32300D10C27 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				53AEE1311B9DE32300D10C27 /* libdriver-misc.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		53AEE12F1B9DE32300D10C27 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53AEE13B1B9DE54000D10C27 /* ChaosDatasetAttribute.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		53AEE1301B9DE32300D10C27 /* libdriver-misc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 53AEE1351B9DE32300D10C27 /* Build configuration list for PBXNativeTarget "libdriver-misc" */;
+			buildPhases = (
+				53AEE12D1B9DE32300D10C27 /* Sources */,
+				53AEE12E1B9DE32300D10C27 /* Frameworks */,
+				53AEE12F1B9DE32300D10C27 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "libdriver-misc";
+			productName = "libdriver-misc";
+			productReference = 53AEE1311B9DE32300D10C27 /* libdriver-misc.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		53AEE1291B9DE32300D10C27 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = "andrea michelotti";
+			};
+			buildConfigurationList = 53AEE12C1B9DE32300D10C27 /* Build configuration list for PBXProject "libdriver-misc" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 53AEE1281B9DE32300D10C27;
+			productRefGroup = 53AEE1321B9DE32300D10C27 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				53AEE1301B9DE32300D10C27 /* libdriver-misc */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		53AEE12D1B9DE32300D10C27 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53AEE1391B9DE52F00D10C27 /* ChaosDatasetAttribute.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		53AEE1331B9DE32300D10C27 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lboost_chrono",
+					"-lmemcached",
+					"-lboost_system",
+					"-lboost_thread",
+					"-lboost_program_options",
+					"-lboost_filesystem",
+					"-lboost_regex",
+					"-levent",
+					"-lboost_log",
+					"-lchaos_common",
+					"-lboost_log_setup",
+					"-lmongoose",
+					"-ljsoncpp",
+				);
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		53AEE1341B9DE32300D10C27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				OTHER_LDFLAGS = (
+					"-lboost_chrono",
+					"-lmemcached",
+					"-lboost_system",
+					"-lboost_thread",
+					"-lboost_program_options",
+					"-lboost_filesystem",
+					"-lboost_regex",
+					"-levent",
+					"-lboost_log",
+					"-lchaos_common",
+					"-lboost_log_setup",
+					"-lmongoose",
+					"-ljsoncpp",
+				);
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		53AEE1361B9DE32300D10C27 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = "";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../usr/local/include";
+				INSTALL_PATH = "$(SRCROOT)/../../../usr/local/lib";
+				LIBRARY_SEARCH_PATHS = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		53AEE1371B9DE32300D10C27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = "";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../usr/local/include";
+				INSTALL_PATH = "$(SRCROOT)/../../../usr/local/lib";
+				LIBRARY_SEARCH_PATHS = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		53AEE12C1B9DE32300D10C27 /* Build configuration list for PBXProject "libdriver-misc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53AEE1331B9DE32300D10C27 /* Debug */,
+				53AEE1341B9DE32300D10C27 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		53AEE1351B9DE32300D10C27 /* Build configuration list for PBXNativeTarget "libdriver-misc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				53AEE1361B9DE32300D10C27 /* Debug */,
+				53AEE1371B9DE32300D10C27 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 53AEE1291B9DE32300D10C27 /* Project object */;
+}
