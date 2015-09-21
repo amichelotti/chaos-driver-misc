@@ -12,14 +12,14 @@ IF(BUILD_FORCE_STATIC)
 ELSE()
    ADD_LIBRARY(${LIB} SHARED ${src} )	 
 ENDIF()
-
+INCLUDE_DIRECTORIES(./src)
 TARGET_LINK_LIBRARIES(${LIB} chaos_cutoolkit chaos_common common_serial ${FrameworkLib})
 
-ADD_EXECUTABLE(testDataSetAttribute test/testDataSetAttribute.cpp)
+ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
-TARGET_LINK_LIBRARIES(testDataSetAttribute ${LIB} chaos_cutoolkit chaos_common ${FrameworkLib})
+TARGET_LINK_LIBRARIES(testSumOperatorUI ${LIB} chaos_cutoolkit chaos_common ${FrameworkLib})
 
-INSTALL_TARGETS(/bin testDataSetAttribute)
+INSTALL_TARGETS(/bin testSumOperatorUI)
  
 
  INSTALL_TARGETS(/lib ${LIB})

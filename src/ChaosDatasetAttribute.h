@@ -13,48 +13,73 @@
 
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 
-class ChaosDatasetAttribute {
-    
-    chaos::ui::DeviceController* controller;
-    
-    void setAttribute(chaos::common::data::CDataWrapper&data);
-    chaos::common::data::CDataWrapper* getAttribute(std::string path);
-    
-    std::map< std::string,chaos::common::data::CDataWrapper > paramToDataset;
+#define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
+#define ATTRDBG_ LDBG_<< "[ "<<__FUNCTION__<<" ]"
+#define ATTRERR_ LERR_ << "[ "<<__FUNCTION__<<" ]"
 
+
+class ChaosDatasetAttributeBase {
+    
+    
+    struct datinfo {
+        
+        uint64_t tget;
+        uint64_t tstamp;
+       
+        chaos::common::data::CDataWrapper*  data;
+        datinfo(){tget=tstamp=0; data=NULL;}
+    };
+    
+    enum UpdateMode{
+        EVERYTIME,
+        NOTBEFORE
+    };
+    
 public:
-    ChaosDatasetAttribute();
-    
-    ChaosDatasetAttribute(std::string path);
+    static const char pathSeparator ='/';
 
-    ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
-    virtual ~ChaosDatasetAttribute();
-    template <typename T>
-    T* get( std::string name){
-        if(paramToDataset.count(name)){
-            size_type pos=name.find_last_of("/");
-            name.erase(name.begin(),pos);
-           // return paramToDataset[name]
-        }
-    }
+    ChaosDatasetAttributeBase(std::string path,uint32_t timeo=5000);
+
+    ChaosDatasetAttributeBase(const ChaosDatasetAttributeBase& orig);
+    virtual ~ChaosDatasetAttributeBase();
     
-    template <typename T>
-    int set(std::string path,T& data);
+   
     /**
      set the timeout for the remote access
      @param timeo_ms update time
      */
-    void setTimeout(int timeo_ms);
+    void setTimeout(uint32_t timeo_ms);
     /**
      set the update mode
      @param mode mode
      @param ustime update time
      */
-    void setUpdateMode(int mode,int ustime);
+    void setUpdateMode(UpdateMode mode,uint64_t ustime);
 private:
-    int timeo_ms;
+    datinfo info;
+    uint64_t update_time;
+    uint32_t timeo;
+    chaos::ui::DeviceController* controller;
+    std::string attr_path;
     
-   
+    UpdateMode upd_mode;
+    static std::map< std::string,datinfo* > paramToDataset;
+protected:
+    void setAttribute(void*buf,int size);
+    void* getAttribute();
+
+};
+
+template <typename T>
+class ChaosDatasetAttribute:public ChaosDatasetAttributeBase{
+public:
+    
+    T* get( ){
+       return reinterpret_cast<T*>(getAttribute());
+    }
+     void set(T*t){
+         setAttribute((void*)t,sizeof(T));
+     }
 };
 
 #endif	/* ChaosDatasetAttribute_H */
