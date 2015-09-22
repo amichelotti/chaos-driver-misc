@@ -3,7 +3,7 @@ project(misc)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 set(LIB chaos_driver_misc)
 
-SET(src src/ChaosDatasetAttribute.cpp  )
+SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeSyncronizer.cpp  )
 
 
 IF(BUILD_FORCE_STATIC)
@@ -13,7 +13,7 @@ ELSE()
    ADD_LIBRARY(${LIB} SHARED ${src} )	 
 ENDIF()
 INCLUDE_DIRECTORIES(./src)
-TARGET_LINK_LIBRARIES(${LIB} chaos_cutoolkit chaos_common common_serial ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${LIB} chaos_cutoolkit chaos_common chaos_uitoolkit ${FrameworkLib})
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 

@@ -49,6 +49,8 @@
       <df name="src">
         <in>ChaosDatasetAttribute.cpp</in>
         <in>ChaosDatasetAttribute.h</in>
+        <in>ChaosDatasetAttributeSyncronizer.cpp</in>
+        <in>ChaosDatasetAttributeSyncronizer.h</in>
       </df>
       <df name="test">
         <in>testSumOperatorUI.cpp</in>

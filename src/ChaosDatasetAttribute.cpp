@@ -10,15 +10,16 @@
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 
-std::map< std::string,ChaosDatasetAttributeBase::datinfo* > ChaosDatasetAttributeBase::paramToDataset;
+std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
 
-ChaosDatasetAttributeBase::ChaosDatasetAttributeBase(std::string path,uint32_t timeo_) {
+ChaosDatasetAttribute::ChaosDatasetAttribute(const char* path,uint32_t timeo_) {
     std::string cu =path;
     timeo=timeo_;
     if(cu.find_last_of(pathSeparator)==0){
         throw chaos::CException(-1, "bad attribute description",__FUNCTION__);
     }
-    cu.erase(0,cu.find_last_of(pathSeparator));
+    cu.erase(cu.find_last_of(pathSeparator),cu.size());
+     ATTRDBG_ << "CU NAME:\""<<cu<<"\"";
     if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
         ATTRDBG_ << "UI toolkit already initialized";
     } else if(chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::StartableServiceType::SS_STARTED){
@@ -29,6 +30,10 @@ ChaosDatasetAttributeBase::ChaosDatasetAttributeBase(std::string path,uint32_t t
     }
     
     attr_path=path;
+    attr_name=path;
+    attr_name.erase(0,attr_path.find_last_of(pathSeparator)+1);
+    ATTRDBG_ << "ATTR NAME:\""<<attr_name<<"\"";
+
     controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo);
     upd_mode=EVERYTIME;
     update_time=0;
@@ -38,16 +43,16 @@ ChaosDatasetAttributeBase::ChaosDatasetAttributeBase(std::string path,uint32_t t
     }
     controller->setRequestTimeWaith(timeo);
     
-    paramToDataset.insert(std::make_pair(path,&info));
+    paramToDataset.insert(std::make_pair(attr_path,&info));
     
  }
-ChaosDatasetAttributeBase::ChaosDatasetAttributeBase(const ChaosDatasetAttributeBase& orig) {
+ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
 
-ChaosDatasetAttributeBase::~ChaosDatasetAttributeBase() {
+ChaosDatasetAttribute::~ChaosDatasetAttribute() {
 }
 
-void* ChaosDatasetAttributeBase::getAttribute(){
+void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
     if(paramToDataset.count(attr_path)){
         boost::posix_time::ptime pt=boost::posix_time::microsec_clock::local_time();
@@ -59,8 +64,12 @@ void* ChaosDatasetAttributeBase::getAttribute(){
             paramToDataset[attr_path]->data = controller->getCurrentData();
             controller->getTimeStamp(paramToDataset[attr_path]->tstamp);        
         }
-        if(paramToDataset[attr_path]->data)
-            tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_path);
+        if(paramToDataset[attr_path]->data){
+            tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_name);
+            if(size){
+                *size = paramToDataset[attr_path]->data->getValueSize(attr_name);
+            }
+        }
 
         return tmp;
     }
@@ -68,13 +77,29 @@ void* ChaosDatasetAttributeBase::getAttribute(){
 }
 
 
-   
- void ChaosDatasetAttributeBase::setTimeout(uint32_t timeo_ms){
+  ChaosDatasetAttribute::datinfo& ChaosDatasetAttribute::getInfo(){
+      return *paramToDataset[attr_path];
+  }
+
+ void ChaosDatasetAttribute::setTimeout(uint64_t timeo_ms){
     timeo=timeo_ms;
     controller->setRequestTimeWaith(timeo);
      
  }
- void ChaosDatasetAttributeBase::setUpdateMode(UpdateMode mode,uint64_t ustime){
+ void ChaosDatasetAttribute::setUpdateMode(UpdateMode mode,uint64_t ustime){
      upd_mode = mode;
      update_time = ustime;
+ }
+ 
+  ChaosDatasetAttribute::operator int32_t()  {
+      return *reinterpret_cast<int32_t*>(get(NULL));
+ }
+ 
+ ChaosDatasetAttribute::operator int64_t(){
+           return *reinterpret_cast<int64_t*>(get(NULL));
+
+ }
+ChaosDatasetAttribute::operator double (){
+           return *reinterpret_cast<double*>(get(NULL));
+
  }

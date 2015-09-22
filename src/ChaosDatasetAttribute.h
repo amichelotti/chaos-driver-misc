@@ -18,14 +18,13 @@
 #define ATTRERR_ LERR_ << "[ "<<__FUNCTION__<<" ]"
 
 
-class ChaosDatasetAttributeBase {
+class ChaosDatasetAttribute{
     
-    
+  public:  
     struct datinfo {
         
         uint64_t tget;
         uint64_t tstamp;
-       
         chaos::common::data::CDataWrapper*  data;
         datinfo(){tget=tstamp=0; data=NULL;}
     };
@@ -35,52 +34,66 @@ class ChaosDatasetAttributeBase {
         NOTBEFORE
     };
     
-public:
+
     static const char pathSeparator ='/';
 
-    ChaosDatasetAttributeBase(std::string path,uint32_t timeo=5000);
+    ChaosDatasetAttribute(const char* path,uint32_t timeo=5000);
 
-    ChaosDatasetAttributeBase(const ChaosDatasetAttributeBase& orig);
-    virtual ~ChaosDatasetAttributeBase();
+    ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
+    virtual ~ChaosDatasetAttribute();
     
    
     /**
      set the timeout for the remote access
      @param timeo_ms update time
      */
-    void setTimeout(uint32_t timeo_ms);
+    void setTimeout(uint64_t timeo_ms);
     /**
      set the update mode
      @param mode mode
      @param ustime update time
      */
     void setUpdateMode(UpdateMode mode,uint64_t ustime);
+    
+    datinfo& getInfo();
 private:
     datinfo info;
     uint64_t update_time;
     uint32_t timeo;
     chaos::ui::DeviceController* controller;
     std::string attr_path;
-    
+    std::string attr_name;
+
     UpdateMode upd_mode;
     static std::map< std::string,datinfo* > paramToDataset;
-protected:
-    void setAttribute(void*buf,int size);
-    void* getAttribute();
-
+public:
+    void set(void*buf,int size);
+    void* get(uint32_t* size);
+    std::string getPath(){return attr_path;}
+    std::string getName(){return attr_name;}
+    
+    operator int32_t() ;
+    operator int64_t() ;
+    operator double () ;
 };
-
+/*
 template <typename T>
 class ChaosDatasetAttribute:public ChaosDatasetAttributeBase{
 public:
-    
-    T* get( ){
-       return reinterpret_cast<T*>(getAttribute());
+    ChaosDatasetAttribute(const char* path,uint32_t timeo=5000):ChaosDatasetAttributeBase(path,timeo){}
+    T get( ){
+       return *reinterpret_cast<T*>(getAttribute(NULL));
     }
-     void set(T*t){
-         setAttribute((void*)t,sizeof(T));
+    
+    T* get( uint32_t& size){
+       return reinterpret_cast<T*>(getAttribute(&size));
+    }
+     void set(T& t){
+         setAttribute((void*)&t,sizeof(T));
      }
+   
 };
+*/
 
 #endif	/* ChaosDatasetAttribute_H */
 
