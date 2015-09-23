@@ -3,7 +3,7 @@ project(misc)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 set(LIB chaos_driver_misc)
 
-SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeSyncronizer.cpp src/ChaosController.cpp src/ChaosControllerGroup.cpp )
+SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeSyncronizer.cpp src/ChaosController.cpp  )
 
 
 IF(BUILD_FORCE_STATIC)

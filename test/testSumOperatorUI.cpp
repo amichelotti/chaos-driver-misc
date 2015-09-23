@@ -10,7 +10,8 @@
 
 #include "ChaosDatasetAttribute.h"
 #include "ChaosDatasetAttributeSyncronizer.h"
-
+#include "ChaosController.h"
+#include "ChaosControllerGroup.h"
 using namespace std;
 
 /*
@@ -21,6 +22,12 @@ int main(int argc, char** argv) {
     ChaosDatasetAttribute op1("LIBERA01/LIBERA_ACQUIRE0/VA");
     ChaosDatasetAttribute op2("LIBERA01/LIBERA_ACQUIRE0/VB");
     ChaosDatasetAttribute op3("LIBERA02/LIBERA_ACQUIRE0/VA");
+    ChaosController libera1("LIBERA01/LIBERA_ACQUIRE0");
+    ChaosController libera2("LIBERA01/LIBERA_ACQUIRE1");
+    
+    ChaosControllerGroup<ChaosController> group;
+    group.add(libera1);
+    
     ChaosDatasetAttributeSyncronizer s;
     uint32_t size;
     int32_t *dd=  (int32_t*)op3.get(&size);

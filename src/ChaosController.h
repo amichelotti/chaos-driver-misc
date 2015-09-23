@@ -34,7 +34,7 @@ private:
         std::string alias;
         chaos::common::data::CDataWrapper param;
         template<typename T>
-        void addParameter(const char*name,T value){
+        void addParameter(std::string name,T value){
             param.addValue(name,value);
         }
         uint32_t priority;
