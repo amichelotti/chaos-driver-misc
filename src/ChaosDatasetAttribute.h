@@ -35,7 +35,6 @@ class ChaosDatasetAttribute{
     };
     
 
-    static const char pathSeparator ='/';
 
     ChaosDatasetAttribute(const char* path,uint32_t timeo=5000);
 
@@ -65,16 +64,26 @@ private:
     std::string attr_name;
 
     UpdateMode upd_mode;
+    
     static std::map< std::string,datinfo* > paramToDataset;
 public:
-    void set(void*buf,int size);
+    int set(void*buf,int size);
     void* get(uint32_t* size);
     std::string getPath(){return attr_path;}
     std::string getName(){return attr_name;}
     
-    operator int32_t() ;
-    operator int64_t() ;
-    operator double () ;
+    template<typename T>
+    operator T(){
+        return *reinterpret_cast<T*>(get(NULL));
+    }
+    
+    template<typename T>
+    T operator=(T& d) throw (chaos::CException) {
+        if(set(&d,sizeof(T))==0)
+            return d;
+        throw chaos::CException(-1,"cannot assign to remote variable:"+attr_path,__FUNCTION__);
+    }
+    
 };
 /*
 template <typename T>

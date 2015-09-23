@@ -13,6 +13,8 @@
         </df>
       </df>
       <df name="src">
+        <in>ChaosController.cpp</in>
+        <in>ChaosControllerGroup.cpp</in>
         <in>ChaosDatasetAttribute.cpp</in>
         <in>ChaosDatasetAttributeSyncronizer.cpp</in>
       </df>
@@ -52,6 +54,19 @@
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath></executablePath>
+          <ccTool flags="1">
+            <incDir>
+              <pElem>.</pElem>
+              <pElem>../..</pElem>
+              <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+              <pElem>src</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>BOOST_ALL_DYN_LINK</Elem>
+              <Elem>CHAOS</Elem>
+              <Elem>NDEBUG</Elem>
+            </preprocessorList>
+          </ccTool>
         </makeTool>
       </makefileType>
       <item path="CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c"
@@ -64,37 +79,28 @@
             tool="1"
             flavor2="4">
       </item>
-      <folder path="0/src">
+      <folder path="0/CMakeFiles">
         <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-            <pElem>../..</pElem>
-            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
-            <pElem>src</pElem>
-          </incDir>
           <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-            <Elem>CHAOS</Elem>
-            <Elem>NDEBUG</Elem>
             <Elem>chaos_driver_misc_EXPORTS</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
-      <folder path="0/test">
+      <folder path="0/src">
         <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-            <pElem>../..</pElem>
-            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
-            <pElem>src</pElem>
-          </incDir>
           <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-            <Elem>CHAOS</Elem>
-            <Elem>NDEBUG</Elem>
+            <Elem>chaos_driver_misc_EXPORTS</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
+      <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="1">
+        </ccTool>
+      </item>
+      <item path="src/ChaosControllerGroup.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="1">
+        </ccTool>
+      </item>
       <item path="src/ChaosDatasetAttribute.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="1">
         </ccTool>
@@ -102,7 +108,7 @@
       <item path="src/ChaosDatasetAttributeSyncronizer.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="1">
         </ccTool>
       </item>

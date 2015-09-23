@@ -15,10 +15,10 @@ std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::p
 ChaosDatasetAttribute::ChaosDatasetAttribute(const char* path,uint32_t timeo_) {
     std::string cu =path;
     timeo=timeo_;
-    if(cu.find_last_of(pathSeparator)==0){
+    if(cu.find_last_of(chaos::PATH_SEPARATOR)==0){
         throw chaos::CException(-1, "bad attribute description",__FUNCTION__);
     }
-    cu.erase(cu.find_last_of(pathSeparator),cu.size());
+    cu.erase(cu.find_last_of(chaos::PATH_SEPARATOR),cu.size());
      ATTRDBG_ << "CU NAME:\""<<cu<<"\"";
     if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
         ATTRDBG_ << "UI toolkit already initialized";
@@ -31,7 +31,7 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(const char* path,uint32_t timeo_) {
     
     attr_path=path;
     attr_name=path;
-    attr_name.erase(0,attr_path.find_last_of(pathSeparator)+1);
+    attr_name.erase(0,attr_path.find_last_of(chaos::PATH_SEPARATOR)+1);
     ATTRDBG_ << "ATTR NAME:\""<<attr_name<<"\"";
 
     controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo);
@@ -52,6 +52,9 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) 
 ChaosDatasetAttribute::~ChaosDatasetAttribute() {
 }
 
+int ChaosDatasetAttribute::set(void* buf, int size){
+    return controller->setAttributeToValue(attr_name.c_str(),buf,1,size);
+}
 void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
     if(paramToDataset.count(attr_path)){
@@ -89,17 +92,4 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
  void ChaosDatasetAttribute::setUpdateMode(UpdateMode mode,uint64_t ustime){
      upd_mode = mode;
      update_time = ustime;
- }
- 
-  ChaosDatasetAttribute::operator int32_t()  {
-      return *reinterpret_cast<int32_t*>(get(NULL));
- }
- 
- ChaosDatasetAttribute::operator int64_t(){
-           return *reinterpret_cast<int64_t*>(get(NULL));
-
- }
-ChaosDatasetAttribute::operator double (){
-           return *reinterpret_cast<double*>(get(NULL));
-
  }
