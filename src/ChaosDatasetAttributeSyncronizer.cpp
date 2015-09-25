@@ -5,9 +5,14 @@
  * Created on September 2, 2015, 5:29 PM
  */
 
+#include <vector>
+
 #include "ChaosDatasetAttributeSyncronizer.h"
 
-
+bool compareSet(ChaosDatasetAttributeSyncronizer::attr_t const& x,ChaosDatasetAttributeSyncronizer::attr_t const& y){
+     return (x.second.tlastread - x.second.tchanged)>(y.second.tlastread - y.second.tchanged);
+     
+}
 ChaosDatasetAttributeSyncronizer::ChaosDatasetAttributeSyncronizer() {
     interval=20000;
     timeo = 2*interval;
@@ -18,48 +23,78 @@ ChaosDatasetAttributeSyncronizer::ChaosDatasetAttributeSyncronizer() {
 ChaosDatasetAttributeSyncronizer::~ChaosDatasetAttributeSyncronizer() {
 }
 
+ChaosDatasetAttributeSyncronizer::syncInfo::syncInfo(){
+    ChaosDatasetAttributeSyncronizer::syncInfo::tchanged=0;
+    ChaosDatasetAttributeSyncronizer::syncInfo::tlastread=0;
+    ChaosDatasetAttributeSyncronizer::syncInfo::changes=0;
+}
 void ChaosDatasetAttributeSyncronizer::add(ChaosDatasetAttribute& d){
     d.setTimeout(2*timeo/1000);
-    set.push_back(&d);
+    
+    set.push_back(std::make_pair(&d,ChaosDatasetAttributeSyncronizer::syncInfo()));
 }
-uint64_t ChaosDatasetAttributeSyncronizer::sync(){
-    int ok=0;
-    base_time=0;
-    uint64_t micro_spent=0;
-    if(set.size()==0)return 0;
-    boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
-    for(std::vector<ChaosDatasetAttribute*>::iterator i=set.begin();i!=set.end();i++){
-        (*i)->setUpdateMode(ChaosDatasetAttribute::NOTBEFORE,interval/2);
-        (*i)->get(NULL);
-        ChaosDatasetAttribute::datinfo& info=(*i)->getInfo();
-        base_time=std::max(info.tstamp,base_time);
-        ATTRDBG_<<"attribute \""<<(*i)->getPath()<<"\" time :"<<info.tstamp<<" base time:"<<base_time;
-       
-    }
-    while((ok!=set.size()) && (((micro_spent=((boost::posix_time::microsec_clock::local_time()-start).total_microseconds()))<timeo))){
-       ok=0;
-       for(std::vector<ChaosDatasetAttribute*>::iterator i=set.begin();i!=set.end();i++){
-        (*i)->get(NULL);
-        ChaosDatasetAttribute::datinfo& info=(*i)->getInfo();
-        base_time=std::max(info.tstamp,base_time);
-        if((base_time-info.tstamp)<=interval){
-            ok++;
-            ATTRDBG_<<" at "<<micro_spent<< " attribute \""<<(*i)->getPath()<<"\" time :"<<info.tstamp<<" ALIGNED to:"<<base_time;     
-        } else {
-                ATTRDBG_<<" at "<<micro_spent<< " attribute \""<<(*i)->getPath()<<"\" time :"<<info.tstamp<<" DIFF FOR US:"<<(base_time-info.tstamp) <<" greater than:"<< interval;     
-        }
+
+int ChaosDatasetAttributeSyncronizer::sortedFetch(uint64_t&max_age){
+    int changed=0;
+    max_age=0;
+    std::sort(set.begin(),set.end(),compareSet);
+    for(cuset_t::iterator i=set.begin();i!=set.end();i++){
+        uint64_t age;
         
-    } 
-    } 
-    if(ok==set.size()){
-        return base_time;
+        i->first->setUpdateMode(ChaosDatasetAttribute::EVERYTIME,0);
+        i->first->get(NULL);
+        ChaosDatasetAttribute::datinfo& info=i->first->getInfo();
+        i->second.tlastread=info.tstamp;
+        age=info.tstamp-i->second.tchanged;
+        std::max(max_age,age);
+        if(i->second.tchanged!=info.tstamp){      
+            i->second.changes++;
+            changed++;
+            ATTRDBG_<<"Changed \""<<i->first->getPath()<<"\" at :"<<info.tstamp<<  " ms age:"<<age << " ms changes:"<<i->second.changes; 
+            i->second.tchanged = info.tstamp;
+        } else {
+            if(i->second.changes){
+                changed++;
+                if(i->second.changes>1)
+                    ATTRDBG_<<"Warning \""<<i->first->getPath()<<"\" Changed more than one time at:"<<info.tstamp<<  " age:"<<age << " ms changes:"<<i->second.changes; 
+
+            }
+        }
     }
-    return 0;
+    return changed;
 }
+
+int64_t ChaosDatasetAttributeSyncronizer::sync(){
+    int ret;
+    uint64_t max_age;
+     uint64_t micro_spent=0;
+
+    boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
+
+    ATTRDBG_<<"syncing...";
+    do{
+        ret=sortedFetch(max_age);
+        ATTRDBG_<<"Sync "<<ret<<"/"<<set.size()<<" attributes, max age:"<<max_age;
+    } while((ret<set.size())&&(((micro_spent=((boost::posix_time::microsec_clock::local_time()-start).total_microseconds()))<timeo)));
+    
+    if(ret==set.size()){
+        
+        for(cuset_t::iterator i=set.begin();i!=set.end();i++){
+                i->second.changes=0;
+        }
+             
+        ATTRDBG_<<"syncing OK after "<<micro_spent<<"us";
+    
+        return max_age;
+    }
+    ATTRDBG_<<"TIMEOUT :"<<micro_spent;
+    return -1;
+}
+
  void ChaosDatasetAttributeSyncronizer::setTimeout(uint64_t inte){
      timeo =inte;
-     for(std::vector<ChaosDatasetAttribute*>::iterator i=set.begin();i!=set.end();i++){
-        (*i)->setTimeout(2*timeo/1000);
+     for(cuset_t::iterator i=set.begin();i!=set.end();i++){
+        i->first->setTimeout(2*timeo/1000);
     }
  }
 

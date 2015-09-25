@@ -27,41 +27,48 @@ public:
     void add(T& d){
         group.push_back(&d);
     }
-     int init(){
+     int init(int force=0){
           
         for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-            if((*i)->T::init()!=0)
+            if((*i)->T::init(force)!=0)
                 return -1;
         }
         return 0;
     }
-    int stop(){
+    int stop(int force=0){
       
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((*i)->T::stop()!=0)
+        if((*i)->T::stop(force)!=0)
             return -1;
     }
         return 0;
 
 }
-    int start(){
+    int start(int force=0){
       
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((*i)->T::start()!=0)
+        if((*i)->T::start(force)!=0)
             return -1;
     }
         return 0;
 
 }
-    int deinit(){
+    int deinit(int force=0){
       
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((*i)->T::deinit()!=0)
+        if((*i)->T::deinit(force)!=0)
             return -1;
     }
         return 0;
 
 }
+    
+    int setSchedule(uint64_t us){
+        for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
+           if((*i)->T::setSchedule(us)!=0)
+            return -1;
+    }
+    }
 int getState(){
     int ret=0,prev=-1;
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){

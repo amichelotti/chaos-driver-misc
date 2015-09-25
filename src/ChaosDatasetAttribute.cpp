@@ -12,7 +12,7 @@
 
 std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
 
-ChaosDatasetAttribute::ChaosDatasetAttribute(const char* path,uint32_t timeo_) {
+ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     std::string cu =path;
     timeo=timeo_;
     if(cu.find_last_of(chaos::PATH_SEPARATOR)==0){

@@ -16,16 +16,16 @@
          timeo=timeo_ms;
  }
     
-int  ChaosController::init(){
+int  ChaosController::init(int force){
     return controller->initDevice();
 }
-int  ChaosController::stop(){
+int  ChaosController::stop(int force){
     return controller->stopDevice();
 }
-int  ChaosController::start(){
+int  ChaosController::start(int force){
     return controller->startDevice();
 }
-int  ChaosController::deinit(){
+int  ChaosController::deinit(int force){
     return controller->deinitDevice();
 }
 
@@ -47,11 +47,16 @@ ChaosController::command_t  ChaosController::prepareCommand(std::string alias){
     cmd->alias = alias;
     return cmd;
 }
+int ChaosController::setSchedule(uint64_t us){
+    
+    schedule=us;
+    return controller->setScheduleDelay(us);
+}
 
 int ChaosController::init(const char* p,uint32_t timeo_)  {
     path=p;
     state= chaos::CUStateKey::UNDEFINED;
-    
+    schedule=0;
     CTRLDBG_ << "init CU NAME:\""<<path<<"\"";
     if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
         CTRLDBG_ << "UI toolkit already initialized";
@@ -62,7 +67,12 @@ int ChaosController::init(const char* p,uint32_t timeo_)  {
        
     }
     if(controller==NULL){
-        controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_);
+        try {
+            controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_);
+        } catch (chaos::CException &e){
+            CTRLERR_<<"Exception during get controller for device:"<<e.what();
+            return -3;
+        }
     }
     if(controller==NULL){
         return -1;
@@ -70,7 +80,8 @@ int ChaosController::init(const char* p,uint32_t timeo_)  {
     }
     controller->setRequestTimeWaith(timeo_);
     timeo=timeo_;
-    if(getState()!=0){
+    if(getState()<0){
+         CTRLERR_<<"Exception during getting state for device:"<<path;
         return -2;
     }
     return 0;
@@ -81,12 +92,14 @@ int ChaosController::waitCmd(command_t&cmd){
     chaos::common::batch_command::CommandState command_state;
     command_state.command_id=cmd->command_id;
     do {
-        if((ret=controller->getCommandState(command_state))!=0)
+        if((ret=controller->getCommandState(command_state))!=0){
             return ret;
-        
-    } while((command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED) && ((boost::posix_time::microsec_clock::local_time()-start).total_milliseconds()<timeo));
+        }
+      
+    } while((command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED) && (command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)  && ((boost::posix_time::microsec_clock::local_time()-start).total_milliseconds()<timeo));
     
-    if(command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED){
+    CTRLDBG_ <<" Command state last event:"<<command_state.last_event;
+    if((command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED)||(command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)){
         return 0;
     }
     
@@ -102,11 +115,12 @@ int ChaosController::sendCmd(command_t& cmd,bool wait){
     }
     
     if(wait){
+        int ret;
         CTRLDBG_ << "waiting command id:"<<cmd->command_id;
-        if(waitCmd(cmd)!=0){
-           CTRLERR_<<"error waiting";
+        if((ret=waitCmd(cmd))!=0){
+           CTRLERR_<<"error waiting ret:"<<ret;
 
-            return -3;
+            return ret;
         }
        CTRLDBG_ << "command performed"; 
     }
@@ -118,9 +132,11 @@ int ChaosController::executeCmd(command_t& cmd,bool wait){
 }
 
 ChaosController::ChaosController(const char* p,uint32_t timeo_) throw (chaos::CException) {
+    int ret;
     controller = NULL;
-    if(init(p,timeo_)!=0){
-               throw chaos::CException(-1, "cannot allocate controller for:"+ path,__FUNCTION__);
+   
+    if((ret=init(p,timeo_))!=0){
+               throw chaos::CException(ret, "cannot allocate controller for:"+ path + " check if exists",__FUNCTION__);
 
     }
  

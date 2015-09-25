@@ -25,8 +25,8 @@ private:
      chaos::ui::DeviceController* controller;
      std::string path;
      chaos::CUStateKey::ControlUnitState state;
-     uint64_t timeo;
-
+     uint64_t timeo,schedule;
+     
       
   public:  
     
@@ -56,13 +56,14 @@ private:
    
     int init(const char*path, uint32_t timeo);
     
-    virtual int init();
-    virtual int stop();
-    virtual int start();
-    virtual int deinit();
+    virtual int init(int force=0);
+    virtual int stop(int force=0);
+    virtual int start(int force=0);
+    virtual int deinit(int force=0);
+    virtual int setSchedule(uint64_t us);
     /**
      * @return the state or negative if error
-     * @return 
+     *  
      */
     virtual int getState();
     virtual uint64_t getTimeStamp();

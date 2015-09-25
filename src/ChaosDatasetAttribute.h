@@ -27,6 +27,9 @@ class ChaosDatasetAttribute{
         uint64_t tstamp;
         chaos::common::data::CDataWrapper*  data;
         datinfo(){tget=tstamp=0; data=NULL;}
+        uint64_t getTimeStamp()const {return tstamp;}
+        
+        uint64_t getLastGet()const {return tget;}
     };
     
     enum UpdateMode{
@@ -36,7 +39,7 @@ class ChaosDatasetAttribute{
     
 
 
-    ChaosDatasetAttribute(const char* path,uint32_t timeo=5000);
+    ChaosDatasetAttribute(std::string path,uint32_t timeo=5000);
 
     ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
     virtual ~ChaosDatasetAttribute();
