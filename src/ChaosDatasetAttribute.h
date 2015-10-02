@@ -14,8 +14,8 @@
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
-#define ATTRDBG_ LDBG_<< "[ "<<__FUNCTION__<<" ]"
-#define ATTRERR_ LERR_ << "[ "<<__FUNCTION__<<" ]"
+#define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
+#define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
 
 
 class ChaosDatasetAttribute{

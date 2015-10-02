@@ -16,6 +16,9 @@ class ChaosControllerGroup:public T{
     typedef  std::vector<T*> ccgrp_t;
     
     ccgrp_t group;
+    
+   
+    
 public:
 
     ChaosControllerGroup(){}
@@ -95,10 +98,16 @@ uint64_t getTimeStamp(){
 
 }
 
-int executeCmd(ChaosController::command_t& cmd,bool wait){
-      
+int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0){
+    boost::posix_time::ptime start_cmd;
+    uint64_t del;
+    start_cmd=boost::posix_time::microsec_clock::local_time();
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((*i)->T::executeCmd(cmd,wait)!=0)
+        del=(boost::posix_time::microsec_clock::local_time() -start_cmd).total_microseconds();
+        if(wait_for>= del){
+            wait_for -=del;
+        }
+        if((*i)->T::executeCmd(cmd,wait,perform_at,wait_for)!=0)
             return -1;
     }
     return 0;

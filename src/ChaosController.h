@@ -14,8 +14,8 @@
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ] ["<<getPath()<<"] "
-#define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<" ] ["<<getPath()<<"] "
-#define CTRLERR_ LERR_ << "[ "<<__FUNCTION__<<" ] ["<<getPath()<<"] "
+#define CTRLDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
+#define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
 
 
 class ChaosController{
@@ -27,7 +27,8 @@ private:
      chaos::CUStateKey::ControlUnitState state;
      uint64_t timeo,schedule;
      
-      
+     
+     int forceState(int dstState);
   public:  
     
     struct command {
@@ -48,13 +49,13 @@ private:
     
     typedef boost::shared_ptr<command> command_t;
     ChaosController();
-    ChaosController(const char* path,uint32_t timeo=5000) throw (chaos::CException);
+    ChaosController(std::string path,uint32_t timeo=5000) throw (chaos::CException);
 
     ChaosController(const ChaosController& orig);
     virtual ~ChaosController();
     
    
-    int init(const char*path, uint32_t timeo);
+    int init(std::string path, uint32_t timeo);
     
     virtual int init(int force=0);
     virtual int stop(int force=0);
@@ -73,7 +74,7 @@ private:
      * @param [in] wait if 1 wait for end
      * @return 0 on success
      */
-    virtual int executeCmd(command_t& cmd,bool wait);
+    virtual int executeCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
     
     /**
      set the timeout for the remote access
@@ -94,7 +95,8 @@ private:
     
     std::string getPath(){return path;}
 protected:
-      int sendCmd(command_t& cmd,bool wait);
+      int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
+      
 };
 
 #endif	/* ChaosController_H */
