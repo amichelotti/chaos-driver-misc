@@ -51,7 +51,18 @@ int ChaosController::forceState(int dstState){
             break;
             
             case chaos::CUStateKey::START:
-                controller->stopDevice();
+                switch(dstState){
+                    case chaos::CUStateKey::INIT:
+                    case chaos::CUStateKey::STOP:
+                        controller->startDevice();
+                        break;
+                    case chaos::CUStateKey::DEINIT:
+                       controller->initDevice();
+
+                        break;
+
+                            
+                }
             break;
                 
                 
@@ -69,7 +80,22 @@ int ChaosController::forceState(int dstState){
                 
                 
             break;
-            
+           default:
+                controller->deinitDevice();
+                controller->initDevice();
+/*
+                switch(dstState){
+                    case chaos::CUStateKey::DEINIT:
+                        break;
+                    case chaos::CUStateKey::INIT:
+                         break;
+                    case chaos::CUStateKey::START:
+                        controller->startDevice();
+                        break;
+                     case chaos::CUStateKey::STOP:
+                        controller->stopDevice();
+                        break;
+                }*/
         }
     } while(currState!=dstState);
         
