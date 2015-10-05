@@ -134,12 +134,21 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
         if(wait_for>= del){
             wait_for -=del;
         }
-        if((*i)->T::executeCmd(cmd,wait,perform_at,wait_for)!=0){
-            CTRLERRG_<<" excuting command  "<<(*i)->getPath();   
+        if((*i)->T::executeCmd(cmd,false,perform_at,wait_for)!=0){
+            CTRLERRG_<<" executing command  "<<(*i)->getPath();   
+            error=*i;
+            return -1;
+        }
+        
+    }
+    for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
+        if((*i)->T::waitCmd()!=0){
+            CTRLERRG_<<" waiting command  "<<(*i)->getPath();   
             error=*i;
             return -1;
         }
     }
+    
     return 0;
 
 }

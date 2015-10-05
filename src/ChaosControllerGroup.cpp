@@ -82,10 +82,19 @@ uint64_t ChaosControllerGroup::getTimeStamp(){
 }
 
 int ChaosControllerGroup::executeCmd(command_t& cmd,bool wait){
-      
+    
     for(ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((*i)->ChaosController::executeCmd(cmd,wait)!=0)
+        if((*i)->ChaosController::executeCmd(cmd,false)!=0){
+            CTRLDBG_<<" executing command "<<cmd.
             return -1;
+        }
+        
+    }
+    if(wait){
+        for(ccgrp_t::iterator i=group.begin();i!=group.end();i++){
+             if((*i)->ChaosController::wait()!=0)
+                return -1;
+        }
     }
     return 0;
 

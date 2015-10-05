@@ -54,7 +54,7 @@ int ChaosController::forceState(int dstState){
                 switch(dstState){
                     case chaos::CUStateKey::INIT:
                     case chaos::CUStateKey::STOP:
-                        controller->startDevice();
+                        controller->stopDevice();
                         break;
                     case chaos::CUStateKey::DEINIT:
                        controller->initDevice();
@@ -194,6 +194,10 @@ int ChaosController::init(std::string p,uint32_t timeo_)  {
     }
     return 0;
  }
+
+int ChaosController::waitCmd(){
+    return waitCmd(last_cmd);
+}
 int ChaosController::waitCmd(command_t&cmd){
     int ret;
     boost::posix_time::ptime start= boost::posix_time::microsec_clock::local_time();
@@ -232,21 +236,25 @@ int ChaosController::sendCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64
         return -1;
     }
     
-    if(wait){
-        int ret;
-        CTRLDBG_ << "waiting command id:"<<cmd->command_id;
-        if((ret=waitCmd(cmd))!=0){
-           CTRLERR_<<"error waiting ret:"<<ret;
-
-            return ret;
-        }
-       CTRLDBG_ << "command performed"; 
-    }
+   
     
     return 0;
 }
 int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64_t wait_for){
-    return sendCmd(cmd,wait,perform_at,wait_for);
+    int ret=sendCmd(cmd,wait,perform_at,wait_for);
+    if(ret!=0)
+        return ret;
+    last_cmd=cmd;
+    if(wait){
+        CTRLDBG_ << "waiting command id:"<<cmd->command_id;
+        if((ret=waitCmd(cmd))!=0){
+           CTRLERR_<<"error waiting ret:"<<ret;
+
+                return ret;
+        }
+       CTRLDBG_ << "command performed"; 
+    }
+    return ret;
 }
 
 ChaosController::ChaosController(std::string p,uint32_t timeo_) throw (chaos::CException) {

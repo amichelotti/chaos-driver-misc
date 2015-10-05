@@ -27,7 +27,6 @@ private:
      chaos::CUStateKey::ControlUnitState state;
      uint64_t timeo,schedule;
      
-     
      int forceState(int dstState);
   public:  
     
@@ -87,12 +86,21 @@ private:
      * @return 0 on success
      */
     int waitCmd(command_t&);
+    
+    /**
+     * wait for last command sent with the wait =0
+     * @return 0 on success
+     */
+    int waitCmd();
+
+
     command_t prepareCommand(std::string alias);
     template <typename T>
     void addParameter(command_t& cmd,std::string name,T value){
         cmd->param.addValue(name,value);
     }
     
+    command_t last_cmd;
     std::string getPath(){return path;}
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
