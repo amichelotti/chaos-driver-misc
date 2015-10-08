@@ -123,7 +123,13 @@ uint64_t getTimeStamp(){
     return ret/group.size();
 
 }
+void setTimeout(uint64_t us){
+     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
+        (*i)->T::setTimeout(us);
+            
+    }
 
+}
 int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0){
     boost::posix_time::ptime start_cmd;
     uint64_t del;

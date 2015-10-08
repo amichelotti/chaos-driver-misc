@@ -43,7 +43,6 @@
       <df name="src">
         <in>ChaosController.cpp</in>
         <in>ChaosController.h</in>
-        <in>ChaosControllerGroup.cpp</in>
         <in>ChaosControllerGroup.h</in>
         <in>ChaosDatasetAttribute.cpp</in>
         <in>ChaosDatasetAttribute.h</in>

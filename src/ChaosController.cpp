@@ -11,25 +11,26 @@
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 
- void ChaosController::setTimeout(uint64_t timeo_ms){
-         controller->setRequestTimeWaith(timeo_ms);
-         timeo=timeo_ms;
+ void ChaosController::setTimeout(uint64_t timeo_us){
+         controller->setRequestTimeWaith(timeo_us/1000);
+         timeo=timeo_us;
  }
 
 int ChaosController::forceState(int dstState){
-    int currState;
+    int currState=-100,oldstate;
+    boost::posix_time::ptime start;
+    int retry=10;
     
-    boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
-
     do{
+        oldstate=currState;
         currState=getState();
         CTRLDBG_ << "Current state:"<<currState<<" destination state:"<<dstState;
+        if(currState!=oldstate){
+            start=boost::posix_time::microsec_clock::local_time();
+        }
         if(currState<0)
             return currState;
         
-        if((boost::posix_time::microsec_clock::local_time() - start).total_microseconds()/1000> timeo){
-            return -100;
-        }
         
           switch(currState){
               case chaos::CUStateKey::DEINIT:
@@ -97,9 +98,20 @@ int ChaosController::forceState(int dstState){
                         break;
                 }*/
         }
-    } while(currState!=dstState);
+          if((boost::posix_time::microsec_clock::local_time() - start).total_microseconds()> timeo){
+              retry --;
+            CTRLERR_ << "Timeout of "<<timeo <<" us elapsed:"<<(boost::posix_time::microsec_clock::local_time() - start).total_microseconds()<< "  Retry:"<<retry;
+             start=boost::posix_time::microsec_clock::local_time();
+            
+        }
+    } while((currState!=dstState)&& (retry>0));
         
+     
+    if(retry==0){
+        CTRLERR_ << "Not Responding";
+        return -100;
         
+    }
        
     return 0;
     
@@ -133,7 +145,7 @@ int  ChaosController::deinit(int force){
 
 int  ChaosController::getState(){
     
-    if(controller->getState(state)==0){
+    if(controller->getState(state)>0){
         return state;
     }
     return -1;
@@ -155,28 +167,30 @@ int ChaosController::setSchedule(uint64_t us){
     return controller->setScheduleDelay(us);
 }
 
-int ChaosController::init(std::string p,uint32_t timeo_)  {
+int ChaosController::init(std::string p,uint64_t timeo_)  {
     path=p;
     state= chaos::CUStateKey::UNDEFINED;
     schedule=0;
     CTRLDBG_ << "init CU NAME:\""<<path<<"\"";
-    CTRLDBG_<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
+   /* CTRLDBG_<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
     CTRLDBG_<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
     CTRLDBG_<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
     CTRLDBG_<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
-    
+    */
     if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
         CTRLDBG_ << "UI toolkit already initialized";
     } else if((chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::StartableServiceType::SS_STARTED) || (chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED)){
         CTRLDBG_ << "CU toolkit has started, initializing UI";
         chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->setConfiguration(chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration());
-       chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);   
+     //  chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);   
     }
-     //chaos::ui::LLRpcApi::getInstance()->init();
+    //chaos::common::utility::InizializableService::initImplementation(chaos::common::async_central::AsyncCentralManager::getInstance(), 0, "AsyncCentralManager", __PRETTY_FUNCTION__);
+
+    //    chaos::ui::LLRpcApi::getInstance()->init();
     //chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
     if(controller==NULL){
         try {
-            controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_);
+            controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_/1000);
         } catch (chaos::CException &e){
             CTRLERR_<<"Exception during get controller for device:"<<e.what();
             return -3;
@@ -186,7 +200,7 @@ int ChaosController::init(std::string p,uint32_t timeo_)  {
         return -1;
      
     }
-    controller->setRequestTimeWaith(timeo_);
+    controller->setRequestTimeWaith(timeo_/1000);
     timeo=timeo_;
     if(getState()<0){
          CTRLERR_<<"Exception during getting state for device:"<<path;
@@ -208,7 +222,7 @@ int ChaosController::waitCmd(command_t&cmd){
             return ret;
         }
       
-    } while((command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED) && (command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)  && ((boost::posix_time::microsec_clock::local_time()-start).total_milliseconds()<timeo));
+    } while((command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED) && (command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)  && ((boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<timeo));
     
     CTRLDBG_ <<" Command state last event:"<<command_state.last_event;
     if((command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED)||(command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)){

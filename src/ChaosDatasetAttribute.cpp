@@ -25,7 +25,7 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     } else if(chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::StartableServiceType::SS_STARTED){
         ATTRDBG_ << "CU toolkit has started, initializing UI";
         chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->setConfiguration(chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration());
-       chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
+     //  chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
        
     }
     
@@ -57,15 +57,19 @@ int ChaosDatasetAttribute::set(void* buf, int size){
 }
 void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
+
     if(paramToDataset.count(attr_path)){
         boost::posix_time::ptime pt=boost::posix_time::microsec_clock::local_time();
         uint64_t tget=pt.time_of_day().total_microseconds();
         pt= boost::posix_time::microsec_clock::local_time();
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_path]->tget)> update_time)) ){
-            controller->fetchCurrentDeviceValue();
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
+            if(tmpw==NULL){
+                 throw chaos::CException(-101, "cannot retrive data for:"+ attr_path,__FUNCTION__);
+            }
             paramToDataset[attr_path]->tget = tget;
-            paramToDataset[attr_path]->data = controller->getCurrentData();
-            controller->getTimeStamp(paramToDataset[attr_path]->tstamp);        
+            paramToDataset[attr_path]->data = tmpw;
+            controller->getTimeStamp(paramToDataset[attr_path]->tstamp);     
         }
         if(paramToDataset[attr_path]->data){
             tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_name);
@@ -76,6 +80,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 
         return tmp;
     }
+    ATTRERR_<<attr_path<<"  NOT FOUND";
     return NULL;
 }
 

@@ -14,7 +14,6 @@
       </df>
       <df name="src">
         <in>ChaosController.cpp</in>
-        <in>ChaosControllerGroup.cpp</in>
         <in>ChaosDatasetAttribute.cpp</in>
         <in>ChaosDatasetAttributeSyncronizer.cpp</in>
       </df>
@@ -94,10 +93,6 @@
         </ccTool>
       </folder>
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="1">
-        </ccTool>
-      </item>
-      <item path="src/ChaosControllerGroup.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="1">
         </ccTool>
       </item>

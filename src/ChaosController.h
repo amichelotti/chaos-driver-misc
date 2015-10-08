@@ -16,7 +16,7 @@
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ] ["<<getPath()<<"] "
 #define CTRLDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
-
+#define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 
 class ChaosController{
     
@@ -26,7 +26,12 @@ private:
      std::string path;
      chaos::CUStateKey::ControlUnitState state;
      uint64_t timeo,schedule;
-     
+    // NetworkBroker *broker;
+     //chaos::common::message::MDSMessageChannel *mdsChannel;
+                //! Device MEssage channel to control via chaos rpc the device
+     //chaos::common::message::DeviceMessageChannel *deviceChannel;
+                //! The io driver for accessing live data of the device
+	
      int forceState(int dstState);
   public:  
     
@@ -48,13 +53,13 @@ private:
     
     typedef boost::shared_ptr<command> command_t;
     ChaosController();
-    ChaosController(std::string path,uint32_t timeo=5000) throw (chaos::CException);
+    ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER) throw (chaos::CException);
 
     ChaosController(const ChaosController& orig);
     virtual ~ChaosController();
     
    
-    int init(std::string path, uint32_t timeo);
+    int init(std::string path, uint64_t timeo);
     
     virtual int init(int force=0);
     virtual int stop(int force=0);
@@ -77,9 +82,9 @@ private:
     
     /**
      set the timeout for the remote access
-     @param timeo_ms update time
+     @param timeo_us timeout in microseconds
      */
-    void setTimeout(uint64_t timeo_ms);
+    virtual void setTimeout(uint64_t timeo_us);
     
     /**
      * wait for a command sent with the wait =0
