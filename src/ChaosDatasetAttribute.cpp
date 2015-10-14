@@ -41,10 +41,15 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
        throw chaos::CException(-1, "cannot allocate controller for:"+ cu,__FUNCTION__);
 
     }
+    attr_size =0;
     controller->setRequestTimeWaith(timeo);
-    
+    controller->getAttributeDescription(attr_name,attr_desc);
+    controller->getDeviceAttributeType(attr_name,attr_type);
+    controller->getDeviceAttributeDirection(attr_name,attr_dir);
     paramToDataset.insert(std::make_pair(attr_path,&info));
-    
+    if(get(&attr_size)==NULL){
+        throw chaos::CException(-1, "cannot fetch variable:"+ path+ " var name:"+attr_name,__FUNCTION__);
+    }
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
@@ -73,8 +78,9 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         }
         if(paramToDataset[attr_path]->data){
             tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_name);
+            attr_size =paramToDataset[attr_path]->data->getValueSize(attr_name);
             if(size){
-                *size = paramToDataset[attr_path]->data->getValueSize(attr_name);
+                *size = attr_size;
             }
         }
 

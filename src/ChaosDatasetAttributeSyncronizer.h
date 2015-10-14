@@ -20,9 +20,18 @@ class ChaosDatasetAttributeSyncronizer{
         syncInfo();
                
     };
-   
+    boost::mutex lock_sync;
     typedef std::pair<ChaosDatasetAttribute*,syncInfo> attr_t;
     typedef std::vector<attr_t > cuset_t;
+    /**
+     * map a full path to an attribute
+     */
+    std::map<std::string,ChaosDatasetAttribute*> id2attr;
+    /**
+     * map a name of an attribute to a vector of attributes
+     */
+    std::map<std::string,std::vector<ChaosDatasetAttribute*> > name2attrs;
+    
 public:
 
     ChaosDatasetAttributeSyncronizer();
@@ -45,8 +54,27 @@ public:
     /**
      add a new Attribute to the synchronized pool
      @param ChaosDatasetAttribute attribute
+     @return the new created Attribute or NULL if error or already present
      */
-    void add(ChaosDatasetAttribute&d);
+    ChaosDatasetAttribute* add(std::string path);
+    
+    /**
+     add a new Attribute to the synchronized pool
+     @param attr attribute
+     */
+    void add(ChaosDatasetAttribute* attr);
+    
+    /**
+     add a new Attribute to the synchronized pool
+     @param attr attribute
+     */
+    void add(ChaosDatasetAttribute& attr);
+    /**
+     remove a new Attribute to the synchronized pool
+     @param ChaosDatasetAttribute attribute
+     */
+    void remove(std::string path);
+
     /**
      read and wait until all the pool is synchronized on a given value
      @return the tune in microseconds to synchronize , 0 otherwise
@@ -79,10 +107,26 @@ public:
      */
     int64_t sync();
     
+    
     /**
-      fetch datesets to understand time diff
-     *      @return return m
+     * Return a list of attributes with the given name
+     * @param name name of the attribute
+     * @return a list of attributes with the corresponding name
      */
+    std::vector<ChaosDatasetAttribute*> getAttrsByName(std::string name);
+    
+    /**
+     * Return the attribute  with the given name
+     * @param path full path that identifies the attribute
+     * @return the attribute or null if not found
+     */
+    ChaosDatasetAttribute* getAttr(std::string path);
+    /**
+     * Return all the attributes
+     * @return a vector of attributes
+     */
+    std::vector<ChaosDatasetAttribute*> getAttributes();
+    
 private:
     uint64_t interval;
     uint32_t timeo;

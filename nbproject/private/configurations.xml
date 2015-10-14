@@ -48,6 +48,14 @@
         <in>ChaosDatasetAttribute.h</in>
         <in>ChaosDatasetAttributeSyncronizer.cpp</in>
         <in>ChaosDatasetAttributeSyncronizer.h</in>
+        <in>CmdSync.cpp</in>
+        <in>CmdSync.h</in>
+        <in>SCDataSync.cpp</in>
+        <in>SCDataSync.h</in>
+        <in>remoteGroupAccessDriver.cpp</in>
+        <in>remoteGroupAccessDriver.h</in>
+        <in>remoteGroupAccessInterface.cpp</in>
+        <in>remoteGroupAccessInterface.h</in>
       </df>
       <df name="test">
         <in>testSumOperatorUI.cpp</in>

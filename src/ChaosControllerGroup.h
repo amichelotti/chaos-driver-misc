@@ -27,13 +27,39 @@ class ChaosControllerGroup:public T{
 public:
 
     ChaosControllerGroup(){}
-    virtual ~ChaosControllerGroup(){}
+    virtual ~ChaosControllerGroup(){     CTRLDBGG_<<" Deleting ChaosControllerGroup and all the content";
+for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++) delete (*i);}
     /**
      * add an existing opject
      * 
      */
     void add(T& d){
-        group.push_back(&d);
+       add(&d);
+    }
+    void add(T* d){
+     
+        typename ccgrp_t::iterator i;
+        for(i=group.begin();i!=group.end();i++){
+            //already in
+            if((*i)->getPath() == d->getPath())
+                return;
+        }
+        group.push_back(d);
+        CTRLDBGG_<<"Adding controller:"<<d->getPath();
+    }
+    T* add(std::string path){
+        typename ccgrp_t::iterator i;
+        T*ret;
+        for(i=group.begin();i!=group.end();i++){
+            //already in
+            if((*i)->getPath() == path)
+                return NULL; 
+        }
+        ret= new T(path);
+        if(ret){
+           add(ret);
+        }
+        return ret;
     }
      int init(int force=0){
          error=0;

@@ -31,9 +31,9 @@ int main(int argc, char** argv) {
     ChaosDatasetAttributeSyncronizer s;
     uint32_t size;
     int32_t *dd=  (int32_t*)op3.get(&size);
-    s.add(op1);
-    s.add(op2);
-    s.add(op3);
+    s.add(&op1);
+    s.add(&op2);
+    s.add(&op3);
 
      std::cout<<"Get Time:"<<op1.getInfo().tget<<" TS:"<<op1.getInfo().tstamp<<" VA:"<<(int32_t)op1<<" VB:"<<(int32_t)op2<<" dd("<<size<<"):"<<dd[0]<<std::endl;
      

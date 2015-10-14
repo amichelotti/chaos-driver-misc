@@ -13,9 +13,9 @@
 #include <boost/shared_ptr.hpp>
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 
-#define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ] ["<<getPath()<<"] "
-#define CTRLDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
-#define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ] ["<<getPath()<<"] "
+#define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
+#define CTRLDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<"]"
+#define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 
 class ChaosController{

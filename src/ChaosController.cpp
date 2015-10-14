@@ -177,13 +177,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
     CTRLDBG_<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
     CTRLDBG_<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
     */
-    if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
-        CTRLDBG_ << "UI toolkit already initialized";
-    } else if((chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::StartableServiceType::SS_STARTED) || (chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED)){
-        CTRLDBG_ << "CU toolkit has started, initializing UI";
-        chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->setConfiguration(chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration());
-     //  chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);   
-    }
+   
     //chaos::common::utility::InizializableService::initImplementation(chaos::common::async_central::AsyncCentralManager::getInstance(), 0, "AsyncCentralManager", __PRETTY_FUNCTION__);
 
     //    chaos::ui::LLRpcApi::getInstance()->init();

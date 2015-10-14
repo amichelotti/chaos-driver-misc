@@ -21,6 +21,14 @@ ChaosDatasetAttributeSyncronizer::ChaosDatasetAttributeSyncronizer() {
 
 
 ChaosDatasetAttributeSyncronizer::~ChaosDatasetAttributeSyncronizer() {
+    ATTRDBG_<<" Deleting ChaosDatasetAttributeSyncronizer and all the content";
+    for(cuset_t::iterator i=set.begin();i!=set.end();i++){
+        delete (i->first);
+       
+    }
+    set.clear();
+    id2attr.clear();
+    name2attrs.clear();
 }
 
 ChaosDatasetAttributeSyncronizer::syncInfo::syncInfo(){
@@ -28,11 +36,79 @@ ChaosDatasetAttributeSyncronizer::syncInfo::syncInfo(){
     ChaosDatasetAttributeSyncronizer::syncInfo::tlastread=0;
     ChaosDatasetAttributeSyncronizer::syncInfo::changes=0;
 }
+
 void ChaosDatasetAttributeSyncronizer::add(ChaosDatasetAttribute& d){
-    d.setTimeout(2*timeo/1000);
-    
-    set.push_back(std::make_pair(&d,ChaosDatasetAttributeSyncronizer::syncInfo()));
+    add(&d);
 }
+void ChaosDatasetAttributeSyncronizer::add(ChaosDatasetAttribute* d){
+    if(id2attr.find(d->getPath())==id2attr.end()){
+        ATTRDBG_<<"adding new dataset attribute <<"<<d->getPath();
+
+        d->setTimeout(2*timeo/1000);
+        set.push_back(std::make_pair(d,ChaosDatasetAttributeSyncronizer::syncInfo()));
+        id2attr.insert(std::make_pair(d->getPath(),d));
+        name2attrs[d->getName()].push_back(d);
+    }
+}
+
+ChaosDatasetAttribute* ChaosDatasetAttributeSyncronizer::add(std::string path){
+    ChaosDatasetAttribute*ret=NULL;
+    boost::mutex::scoped_lock sl(lock_sync);
+        
+
+    if(id2attr.find(path)==id2attr.end()){
+        ChaosDatasetAttribute*d = new ChaosDatasetAttribute(path);
+        add(d);
+        ret = d;
+    } 
+    return ret;
+}
+
+std::vector<ChaosDatasetAttribute*> ChaosDatasetAttributeSyncronizer::getAttributes(){
+    std::vector<ChaosDatasetAttribute*> ret;
+    cuset_t::iterator i;
+    for(i=set.begin();i!=set.end();i++){
+        ret.push_back(i->first);
+    }
+    return ret;
+
+}
+void ChaosDatasetAttributeSyncronizer::remove(std::string path){
+    boost::mutex::scoped_lock sl(lock_sync);
+    std::map<std::string,ChaosDatasetAttribute* >::iterator i=id2attr.find(path);
+   
+    if(i!=id2attr.end()){
+        ATTRDBG_<<"removing dataset attribute path:<<"<<path;
+
+        std::map<std::string,std::vector<ChaosDatasetAttribute*> >::iterator j=name2attrs.find(i->second->getName());
+        if(j!=name2attrs.end()){
+            ATTRDBG_<<"removing dataset attribute name:<<"<<i->second->getName();
+
+            std::vector<ChaosDatasetAttribute*>::iterator k= std::find(j->second.begin(),j->second.end(),i->second);
+            if(k!=j->second.end()){
+                j->second.erase(k);
+            }
+        }
+        delete i->second;
+        
+        id2attr.erase(i);
+        
+    }
+}
+
+
+ std::vector<ChaosDatasetAttribute*> ChaosDatasetAttributeSyncronizer::getAttrsByName(std::string name){
+     return name2attrs[name];
+ }
+    
+    
+ChaosDatasetAttribute* ChaosDatasetAttributeSyncronizer::getAttr(std::string path){
+        if(id2attr.find(path)==id2attr.end())
+            return NULL;
+        return id2attr[path];
+}
+
+
 
 int ChaosDatasetAttributeSyncronizer::sortedFetch(uint64_t&max_age){
     int changed=0;
@@ -69,7 +145,7 @@ int ChaosDatasetAttributeSyncronizer::sortedFetch(uint64_t&max_age){
 int64_t ChaosDatasetAttributeSyncronizer::sync(){
     int ret;
     uint64_t max_age=0;
-     uint64_t micro_spent=0;
+    uint64_t micro_spent=0;
 
     boost::posix_time::ptime start=boost::posix_time::microsec_clock::local_time();
 

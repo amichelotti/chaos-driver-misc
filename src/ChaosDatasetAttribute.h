@@ -65,7 +65,10 @@ private:
     chaos::ui::DeviceController* controller;
     std::string attr_path;
     std::string attr_name;
-
+    std::string attr_desc;
+    chaos::DataType::DataType attr_type;
+    chaos::DataType::DataSetAttributeIOAttribute attr_dir;
+    uint32_t attr_size;
     UpdateMode upd_mode;
     
     static std::map< std::string,datinfo* > paramToDataset;
@@ -74,7 +77,10 @@ public:
     void* get(uint32_t* size);
     std::string getPath(){return attr_path;}
     std::string getName(){return attr_name;}
-    
+    std::string getDesc(){return attr_desc;}
+    chaos::DataType::DataType getType(){return attr_type;}
+    chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_dir;}
+    uint32_t getSize(){return attr_size;}
     template<typename T>
     operator T(){
         return *reinterpret_cast<T*>(get(NULL));
