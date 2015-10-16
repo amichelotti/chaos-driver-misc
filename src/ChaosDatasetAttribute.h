@@ -17,7 +17,9 @@
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
 
-
+namespace driver{
+    
+    namespace misc{
 class ChaosDatasetAttribute{
     
   public:  
@@ -58,11 +60,12 @@ class ChaosDatasetAttribute{
     void setUpdateMode(UpdateMode mode,uint64_t ustime);
     
     datinfo& getInfo();
+    typedef boost::shared_ptr<chaos::ui::DeviceController> ctrl_t;
 private:
     datinfo info;
     uint64_t update_time;
     uint32_t timeo;
-    chaos::ui::DeviceController* controller;
+    std::string attr_parent;
     std::string attr_path;
     std::string attr_name;
     std::string attr_desc;
@@ -72,9 +75,14 @@ private:
     UpdateMode upd_mode;
     
     static std::map< std::string,datinfo* > paramToDataset;
+    static std::map<std::string,ctrl_t> controllers;
+    ctrl_t controller;
+
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);
+     std::string getParent(){return attr_parent;}
+
     std::string getPath(){return attr_path;}
     std::string getName(){return attr_name;}
     std::string getDesc(){return attr_desc;}
@@ -94,6 +102,7 @@ public:
     }
     
 };
+    }}
 /*
 template <typename T>
 class ChaosDatasetAttribute:public ChaosDatasetAttributeBase{

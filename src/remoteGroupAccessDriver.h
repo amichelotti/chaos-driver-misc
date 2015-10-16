@@ -10,10 +10,12 @@
 #include <chaos/cu_toolkit/driver_manager/driver/BasicIODriver.h>
 
 #include "ChaosControllerGroup.h"
-#include "ChaosDatasetAttributeSyncronizer.h"
+#include "ChaosDatasetAttributeGroup.h"
 
 DEFINE_CU_DRIVER_DEFINITION_PROTOTYPE(remoteGroupAccessDriver);
-
+namespace driver{
+    
+    namespace misc{
 class remoteGroupAccessDriver: public chaos::cu::driver_manager::driver::BasicIODriver {
 public:
     remoteGroupAccessDriver();
@@ -29,8 +31,8 @@ public:
 
 private:
     ChaosControllerGroup<ChaosController>* group;
-    ChaosDatasetAttributeSyncronizer* data_group;
+    ChaosDatasetAttributeGroup* data_group;
 };
-
+    }}
 #endif	/* REMOTEGROUPACCESSDRIVER_H */
 

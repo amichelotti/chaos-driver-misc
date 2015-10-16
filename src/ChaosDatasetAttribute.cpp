@@ -9,9 +9,10 @@
 #include <chaos/common/exception/CException.h>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
+using namespace driver::misc;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
-
+std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
 ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     std::string cu =path;
     timeo=timeo_;
@@ -20,21 +21,22 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     }
     cu.erase(cu.find_last_of(chaos::PATH_SEPARATOR),cu.size());
      ATTRDBG_ << "CU NAME:\""<<cu<<"\"";
-    if(chaos::ui::ChaosUIToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::InizializableServiceType::IS_INITIATED){
-        ATTRDBG_ << "UI toolkit already initialized";
-    } else if(chaos::cu::ChaosCUToolkit::getInstance()->getServiceState()==chaos::common::utility::service_state_machine::StartableServiceType::SS_STARTED){
-        ATTRDBG_ << "CU toolkit has started, initializing UI";
-        chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->setConfiguration(chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration());
-     //  chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
-       
-    }
     
     attr_path=path;
     attr_name=path;
     attr_name.erase(0,attr_path.find_last_of(chaos::PATH_SEPARATOR)+1);
     ATTRDBG_ << "ATTR NAME:\""<<attr_name<<"\"";
+    attr_parent=cu;
+    if(controllers.find(cu)==controllers.end()){
+        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
+        controllers[cu]=controller;
+        controller->setupTracking();
+        ATTRDBG_ << " Allocating New controller:"<<controller.get();
 
-    controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo);
+    } else {
+        controller = controllers[cu];
+        ATTRDBG_ << " REUsing controller:"<<controller;
+    }
     upd_mode=EVERYTIME;
     update_time=0;
     if(controller==NULL){
@@ -42,19 +44,36 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     }
     attr_size =0;
+    attr_type=(chaos::DataType::DataType)0;
     controller->setRequestTimeWaith(timeo);
+    
     controller->getAttributeDescription(attr_name,attr_desc);
-    controller->getDeviceAttributeType(attr_name,attr_type);
-    controller->getDeviceAttributeDirection(attr_name,attr_dir);
+                
+    if(controller->getDeviceAttributeType(attr_name,attr_type)!=0){
+               throw chaos::CException(-1, "cannot retrieve type of:"+ attr_name,__FUNCTION__);
+
+    }
+    if(controller->getDeviceAttributeDirection(attr_name,attr_dir)!=0){
+                        throw chaos::CException(-1, "cannot retrieve direction of:"+ attr_name,__FUNCTION__);
+
+    }
     paramToDataset.insert(std::make_pair(attr_path,&info));
     if(get(&attr_size)==NULL){
         throw chaos::CException(-1, "cannot fetch variable:"+ path+ " var name:"+attr_name,__FUNCTION__);
     }
+    
+    ATTRDBG_<<"Retrived "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type<<" size:"<<attr_size;
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
 
 ChaosDatasetAttribute::~ChaosDatasetAttribute() {
+     ATTRDBG_<<" delete attribute:"<<attr_path;
+    if(controllers.find(attr_parent)!=controllers.end()){
+        ATTRDBG_<<" remove controller:"<<attr_parent;
+
+        controllers.erase(controllers.find(attr_parent));
+    }
 }
 
 int ChaosDatasetAttribute::set(void* buf, int size){
@@ -70,7 +89,8 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_path]->tget)> update_time)) ){
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
             if(tmpw==NULL){
-                 throw chaos::CException(-101, "cannot retrive data for:"+ attr_path,__FUNCTION__);
+                ATTRERR_<<"cannot retrieve data for:"+attr_path+ " controller:"<<controller; 
+                return NULL;
             }
             paramToDataset[attr_path]->tget = tget;
             paramToDataset[attr_path]->data = tmpw;

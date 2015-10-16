@@ -3,7 +3,7 @@ project(misc)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 set(LIB chaos_driver_misc)
 
-SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeSyncronizer.cpp src/ChaosController.cpp src/CmdSync.cpp src/SCDataSync.cpp src/remoteGroupAccessDriver.cpp src/remoteGroupAccessInterface.cpp)
+SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeGroup.cpp src/ChaosDatasetAttributeSinchronizer.cpp src/ChaosController.cpp src/CmdSync.cpp src/SCDataSync.cpp src/remoteGroupAccessDriver.cpp src/remoteGroupAccessInterface.cpp)
 
 
 IF(BUILD_FORCE_STATIC)

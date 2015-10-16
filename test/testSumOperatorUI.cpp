@@ -9,14 +9,16 @@
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 
 #include "ChaosDatasetAttribute.h"
-#include "ChaosDatasetAttributeSyncronizer.h"
+#include "ChaosDatasetAttributeGroup.h"
 #include "ChaosController.h"
 #include "ChaosControllerGroup.h"
+#include "ChaosDatasetAttributeSinchronizer.h"
 using namespace std;
 
 /*
  * 
  */
+using namespace driver::misc;
 int main(int argc, char** argv) {
     chaos::ui::ChaosUIToolkit::getInstance()->init(argc, argv);
     ChaosDatasetAttribute op1("LIBERA01/LIBERA_ACQUIRE0/VA");
@@ -28,7 +30,7 @@ int main(int argc, char** argv) {
     ChaosControllerGroup<ChaosController> group;
     group.add(libera1);
     
-    ChaosDatasetAttributeSyncronizer s;
+    ChaosDatasetAttributeSinchronizer s;
     uint32_t size;
     int32_t *dd=  (int32_t*)op3.get(&size);
     s.add(&op1);

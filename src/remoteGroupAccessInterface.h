@@ -8,13 +8,15 @@
 #ifndef REMOTEGROUPACCESS_H
 #define	REMOTEGROUPACCESS_H
 #include "ChaosControllerGroup.h"
-#include "ChaosDatasetAttributeSyncronizer.h"
+#include "ChaosDatasetAttributeGroup.h"
 #include <chaos/cu_toolkit/driver_manager/driver/BasicIODriverInterface.h>
+namespace driver{
+    namespace misc{
 
 class remoteGroupAccessInterface : public chaos::cu::driver_manager::driver::BasicIODriverInterface {
 
     ChaosControllerGroup<ChaosController>* ctrl_group;
-    ChaosDatasetAttributeSyncronizer* data_group;
+    ChaosDatasetAttributeGroup* data_group;
     
     public:
     remoteGroupAccessInterface(chaos::cu::driver_manager::driver::DriverAccessor*);
@@ -66,11 +68,7 @@ class remoteGroupAccessInterface : public chaos::cu::driver_manager::driver::Bas
      * @return 0 on succes
      */
     int broadcastCmd(std::string alias,chaos::common::data::CDataWrapper*params);
-    /**
-     * keep synchronized the remote variables under 
-     * @return return the max age (max refresh time)
-     */
-    int64_t sync();
+   
     
     std::vector<ChaosDatasetAttribute*> getRemoteVariables();
       /**
@@ -89,6 +87,6 @@ class remoteGroupAccessInterface : public chaos::cu::driver_manager::driver::Bas
 private:
 
 };
-
+    }}
 #endif	/* REMOTEGROUPACCESS_H */
 

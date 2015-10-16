@@ -46,8 +46,10 @@
         <in>ChaosControllerGroup.h</in>
         <in>ChaosDatasetAttribute.cpp</in>
         <in>ChaosDatasetAttribute.h</in>
-        <in>ChaosDatasetAttributeSyncronizer.cpp</in>
-        <in>ChaosDatasetAttributeSyncronizer.h</in>
+        <in>ChaosDatasetAttributeGroup.cpp</in>
+        <in>ChaosDatasetAttributeGroup.h</in>
+        <in>ChaosDatasetAttributeSinchronizer.cpp</in>
+        <in>ChaosDatasetAttributeSinchronizer.h</in>
         <in>CmdSync.cpp</in>
         <in>CmdSync.h</in>
         <in>SCDataSync.cpp</in>

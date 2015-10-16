@@ -6,7 +6,7 @@
  */
 
 #include "remoteGroupAccessInterface.h"
-
+using namespace driver::misc;
 remoteGroupAccessInterface::remoteGroupAccessInterface(chaos::cu::driver_manager::driver::DriverAccessor*da):BasicIODriverInterface(da) {
     ctrl_group=0;
     data_group=0;
@@ -21,14 +21,14 @@ remoteGroupAccessInterface::~remoteGroupAccessInterface() {
 
 int remoteGroupAccessInterface::connect(){
     ChaosControllerGroup<ChaosController>* ctrl=NULL;
-    ChaosDatasetAttributeSyncronizer*data=NULL;
+    ChaosDatasetAttributeGroup*data=NULL;
     if(read((void*)&ctrl,0,sizeof(ChaosControllerGroup<ChaosController>*))>0){
         ctrl_group = ctrl;
         
     } else {
         return -1;
     }
-    if(read((void*)&data,1,sizeof(sizeof(ChaosDatasetAttributeSyncronizer*))>0)){
+    if(read((void*)&data,1,sizeof(ChaosDatasetAttributeGroup*))>0){
         data_group = data;
     } else {
         return -2;
@@ -97,9 +97,6 @@ int remoteGroupAccessInterface::connect(){
     }
     
    
-    int64_t remoteGroupAccessInterface::sync(){
-        return data_group->sync();
-    }
     
     std::vector<ChaosDatasetAttribute*> remoteGroupAccessInterface::getRemoteVariables(){
         return data_group->getAttributes();

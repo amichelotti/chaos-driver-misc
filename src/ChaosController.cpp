@@ -11,6 +11,7 @@
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 
+using namespace driver::misc;
  void ChaosController::setTimeout(uint64_t timeo_us){
          controller->setRequestTimeWaith(timeo_us/1000);
          timeo=timeo_us;
@@ -24,7 +25,7 @@ int ChaosController::forceState(int dstState){
     do{
         oldstate=currState;
         currState=getState();
-        CTRLDBG_ << "Current state:"<<currState<<" destination state:"<<dstState;
+        CTRLDBG_ << "Current state ["<<getPath()<<"]:"<<currState<<" destination state:"<<dstState;
         if(currState!=oldstate){
             start=boost::posix_time::microsec_clock::local_time();
         }
@@ -100,7 +101,7 @@ int ChaosController::forceState(int dstState){
         }
           if((boost::posix_time::microsec_clock::local_time() - start).total_microseconds()> timeo){
               retry --;
-            CTRLERR_ << "Timeout of "<<timeo <<" us elapsed:"<<(boost::posix_time::microsec_clock::local_time() - start).total_microseconds()<< "  Retry:"<<retry;
+            CTRLERR_ <<"["<< getPath()<<"] Timeout of "<<timeo <<" us elapsed:"<<(boost::posix_time::microsec_clock::local_time() - start).total_microseconds()<< "  Retry:"<<retry;
              start=boost::posix_time::microsec_clock::local_time();
             
         }
@@ -108,7 +109,7 @@ int ChaosController::forceState(int dstState){
         
      
     if(retry==0){
-        CTRLERR_ << "Not Responding";
+        CTRLERR_ <<"["<< getPath()<<"]"<< " Not Responding";
         return -100;
         
     }
@@ -283,6 +284,7 @@ ChaosController::ChaosController() {
 
 }
 ChaosController::~ChaosController() {
+    delete controller;
     
 }
 

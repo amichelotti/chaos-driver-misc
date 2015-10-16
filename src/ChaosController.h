@@ -18,6 +18,9 @@
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 
+namespace driver{
+    
+    namespace misc{
 class ChaosController{
     
     
@@ -111,6 +114,6 @@ protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       
 };
-
+    }}
 #endif	/* ChaosController_H */
 

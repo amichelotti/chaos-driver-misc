@@ -15,6 +15,9 @@
 #define CTRLDBGG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define CTRLERRG_ LERR_ << "## [ "<<__PRETTY_FUNCTION__<<" ]"
 
+namespace driver{
+    
+    namespace misc{
 template <class T>
 class ChaosControllerGroup:public T{
     
@@ -187,6 +190,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
 
 T* getErrorCU(){return error;}
 };
+    }}
 
 #endif	/* ChaosControllerGroupSyncronizer_H */
 

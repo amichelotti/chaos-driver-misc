@@ -7,7 +7,7 @@
 
 #include "remoteGroupAccessDriver.h"
 #include <boost/algorithm/string.hpp>
-
+using namespace driver::misc;
 OPEN_CU_DRIVER_PLUGIN_CLASS_DEFINITION(remoteGroupAccessDriver, 1.0.0, remoteGroupAccessDriver)
 REGISTER_CU_DRIVER_PLUGIN_CLASS_INIT_ATTRIBUTE(remoteGroupAccessDriver, http_address / dnsname : port)
 CLOSE_CU_DRIVER_PLUGIN_CLASS_DEFINITION
@@ -27,11 +27,11 @@ int remoteGroupAccessDriver::read(void *buffer, int addr, int bcount){
         return -1;
     
     if((addr==0) && group){
-        memcpy(buffer,(void*)group,sizeof(ChaosControllerGroup<ChaosController>*));
+        memcpy(buffer,(void*)&group,sizeof(ChaosControllerGroup<ChaosController>*));
         return 1;
     }
     if((addr==1) && data_group){
-        memcpy(buffer,(void*)data_group,sizeof(ChaosDatasetAttributeSyncronizer*));
+        memcpy(buffer,(void*)&data_group,sizeof(ChaosDatasetAttributeGroup*));
         return 1;
     }
     return 0;
@@ -56,7 +56,7 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
    
    CTRLDBG_<<" "<<vars.size()<<" Synchronizing:"<<ctrl_vars;
    group=new ChaosControllerGroup<ChaosController>();
-   data_group=new ChaosDatasetAttributeSyncronizer();
+   data_group=new ChaosDatasetAttributeGroup();
    if(group==NULL || data_group==NULL){
        CTRLERR_ <<" cannot create resources";
    }
@@ -64,10 +64,12 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
         CTRLDBG_<<" Adding "<<*i<<" to the set";
         ChaosDatasetAttribute *ret=data_group->add(*i);
         if(ret){
-            group->add(*i);
+            group->add(ret->getParent());
         }
       
     }
+   group->setTimeout(10000000);
+   data_group->setTimeout(10000000);
 }
 int remoteGroupAccessDriver::deinitIO(){
     if(group)

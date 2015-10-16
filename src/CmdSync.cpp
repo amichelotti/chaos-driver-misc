@@ -29,10 +29,8 @@ using namespace chaos::common::batch_command;
 using namespace chaos::cu::control_manager::slow_command;
 using namespace driver::misc;
 CmdSync::CmdSync() {
-     driver=new remoteGroupAccessInterface(driverAccessorsErogator->getAccessoInstanceByIndex(0));
-     if((driver == NULL) || (driver->connect()!=0)){
-         throw chaos::CException(-1,"cannot connect remote resources",__PRETTY_FUNCTION__);
-     }
+     
+    driver=0;
    
 }
 
@@ -43,5 +41,21 @@ CmdSync::~CmdSync() {
 }
  
 void  CmdSync::setHandler(c_data::CDataWrapper *data){
+    chaos::cu::driver_manager::driver::DriverAccessor * accessor=driverAccessorsErogator->getAccessoInstanceByIndex(0);
+    if(accessor==NULL){
+          throw chaos::CException(-1,"no driver available",__PRETTY_FUNCTION__);
+
+    }
+     driver=new remoteGroupAccessInterface(accessor);
+     if((driver == NULL) || (driver->connect()!=0)){
+         throw chaos::CException(-1,"cannot connect remote resources",__PRETTY_FUNCTION__);
+     }
+     if(data){
+     CTRLDBG_<<" ["<<getAlias()<<"]" <<"CMD:"<<data->getJSONString();
      driver->broadcastCmd(getAlias(),data);
+     }
+}
+
+uint8_t CmdSync::implementedHandler(){
+       return chaos_batch::HandlerType::HT_Set  ;
 }

@@ -32,17 +32,20 @@ namespace driver {
 	namespace misc {
 		class CmdSync : public ccc_slow_command::SlowCommand {
                 
-                   remoteGroupAccessInterface *driver;
 
+                   
                 protected:
-                     
+                    remoteGroupAccessInterface *driver;
+
                 
 			
 		public:
 			CmdSync();
 			~CmdSync();
 		
-                
+                	// return the implemented handler
+                uint8_t implementedHandler();
+			
 
 			// Start the command execution
                 void setHandler(c_data::CDataWrapper *data);
