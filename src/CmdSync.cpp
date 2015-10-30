@@ -42,6 +42,7 @@ CmdSync::~CmdSync() {
  
 void  CmdSync::setHandler(c_data::CDataWrapper *data){
     chaos::cu::driver_manager::driver::DriverAccessor * accessor=driverAccessorsErogator->getAccessoInstanceByIndex(0);
+    CTRLDBG_<<" ["<<getAlias()<<"]";
     if(accessor==NULL){
           throw chaos::CException(-1,"no driver available",__PRETTY_FUNCTION__);
 

@@ -58,9 +58,12 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     }
     paramToDataset.insert(std::make_pair(attr_path,&info));
-    if(get(&attr_size)==NULL){
-        throw chaos::CException(-1, "cannot fetch variable:"+ path+ " var name:"+attr_name,__FUNCTION__);
+    try{
+        get(&attr_size);
+    } catch(chaos::CException e){
+        ATTRDBG_<<"%% WARNING  no data present in live for:"<<attr_path;
     }
+ 
     
     ATTRDBG_<<"Retrived "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type<<" size:"<<attr_size;
  }
@@ -89,8 +92,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_path]->tget)> update_time)) ){
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
             if(tmpw==NULL){
-                ATTRERR_<<"cannot retrieve data for:"+attr_path+ " controller:"<<controller; 
-                return NULL;
+                throw chaos::CException(-1000,"cannot retrieve data for:"+attr_path,__PRETTY_FUNCTION__);
             }
             paramToDataset[attr_path]->tget = tget;
             paramToDataset[attr_path]->data = tmpw;
@@ -106,8 +108,9 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 
         return tmp;
     }
-    ATTRERR_<<attr_path<<"  NOT FOUND";
-    return NULL;
+    throw chaos::CException(-1000,"Attribute "+attr_path+" not found",__PRETTY_FUNCTION__);
+    
+    
 }
 
 

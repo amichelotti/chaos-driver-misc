@@ -10,7 +10,21 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group name="CHAOS_BUNDLE_DEVELOPMENT">
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/CMakeLists.txt</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosController.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/remoteGroupAccessDriver.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttributeSinchronizer.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/remoteGroupAccessInterface.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/test/testSumOperatorUI.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosController.h</file>
             <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttributeGroup.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/remoteGroupAccessDriver.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttribute.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttribute.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttributeGroup.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosControllerGroup.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/CmdSync.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/driver/misc/src/ChaosDatasetAttributeSinchronizer.cpp</file>
         </group>
     </open-files>
 </project-private>
