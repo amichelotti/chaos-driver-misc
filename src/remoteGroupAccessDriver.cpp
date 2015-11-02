@@ -8,9 +8,11 @@
 #include "remoteGroupAccessDriver.h"
 #include <boost/algorithm/string.hpp>
 using namespace ::driver::misc;
-OPEN_CU_DRIVER_PLUGIN_CLASS_DEFINITION(remoteGroupAccessDriver, 1.0.0, remoteGroupAccessDriver)
-REGISTER_CU_DRIVER_PLUGIN_CLASS_INIT_ATTRIBUTE(remoteGroupAccessDriver, http_address / dnsname : port)
+OPEN_CU_DRIVER_PLUGIN_CLASS_DEFINITION(remoteGroupAccessDriver, 1.0.0, ::driver::misc::remoteGroupAccessDriver)
+
+REGISTER_CU_DRIVER_PLUGIN_CLASS_INIT_ATTRIBUTE(::driver::misc::remoteGroupAccessDriver, http_address / dnsname : port)
 CLOSE_CU_DRIVER_PLUGIN_CLASS_DEFINITION
+
 
 remoteGroupAccessDriver::remoteGroupAccessDriver() {
     group = NULL;
