@@ -96,6 +96,6 @@ private:
 
 
     }}
-bool compareSet(driver::misc::ChaosDatasetAttributeSinchronizer::attr_t const &i,driver::misc::ChaosDatasetAttributeSinchronizer::attr_t const&j);
+bool compareSet(::driver::misc::ChaosDatasetAttributeSinchronizer::attr_t const &i,::driver::misc::ChaosDatasetAttributeSinchronizer::attr_t const&j);
 #endif	/* ChaosDatasetAttributeSinchronizerSyncronizer_H */
 

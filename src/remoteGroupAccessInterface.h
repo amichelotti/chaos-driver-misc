@@ -5,8 +5,8 @@
  * Created on October 14, 2015, 9:40 AM
  */
 
-#ifndef REMOTEGROUPACCESS_H
-#define	REMOTEGROUPACCESS_H
+#ifndef REMOTEGROUPACCESSINTERFACE_H
+#define	REMOTEGROUPACCESSINTERFACE_H
 #include "ChaosControllerGroup.h"
 #include "ChaosDatasetAttributeGroup.h"
 #include <chaos/cu_toolkit/driver_manager/driver/BasicIODriverInterface.h>

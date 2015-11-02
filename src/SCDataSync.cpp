@@ -38,7 +38,7 @@ using namespace chaos::cu::driver_manager::driver;
 
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(driver::misc::SCDataSync)
 
-using namespace driver::misc;
+using namespace ::driver::misc;
 /*
  Construct a new CU with an identifier
  */

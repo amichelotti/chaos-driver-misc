@@ -6,7 +6,7 @@
  */
 
 #include "remoteGroupAccessInterface.h"
-using namespace driver::misc;
+using namespace ::driver::misc;
 remoteGroupAccessInterface::remoteGroupAccessInterface(chaos::cu::driver_manager::driver::DriverAccessor*da):BasicIODriverInterface(da) {
     ctrl_group=0;
     data_group=0;

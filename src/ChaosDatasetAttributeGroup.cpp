@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "ChaosDatasetAttributeGroup.h"
-using namespace driver::misc;
+using namespace ::driver::misc;
 ChaosDatasetAttributeGroup::ChaosDatasetAttributeGroup() {
     interval=20000;
     timeo = 2*interval;

@@ -11,7 +11,7 @@
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 
-using namespace driver::misc;
+using namespace ::driver::misc;
  void ChaosController::setTimeout(uint64_t timeo_us){
          controller->setRequestTimeWaith(timeo_us/1000);
          timeo=timeo_us;
