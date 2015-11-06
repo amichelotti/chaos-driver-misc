@@ -65,6 +65,7 @@ public:
             if((T)*i->first == value){
                 ChaosDatasetAttribute::datinfo& info=i->first->getInfo();
                 ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"reached value:"<<(T)value;
+                ok++;
             }
                  
         }
