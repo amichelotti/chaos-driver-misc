@@ -48,8 +48,10 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-O3 -fPIC -O2"/>
-        <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -O3 -O2"/>
-        <element flagsID="2" commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+        <element flagsID="1"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -O2"/>
+        <element flagsID="2"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -113,45 +115,30 @@
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeGroup.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeSinchronizer.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/CmdSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/SCDataSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessDriver.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessInterface.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="test/testSumOperatorUI.cpp" ex="false" tool="1" flavor2="4">

@@ -17,11 +17,13 @@ ChaosDatasetAttributeGroup::ChaosDatasetAttributeGroup() {
 
 ChaosDatasetAttributeGroup::~ChaosDatasetAttributeGroup() {
     ATTRDBG_<<" Deleting ChaosDatasetAttributeGroup and all the content";
-    for(std::map<std::string,ChaosDatasetAttribute* >::iterator i=id2attr.begin();i!=id2attr.end();i++){
-        delete i->second;
+    for(std::vector<ChaosDatasetAttribute* >::iterator i=allocated_here.begin();i!=allocated_here.end();i++){
+        delete *i;
+        allocated_here.erase(i);
     }
     id2attr.clear();
     name2attrs.clear();
+    
 }
 
 
@@ -56,6 +58,7 @@ ChaosDatasetAttribute* ChaosDatasetAttributeGroup::add(std::string path){
     if(id2attr.find(path)==id2attr.end()){
         ChaosDatasetAttribute*d = new ChaosDatasetAttribute(path);
         add(d);
+        allocated_here.push_back(d);
         ret = d;
     } 
     return ret;

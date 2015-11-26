@@ -62,14 +62,18 @@ public:
         for(cuset_t::iterator i=set.begin();i!=set.end();i++){
             i->first->setUpdateMode(ChaosDatasetAttribute::EVERYTIME,interval/2);
             i->first->get(NULL);
+            ChaosDatasetAttribute::datinfo& info=i->first->getInfo();
+
             if((T)*i->first == value){
-                ChaosDatasetAttribute::datinfo& info=i->first->getInfo();
-                ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"reached value:"<<(T)value;
+                ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"reached value:"<<(T)value <<" "<<ok<<"/"<<set.size();
                 ok++;
+            } else {
+                ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"NOT in sync value:"<<(T)*i->first <<" "<<ok<<"/"<<set.size();
             }
                  
         }
       }
+     ATTRDBG_<<"micro spent waiting: "<<micro_spent<<" timeo:"<<timeo;
      if(ok==set.size()){
          return micro_spent;
      }

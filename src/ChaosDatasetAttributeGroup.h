@@ -26,7 +26,7 @@ class ChaosDatasetAttributeGroup{
      * map a name of an attribute to a vector of attributes
      */
     std::map<std::string,std::vector<ChaosDatasetAttribute*> > name2attrs;
-    
+    std::vector<ChaosDatasetAttribute*> allocated_here;
 public:
 
     ChaosDatasetAttributeGroup();
