@@ -21,7 +21,7 @@
 #ifndef __CmdSync__
 #define __CmdSync__
 
-#include <chaos/cu_toolkit/ControlManager/slow_command/SlowCommand.h>
+#include <chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h>
 #include "remoteGroupAccessInterface.h"
 
 namespace c_data = chaos::common::data;

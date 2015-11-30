@@ -21,7 +21,7 @@
 #ifndef __SCDataSYNCCU__
 #define __SCDataSYNCCU__
 
-#include <chaos/cu_toolkit/ControlManager/SCAbstractControlUnit.h>
+#include <chaos/cu_toolkit/control_manager/SCAbstractControlUnit.h>
 #include <chaos/cu_toolkit/driver_manager/driver/BasicIODriverInterface.h>
 #include "remoteGroupAccessInterface.h"
 namespace driver {
