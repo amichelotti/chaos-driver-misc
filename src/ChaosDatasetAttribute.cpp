@@ -13,6 +13,13 @@ using namespace ::driver::misc;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
+
+std::string ChaosDatasetAttribute::getGroup(){
+    std::string res=attr_parent;
+    res.erase(0,attr_parent.find_last_of(chaos::PATH_SEPARATOR)+1);
+    return res;
+}
+
 ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     std::string cu =path;
     timeo=timeo_;
@@ -44,19 +51,11 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     }
     attr_size =0;
-    attr_type=(chaos::DataType::DataType)0;
     controller->setRequestTimeWaith(timeo);
     
     controller->getAttributeDescription(attr_name,attr_desc);
-                
-    if(controller->getDeviceAttributeType(attr_name,attr_type)!=0){
-               throw chaos::CException(-1, "cannot retrieve type of:"+ attr_name,__FUNCTION__);
-
-    }
-    if(controller->getDeviceAttributeDirection(attr_name,attr_dir)!=0){
-                        throw chaos::CException(-1, "cannot retrieve direction of:"+ attr_name,__FUNCTION__);
-
-    }
+    controller->getDeviceAttributeRangeValueInfo(attr_name,attr_type);
+    
     paramToDataset.insert(std::make_pair(attr_path,&info));
     try{
         get(&attr_size);
@@ -65,7 +64,7 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     }
  
     
-    ATTRDBG_<<"Retrived "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type<<" size:"<<attr_size;
+    ATTRDBG_<<"Retrived "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" size:"<<attr_size;
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }

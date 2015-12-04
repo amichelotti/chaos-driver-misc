@@ -52,6 +52,8 @@
                  commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -O2"/>
         <element flagsID="2"
                  commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+        <element flagsID="3"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -108,10 +110,7 @@
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttribute.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-          <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-          </preprocessorList>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeGroup.cpp" ex="false" tool="1" flavor2="4">

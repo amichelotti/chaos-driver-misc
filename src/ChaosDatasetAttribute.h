@@ -69,8 +69,9 @@ private:
     std::string attr_path;
     std::string attr_name;
     std::string attr_desc;
-    chaos::DataType::DataType attr_type;
-    chaos::DataType::DataSetAttributeIOAttribute attr_dir;
+    chaos::common::data::RangeValueInfo attr_type;
+    
+    //chaos::DataType::DataSetAttributeIOAttribute attr_dir;
     uint32_t attr_size;
     UpdateMode upd_mode;
     
@@ -81,13 +82,16 @@ private:
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);
-     std::string getParent(){return attr_parent;}
-
+    std::string getParent(){return attr_parent;}
+    std::string getGroup();
     std::string getPath(){return attr_path;}
     std::string getName(){return attr_name;}
     std::string getDesc(){return attr_desc;}
-    chaos::DataType::DataType getType(){return attr_type;}
-    chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_dir;}
+    chaos::common::data::RangeValueInfo& getValueInfo(){return attr_type;}
+    chaos::DataType::DataType getType(){return attr_type.valueType;}
+    chaos::DataType::BinarySubtype getBinaryType(){return attr_type.binType;}
+
+    chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
     template<typename T>
     operator T(){
