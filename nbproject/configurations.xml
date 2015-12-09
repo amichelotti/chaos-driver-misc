@@ -48,11 +48,11 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-O3 -fPIC -O2"/>
-        <element flagsID="1"
-                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -O2"/>
-        <element flagsID="2"
-                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+        <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -O3 -O2"/>
+        <element flagsID="2" commonFlags="-fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
         <element flagsID="3"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+        <element flagsID="4"
                  commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
       </flagsDictionary>
       <codeAssistance>
@@ -67,8 +67,6 @@
             <incDir>
               <pElem>.</pElem>
               <pElem>../..</pElem>
-              <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
-              <pElem>src</pElem>
             </incDir>
             <preprocessorList>
               <Elem>CHAOS</Elem>
@@ -89,6 +87,10 @@
       </item>
       <folder path="0/CMakeFiles">
         <ccTool>
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
           <preprocessorList>
             <Elem>BOOST_ALL_DYN_LINK</Elem>
             <Elem>chaos_driver_misc_EXPORTS</Elem>
@@ -102,19 +104,40 @@
           </preprocessorList>
         </ccTool>
       </folder>
+      <folder path="0/test">
+        <ccTool>
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
           <preprocessorList>
             <Elem>BOOST_ALL_DYN_LINK</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttribute.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="4">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeGroup.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="2">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeSinchronizer.cpp"
@@ -122,22 +145,43 @@
             tool="1"
             flavor2="4">
         <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/CmdSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="2">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/SCDataSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="2">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessDriver.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="2">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessInterface.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="2">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="test/testSumOperatorUI.cpp" ex="false" tool="1" flavor2="4">

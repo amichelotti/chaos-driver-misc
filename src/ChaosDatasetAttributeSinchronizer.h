@@ -68,7 +68,7 @@ public:
                 ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"reached value:"<<(T)value <<" "<<ok<<"/"<<set.size();
                 ok++;
             } else {
-                ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<"NOT in sync value:"<<(T)*i->first <<" "<<ok<<"/"<<set.size();
+                ATTRDBG_<<"attribute \""<<i->first->getPath()<<"\" time :"<<info.tstamp<<" NOT in sync value:"<<(T)*i->first <<" "<<ok<<"/"<<set.size();
             }
                  
         }

@@ -89,7 +89,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         uint64_t tget=pt.time_of_day().total_microseconds();
         pt= boost::posix_time::microsec_clock::local_time();
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_path]->tget)> update_time)) ){
-            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
             if(tmpw==NULL){
                 throw chaos::CException(-1000,"cannot retrieve data for:"+attr_path,__PRETTY_FUNCTION__);
             }
