@@ -94,10 +94,14 @@ public:
     chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
     template<typename T>
-    operator T(){
+    operator T()  throw (chaos::CException){
+            
         return *reinterpret_cast<T*>(get(NULL));
     }
-    
+    template <typename T> operator T*()  throw (chaos::CException){
+            
+        return reinterpret_cast<T*>(get(NULL));
+    }
     template<typename T>
     T operator=(T& d) throw (chaos::CException) {
         if(set(&d,sizeof(T))==0)

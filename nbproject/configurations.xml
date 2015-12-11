@@ -50,10 +50,6 @@
         <element flagsID="0" commonFlags="-O3 -fPIC -O2"/>
         <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -O3 -O2"/>
         <element flagsID="2" commonFlags="-fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
-        <element flagsID="3"
-                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
-        <element flagsID="4"
-                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -125,16 +121,18 @@
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttribute.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="4">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="src/ChaosDatasetAttributeGroup.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>
@@ -153,32 +151,36 @@
         </ccTool>
       </item>
       <item path="src/CmdSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="src/SCDataSync.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessDriver.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="src/remoteGroupAccessInterface.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="3">
+        <ccTool flags="2">
           <incDir>
+            <pElem>..</pElem>
             <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
             <pElem>src</pElem>
           </incDir>

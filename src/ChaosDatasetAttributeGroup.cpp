@@ -98,6 +98,9 @@ void ChaosDatasetAttributeGroup::remove(std::string path){
 
 
  std::vector<ChaosDatasetAttribute*> ChaosDatasetAttributeGroup::getAttrsByName(std::string name){
+     if(name2attrs[name].empty()){
+         ATTRERR_<<"no attributes found with name \""<<name<<"\"";
+     }
      return name2attrs[name];
  }
     

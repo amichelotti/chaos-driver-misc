@@ -63,10 +63,12 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
        CTRLERR_ <<" cannot create resources";
    }
     for( std::vector<std::string>::iterator i=vars.begin();i!=vars.end();i++){
-        CTRLDBG_<<" Adding "<<*i<<" to the set";
-        ChaosDatasetAttribute *ret=data_group->add(*i);
-        if(ret){
-            group->add(ret->getParent());
+        if(!(*i).empty()){
+            CTRLDBG_<<" Adding "<<*i<<" to the set";
+            ChaosDatasetAttribute *ret=data_group->add(*i);
+            if(ret){
+                group->add(ret->getParent());
+            }
         }
       
     }
