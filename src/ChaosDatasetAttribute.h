@@ -36,7 +36,8 @@ class ChaosDatasetAttribute{
     
     enum UpdateMode{
         EVERYTIME,
-        NOTBEFORE
+        NOTBEFORE,
+        DONTUPDATE
     };
     
 
@@ -70,7 +71,8 @@ private:
     std::string attr_name;
     std::string attr_desc;
     chaos::common::data::RangeValueInfo attr_type;
-    
+    void *ptr_cache;
+    int32_t cache_size; 
     //chaos::DataType::DataSetAttributeIOAttribute attr_dir;
     uint32_t attr_size;
     UpdateMode upd_mode;
@@ -78,10 +80,11 @@ private:
     static std::map< std::string,datinfo* > paramToDataset;
     static std::map<std::string,ctrl_t> controllers;
     ctrl_t controller;
-
+    
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);
+    void resize(int32_t newsize) throw (chaos::CException);
     std::string getParent(){return attr_parent;}
     std::string getGroup();
     std::string getPath(){return attr_path;}

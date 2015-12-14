@@ -9,7 +9,7 @@
 #include <chaos/common/exception/CException.h>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
-using namespace ::driver::misc;
+using namespace driver::misc;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
@@ -22,6 +22,8 @@ std::string ChaosDatasetAttribute::getGroup(){
 
 ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     std::string cu =path;
+    ptr_cache=NULL;
+    cache_size=0;
     timeo=timeo_;
     if(cu.find_last_of(chaos::PATH_SEPARATOR)==0){
         throw chaos::CException(-1, "bad attribute description",__FUNCTION__);
@@ -63,10 +65,23 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
         ATTRDBG_<<"%% WARNING  no data present in live for:"<<attr_path;
     }
  
+    resize(attr_size);
     
-    ATTRDBG_<<"Retrived "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size;
+    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size;
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
+}
+void ChaosDatasetAttribute::resize(int32_t newsize) throw (chaos::CException){
+    if(cache_size<newsize){
+        ptr_cache=realloc(ptr_cache,newsize);
+        cache_size = newsize;
+        if(ptr_cache==NULL){
+                throw chaos::CException(-1001,"cannot allocate memory cache for:"+attr_path,__PRETTY_FUNCTION__);
+
+        }
+    }
+    
+
 }
 
 ChaosDatasetAttribute::~ChaosDatasetAttribute() {
@@ -76,11 +91,26 @@ ChaosDatasetAttribute::~ChaosDatasetAttribute() {
 
         controllers.erase(controllers.find(attr_parent));
     }
+     if(ptr_cache){
+         free(ptr_cache);
+         cache_size=0;
+     }
+     ptr_cache=NULL;
+     
 }
 
 int ChaosDatasetAttribute::set(void* buf, int size){
-    return controller->setAttributeToValue(attr_name.c_str(),buf,1,size);
+    int ret=0;
+    resize(size);
+    
+    std::memcpy(ptr_cache,buf,size);
+    if(attr_type.dir == chaos::DataType::Input){
+        ATTRDBG_<<"setting remote variable \""<<attr_path<<"\"";
+        ret=controller->setAttributeToValue(attr_name.c_str(),buf,1,size);
+    }
+    return ret;
 }
+
 void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
 
@@ -95,17 +125,18 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             }
             paramToDataset[attr_path]->tget = tget;
             paramToDataset[attr_path]->data = tmpw;
-            controller->getTimeStamp(paramToDataset[attr_path]->tstamp);     
-        }
-        if(paramToDataset[attr_path]->data){
+            controller->getTimeStamp(paramToDataset[attr_path]->tstamp);
             tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_name);
             attr_size =paramToDataset[attr_path]->data->getValueSize(attr_name);
-            if(size){
-                *size = attr_size;
-            }
+            
+            resize(attr_size);
+            std::memcpy(ptr_cache,tmp,attr_size);
         }
-
-        return tmp;
+     
+        if(size){
+            *size = cache_size;                
+        }
+        return ptr_cache;
     }
     throw chaos::CException(-1000,"Attribute "+attr_path+" not found",__PRETTY_FUNCTION__);
     
