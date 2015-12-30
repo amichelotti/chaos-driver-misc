@@ -1,15 +1,29 @@
 cmake_minimum_required(VERSION 2.6)
-project(daq)
+project(chaos_driver_misc)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 
-IF("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux") 
-  message(STATUS "Including Libera")
-  SET(CHAOS_INSTALL_DIRS models/Libera models/Libera/cspi)
-  ADD_SUBDIRECTORY(models/Libera)
-  ADD_DEFINITIONS(-DLIBERA)
+
+SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeGroup.cpp src/ChaosDatasetAttributeSinchronizer.cpp src/ChaosController.cpp src/CmdSync.cpp src/SCDataSync.cpp src/remoteGroupAccessDriver.cpp src/remoteGroupAccessInterface.cpp)
+
+
+IF(BUILD_FORCE_STATIC)
+  SET(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--whole-archive -lchaos_common -Wl,--no-whole-archive")
+   ADD_LIBRARY(${PROJECT_NAME} STATIC ${src} )
+ELSE()
+   ADD_LIBRARY(${PROJECT_NAME} SHARED ${src} )	 
 ENDIF()
+INCLUDE_DIRECTORIES(./src)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common chaos_uitoolkit ${FrameworkLib})
 
+ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
-# install(DIRECTORY DESTINATION include/driver/daq)  
+TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_cutoolkit chaos_common ${FrameworkLib})
 
+INSTALL_TARGETS(/bin testSumOperatorUI)
+ 
+
+ INSTALL_TARGETS(/lib ${PROJECT_NAME})
+ FILE(GLOB ss src/*.h)
+ INSTALL(FILES ${ss} DESTINATION include/driver/misc/)
+   
 

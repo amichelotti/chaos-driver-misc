@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="95">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="CMakeFiles">
+        <df name="2.8.12.2">
+          <df name="CompilerIdC">
+            <in>CMakeCCompilerId.c</in>
+          </df>
+          <df name="CompilerIdCXX">
+            <in>CMakeCXXCompilerId.cpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="src">
+        <in>ChaosController.cpp</in>
+        <in>ChaosDatasetAttribute.cpp</in>
+        <in>ChaosDatasetAttributeGroup.cpp</in>
+        <in>ChaosDatasetAttributeSinchronizer.cpp</in>
+        <in>CmdSync.cpp</in>
+        <in>SCDataSync.cpp</in>
+        <in>remoteGroupAccessDriver.cpp</in>
+        <in>remoteGroupAccessInterface.cpp</in>
+      </df>
+      <df name="test">
+        <in>testSumOperatorUI.cpp</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>CMakeLists.txt</itemPath>
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-O3 -fPIC -O2"/>
+        <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -O3 -O2"/>
+        <element flagsID="2" commonFlags="-fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+      </flagsDictionary>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile install</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <ccTool flags="0">
+            <incDir>
+              <pElem>.</pElem>
+              <pElem>../..</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>CHAOS</Elem>
+              <Elem>NDEBUG</Elem>
+            </preprocessorList>
+          </ccTool>
+        </makeTool>
+      </makefileType>
+      <item path="CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c"
+            ex="false"
+            tool="0"
+            flavor2="2">
+      </item>
+      <item path="CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+      </item>
+      <folder path="0/CMakeFiles">
+        <ccTool>
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>BOOST_ALL_DYN_LINK</Elem>
+            <Elem>chaos_driver_misc_EXPORTS</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/src">
+        <ccTool>
+          <preprocessorList>
+            <Elem>chaos_driver_misc_EXPORTS</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/test">
+        <ccTool>
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="0">
+          <incDir>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>BOOST_ALL_DYN_LINK</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/ChaosDatasetAttribute.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/ChaosDatasetAttributeGroup.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/ChaosDatasetAttributeSinchronizer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/CmdSync.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/SCDataSync.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/remoteGroupAccessDriver.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/remoteGroupAccessInterface.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="2">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../chaos-x86_64-dynamic-release/include</pElem>
+            <pElem>src</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="test/testSumOperatorUI.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="1">
+        </ccTool>
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
