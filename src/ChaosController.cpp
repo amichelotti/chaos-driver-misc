@@ -102,6 +102,11 @@ int ChaosController::forceState(int dstState){
           if((boost::posix_time::microsec_clock::local_time() - start).total_microseconds()> timeo){
               retry --;
             CTRLERR_ <<"["<< getPath()<<"] Timeout of "<<timeo <<" us elapsed:"<<(boost::posix_time::microsec_clock::local_time() - start).total_microseconds()<< "  Retry:"<<retry;
+              if(init(path,timeo)!=0){
+                CTRLERR_<<"cannot retrive controller for:"<<path;
+                return -1;
+
+                }
              start=boost::posix_time::microsec_clock::local_time();
             
         }
@@ -121,6 +126,7 @@ int ChaosController::forceState(int dstState){
 int  ChaosController::init(int force){
    
     if(force){
+       
         return forceState(chaos::CUStateKey::INIT);
     }
     return controller->initDevice();
@@ -183,14 +189,19 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 
     //    chaos::ui::LLRpcApi::getInstance()->init();
     //chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
-    if(controller==NULL){
-        try {
+    
+    if(controller!=NULL){
+       
+        CTRLDBG_<<" removing existing controller";
+        chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
+    }
+    
+     try {
             controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_/1000);
         } catch (chaos::CException &e){
             CTRLERR_<<"Exception during get controller for device:"<<e.what();
             return -3;
         }
-    }
     if(controller==NULL){
         return -1;
      
