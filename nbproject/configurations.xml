@@ -18,6 +18,7 @@
         <in>ChaosDatasetAttributeGroup.cpp</in>
         <in>ChaosDatasetAttributeSinchronizer.cpp</in>
         <in>CmdSync.cpp</in>
+        <in>RTDataSync.cpp</in>
         <in>SCDataSync.cpp</in>
         <in>remoteGroupAccessDriver.cpp</in>
         <in>remoteGroupAccessInterface.cpp</in>
@@ -49,6 +50,8 @@
       <flagsDictionary>
         <element flagsID="0" commonFlags="-fPIC -fPIC -fPIC -O3 -O2"/>
         <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
+        <element flagsID="2"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -fPIC -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -134,6 +137,10 @@
       </item>
       <item path="src/CmdSync.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="1">
+        </ccTool>
+      </item>
+      <item path="src/RTDataSync.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="2">
         </ccTool>
       </item>
       <item path="src/SCDataSync.cpp" ex="false" tool="1" flavor2="4">

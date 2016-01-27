@@ -27,8 +27,7 @@
 using namespace chaos;
 using namespace chaos::common::data::cache;
 using namespace chaos::cu::driver_manager::driver;
-using namespace ::driver::daq::libera;
-using namespace ::driver::misc;
+using namespace driver::misc;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(RTDataSync)
 
 #define RTDataSyncLAPP_		LAPP_ << "[RTDataSync] "
@@ -73,6 +72,20 @@ RTAbstractControlUnit(_control_unit_id, _control_unit_param, _control_unit_drive
     data_group->setTimeout (6000000);
   
     
+}
+void RTDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
+    //insert your definition code here
+     std::vector<ChaosDatasetAttribute*> rattrs=data_group->getAttributes();
+    for (std::vector<ChaosDatasetAttribute*>::iterator i=rattrs.begin();i!=rattrs.end();i++){
+        std::string name=(*i)->getName();
+        DPRINT("dynamic adding attribute: %s size :%d dir: %d type:%d",name.c_str(),(*i)->getSize(),(*i)->getDir(),(*i)->getType());
+        if((*i)->getType()!=chaos::DataType::TYPE_BYTEARRAY){
+            addAttributeToDataSet(name,(*i)->getDesc(),(*i)->getType(),(*i)->getDir());
+        } else if((*i)->getBinaryType()!=chaos::DataType::SUB_TYPE_NONE){
+            addBinaryAttributeAsSubtypeToDataSet(name,(*i)->getDesc(),(*i)->getBinaryType(),(*i)->getSize(),(*i)->getDir());
+        }
+    }
+   
 }
 
 /*

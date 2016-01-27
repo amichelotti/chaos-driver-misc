@@ -29,8 +29,8 @@
    
     namespace driver {
         
-        namespace daq {
-            namespace libera{
+        namespace misc {
+            
 class RTDataSync : public chaos::cu::control_manager::RTAbstractControlUnit {
 	PUBLISHABLE_CONTROL_UNIT_INTERFACE(RTDataSync)
 public:
@@ -48,8 +48,15 @@ protected:
         int rem_variables;
         driver::misc::ChaosDatasetAttributeSinchronizer* data_group;
         std::vector<std::string> cu_names;
-
+public:
+    void unitDefineActionAndDataset() throw(chaos::CException);
+    void unitInit() throw(chaos::CException){}
+		
+    void unitStart() throw(chaos::CException){}
+    void unitStop() throw(chaos::CException){}
+			void unitDeinit() throw(chaos::CException){}
+			void unitRun() throw(chaos::CException){}
 
 };
-            }}}
+            }}
 #endif
