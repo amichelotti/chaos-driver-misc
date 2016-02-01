@@ -24,11 +24,11 @@
 #include "ChaosDatasetAttribute.h"
 #include "ChaosDatasetAttributeSinchronizer.h"
 
-   
+
     namespace driver {
-        
+
         namespace misc {
-            
+
 class RTDataSync : public chaos::cu::control_manager::RTAbstractControlUnit {
 	PUBLISHABLE_CONTROL_UNIT_INTERFACE(RTDataSync)
 public:
@@ -42,14 +42,14 @@ public:
     ~RTDataSync();
 
 protected:
-        driver::misc::ChaosDatasetAttribute** rem_data;
+        ChaosDatasetAttribute** rem_data;
         int rem_variables;
-        driver::misc::ChaosDatasetAttributeSinchronizer* data_group;
+        ChaosDatasetAttributeSinchronizer* data_group;
         std::vector<std::string> cu_names;
 public:
     void unitDefineActionAndDataset() throw(chaos::CException);
     void unitInit() throw(chaos::CException){}
-		
+
     void unitStart() throw(chaos::CException){}
     void unitStop() throw(chaos::CException){}
 			void unitDeinit() throw(chaos::CException){}
