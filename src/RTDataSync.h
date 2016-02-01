@@ -52,8 +52,8 @@ public:
 
     void unitStart() throw(chaos::CException){}
     void unitStop() throw(chaos::CException){}
-			void unitDeinit() throw(chaos::CException){}
-			void unitRun() throw(chaos::CException){}
+	void unitDeinit() throw(chaos::CException){}
+	void unitRun() throw(chaos::CException){}
 
 };
             }}

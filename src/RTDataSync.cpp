@@ -24,8 +24,10 @@
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 #include <chaos/cu_toolkit/command_manager/CommandManager.h>
 #include <common/debug/core/debug.h>
+#include <chaos/common/utility/TimingUtil.h>
 using namespace chaos;
 using namespace chaos::common::data::cache;
+using namespace chaos::common::utility;
 using namespace chaos::cu::driver_manager::driver;
 using namespace driver::misc;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(RTDataSync)
@@ -39,8 +41,12 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(RTDataSync)
 /*
  Construct
  */
-RTDataSync::RTDataSync(const string& _control_unit_id, const string& _control_unit_param, const ControlUnitDriverList& _control_unit_drivers):
-RTAbstractControlUnit(_control_unit_id, _control_unit_param, _control_unit_drivers) {
+RTDataSync::RTDataSync(const string& _control_unit_id,
+                        const string& _control_unit_param,
+                        const ControlUnitDriverList& _control_unit_drivers):
+RTAbstractControlUnit(_control_unit_id,
+                        _control_unit_param,
+                        _control_unit_drivers) {
     int cnt=0;
     std::vector<std::string>::iterator i;
    rem_variables=0;
@@ -61,7 +67,7 @@ RTAbstractControlUnit(_control_unit_id, _control_unit_param, _control_unit_drive
      i=cu_names.begin();
 
      for(cnt=0;cnt<rem_variables;cnt++){
-         DPRINT("[%d] Adding Remote Variable \"%s\"",cnt*i);
+         DPRINT("[%d] Adding Remote Variable \"%s\"",cnt,i->c_str());
          rem_data[cnt] = new ChaosDatasetAttribute(*i);
          data_group->add(rem_data[cnt] );
          i++;
