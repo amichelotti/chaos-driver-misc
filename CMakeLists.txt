@@ -3,7 +3,7 @@ project(chaos_driver_misc)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 
 
-SET(src src/ChaosDatasetAttribute.cpp src/ChaosDatasetAttributeGroup.cpp src/ChaosDatasetAttributeSinchronizer.cpp src/ChaosController.cpp src/CmdSync.cpp src/RTDataSync.cpp src/SCDataSync.cpp src/remoteGroupAccessDriver.cpp src/remoteGroupAccessInterface.cpp)
+SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp)
 
 
 IF (BUILD_FORCE_STATIC)
@@ -12,7 +12,7 @@ IF (BUILD_FORCE_STATIC)
 ELSE ()
     ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
 ENDIF ()
-INCLUDE_DIRECTORIES(./src)
+INCLUDE_DIRECTORIES(./core)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common chaos_uitoolkit common_debug ${FrameworkLib})
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
@@ -23,7 +23,6 @@ INSTALL_TARGETS(/bin testSumOperatorUI)
 
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
-FILE(GLOB ss src/*.h)
+FILE(GLOB ss core/*.h)
 INSTALL(FILES ${ss} DESTINATION include/driver/misc/)
-   
 
