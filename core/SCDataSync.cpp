@@ -49,10 +49,7 @@ SCDataSync::SCDataSync(const string& _control_unit_id,
 chaos::cu::control_manager::SCAbstractControlUnit(_control_unit_id,
 												  _control_unit_param,
 												  _control_unit_drivers){
-     driver=new remoteGroupAccessInterface(getAccessoInstanceByIndex(0));
-     if((driver == NULL) || (driver->connect()!=0)){
-         throw chaos::CException(-1,"cannot connect with driver",__PRETTY_FUNCTION__);
-     }
+    
 
 }
 
@@ -70,7 +67,10 @@ SCDataSync::~SCDataSync() {
  Return the default configuration
  */
 void SCDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
-  
+   driver=new remoteGroupAccessInterface(getAccessoInstanceByIndex(0));
+     if((driver == NULL) || (driver->connect()!=0)){
+         throw chaos::CException(-1,"cannot connect with driver",__PRETTY_FUNCTION__);
+     }
     std::vector<ChaosDatasetAttribute*> ret= driver->getRemoteVariables();
     for(std::vector<ChaosDatasetAttribute*>::iterator i=ret.begin();i!=ret.end();i++){
         SCCULDBG<<"adding \""<<(*i)->getName()<<"\" desc: \""<<(*i)->getDesc()<<"\" type:"<<(*i)->getType()<<" dir:"<<(*i)->getDir()<<" size:"<<(*i)->getSize();
