@@ -26,7 +26,14 @@ ChaosDatasetAttributeGroup::~ChaosDatasetAttributeGroup() {
     
 }
 
-
+ 
+void ChaosDatasetAttributeGroup::setUpdateMode(ChaosDatasetAttribute::UpdateMode mode,uint64_t ustime){
+      for(std::map<std::string,ChaosDatasetAttribute* >::iterator i=id2attr.begin();i!=id2attr.end();i++){
+         
+         i->second->setUpdateMode(mode,ustime);
+    }
+    
+}
 
 void ChaosDatasetAttributeGroup::add(ChaosDatasetAttribute& d){
     add(&d);

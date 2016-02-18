@@ -11,7 +11,7 @@
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 using namespace driver::misc;
 
-std::map< std::string,ChaosDatasetAttribute::datinfo* > ChaosDatasetAttribute::paramToDataset;
+std::map< std::string,ChaosDatasetAttribute::datinfo_psh > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
 
 std::string ChaosDatasetAttribute::getGroup(){
@@ -21,10 +21,12 @@ std::string ChaosDatasetAttribute::getGroup(){
 }
 
 ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
+
     std::string cu =path;
     ptr_cache=NULL;
     cache_size=0;
     timeo=timeo_;
+    cache_updated=0;
     if(cu.find_last_of(chaos::PATH_SEPARATOR)==0){
         throw chaos::CException(-1, "bad attribute description",__FUNCTION__);
     }
@@ -54,17 +56,21 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     }
     attr_size =0;
     controller->setRequestTimeWaith(timeo);
-    
     controller->getAttributeDescription(attr_name,attr_desc);
     controller->getDeviceAttributeRangeValueInfo(attr_name,attr_type);
-    
-    paramToDataset.insert(std::make_pair(attr_path,&info));
+    if(paramToDataset.find(attr_parent)==paramToDataset.end()){
+    	datinfo_psh inf=boost::shared_ptr<datinfo_t>(new datinfo_t());
+    	paramToDataset.insert(std::make_pair(attr_parent,inf));
+    	info = inf;
+    } else {
+    	info = paramToDataset[attr_parent];
+    }
     try{
         get(&attr_size);
     } catch(chaos::CException e){
         ATTRDBG_<<"%% WARNING  no data present in live for:"<<attr_path;
     }
- 
+
     resize(attr_size);
     
     ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size;
@@ -88,9 +94,10 @@ ChaosDatasetAttribute::~ChaosDatasetAttribute() {
      ATTRDBG_<<" delete attribute:"<<attr_path;
     if(controllers.find(attr_parent)!=controllers.end()){
         ATTRDBG_<<" remove controller:"<<attr_parent;
-
         controllers.erase(controllers.find(attr_parent));
     }
+    info.reset();
+    if(paramToDataset[attr_parent])
      if(ptr_cache){
          free(ptr_cache);
          cache_size=0;
@@ -113,25 +120,46 @@ int ChaosDatasetAttribute::set(void* buf, int size){
 
 void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
-
-    if(paramToDataset.count(attr_path)){
+    boost::mutex::scoped_lock l(data_access);
+    if(paramToDataset.count(attr_parent)){
         boost::posix_time::ptime pt=boost::posix_time::microsec_clock::local_time();
         uint64_t tget=pt.time_of_day().total_microseconds();
         pt= boost::posix_time::microsec_clock::local_time();
-        if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_path]->tget)> update_time)) ){
+        if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_parent]->tget)> update_time)) ){
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
+
             if(tmpw==NULL){
                 throw chaos::CException(-1000,"cannot retrieve data for:"+attr_path,__PRETTY_FUNCTION__);
             }
-            paramToDataset[attr_path]->tget = tget;
-            paramToDataset[attr_path]->data = tmpw;
-            controller->getTimeStamp(paramToDataset[attr_path]->tstamp);
-            tmp =(void*)paramToDataset[attr_path]->data->getRawValuePtr(attr_name);
-            attr_size =paramToDataset[attr_path]->data->getValueSize(attr_name);
-            
-            resize(attr_size);
-            std::memcpy(ptr_cache,tmp,attr_size);
+      //      ATTRDBG_<<"fetched  ptr:"<<paramToDataset[attr_parent]<<" \""<<attr_path<<"\" last:"<<(tget - paramToDataset[attr_parent]->tget) <<" us ago update mode:"<<upd_mode;
+
+            paramToDataset[attr_parent]->tget = tget;
+            paramToDataset[attr_parent]->data = tmpw;
+            controller->getTimeStamp(paramToDataset[attr_parent]->tstamp);
+            tmp=(void*)tmpw->getRawValuePtr(attr_name);
+            if(tmp){
+            	attr_size=tmpw->getValueSize(attr_name);
+            	if(attr_size){
+            	       resize(attr_size);
+            	       std::memcpy(ptr_cache,tmp,attr_size);
+            	}
+            }
+            cache_updated=tget;
+        } else if((upd_mode==NOTBEFORE)){
+        	//ATTRDBG_<<" not fetch because \""<<attr_path<<"\" has been fetched "<<(tget - paramToDataset[attr_parent]->tget) <<" us ago updating each:"<<update_time;
+        	if(cache_updated!=paramToDataset[attr_parent]->tget){
+				tmp =(void*)paramToDataset[attr_parent]->data->getRawValuePtr(attr_name);
+				if(tmp){
+					attr_size =paramToDataset[attr_parent]->data->getValueSize(attr_name);
+					if(attr_size){
+										   resize(attr_size);
+										   std::memcpy(ptr_cache,tmp,attr_size);
+									}
+				}
+				cache_updated=paramToDataset[attr_parent]->tget;
+        	}
         }
+
      
         if(size){
             *size = cache_size;                
@@ -145,7 +173,8 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 
 
   ChaosDatasetAttribute::datinfo& ChaosDatasetAttribute::getInfo(){
-      return *paramToDataset[attr_path];
+	  ChaosDatasetAttribute::datinfo* ptr=paramToDataset[attr_parent].get();
+      return *ptr;
   }
 
  void ChaosDatasetAttribute::setTimeout(uint64_t timeo_ms){

@@ -23,7 +23,7 @@ namespace driver{
 class ChaosDatasetAttribute{
     
   public:  
-    struct datinfo {
+    typedef struct datinfo {
         
         uint64_t tget;
         uint64_t tstamp;
@@ -32,8 +32,9 @@ class ChaosDatasetAttribute{
         uint64_t getTimeStamp()const {return tstamp;}
         
         uint64_t getLastGet()const {return tget;}
-    };
+    } datinfo_t;
     
+    typedef  boost::shared_ptr<datinfo_t> datinfo_psh;
     enum UpdateMode{
         EVERYTIME,
         NOTBEFORE,
@@ -41,6 +42,7 @@ class ChaosDatasetAttribute{
     };
     
 
+    datinfo_psh info;
 
     ChaosDatasetAttribute(std::string path,uint32_t timeo=5000);
 
@@ -63,7 +65,6 @@ class ChaosDatasetAttribute{
     datinfo& getInfo();
     typedef boost::shared_ptr<chaos::ui::DeviceController> ctrl_t;
 private:
-    datinfo info;
     uint64_t update_time;
     uint32_t timeo;
     std::string attr_parent;
@@ -73,13 +74,15 @@ private:
     chaos::common::data::RangeValueInfo attr_type;
     void *ptr_cache;
     int32_t cache_size; 
+    uint64_t cache_updated;
     //chaos::DataType::DataSetAttributeIOAttribute attr_dir;
     uint32_t attr_size;
     UpdateMode upd_mode;
     
-    static std::map< std::string,datinfo* > paramToDataset;
+    static std::map< std::string,datinfo_psh > paramToDataset;
     static std::map<std::string,ctrl_t> controllers;
     ctrl_t controller;
+    boost::mutex data_access;
     
 public:
     int set(void*buf,int size);
