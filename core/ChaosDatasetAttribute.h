@@ -83,7 +83,7 @@ private:
     static std::map<std::string,ctrl_t> controllers;
     ctrl_t controller;
     boost::mutex data_access;
-    
+    int allocateController(std::string name);
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);

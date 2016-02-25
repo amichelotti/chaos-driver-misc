@@ -20,6 +20,28 @@ std::string ChaosDatasetAttribute::getGroup(){
     return res;
 }
 
+int ChaosDatasetAttribute::allocateController(std::string cu){
+
+	try{
+	  if(controllers.find(cu)==controllers.end()){
+	        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
+	        controllers[cu]=controller;
+	        controller->setupTracking();
+	        ATTRDBG_ << " Allocating New controller:"<<controller.get();
+
+	    } else {
+	    	//CDataWrapper data;
+	    	//data.setSerializedJsonData("{\"delay\":1}");
+
+	        controller = controllers[cu];
+	        ATTRDBG_ << " REUsing controller:"<<controller;
+	    }
+	} catch(chaos::CException e){
+        ATTRDBG_<<"%% WARNING exception during controller initialization of \""<<cu<<"\" :"<<e.what();
+        return -1;
+	}
+	  return (controller!=NULL)?0:-1;
+}
 ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     std::string cu =path;
@@ -27,6 +49,8 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     cache_size=0;
     timeo=timeo_;
     cache_updated=0;
+    int retry=10;
+    int ret;
     if(cu.find_last_of(chaos::PATH_SEPARATOR)==0){
         throw chaos::CException(-1, "bad attribute description",__FUNCTION__);
     }
@@ -36,21 +60,20 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     attr_path=path;
     attr_name=path;
     attr_name.erase(0,attr_path.find_last_of(chaos::PATH_SEPARATOR)+1);
-    ATTRDBG_ << "ATTR NAME:\""<<attr_name<<"\"";
+    ATTRDBG_ << "ATTR NAME:\""<<attr_name<<"\", allocating controller";
     attr_parent=cu;
-    if(controllers.find(cu)==controllers.end()){
-        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
-        controllers[cu]=controller;
-        controller->setupTracking();
-        ATTRDBG_ << " Allocating New controller:"<<controller.get();
+    do {
+    	ret= allocateController(cu);
+    	if(ret<0){
+    		sleep (1);
+    		ATTRDBG_ << " controller of "<<cu<<" is not ready, retry:"<<retry;
+    	}
+    } while((ret<0)&& (retry--));
 
-    } else {
-        controller = controllers[cu];
-        ATTRDBG_ << " REUsing controller:"<<controller;
-    }
     upd_mode=EVERYTIME;
     update_time=0;
-    if(controller==NULL){
+    if(ret<0){
+    	ATTRERR_<<"## cannot allocate controller for cu:\""+cu+"\"";
        throw chaos::CException(-1, "cannot allocate controller for:"+ cu,__FUNCTION__);
 
     }
@@ -86,7 +109,7 @@ void ChaosDatasetAttribute::resize(int32_t newsize) throw (chaos::CException){
 
         }
     }
-    
+    attr_size=newsize;
 
 }
 
@@ -162,7 +185,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 
      
         if(size){
-            *size = cache_size;                
+            *size = attr_size;
         }
         return ptr_cache;
     }

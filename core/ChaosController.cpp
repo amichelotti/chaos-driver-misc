@@ -238,6 +238,7 @@ int ChaosController::waitCmd(command_t&cmd){
     return -100;
 }
 int ChaosController::sendCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64_t wait_for){
+	int err=0;
     if(cmd==NULL)
         return -2;
     if(perform_at){
@@ -256,14 +257,29 @@ int ChaosController::sendCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64
         return -1;
     }
     
+    chaos::common::batch_command::CommandState command_state;
+    command_state.command_id=cmd->command_id;
+
+    err+=controller->getCommandState(command_state);
+
+//    LAPP_ << "command after:" << ss.str().c_str();
+    return err;
+
    
-    
-    return 0;
 }
 int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64_t wait_for){
     int ret=sendCmd(cmd,wait,perform_at,wait_for);
-    if(ret!=0)
+    if(ret!=0){
+    	// retry to update channel
+		CTRLERR_<<"error sending command to:"<<path<<" update controller";
+
+    	if(init(path,timeo)==0){
+    		ret=sendCmd(cmd,wait,perform_at,wait_for);
+    	} else {
+    		CTRLERR_<<"cannot reinitialize controller:"<<path;
+    	}
         return ret;
+    }
     last_cmd=cmd;
     if(wait){
         CTRLDBG_ << "waiting command id:"<<cmd->command_id;
