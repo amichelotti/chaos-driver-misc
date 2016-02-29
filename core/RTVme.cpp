@@ -62,31 +62,31 @@ RTAbstractControlUnit(_control_unit_id,
 }
 void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
     //insert your definition code here
-    addAttributeToDataSet("vme_base",
+    addAttributeToDataSet("VME_BASE",
                         "Vme Base address",
                         DataType::TYPE_INT64,
                         DataType::Input);
-    addAttributeToDataSet("vme_size",
+    addAttributeToDataSet("VME_SIZE",
                         "Vme map size",
                         DataType::TYPE_INT32,
                         DataType::Input);
 
-    addAttributeToDataSet("vme_addressing",
+    addAttributeToDataSet("VME_ADDRESSING",
                         "VME addressing (16/24/32/64)",
                         DataType::TYPE_INT32,
                         DataType::Input);
 
-    addAttributeToDataSet("vme_data_access",
-                        "VME data access (8/16/32)",
+    addAttributeToDataSet("VME_DW",
+                        "VME data width access (8/16/32)",
                         DataType::TYPE_INT32,
                         DataType::Input);
 
-    addAttributeToDataSet("vme_master",
+    addAttributeToDataSet("VME_MASTER",
                         "VME Master (true)/Slave(false)",
                         DataType::TYPE_BOOLEAN,
                         DataType::Input);
 
-    addAttributeToDataSet("vme_options",
+    addAttributeToDataSet("VME_OPTIONS",
                         "VME Options, irq=0x1, dma=0x2, supervisor=0x4",
                         DataType::TYPE_INT32,
                         DataType::Input);
@@ -105,12 +105,12 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 
 
  void RTVme::unitInit() throw(chaos::CException){
-	 vme_base_address = *getAttributeCache()->getROPtr<uint64_t>(DOMAIN_INPUT, "vme_base");
-	 vme_base_size = *getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_size");
-	 vme_addressing=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_addressing");
-	 vme_data_access=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_data_access");
-	 vme_master=*getAttributeCache()->getROPtr<bool>(DOMAIN_INPUT, "vme_master");
-	 vme_options=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_options");
+	 vme_base_address = *getAttributeCache()->getROPtr<uint64_t>(DOMAIN_INPUT, "VME_BASE");
+	 vme_base_size = *getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_SIZE");
+	 vme_addressing=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_ADDRESSING");
+	 vme_data_access=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_DW");
+	 vme_master=*getAttributeCache()->getROPtr<bool>(DOMAIN_INPUT, "VME_MASTER");
+	 vme_options=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_OPTIONS");
 	 if(vme_master){
 		 vme=vmewrap_vme_open_master(vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
 	 } else {
