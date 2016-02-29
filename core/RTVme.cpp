@@ -51,6 +51,7 @@ RTAbstractControlUnit(_control_unit_id,
     int cnt=0;
     std::vector<std::string>::iterator i;
     std::vector<std::string> soff;
+    vme=NULL;
     boost::split(soff,_control_unit_param,boost::is_any_of(" \n"));
     i=soff.begin();
     for(cnt=0;cnt<soff.size();cnt++){
@@ -81,7 +82,7 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
                         DataType::Input);
 
     addAttributeToDataSet("vme_master",
-                        "VME Master (0)/Slave(1)",
+                        "VME Master (true)/Slave(false)",
                         DataType::TYPE_BOOLEAN,
                         DataType::Input);
 
@@ -104,17 +105,49 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 
 
  void RTVme::unitInit() throw(chaos::CException){
-   
+	 vme_base_address = *getAttributeCache()->getROPtr<uint64_t>(DOMAIN_INPUT, "vme_base");
+	 vme_base_size = *getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_size");
+	 vme_addressing=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_addressing");
+	 vme_data_access=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_data_access");
+	 vme_master=*getAttributeCache()->getROPtr<bool>(DOMAIN_INPUT, "vme_master");
+	 vme_options=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "vme_options");
+	 if(vme_master){
+		 vme=vmewrap_vme_open_master(vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+	 } else {
+		 vme=vmewrap_vme_open_slave(vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+	 }
+	 if(vme==NULL){
+		 throw CException(-1,__PRETTY_FUNCTION__,"cannot initialize VME");
+	 }
  }
  
- void RTVme::unitStart() throw(chaos::CException){}
- void RTVme::unitStop() throw(chaos::CException){}
- void RTVme::unitDeinit() throw(chaos::CException){}
+ void RTVme::unitStart() throw(chaos::CException){
+	 int cnt;
+	 for(cnt=0;cnt<vme_offs.size();cnt++){
+		 uint32_t data=0;
+		 vmewrap_read32(vme,vme_offs[cnt],&data);
+		 getAttributeCache()->setOutputAttributeValue(cnt,&data,sizeof(data));
+	 }
+	if(vme_offs.size()){
+		getAttributeCache()->setOutputDomainAsChanged();
+	}
+
+ }
+ void RTVme::unitStop() throw(chaos::CException){
+
+ }
+ void RTVme::unitDeinit() throw(chaos::CException){
+	 if(vme){
+		 vmewrap_vme_close(vme);
+		 vme=NULL;
+	 }
+ }
  void RTVme::unitRun() throw(chaos::CException){}
  
 /*
  Destructor
  */
 RTVme::~RTVme() {
+	unitDeinit();
 
 }

@@ -43,7 +43,7 @@ protected:
     uint64_t vme_base_address;
     
     uint32_t vme_base_size,vme_addressing,vme_data_access;
-    uint32_t vme_master;
+    bool vme_master;
     uint32_t vme_options;
     vmewrap_vme_handle_t vme;
     std::vector<uint64_t> vme_offs;
