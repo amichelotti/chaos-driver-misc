@@ -55,8 +55,10 @@ RTAbstractControlUnit(_control_unit_id,
     boost::split(soff,_control_unit_param,boost::is_any_of(" \n"));
     i=soff.begin();
     for(cnt=0;cnt<soff.size();cnt++){
+    	if(i->size()){
          DPRINT("[%d] Adding Offset \"%s\"",cnt,i->c_str());
-	 vme_offs.push_back(strtoll(i->c_str(),0,0));
+         vme_offs.push_back(strtoll(i->c_str(),0,0));
+    	}
          i++;
      }
 }
