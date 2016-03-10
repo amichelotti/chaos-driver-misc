@@ -30,7 +30,7 @@ using namespace chaos;
 using namespace chaos::common::data::cache;
 using namespace chaos::common::utility;
 using namespace chaos::cu::driver_manager::driver;
-using namespace driver::misc;
+using namespace ::driver::misc;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(RTVme)
 
 #define RTVmeLAPP_		LAPP_ << "[RTDataSync] "

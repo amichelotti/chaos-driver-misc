@@ -9,7 +9,7 @@
 #include <chaos/common/exception/CException.h>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
-using namespace driver::misc;
+using namespace ::driver::misc;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo_psh > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;

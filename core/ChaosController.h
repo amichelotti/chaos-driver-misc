@@ -17,6 +17,11 @@
 #define CTRLDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<"]"
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
+#define MDS_TIMEOUT 3000
+#define MDS_STEP_TIMEOUT 1000
+#define MDS_RETRY 3
+#define HEART_BEAT_MAX 60000000
+#define CALC_AVERAGE_REFRESH 5
 
 namespace driver{
     
@@ -27,17 +32,52 @@ class ChaosController{
 private:
      chaos::ui::DeviceController* controller;
      std::string path;
-     chaos::CUStateKey::ControlUnitState state;
+     chaos::CUStateKey::ControlUnitState state,last_state,next_state;
      uint64_t timeo,schedule;
+     std::map<std::string,int> binaryToTranslate;
+     uint64_t last_access,heart,reqtime,tot_us,naccess,refresh;
+     int wostate;
+
     // NetworkBroker *broker;
      //chaos::common::message::MDSMessageChannel *mdsChannel;
                 //! Device MEssage channel to control via chaos rpc the device
      //chaos::common::message::DeviceMessageChannel *deviceChannel;
                 //! The io driver for accessing live data of the device
-	
+
+     std::string json_dataset;
+     chaos::common::data::CDataWrapper data_out;
+
      int forceState(int dstState);
   public:  
-    
+
+     typedef enum {
+    	 CHAOS_DEV_OK=0,
+    	 CHAOS_DEV_TIMEOUT=-100,
+		 CHAOS_DEV_HB_TIMEOUT=-101,
+		 CHAOS_DEV_RECOVERABLE_ERROR=-102,
+		 CHAOS_DEV_FATAL_ERROR=-102,
+		 CHAOS_DEV_INIT=-103, // error initializing
+		 CHAOS_DEV_START=-104, // error starting
+		 CHAOS_DEV_STOP=-105, // error stopping
+		 CHAOS_DEV_DEINIT=-106, // error deinit
+		 CHAOS_DEV_CMD=-107
+
+
+     } chaos_controller_error_t;
+
+     struct dev_info_status {
+         char dev_status[256];
+         char error_status[256];
+         char log_status[256];
+         chaos::common::data::CDataWrapper data_wrapper;
+         dev_info_status();
+         void status(chaos::CUStateKey::ControlUnitState deviceState);
+         void append_log(std::string log);
+         void append_error(std::string log);
+         void reset();
+         chaos::common::data::CDataWrapper * getData();
+     };
+
     struct command {
         std::string alias;
         chaos::common::data::CDataWrapper param;
@@ -55,6 +95,7 @@ private:
     };
     
     typedef boost::shared_ptr<command> command_t;
+    dev_info_status bundle_state;
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER) throw (chaos::CException);
 
@@ -110,9 +151,30 @@ private:
     
     command_t last_cmd;
     std::string getPath(){return path;}
+    /*
+     * Interface for third party software http/labview
+     * @param cmd command identifier, null if no command is required
+     * @param args arguments in json format, null if no args are required
+     * @param prio priority of the command
+     * @param sched scheduling of the command
+     * @param submission_mode submission mode of the command
+     * @param channel dataset channel you want to get into json_buf (negative = last acquisition)
+     * @param [out] json_buf returning dataset
+     * @return negative if error, dataset size on success
+     */
+
+    chaos_controller_error_t get(const std::string&  cmd,char* args,int timeout, int prio,int sched,int submission_mode,int channel, std::string &json_buf);
+    /*
+     * Update device state
+     * @return negative if error
+     */
+    int updateState();
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
-      
+      chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
+
+  	chaos::common::data::CDataWrapper*fetch(int channel);
+
 };
     }}
 #endif	/* ChaosController_H */

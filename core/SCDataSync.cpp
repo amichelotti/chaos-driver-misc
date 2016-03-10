@@ -36,7 +36,7 @@ using namespace chaos::cu::driver_manager::driver;
 #define SCCUAPP LAPP_ << "[SCDataSync - " << getCUID() << "] - "<<__FUNCTION__<<":"
 #define SCCULDBG LDBG_ << "[SCDataSync - " << getCUID() << "] - "<<__FUNCTION__<<":"
 
-PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(driver::misc::SCDataSync)
+PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::misc::SCDataSync)
 
 using namespace ::driver::misc;
 /*

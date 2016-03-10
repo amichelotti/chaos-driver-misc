@@ -29,7 +29,7 @@ using namespace chaos;
 using namespace chaos::common::data::cache;
 using namespace chaos::common::utility;
 using namespace chaos::cu::driver_manager::driver;
-using namespace driver::misc;
+using namespace ::driver::misc;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(RTDataSync)
 
 #define RTDataSyncLAPP_		LAPP_ << "[RTDataSync] "
@@ -54,7 +54,7 @@ RTAbstractControlUnit(_control_unit_id,
      rem_variables=cu_names.size();
      DPRINT("Variables :%d",rem_variables);
      if(rem_variables>0){
-         rem_data = new driver::misc::ChaosDatasetAttribute*[rem_variables];
+         rem_data = new ::driver::misc::ChaosDatasetAttribute*[rem_variables];
      } else {
          return;
      }
