@@ -51,6 +51,7 @@ RTAbstractControlUnit(_control_unit_id,
     int cnt=0;
     std::vector<std::string>::iterator i;
     std::vector<std::string> soff;
+    vme_driver_type=(vme_driver_t)0;
     vme=NULL;
     boost::split(soff,_control_unit_param,boost::is_any_of(" \n"));
     i=soff.begin();
@@ -64,6 +65,11 @@ RTAbstractControlUnit(_control_unit_id,
 }
 void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
     //insert your definition code here
+	 addAttributeToDataSet("VME_DRIVER",
+	                        "VME DRIVER TYPE (0=universe2, 1=caen)",
+	                        DataType::TYPE_INT32,
+	                        DataType::Input);
+
     addAttributeToDataSet("VME_BASE",
                         "Vme Base address",
                         DataType::TYPE_INT64,
@@ -107,20 +113,30 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 
 
  void RTVme::unitInit() throw(chaos::CException){
+	 int ret;
+	 vme_driver_type= (vme_driver_t)*getAttributeCache()->getROPtr<uint64_t>(DOMAIN_INPUT, "VME_DRIVER");
 	 vme_base_address = *getAttributeCache()->getROPtr<uint64_t>(DOMAIN_INPUT, "VME_BASE");
 	 vme_base_size = *getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_SIZE");
 	 vme_addressing=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_ADDRESSING");
 	 vme_data_access=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_DW");
 	 vme_master=*getAttributeCache()->getROPtr<bool>(DOMAIN_INPUT, "VME_MASTER");
 	 vme_options=*getAttributeCache()->getROPtr<uint32_t>(DOMAIN_INPUT, "VME_OPTIONS");
-	 if(vme_master){
-		 vme=vmewrap_vme_open_master(vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
-	 } else {
-		 vme=vmewrap_vme_open_slave(vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
-	 }
+
+	 vme = vmewrap_init_driver((vme_driver_t)vme_driver_type);
 	 if(vme==NULL){
-		 throw CException(-1,__PRETTY_FUNCTION__,"cannot initialize VME");
+	 		 throw CException(-1,__PRETTY_FUNCTION__,"cannot initialize VME DRIVER");
 	 }
+	 if(vme_master){
+		 ret=vmewrap_vme_open_master(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+	 } else {
+		 ret=vmewrap_vme_open_slave(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+	 }
+	if(ret!=0){
+		std::stringstream ss;
+		ss<<"cannot map vme address 0x"<<std::hex<<vme_base_address;
+		 throw CException(-1,__PRETTY_FUNCTION__,ss.str());
+
+	}
  }
  
  void RTVme::unitStart() throw(chaos::CException){

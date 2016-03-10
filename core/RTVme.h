@@ -41,7 +41,7 @@
 
 protected:
     uint64_t vme_base_address;
-    
+    vme_driver_t vme_driver_type;
     uint32_t vme_base_size,vme_addressing,vme_data_access;
     bool vme_master;
     uint32_t vme_options;
