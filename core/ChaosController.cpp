@@ -181,12 +181,18 @@ int ChaosController::setSchedule(uint64_t us){
 	schedule=us;
 	return controller->setScheduleDelay(us);
 }
+std::string  ChaosController::getJsonState(){
+	std::string ret;
+	ret=bundle_state.getData()->getJSONString();
+	return ret;
+}
 
 int ChaosController::init(std::string p,uint64_t timeo_)  {
 	path=p;
 	state= chaos::CUStateKey::UNDEFINED;
 	schedule=0;
-	CTRLDBG_ << "init CU NAME:\""<<path<<"\"";
+	bundle_state.reset();
+	CTRLDBG_ << "init CU NAME:\""<<path<<"\""<<" timeo:"<<timeo_;
 	/* CTRLDBG_<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
     CTRLDBG_<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
     CTRLDBG_<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
@@ -207,6 +213,9 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 	try {
 		controller= chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_/1000);
 	} catch (chaos::CException &e){
+		std::stringstream ss;
+		ss<<"Exception during get controller for device:\""<<path<<"\" ex: \""<<e.what()<<"\"";
+		bundle_state.append_error(ss.str());
 		CTRLERR_<<"Exception during get controller for device:"<<e.what();
 		return -3;
 	}
@@ -243,6 +252,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 		return -3;
 	}
 	CTRLDBG_<<"initalization ok handle:"<<(void*)controller;
+	last_access =boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	return 0;
 }
 
@@ -348,15 +358,52 @@ ChaosController::~ChaosController() {
 
 }
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
-	chaos::common::data::CDataWrapper* data = NULL;
+	chaos::common::data::CDataWrapper*data=NULL;
 	try {
-		data=controller->fetchCurrentDatatasetFromDomain((chaos::ui::DatasetDomain)channel);
-		if(data==NULL){
-			std::stringstream ss;
-			ss<<"error fetching data from channel "<<channel;
-			bundle_state.append_error(ss.str());
-			return bundle_state.getData();
+		if(channel==-1){
+			chaos::common::data::CDataWrapper* idata = NULL,*odata=NULL;
+			std::stringstream out;
+			uint64_t ts=0;
+			idata=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainInput);
+			odata=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
+			if(odata==NULL){
+				std::stringstream ss;
+
+				ss<<"error fetching data from output channel ";
+				bundle_state.append_error(ss.str());
+				return bundle_state.getData();
+			}
+			out<<"{\"name\":\""<<getPath()<<"\",\"timestamp\":"<<odata->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+
+			if(idata){
+				out<<",\"input\":"<<idata->getJSONString();
+			}
+
+			if(odata){
+				out<<",\"output\":";
+				out<<odata->getJSONString();
+
+			}
+			out<<"}";
+			odata->reset();
+			//CTRLDBG_<<"channel "<<channel<<" :"<<out.str();
+
+			odata->setSerializedJsonData(out.str().c_str());
+			data=normalizeToJson(odata,binaryToTranslate);
+			data->appendAllElement(*bundle_state.getData());
+			CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
+			return data;
+
+		} else {
+			data=controller->fetchCurrentDatatasetFromDomain((chaos::ui::DatasetDomain)channel);
+			if(data==NULL){
+				std::stringstream ss;
+				ss<<"error fetching data from channel "<<channel;
+				bundle_state.append_error(ss.str());
+				return bundle_state.getData();
+			}
 		}
+
 		data=normalizeToJson(data,binaryToTranslate);
 
 		data->appendAllElement(*bundle_state.getData());
@@ -379,13 +426,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	int err;
 	reqtime=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	bundle_state.reset();
+	bundle_state.status(state);
 	CTRLDBG_<<"cmd:"<<cmd;
 	if (wostate == 0) {
 		std::stringstream ss;
 
 		if((reqtime - last_access) > (timeo*1000)){
 			if(updateState()==0){
-				ss<<" ["<<path<<"] HB expired, removing device";
+				ss<<" ["<<path<<"] HB expired" <<(reqtime - last_access)<<" ms greater than "<<timeo/1000<<" ms, removing device";
 				init(path,timeo);
 				bundle_state.append_error(ss.str());
 				json_buf=bundle_state.getData()->getJSONString();

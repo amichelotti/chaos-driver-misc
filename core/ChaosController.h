@@ -164,6 +164,7 @@ private:
      */
 
     chaos_controller_error_t get(const std::string&  cmd,char* args,int timeout, int prio,int sched,int submission_mode,int channel, std::string &json_buf);
+    std::string  getJsonState();
     /*
      * Update device state
      * @return negative if error
