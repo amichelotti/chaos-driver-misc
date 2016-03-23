@@ -376,20 +376,22 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 			out<<"{\"name\":\""<<getPath()<<"\",\"timestamp\":"<<odata->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 
 			if(idata){
-				out<<",\"input\":"<<idata->getJSONString();
+				data=normalizeToJson(idata,binaryToTranslate);
+				out<<",\"input\":"<<data->getJSONString();
 			}
 
 			if(odata){
 				out<<",\"output\":";
-				out<<odata->getJSONString();
+				data=normalizeToJson(odata,binaryToTranslate);
+				out<<data->getJSONString();
 
 			}
 			out<<"}";
-			odata->reset();
+			data->reset();
 			//CTRLDBG_<<"channel "<<channel<<" :"<<out.str();
 
-			odata->setSerializedJsonData(out.str().c_str());
-			data=normalizeToJson(odata,binaryToTranslate);
+			data->setSerializedJsonData(out.str().c_str());
+
 			data->appendAllElement(*bundle_state.getData());
 			CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
 			return data;
