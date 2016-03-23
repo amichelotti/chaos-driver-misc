@@ -52,6 +52,8 @@ private:
 
      typedef enum {
     	 CHAOS_DEV_OK=0,
+		 CHAOS_DEV_UKN,
+		 CHAOS_DEV_UNX,
     	 CHAOS_DEV_TIMEOUT=-100,
 		 CHAOS_DEV_HB_TIMEOUT=-101,
 		 CHAOS_DEV_RECOVERABLE_ERROR=-102,
