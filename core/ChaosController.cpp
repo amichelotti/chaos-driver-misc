@@ -192,6 +192,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 	state= chaos::CUStateKey::UNDEFINED;
 	schedule=0;
 	bundle_state.reset();
+	bundle_state.status(state);
 	CTRLDBG_ << "init CU NAME:\""<<path<<"\""<<" timeo:"<<timeo_;
 	/* CTRLDBG_<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
     CTRLDBG_<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
@@ -501,7 +502,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else {
 			bundle_state.append_log("device:" + path+ " already initialized");
 		}
-		json_buf=bundle_state.getData()->getJSONString();
+		chaos::common::data::CDataWrapper* data=fetch(chaos::ui::DatasetDomainOutput);
+		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 	} else if (cmd == "start") {
 		wostate = 0;
@@ -528,7 +530,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			bundle_state.append_log("device:" + path+ " already started");
 		}
 
-		json_buf=bundle_state.getData()->getJSONString();
+		chaos::common::data::CDataWrapper* data=fetch(chaos::ui::DatasetDomainOutput);
+		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 	} else if (cmd == "stop") {
 		wostate = 0;
@@ -554,7 +557,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else {
 			bundle_state.append_log("device:" + path+ " already stopped");
 		}
-		json_buf=bundle_state.getData()->getJSONString();
+
+		chaos::common::data::CDataWrapper* data=fetch(chaos::ui::DatasetDomainOutput);
+		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 	} else if (cmd == "deinit") {
 		wostate = 0;
@@ -580,7 +585,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else {
 			bundle_state.append_log("device:" + path+ " already deinitialized");
 		}
-		json_buf=bundle_state.getData()->getJSONString();
+		chaos::common::data::CDataWrapper* data=fetch(chaos::ui::DatasetDomainOutput);
+		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 	} else if (cmd == "sched" && (args!=0)) {
 		bundle_state.append_log("sched device:" + path);
@@ -592,7 +598,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_CMD;
 		}
-		json_buf=bundle_state.getData()->getJSONString();
+		chaos::common::data::CDataWrapper* data=fetch(chaos::ui::DatasetDomainOutput);
+				json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 	} else if (cmd == "channel" &&  (args!=0)) {
 		// bundle_state.append_log("return channel :" + parm);
@@ -601,7 +608,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "attr" && (args!=0)) {
-		bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(args) + "\" to device:\"" + path+"\"");
+
 		chaos::common::data::CDataWrapper data;
 		data.setSerializedJsonData(args);
 		std::vector<std::string> attrs;
@@ -618,7 +625,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				strncpy(param,data.getCStringValue(*i),sizeof(param));
 			}
 			CTRLDBG_<<"applying \""<<i->c_str()<<"\"="<<param;
-
+			bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(param) + "\" to device:\"" + path+"\"");
 			err = controller->setAttributeToValue(i->c_str(), param, true);
 			if(err!=0){
 				bundle_state.append_error("error setting attribute:"+path+"/"+*i+"\"="+data.getCStringValue(*i));
@@ -657,8 +664,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		return CHAOS_DEV_OK;
 	} else if (cmd != "status") {
 		bundle_state.append_log("send cmd:\"" + cmd + "\" args: \"" + std::string(args) + "\" to device:" + path);
-		command_t command;
-		command->alias = cmd;
+		command_t command = prepareCommand(cmd);
 		command->param.setSerializedJsonData(args);
 
 		err = sendCmd(command,false);
@@ -674,6 +680,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 		}
+		bundle_state.status(state);
 		json_buf=bundle_state.getData()->getJSONString();
 		return CHAOS_DEV_OK;
 	}
@@ -713,6 +720,7 @@ int ChaosController::updateState(){
 		std::stringstream ss;
 		ss<<"device is dead "<< (h - heart)<<" ms of inactivity, removing";
 		bundle_state.append_error(ss.str());
+		bundle_state.status(state);
 		init(path,timeo);
 		return 0;
 	}
