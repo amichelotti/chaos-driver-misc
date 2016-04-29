@@ -29,71 +29,70 @@ int ChaosController::forceState(int dstState){
 	int currState=-100,oldstate;
 	boost::posix_time::ptime start;
 	int retry=10;
-
+	
 	do{
 		oldstate=currState;
 		currState=getState();
+
 		CTRLDBG_ << "Current state ["<<getPath()<<"]:"<<currState<<" destination state:"<<dstState;
+		if(currState==dstState){
+		  return 0;
+		}
 		if(currState!=oldstate){
 			start=boost::posix_time::microsec_clock::local_time();
 		}
+
 		if(currState<0)
 			return currState;
 
 
 		switch(currState){
 		case chaos::CUStateKey::DEINIT:
-			controller->initDevice();
-			break;
+		  CTRLDBG_ << "[deinit] apply \"init\" to :"<<getPath();
+		  controller->initDevice();
+		  break;
 		case chaos::CUStateKey::INIT:
-			switch(dstState){
-			case chaos::CUStateKey::DEINIT:
-				controller->deinitDevice();
-				break;
-			case chaos::CUStateKey::START:
-			case chaos::CUStateKey::STOP:
-				controller->startDevice();
-				break;
+		  switch(dstState){
+		  case chaos::CUStateKey::DEINIT:
+		    CTRLDBG_ << "[init] apply \"deinit\" to :"<<getPath();
+		    controller->deinitDevice();
+		    break;
+		  case chaos::CUStateKey::START:
+		  case chaos::CUStateKey::STOP:
+		    CTRLDBG_ << "[init] apply \"start\" to :"<<getPath();
+		    controller->startDevice();
+		    break;
 
-			}
+		  }
 
+		  break;
 
-			break;
-
-			case chaos::CUStateKey::START:
-				switch(dstState){
-				case chaos::CUStateKey::INIT:
-				case chaos::CUStateKey::STOP:
-					controller->stopDevice();
-					break;
-				case chaos::CUStateKey::DEINIT:
-					controller->initDevice();
-
-					break;
+		case chaos::CUStateKey::START:
+		  CTRLDBG_ << "[start] apply \"stop\" to :"<<getPath();
+		  controller->stopDevice();
+		  break; 
 
 
-				}
-				break;
-
-
-				case chaos::CUStateKey::STOP:
-					switch(dstState){
-					case chaos::CUStateKey::DEINIT:
-					case chaos::CUStateKey::INIT:
-						controller->deinitDevice();
-						break;
-					case chaos::CUStateKey::START:
-						controller->startDevice();
-						break;
-
-					}
-
-
-					break;
-					default:
-						controller->deinitDevice();
-						controller->initDevice();
-						/*
+		case chaos::CUStateKey::STOP:
+		  switch(dstState){
+		  case chaos::CUStateKey::DEINIT:
+		  case chaos::CUStateKey::INIT:
+		    CTRLDBG_ << "[stop] apply \"deinit\" to :"<<getPath();
+		    controller->deinitDevice();
+		    break;
+		  case chaos::CUStateKey::START:
+		    CTRLDBG_ << "[stop] apply \"start\" to :"<<getPath();
+		    controller->startDevice();
+		    break;
+		    
+		  }
+		  
+		  
+		  break;
+		default:
+		  controller->deinitDevice();
+		  controller->initDevice();
+		  /*
                 switch(dstState){
                     case chaos::CUStateKey::DEINIT:
                         break;
@@ -264,6 +263,8 @@ int ChaosController::waitCmd(command_t&cmd){
 	int ret;
 	boost::posix_time::ptime start= boost::posix_time::microsec_clock::local_time();
 	chaos::common::batch_command::CommandState command_state;
+	if(cmd==NULL)
+		return -200;
 	command_state.command_id=cmd->command_id;
 	do {
 		if((ret=controller->getCommandState(command_state))!=0){
@@ -573,7 +574,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 		if(state!=chaos::CUStateKey::DEINIT){
 			bundle_state.append_log("deinitializing device:" + path);
-			err = controller->startDevice();
+			err = controller->deinitDevice();
 			if(err!=0){
 				bundle_state.append_error("deinitializing device:" + path);
 				init(path,timeo);
@@ -746,6 +747,9 @@ chaos::common::data::CDataWrapper* ChaosController::normalizeToJson(chaos::commo
 				int size=src->getValueSize(rkey->first);
 				int elems=size/sizeof(double);
 				for(cnt=0;cnt<elems;cnt++){
+				  if(data[cnt]<1.0e-308)data[cnt]=1.0e-208;
+				  else
+				    if(data[cnt]>1.0e+308)data[cnt]=1.0e+308;
 					data_out.appendDoubleToArray(data[cnt]);
 				}
 				data_out.finalizeArrayForKey(rkey->first);
