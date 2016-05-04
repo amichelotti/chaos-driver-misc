@@ -51,6 +51,7 @@ int ChaosController::forceState(int dstState){
 		  CTRLDBG_ << "[deinit] apply \"init\" to :"<<getPath();
 		  controller->initDevice();
 		  break;
+
 		case chaos::CUStateKey::INIT:
 		  switch(dstState){
 		  case chaos::CUStateKey::DEINIT:
@@ -89,9 +90,10 @@ int ChaosController::forceState(int dstState){
 		  
 		  
 		  break;
-		default:
-		  controller->deinitDevice();
-		  controller->initDevice();
+		  default:
+			  return 0;
+		 // controller->deinitDevice();
+		 // controller->initDevice();
 		  /*
                 switch(dstState){
                     case chaos::CUStateKey::DEINIT:
@@ -627,7 +629,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 			CTRLDBG_<<"applying \""<<i->c_str()<<"\"="<<param;
 			bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(param) + "\" to device:\"" + path+"\"");
-			err = controller->setAttributeToValue(i->c_str(), param, true);
+			err = controller->setAttributeToValue(i->c_str(), param, false);
 			if(err!=0){
 				bundle_state.append_error("error setting attribute:"+path+"/"+*i+"\"="+data.getCStringValue(*i));
 				init(path,timeo);
