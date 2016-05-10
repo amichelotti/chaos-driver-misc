@@ -74,6 +74,7 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
     }
    group->setTimeout(10000000);
    data_group->setTimeout(10000000);
+   return 0;
 }
 int remoteGroupAccessDriver::deinitIO(){
     if(group)
