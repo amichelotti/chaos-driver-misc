@@ -12,7 +12,10 @@
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 #include <common/debug/core/debug.h>
 #include <ctype.h>
+
 using namespace ::driver::misc;
+common::misc::data::DBCassandra* ChaosController::cassandra=NULL;
+
 #define CALC_EXEC_TIME \
 		tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
 		if(naccess%500 ==0){\
@@ -352,6 +355,16 @@ ChaosController::ChaosController(const ChaosController& orig) {
 ChaosController::ChaosController() {
 	controller=NULL;
 	state= chaos::CUStateKey::UNDEFINED;
+	if(cassandra==NULL){
+		cassandra = new common::misc::data::DBCassandra("chaos");
+		cassandra->addDBServer("127.0.0.1");
+		if(cassandra->connect()==0){
+			DPRINT("connected to cassandra");
+		} else {
+			ERR("cannot connect to cassandra");
+		}
+	}
+
 
 }
 ChaosController::~ChaosController() {
@@ -360,12 +373,15 @@ ChaosController::~ChaosController() {
 	}
 	controller=NULL;
 
+
 }
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 	chaos::common::data::CDataWrapper*data=NULL;
 	try {
 		if(channel==-1){
+			uint64_t time_stamp=boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
 			chaos::common::data::CDataWrapper* idata = NULL,*odata=NULL;
+			chaos::common::data::CDataWrapper resdata;
 			std::stringstream out;
 			uint64_t ts=0;
 			idata=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainInput);
@@ -377,25 +393,28 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 				bundle_state.append_error(ss.str());
 				return bundle_state.getData();
 			}
-			out<<"{\"name\":\""<<getPath()<<"\",\"timestamp\":"<<odata->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-
+			//out<<"{\"name\":\""<<getPath()<<"\",\"timestamp\":"<<odata->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+			resdata.addStringValue("name",getPath());
+			resdata.addInt64Value("timestamp",time_stamp);
 			if(idata){
 				data=normalizeToJson(idata,binaryToTranslate);
-				out<<",\"input\":"<<data->getJSONString();
+				//out<<",\"input\":"<<data->getJSONString();
+				resdata.addCSDataValue("input",*data);
 			}
 
 			if(odata){
-				out<<",\"output\":";
+			//	out<<",\"output\":";
 				data=normalizeToJson(odata,binaryToTranslate);
-				out<<data->getJSONString();
+				//out<<data->getJSONString();
+				resdata.addCSDataValue("output",*data);
 
 			}
-			out<<"}";
+//			out<<"}";
 			data->reset();
 			//CTRLDBG_<<"channel "<<channel<<" :"<<out.str();
 
-			data->setSerializedJsonData(out.str().c_str());
-
+	//		data->setSerializedJsonData(out.str().c_str());
+			data->appendAllElement(resdata);
 			data->appendAllElement(*bundle_state.getData());
 			CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
 			return data;
@@ -610,6 +629,32 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 
+	} else if (cmd == "save" &&  (args!=0)) {
+		// bundle_state.append_log("return channel :" + parm);
+		chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
+		json_buf=data->getJSONString();
+		std::replace(path.begin(),path.end(),'/','_');
+		std::string key = path + "_"+std::string(args);
+		DPRINT("saving dataset %s :%s",key.c_str(),json_buf.c_str());
+		cassandra->pushData("snapshot",key,json_buf);
+		return CHAOS_DEV_OK;
+
+	} else if (cmd == "load" &&  (args!=0)) {
+		::common::misc::data::DBbase::blobRecord_t ret;
+
+		// bundle_state.append_log("return channel :" + parm);
+		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
+		//json_buf=data->getJSONString();
+		std::replace(path.begin(),path.end(),'/','_');
+		std::string key = path + "_"+std::string(args);
+		cassandra->queryData("snapshot",key,ret);
+		if(ret.size()){
+			json_buf=ret[ret.size()-1].second;
+			DPRINT("retriving dataset %s : [%lld] %s",key.c_str(),ret[ret.size()-1].first,json_buf.c_str());
+
+		}
+		return CHAOS_DEV_OK;
+
 	} else if (cmd == "attr" && (args!=0)) {
 
 		chaos::common::data::CDataWrapper data;
@@ -749,9 +794,9 @@ chaos::common::data::CDataWrapper* ChaosController::normalizeToJson(chaos::commo
 				int size=src->getValueSize(rkey->first);
 				int elems=size/sizeof(double);
 				for(cnt=0;cnt<elems;cnt++){
-				  if(data[cnt]<1.0e-308)data[cnt]=1.0e-208;
-				  else
-				    if(data[cnt]>1.0e+308)data[cnt]=1.0e+308;
+				//  if(data[cnt]<1.0e-308)data[cnt]=1.0e-208;
+				//  else
+				//    if(data[cnt]>1.0e+308)data[cnt]=1.0e+308;
 					data_out.appendDoubleToArray(data[cnt]);
 				}
 				data_out.finalizeArrayForKey(rkey->first);

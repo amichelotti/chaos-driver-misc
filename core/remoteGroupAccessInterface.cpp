@@ -26,11 +26,14 @@ int remoteGroupAccessInterface::connect(){
         ctrl_group = ctrl;
         
     } else {
+    	CTRLERRG_<< "cannot read ChaosControllerGroup";
         return -1;
     }
     if(read((void*)&data,1,sizeof(ChaosDatasetAttributeGroup*))>0){
         data_group = data;
     } else {
+    	CTRLERRG_<< "cannot read ChaosDatasetGroup";
+
         return -2;
     }
     return 0;
