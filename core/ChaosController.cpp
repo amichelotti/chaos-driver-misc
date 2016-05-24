@@ -14,7 +14,6 @@
 #include <ctype.h>
 
 using namespace ::driver::misc;
-common::misc::data::DBCassandra* ChaosController::cassandra=NULL;
 
 #define CALC_EXEC_TIME \
 		tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
@@ -340,7 +339,7 @@ int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uin
 	return ret;
 }
 
-ChaosController::ChaosController(std::string p,uint32_t timeo_) throw (chaos::CException) {
+ChaosController::ChaosController(std::string p,uint32_t timeo_):cassandra(common::misc::data::DBCassandra::getInstance("chaos"))  {
 	int ret;
 	controller = NULL;
 
@@ -348,22 +347,25 @@ ChaosController::ChaosController(std::string p,uint32_t timeo_) throw (chaos::CE
 		throw chaos::CException(ret, "cannot allocate controller for:"+ path + " check if exists",__FUNCTION__);
 
 	}
+		cassandra.addDBServer("127.0.0.1");
+		if(cassandra.connect()==0){
+				DPRINT("connected to cassandra");
+		} else {
+				ERR("cannot connect to cassandra");
+		}
+}
 
-}
-ChaosController::ChaosController(const ChaosController& orig) {
-}
-ChaosController::ChaosController() {
+ChaosController::ChaosController():cassandra(common::misc::data::DBCassandra::getInstance("chaos")) {
 	controller=NULL;
 	state= chaos::CUStateKey::UNDEFINED;
-	if(cassandra==NULL){
-		cassandra = new common::misc::data::DBCassandra("chaos");
-		cassandra->addDBServer("127.0.0.1");
-		if(cassandra->connect()==0){
+	//cassandra = ;
+	cassandra.addDBServer("127.0.0.1");
+	if(cassandra.connect()==0){
 			DPRINT("connected to cassandra");
-		} else {
+	} else {
 			ERR("cannot connect to cassandra");
-		}
 	}
+
 
 
 }
@@ -636,18 +638,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		std::replace(path.begin(),path.end(),'/','_');
 		std::string key = path + "_"+std::string(args);
 		DPRINT("saving dataset %s :%s",key.c_str(),json_buf.c_str());
-		cassandra->pushData("snapshot",key,json_buf);
+		cassandra.pushData("snapshot",key,json_buf);
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "load" &&  (args!=0)) {
-		::common::misc::data::DBbase::blobRecord_t ret;
+		::common::misc::data::blobRecord_t ret;
 
 		// bundle_state.append_log("return channel :" + parm);
 		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
 		//json_buf=data->getJSONString();
 		std::replace(path.begin(),path.end(),'/','_');
 		std::string key = path + "_"+std::string(args);
-		cassandra->queryData("snapshot",key,ret);
+		cassandra.queryData("snapshot",key,ret);
 		if(ret.size()){
 			json_buf=ret[ret.size()-1].second;
 			DPRINT("retriving dataset %s : [%lld] %s",key.c_str(),ret[ret.size()-1].first,json_buf.c_str());

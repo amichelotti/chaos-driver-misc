@@ -38,7 +38,7 @@ private:
      std::map<std::string,int> binaryToTranslate;
      uint64_t last_access,heart,reqtime,tot_us,naccess,refresh;
      int wostate;
-     static common::misc::data::DBCassandra* cassandra;
+     ::common::misc::data::DBCassandra& cassandra;
     // NetworkBroker *broker;
      //chaos::common::message::MDSMessageChannel *mdsChannel;
                 //! Device MEssage channel to control via chaos rpc the device
@@ -100,9 +100,9 @@ private:
     typedef boost::shared_ptr<command> command_t;
     dev_info_status bundle_state;
     ChaosController();
-    ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER) throw (chaos::CException);
+    ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
 
-    ChaosController(const ChaosController& orig);
+
     virtual ~ChaosController();
     
    
