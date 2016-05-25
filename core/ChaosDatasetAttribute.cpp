@@ -166,6 +166,8 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             	       resize(attr_size);
             	       std::memcpy(ptr_cache,tmp,attr_size);
             	}
+            } else {
+            	 throw chaos::CException(-1000,"cannot variable \""+attr_name +"\" not found in:"+attr_path,__PRETTY_FUNCTION__);
             }
             cache_updated=tget;
         } else if((upd_mode==NOTBEFORE)){

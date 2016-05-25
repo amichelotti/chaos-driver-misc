@@ -113,8 +113,11 @@ void ChaosDatasetAttributeGroup::remove(std::string path){
     
     
 ChaosDatasetAttribute* ChaosDatasetAttributeGroup::getAttr(std::string path){
-        if(id2attr.find(path)==id2attr.end())
+        if(id2attr.find(path)==id2attr.end()){
+            ATTRERR_<<"no attribute found with path \""<<path<<"\"";
+
             return NULL;
+        }
         return id2attr[path];
 }
 
