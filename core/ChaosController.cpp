@@ -651,8 +651,33 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		std::string key = path + "_"+std::string(args);
 		cassandra.queryData("snapshot",key,ret);
 		if(ret.size()){
-			json_buf=ret[ret.size()-1].second;
-			DPRINT("retriving dataset %s : [%lld] %s",key.c_str(),ret[ret.size()-1].first,json_buf.c_str());
+			json_buf=ret[ret.size()-1].data;
+			DPRINT("retriving dataset %s : [%lld] %s",key.c_str(),ret[ret.size()-1].timestamp,json_buf.c_str());
+
+		}
+		return CHAOS_DEV_OK;
+
+	} else if (cmd == "list" ) {
+		::common::misc::data::blobRecord_t ret;
+
+		// bundle_state.append_log("return channel :" + parm);
+		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
+		//json_buf=data->getJSONString();
+	  //		std::replace(path.begin(),path.end(),'/','_');
+	  //	std::string key = path + "_"+std::string(args);
+		cassandra.queryData("snapshot","",ret);
+		if(ret.size()){
+		  int cnt;
+		  std::stringstream ss;
+		  ss<<"{[";
+		  for(cnt=0;cnt<ret.size();cnt++){
+		    ss<<ret[cnt].key;
+		    if((cnt+1)<ret.size())
+		      ss<<",";
+		  }
+		  ss<<"]}";
+		  json_buf=ss.str();
+		  DPRINT("retriving key list:%s",ss.str().c_str());
 
 		}
 		return CHAOS_DEV_OK;
