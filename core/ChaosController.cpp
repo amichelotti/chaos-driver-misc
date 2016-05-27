@@ -637,9 +637,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		json_buf=data->getJSONString();
 		std::string k=path;
 		std::replace(k.begin(),k.end(),'/','_');
-		std::string key = k + "_"+std::string(args);
-		DPRINT("saving dataset %s :%s",key.c_str(),json_buf.c_str());
-		cassandra.pushData("snapshot",key,json_buf);
+		std::string tbl = "snapshot_"+ k;
+		std::string key=args;
+		CTRLDBG_ <<"saving blk: "<< tbl<<" key:" <<key<<" data:"<<json_buf;
+		cassandra.pushData(tbl,key,json_buf);
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "load" &&  (args!=0)) {
@@ -650,30 +651,37 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		//json_buf=data->getJSONString();
 		std::string k=path;
 		std::replace(k.begin(),k.end(),'/','_');
-		std::string key = k + "_"+std::string(args);
-		cassandra.queryData("snapshot",key,ret);
+		std::string key=args;
+
+		std::string tbl = "snapshot_"+ k;
+		cassandra.queryData(tbl,key,ret);
+		CTRLDBG_ <<"load tbl: "<< k<<" key:"<<key;
+
 		if(ret.size()){
 			json_buf=ret[ret.size()-1].data;
-			DPRINT("retriving dataset %s : [%lld] %s",key.c_str(),ret[ret.size()-1].timestamp,json_buf.c_str());
+
+			CTRLDBG_ <<"retriving dataset "<<key<<"[" << ret[ret.size()-1].timestamp <<" data:"<<json_buf;
 
 		}
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "list" ) {
 		::common::misc::data::blobRecord_t ret;
-
+		std::string k=path;
+		std::replace(k.begin(),k.end(),'/','_');
+		std::string tbl = "snapshot_"+ k;
 		// bundle_state.append_log("return channel :" + parm);
 		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
 		//json_buf=data->getJSONString();
 	  //		std::replace(path.begin(),path.end(),'/','_');
 	  //	std::string key = path + "_"+std::string(args);
-		cassandra.queryData("snapshot","",ret);
+		cassandra.queryData(tbl,"",ret);
 		std::stringstream ss;
 		ss<<ret;
 
 
 		  json_buf=ss.str();
-		  DPRINT("retriving key list:%s",ss.str().c_str());
+		  CTRLDBG_ <<"retriving key list:"<<json_buf;
 
 
 		return CHAOS_DEV_OK;
