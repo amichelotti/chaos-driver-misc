@@ -458,7 +458,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	bundle_state.status(state);
 	CTRLDBG_<<"cmd:"<<cmd<< " last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
 	try {
-	if (wostate == 0) {
+		if (wostate == 0) {
 		std::stringstream ss;
 
 		if(((reqtime - last_access) > (timeo))|| ((next_state > 0)&&(state != next_state))){
@@ -635,8 +635,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		// bundle_state.append_log("return channel :" + parm);
 		chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
 		json_buf=data->getJSONString();
-		std::replace(path.begin(),path.end(),'/','_');
-		std::string key = path + "_"+std::string(args);
+		std::string k=path;
+		std::replace(k.begin(),k.end(),'/','_');
+		std::string key = k + "_"+std::string(args);
 		DPRINT("saving dataset %s :%s",key.c_str(),json_buf.c_str());
 		cassandra.pushData("snapshot",key,json_buf);
 		return CHAOS_DEV_OK;
@@ -647,8 +648,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		// bundle_state.append_log("return channel :" + parm);
 		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
 		//json_buf=data->getJSONString();
-		std::replace(path.begin(),path.end(),'/','_');
-		std::string key = path + "_"+std::string(args);
+		std::string k=path;
+		std::replace(k.begin(),k.end(),'/','_');
+		std::string key = k + "_"+std::string(args);
 		cassandra.queryData("snapshot",key,ret);
 		if(ret.size()){
 			json_buf=ret[ret.size()-1].data;
@@ -666,20 +668,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	  //		std::replace(path.begin(),path.end(),'/','_');
 	  //	std::string key = path + "_"+std::string(args);
 		cassandra.queryData("snapshot","",ret);
-		if(ret.size()){
-		  int cnt;
-		  std::stringstream ss;
-		  ss<<"{[";
-		  for(cnt=0;cnt<ret.size();cnt++){
-		    ss<<ret[cnt].key;
-		    if((cnt+1)<ret.size())
-		      ss<<",";
-		  }
-		  ss<<"]}";
+		std::stringstream ss;
+		ss<<ret;
+
+
 		  json_buf=ss.str();
 		  DPRINT("retriving key list:%s",ss.str().c_str());
 
-		}
+
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "attr" && (args!=0)) {
@@ -766,7 +762,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)atoi((char*) args));
 	json_buf=data->getJSONString();
 	return CHAOS_DEV_OK;
-	} catch (chaos::CException e){
+} catch (chaos::CException e){
 		bundle_state.append_error("error sending \""+cmd+"\" "+ " to:"+path +" err:"+e.what());
 		json_buf=bundle_state.getData()->getJSONString();
 		return CHAOS_DEV_UNX;
