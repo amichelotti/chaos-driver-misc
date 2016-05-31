@@ -50,14 +50,16 @@ chaos::cu::control_manager::SCAbstractControlUnit(_control_unit_id,
 												  _control_unit_param,
 												  _control_unit_drivers){
     
-
+  driver =NULL;
 }
 
 /*
  Base destructor
  */
 SCDataSync::~SCDataSync() {
+  if(driver){
     delete driver;
+  }
     
     
 }

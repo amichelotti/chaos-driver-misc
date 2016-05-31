@@ -22,8 +22,10 @@
 #define MDS_RETRY 3
 #define HEART_BEAT_MAX 60000000
 #define CALC_AVERAGE_REFRESH 5
-#include <common/misc/data/cassandra/DBCassandra.h>
-#include <common/misc/data/DBbase.h>
+#include <common/misc/data/core/DBbaseFactory.h>
+#define DEFAULT_DBTYPE "cassandra"
+#define DEFAULT_DBNAME "chaos"
+#define DEFAULT_DBREPLICATION "2"
 namespace driver{
     
     namespace misc{
@@ -38,7 +40,7 @@ private:
      std::map<std::string,int> binaryToTranslate;
      uint64_t last_access,heart,reqtime,tot_us,naccess,refresh;
      int wostate;
-     ::common::misc::data::DBCassandra& cassandra;
+     ::common::misc::data::DBbase* db;
     // NetworkBroker *broker;
      //chaos::common::message::MDSMessageChannel *mdsChannel;
                 //! Device MEssage channel to control via chaos rpc the device

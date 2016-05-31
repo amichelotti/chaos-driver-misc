@@ -339,7 +339,7 @@ int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uin
 	return ret;
 }
 
-ChaosController::ChaosController(std::string p,uint32_t timeo_):cassandra(common::misc::data::DBCassandra::getInstance("chaos"))  {
+ChaosController::ChaosController(std::string p,uint32_t timeo_) {
 	int ret;
 	controller = NULL;
 
@@ -347,20 +347,26 @@ ChaosController::ChaosController(std::string p,uint32_t timeo_):cassandra(common
 		throw chaos::CException(ret, "cannot allocate controller for:"+ path + " check if exists",__FUNCTION__);
 
 	}
-		cassandra.addDBServer("127.0.0.1");
-		if(cassandra.connect()==0){
+	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
+	db->setDBParameters("replication",DEFAULT_DBREPLICATION);
+
+		db->addDBServer("127.0.0.1");
+		if(db->connect()==0){
 				DPRINT("connected to cassandra");
 		} else {
 				ERR("cannot connect to cassandra");
 		}
 }
 
-ChaosController::ChaosController():cassandra(common::misc::data::DBCassandra::getInstance("chaos")) {
+ChaosController::ChaosController() {
 	controller=NULL;
 	state= chaos::CUStateKey::UNDEFINED;
 	//cassandra = ;
-	cassandra.addDBServer("127.0.0.1");
-	if(cassandra.connect()==0){
+	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
+	db->setDBParameters("replication",DEFAULT_DBREPLICATION);
+
+	db->addDBServer("127.0.0.1");
+	if(db->connect()==0){
 			DPRINT("connected to cassandra");
 	} else {
 			ERR("cannot connect to cassandra");
@@ -418,7 +424,7 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 	//		data->setSerializedJsonData(out.str().c_str());
 			data->appendAllElement(resdata);
 			data->appendAllElement(*bundle_state.getData());
-			CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
+		//	CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
 			return data;
 
 		} else {
@@ -640,7 +646,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		std::string tbl = "snapshot_"+ k;
 		std::string key=args;
 		CTRLDBG_ <<"saving blk: "<< tbl<<" key:" <<key<<" data:"<<json_buf;
-		cassandra.pushData(tbl,key,json_buf);
+		if(db->pushData(tbl,key,json_buf)!=0){
+			db->disconnect();
+			db->connect();
+		}
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "load" &&  (args!=0)) {
@@ -654,7 +663,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		std::string key=args;
 
 		std::string tbl = "snapshot_"+ k;
-		cassandra.queryData(tbl,key,ret);
+		if(db->queryData(tbl,key,ret)!=0){
+			db->disconnect();
+			db->connect();
+		}
 		CTRLDBG_ <<"load tbl: "<< k<<" key:"<<key;
 
 		if(ret.size()){
@@ -675,7 +687,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		//json_buf=data->getJSONString();
 	  //		std::replace(path.begin(),path.end(),'/','_');
 	  //	std::string key = path + "_"+std::string(args);
-		cassandra.queryData(tbl,"",ret);
+		if(db->queryData(tbl,"",ret)!=0){
+			db->disconnect();
+			db->connect();
+		}
 		std::stringstream ss;
 		ss<<ret;
 

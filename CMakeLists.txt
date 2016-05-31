@@ -13,7 +13,7 @@ ELSE ()
     ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
 ENDIF ()
 INCLUDE_DIRECTORIES(./core)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common chaos_uitoolkit common_misc_data_cassandra cassandra_static common_misc_data uv common_vme vme common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common chaos_uitoolkit common_misc_data uv common_vme vme common_debug ${FrameworkLib})
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
