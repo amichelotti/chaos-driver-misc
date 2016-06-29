@@ -12,6 +12,10 @@
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 #include <common/debug/core/debug.h>
 #include <ctype.h>
+#include <json/json.h>
+#include <json/reader.h>
+#include <json/writer.h>
+#include <json/value.h>
 
 using namespace ::driver::misc;
 
@@ -376,8 +380,13 @@ ChaosController::ChaosController() {
 
 }
 ChaosController::~ChaosController() {
+	if(db){
+		db->disconnect();
+	}
+
 	if(controller){
-		delete controller;
+		chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
+
 	}
 	controller=NULL;
 
@@ -462,8 +471,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	naccess++;
 	bundle_state.reset();
 	bundle_state.status(state);
-	CTRLDBG_<<"cmd:"<<cmd<< " last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
+	CTRLDBG_<<"cmd:"<<cmd<< " args:"<<args<<" last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
 	try {
+		//Json::Reader rreader;
+		//Json::Value vvalue;
 		if (wostate == 0) {
 		std::stringstream ss;
 
@@ -649,6 +660,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		if(db->pushData(tbl,key,json_buf)!=0){
 			db->disconnect();
 			db->connect();
+			bundle_state.append_log("error pushing data on  "+tbl +" key:"+ key);
+			json_buf=bundle_state.getData()->getJSONString();
+			CALC_EXEC_TIME;
+			return CHAOS_DEV_CMD;
 		}
 		return CHAOS_DEV_OK;
 
@@ -663,18 +678,55 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		std::string key=args;
 
 		std::string tbl = "snapshot_"+ k;
-		if(db->queryData(tbl,key,ret)!=0){
-			db->disconnect();
-			db->connect();
+		//std::string mystring="{\"mykey\" : \"myvalue\"}";
+		//CTRLDBG_ <<"parsing json..."<<mystring;
+
+		if(strchr(args,'{')){
+			chaos::common::data::CDataWrapper data;
+			data.setSerializedJsonData(args);
+			data.addStringValue("tbl",tbl);
+
+			CTRLDBG_ <<"1 load tbl: "<< k<<" KEY:"<<data.getJSONString();
+
+
+
+
+			if(db->queryData(json_buf,data.getJSONString())!=0){
+				db->disconnect();
+				db->connect();
+				bundle_state.append_log("error making query "+data.getJSONString());
+				json_buf=bundle_state.getData()->getJSONString();
+				CALC_EXEC_TIME;
+				return CHAOS_DEV_CMD;
+
+			}
+			CTRLDBG_ <<"retriving dataset KEY:"<<data.getJSONString()<<" data:"<<json_buf;
+		} else {
+			CTRLDBG_ <<"load table: "<< k<<" key:"<<key;
+			if(db->queryData(tbl,key,ret)!=0){
+				db->disconnect();
+				db->connect();
+				bundle_state.append_log("error making query on "+tbl + " key:"+key);
+				json_buf=bundle_state.getData()->getJSONString();
+				CALC_EXEC_TIME;
+				return CHAOS_DEV_CMD;
+			} else {
+				std::stringstream ss;
+				ss<<ret;
+				json_buf=ss.str();
+				/*
+				if(ret.size()){
+						json_buf=ret[ret.size()-1].data;
+						CTRLDBG_ <<"retriving dataset "<<key<<"[" << ret[ret.size()-1].timestamp <<" data:"<<json_buf;
+
+				} else {
+					json_buf="{}";
+				}
+				*/
+			}
 		}
-		CTRLDBG_ <<"load tbl: "<< k<<" key:"<<key;
 
-		if(ret.size()){
-			json_buf=ret[ret.size()-1].data;
 
-			CTRLDBG_ <<"retriving dataset "<<key<<"[" << ret[ret.size()-1].timestamp <<" data:"<<json_buf;
-
-		}
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "list" ) {
@@ -690,10 +742,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		if(db->queryData(tbl,"",ret)!=0){
 			db->disconnect();
 			db->connect();
+			bundle_state.append_log("error making query on "+tbl);
+			json_buf=bundle_state.getData()->getJSONString();
+			CALC_EXEC_TIME;
+			return CHAOS_DEV_CMD;
 		}
 		std::stringstream ss;
+		::common::misc::data::_data_::format =0x3;
 		ss<<ret;
-
+		::common::misc::data::_data_::format =0xf;
 
 		  json_buf=ss.str();
 		  CTRLDBG_ <<"retriving key list:"<<json_buf;
@@ -786,11 +843,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	json_buf=data->getJSONString();
 	return CHAOS_DEV_OK;
 } catch (chaos::CException e){
-		bundle_state.append_error("error sending \""+cmd+"\" "+ " to:"+path +" err:"+e.what());
+		bundle_state.append_error("error sending \""+cmd+"\" args:\""+std::string(args)+ "\" to:"+path +" err:"+e.what());
 		json_buf=bundle_state.getData()->getJSONString();
 		return CHAOS_DEV_UNX;
 	} catch (std::exception ee){
-		bundle_state.append_error("unexpected error sending \""+cmd+"\" "+ " to:"+path + " err:"+ee.what());
+		bundle_state.append_error("unexpected error sending \""+cmd+"\" args:\""+std::string(args)+ "\" to:"+path + " err:"+ee.what());
 		json_buf=bundle_state.getData()->getJSONString();
 		return CHAOS_DEV_UKN;
 	}
