@@ -21,5 +21,5 @@ INSTALL_TARGETS(/bin testSumOperatorUI)
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
 FILE(GLOB ss core/*.h)
-INSTALL(FILES ${ss} DESTINATION include/driver/misc/)
+INSTALL(FILES ${ss} DESTINATION include/driver/misc/core)
 
