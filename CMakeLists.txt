@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
 project(chaos_driver_misc)
-include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
-
-
 SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/RTVme.cpp)
 
 
@@ -24,5 +21,5 @@ INSTALL_TARGETS(/bin testSumOperatorUI)
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
 FILE(GLOB ss core/*.h)
-INSTALL(FILES ${ss} DESTINATION include/driver/misc/)
+INSTALL(FILES ${ss} DESTINATION include/driver/misc/core)
 
