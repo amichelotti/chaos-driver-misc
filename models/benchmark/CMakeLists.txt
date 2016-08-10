@@ -17,7 +17,7 @@ ELSE()
   ADD_LIBRARY(${PROJECT_NAME} SHARED ${messlib})
 ENDIF()
 
-TARGET_LINK_LIBRARIES(MessMonitor ${PROJECT_NAME} chaos_driver_mess chaos_cutoolkit boost_random ${FrameworkLib})
+TARGET_LINK_LIBRARIES(MessMonitor ${PROJECT_NAME} chaos_cutoolkit boost_random ${FrameworkLib})
 TARGET_LINK_LIBRARIES(MessClient ${PROJECT_NAME} chaos_uitoolkit chaos_common boost_random ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread chaos_cutoolkit chaos_common boost_random ${FrameworkLib})
