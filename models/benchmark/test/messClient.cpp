@@ -162,7 +162,7 @@ public:
 		uint32_t errors=0;
 		int64_t command_latency=0;
 		int64_t fetch_data_us=0;
-
+		uint64_t live_fetch=0;
 		int err;
 		int retry=RETRY_LOOP;
 		MessProfilePacketInfo *prof=0;
@@ -196,7 +196,7 @@ public:
 
 
 					if(prof->uidx==counter){
-						ui_cu_time_shift[ok_counter]=abs((long long)(start_loop.time_of_day().total_microseconds() - prof->tprof.end_cycle_us));
+						ui_cu_time_shift[ok_counter]=abs((long long)(fetch_data_us - prof->tprof.end_cycle_us));
 						cu_ui_timeshift+=ui_cu_time_shift[ok_counter];
 						ok_counter++;
 						retry=RETRY_LOOP;
@@ -244,6 +244,7 @@ public:
 			micro_max = std::max(micro_max,packet_time);
 			micro_min = std::min(micro_min,packet_time);
 			total_micro +=packet_time;
+
 			ui_cycles++;
 
 		} while ((counter<repetition) && (retry-->0));
@@ -508,6 +509,7 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 
+		 HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
 
 
 	} catch (CException& e) {
