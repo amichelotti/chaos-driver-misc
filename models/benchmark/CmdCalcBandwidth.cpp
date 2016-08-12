@@ -54,19 +54,20 @@ void CmdCalcBandwidth::setHandler(CDataWrapper *data) {
 		std::cout<<"## empty data"<<std::endl;
 		return;
 	}
-	
+	int64_t ts_tag;
 	hdr = getAttributeCache()->getRWPtr<MessProfilePacketInfo>(DOMAIN_OUTPUT, "profile");
 	memset((void*)hdr,0,sizeof(hdr));
 	
 	boost::posix_time::ptime time = boost::posix_time::microsec_clock::local_time();
 	hdr->tprof.cmd_arrival_time_us = time.time_of_day().total_microseconds();
-	
+	ts_tag = data->getUInt64Value("ts_tag");
 	size = data->getUInt32Value(CmdCalcBandwidth_BYTES_PARAM_KEY);
 	//enalrge cache
 	getAttributeCache()->setOutputAttributeNewSize("buffer", size);
 	
 	hdr->buffsize = size;
 	hdr->uidx= 0;
+	hdr->ts_tag = ts_tag;
         hdr->tprof.cycle_sigma=0;
 	buffer = getAttributeCache()->getRWPtr<uint8_t>(DOMAIN_OUTPUT, "buffer");
         repeat = data->getUInt32Value(CmdCalcBandwidth_REPEAT_PARAM_KEY);

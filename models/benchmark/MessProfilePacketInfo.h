@@ -24,6 +24,7 @@ struct MessTimeProfile {
 
 };
 struct MessProfilePacketInfo {
+	uint64_t ts_tag; //! timestamp tag
     uint32_t uidx; //!packet uid counter
     uint32_t buffsize; //!packet buffer size
     uint32_t crc32;//! buffer crc32
