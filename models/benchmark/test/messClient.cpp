@@ -72,6 +72,8 @@ namespace chaos_batch = chaos::common::batch_command;
 
 #define OPT_TEST_REPETITION               "test_repetition"
 
+
+
 class perform_test {
 
 protected:
@@ -131,7 +133,7 @@ public:
 class perform_bandwidth_test : public perform_test {
 public:
 	perform_bandwidth_test(string _fradix_name, DeviceController*ctrl) : perform_test(string("bandwidth_test"), _fradix_name, ctrl) {
-		*fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us), Cmd Latency (us), Cycles/s"<<endl;
+		*fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us), Cmd Latency (us), Cycles/s,UsrTime(%),SysTime(%)"<<endl;
 	}
 
 	int test(int bytes,uint64_t delay,int repetition) {
@@ -163,9 +165,14 @@ public:
 		int64_t command_latency=0;
 		int64_t fetch_data_us=0;
 		uint64_t live_fetch=0;
+		int prof_stat=0;
+		double cputime=0,systime=0;
+
 		int err;
 		int retry=RETRY_LOOP;
 		MessProfilePacketInfo *prof=0;
+		controller->fetchCurrentDeviceValue();
+		wrapped_data = controller->getCurrentData();
 		err = controller->submitSlowControlCommand("calc_bandwidth",
 				chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack,
 				100,
@@ -207,6 +214,14 @@ public:
 						LDBG_<<"%% UI packet lost CU:"<<prof->uidx<<" ui:"<<counter<<" total:"<<ui_packets_lost;
 						counter= prof->uidx+1;
 						retry=RETRY_LOOP;
+					} else {
+#if 0
+					  //retrieve statistics
+					  prof_stat++;
+					  cu_prof_t cu_prof=controller->getProfileInfo();
+					  cputime+=cu_prof.usr_time;
+					  systime+=cu_prof.sys_time;
+#endif
 					}
 #ifdef CHECK_BUFFER		  
 					// cout<<"received:"<<prof->uidx<<" exp:"<<counter<<" crc:"<<prof->crc32<<endl;
@@ -244,10 +259,14 @@ public:
 			micro_max = std::max(micro_max,packet_time);
 			micro_min = std::min(micro_min,packet_time);
 			total_micro +=packet_time;
-
+			
 			ui_cycles++;
 
 		} while ((counter<repetition) && (retry-->0));
+		prof_stat++;
+		cu_prof_t cu_prof=controller->getProfileInfo();
+		cputime+=cu_prof.usr_time;
+		systime+=cu_prof.sys_time;
 
 		if(retry<0){
 			if(prof==NULL){
@@ -257,7 +276,8 @@ public:
 			LERR_ << "## CU TOO SLOW packet lost:"<<ui_packets_lost<<" received:"<<number_of_packets<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx;
 			throw CException(2, "CU too slow", "CU too slow");
 		}
-		LAPP_<<"* CU #:"<<prof->uidx<<" ui#:"<<counter -1<<" total lost:"<<ui_packets_lost;
+		LAPP_<<"* CU #:"<<prof->uidx<<" ui#:"<<counter -1<<" total lost:"<<ui_packets_lost<<" cpu:"<<cputime/prof_stat
+;
 
 
 
@@ -276,7 +296,7 @@ public:
 		}
 		ui_sigma/=((ok_counter==0)?1:ok_counter);
 		ui_sigma=sqrt(ui_sigma);
-		*fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ","<<cycle_us<<","<<prof->tprof.cycle_us<<","<<prof->tprof.cycle_sigma<<","<<kbs<<","<<ui_packets_lost<<","<<ui_shift_average<<","<<ui_sigma<<","<< (int64_t)prof->tprof.cmd_arrival_time_us - (int64_t)start_test.time_of_day().total_microseconds()<<","<<prof->tprof.cycle_sec<<endl;
+		*fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ","<<cycle_us<<","<<prof->tprof.cycle_us<<","<<prof->tprof.cycle_sigma<<","<<kbs<<","<<ui_packets_lost<<","<<ui_shift_average<<","<<ui_sigma<<","<< (int64_t)prof->tprof.cmd_arrival_time_us - (int64_t)start_test.time_of_day().total_microseconds()<<","<<prof->tprof.cycle_sec<<","<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
 
 		//sleep(1);
 		return 0;
