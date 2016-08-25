@@ -30,6 +30,7 @@ class CmdCalcBandwidth  : public ccc_slow_command::SlowCommand {
     int counter;
     int samples;
     int start;
+    int64_t ts_tag;
     int64_t *repetition_stats;
        uint64_t oldtime;
         uint64_t avg_cycle;

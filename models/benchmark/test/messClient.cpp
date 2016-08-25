@@ -37,7 +37,7 @@
 #include <boost/shared_ptr.hpp>
 #include "MessProfilePacketInfo.h"
 #include <boost/crc.hpp>
-#define RETRY_LOOP 1000000
+#define RETRY_LOOP 10000
 #define BAND_REPETITION 100
 #define MAX_BUFFER 1024*1024
 
@@ -141,7 +141,7 @@ public:
 		LAPP_ << "Performing  " << test_name<< "bytes :"<<bytes<< " scheduling :"<<delay<<" us"<<" repetitions:"<<repetition;
 		//set scehdule delay to 500 micro seconds
 		uint64_t command_id;
-		controller->setScheduleDelay(delay);
+		//		controller->setScheduleDelay(delay);
 		CDataWrapper test_data;
 
 		boost::posix_time::ptime start_test = boost::posix_time::microsec_clock::local_time();
@@ -212,7 +212,11 @@ public:
 						int lost=(prof->uidx-counter);
 						ui_packets_lost+=lost;
 						LDBG_<<"%% UI packet lost CU:"<<prof->uidx<<" ui:"<<counter<<" total:"<<ui_packets_lost;
-						counter= prof->uidx+1;
+						if((prof->uidx+lost) < repetition){
+						  counter= prof->uidx+lost;
+						} else {
+						  counter= prof->uidx+1;
+						}
 						retry=RETRY_LOOP;
 					} else {
 #if 0
@@ -249,7 +253,6 @@ public:
 					//						ok_counter++;
 					//					}
 					number_of_packets++;
-					retry=RETRY_LOOP;
 				}
 
 			}
@@ -269,21 +272,21 @@ public:
 		systime+=cu_prof.sys_time;
 
 		if(retry<0){
-			if(prof==NULL){
-				LERR_<<" no live data";
-				throw CException(2, "No live data", "No live data");
-			}
-			LERR_ << "## CU TOO SLOW packet lost:"<<ui_packets_lost<<" received:"<<number_of_packets<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx;
-			throw CException(2, "CU too slow", "CU too slow");
+		  LAPP_<<"%% exiting for timeout";
+
+		  if(prof==NULL){
+		    LERR_<<" no live data";
+		    throw CException(2, "No live data", "No live data");
+		  }
 		}
 		LAPP_<<"* CU #:"<<prof->uidx<<" ui#:"<<counter -1<<" total lost:"<<ui_packets_lost<<" cpu:"<<cputime/prof_stat
 ;
 
 
-
+		
 		if(ok_counter<1){
-			LERR_ << "## MANY out of sync PACKETS:"<<ui_packets_lost<<" received in sync:"<<ok_counter<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx;
-
+		  LERR_ << "## MANY out of sync PACKETS:"<<ui_packets_lost<<" received in sync:"<<ok_counter<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx;
+		  ui_packets_lost=repetition;
 		}
 
 		double  hz= 1000000.0/prof->tprof.net_cycle_us;
@@ -324,7 +327,7 @@ public:
 		uint64_t time_shift_samples[repetition];
 		uint64_t time_rt_samples[repetition];
 
-		controller->setScheduleDelay(delay);
+		//		controller->setScheduleDelay(delay);
 
 
 		for (int idx = 0; idx < repetition; idx++) {
@@ -371,7 +374,7 @@ public:
 				LAPP_ << "Command";
 				switch (command_state.last_event) {
 				case chaos_batch::BatchCommandEventType::EVT_COMPLETED:
-					LAPP_ << " has completed"<< std::endl;;
+					LAPP_ << " has completed";;
 					break;
 				case chaos_batch::BatchCommandEventType::EVT_FAULT:
 					LAPP_ << " has fault";
@@ -530,18 +533,13 @@ int main(int argc, char* argv[]) {
 		}
 
 		 HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
-
+		 ChaosUIToolkit::getInstance()->deinit();
 
 	} catch (CException& e) {
 		std::cerr << e.errorCode << " - " << e.errorDomain << " - " << e.errorMessage << std::endl;
 		return -1;
 	}
-	try {
-		ChaosUIToolkit::getInstance()->deinit();
-	} catch (CException& e) {
-		std::cerr << e.errorCode << " - " << e.errorDomain << " - " << e.errorMessage << std::endl;
-		return -2;
-	}
+
 	return 0;
 }
 

@@ -54,7 +54,7 @@ void CmdCalcBandwidth::setHandler(CDataWrapper *data) {
     std::cout<<"## empty data"<<std::endl;
     return;
   }
-  int64_t ts_tag;
+
   hdr = getAttributeCache()->getRWPtr<MessProfilePacketInfo>(DOMAIN_OUTPUT, "profile");
   memset((void*)hdr,0,sizeof(hdr));
 
@@ -73,7 +73,7 @@ void CmdCalcBandwidth::setHandler(CDataWrapper *data) {
   repeat = data->getUInt32Value(CmdCalcBandwidth_REPEAT_PARAM_KEY);
   repetition_stats=(int64_t*)realloc(repetition_stats,repeat*sizeof(int64_t));
   assert(repetition_stats);
-  LAPP_<<"Command bytes:"<<size<<" repeat:"<<repeat<<endl;
+  LAPP_<<"=== Start Command bytes:"<<size<<" repeat:"<<repeat<<endl;
   getAttributeCache()->setOutputAttributeNewSize("buffer",size);
   assert(buffer);
   //start =1;
@@ -133,14 +133,14 @@ void CmdCalcBandwidth::acquireHandler() {
 	  hdr->tprof.cycle_us=(double)avg_cycle/samples;
 	  for(cnt=0;cnt<samples;cnt++){
 	    val+=pow(((double)repetition_stats[cnt] - hdr->tprof.cycle_us),2);
-	    LDBG_<<" val:"<<repetition_stats[cnt];
+	    //	    LDBG_<<" val:"<<repetition_stats[cnt];
 	  }
 
 	  val=val/samples;
 	  hdr->tprof.cycle_sigma=sqrt(val);
 	  hdr->tprof.cycle_sec=repeat*1000000.0/tot_time;
 
-	  LAPP_<<" Avg:"<<hdr->tprof.cycle_us<<" Sigma:"<<hdr->tprof.cycle_sigma<<" cycle/s "<<hdr->tprof.cycle_sec;
+	  LAPP_<<"=== [tag:"<<ts_tag<<"] End Avg cycle :"<<hdr->tprof.cycle_us<<" Sigma:"<<hdr->tprof.cycle_sigma<<" cycle/s "<<hdr->tprof.cycle_sec<<" tot us "<<avg_cycle <<" tot bytes "<<size*repeat;
 
 	}
       }
