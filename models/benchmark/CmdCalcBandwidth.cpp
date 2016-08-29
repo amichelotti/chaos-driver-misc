@@ -1,8 +1,8 @@
 //
-//  CmdCalcTrxDelay.cpp
+//  CmdCalcBandwidth
 //  chaos-mess
 //
-//  Created by Claudio Bisegni on 27/02/14.
+//  Created by Andrea Michelotti on 27/8/16.
 //  Copyright (c) 2014 INFN. All rights reserved.
 //
 
@@ -17,6 +17,15 @@ using namespace chaos::common::data;
 
 using namespace chaos::cu::control_manager::slow_command;
 namespace chaos_batch = chaos::common::batch_command;
+BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(,CmdCalcBandwidth,CmdCalcBandwidth_CMD_ALIAS,
+                                     "Start the bandwith test",
+                                     "adf2973c-35dd-11e5-855a-774defc0b6db")
+    BATCH_COMMAND_ADD_INT32_PARAM(CmdCalcBandwidth_BYTES_PARAM_KEY, "buffer size", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
+
+    BATCH_COMMAND_ADD_INT32_PARAM(CmdCalcBandwidth_REPEAT_PARAM_KEY, "repetitions", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
+
+    BATCH_COMMAND_ADD_INT64_PARAM(CmdCalcBandwidth_REPEAT_PARAM_KEY, "timing tag", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
+BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
 CmdCalcBandwidth::CmdCalcBandwidth()  {

@@ -46,11 +46,11 @@ void ChaosMESS::unitDefineActionAndDataset() throw(CException) {
 	
     //add managed device di
 	//setDeviceID(_deviceID);
-        //install a command
-    installCommand<DefaultCommand>("DefaultCommand");
-	installCommand<CmdCalcTrxDelay>(CmdCalcTrxDelay_CMD_ALIAS);
-	installCommand<CmdCalcBandwidth>(CmdCalcBandwidth_CMD_ALIAS);
-	addActionDescritionInstance<ChaosMESS>(this,
+        
+    installCommand(BATCH_COMMAND_GET_DESCRIPTION(DefaultCommand), true);
+    installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdCalcTrxDelay));
+    installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdCalcBandwidth));
+   	addActionDescritionInstance<ChaosMESS>(this,
 										   &ChaosMESS::getLastTrxDelay,
 										   "getLastTrxDelay",
 										   "Return the last transmission delay");

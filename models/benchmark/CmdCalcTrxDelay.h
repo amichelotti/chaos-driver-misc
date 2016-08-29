@@ -19,7 +19,7 @@ namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
 #define CmdCalcTrxDelay_CMD_ALIAS		"trx_delay"
 #define CmdCalcTrxDelay_TS_PARAM_KEY	"sts"
 
-class CmdCalcTrxDelay  : public ccc_slow_command::SlowCommand {
+DEFINE_BATCH_COMMAND_CLASS(  CmdCalcTrxDelay ,ccc_slow_command::SlowCommand){
 	uint64_t *o_lct_ts;
 	uint64_t *o_lct_delay;
 protected:
