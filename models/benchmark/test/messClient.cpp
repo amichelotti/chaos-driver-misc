@@ -281,16 +281,24 @@ public:
 	total_micro +=packet_time;
 	
 	ui_cycles++;
-	if(readonly)
+	if(readonly){
 	  counter++;
+	  retry=RETRY_LOOP;
+	}
+	//	LDBG_<<"["<<counter<<"] duration us:"<<packet_time;      
       }
-      
+
     } while ((counter<repetition) && (retry-->0));
     prof_stat++;
     cu_prof_t cu_prof=controller->getProfileInfo();
     cputime+=cu_prof.usr_time;
     systime+=cu_prof.sys_time;
 
+    if(readonly){
+      *fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ",0,0,0,0,0,0,0,0,0,"<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
+      return 0;
+      
+    }
     if(retry<0){
       LAPP_<<"%% exiting for timeout";
 
