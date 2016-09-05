@@ -95,7 +95,8 @@ public:
     if ( fs == NULL || !fs->good()) {
       throw CException(1, string(__FUNCTION__), "## cannot open " + filename);
     }
-
+    if(readonly)
+      return;
     err = controller->initDevice();
     if (err == ErrorCode::EC_TIMEOUT) throw CException(6,string(__FUNCTION__), "Set device to init state");
     sleep(1);
@@ -110,7 +111,9 @@ public:
     fs.reset();
     LAPP_ << "Wrote  " << filename<<endl;
     usleep(100000); // TODO: MAY NOT WORK IF THE DEVICE IS BUSY
-
+    if(readonly)
+      return;
+	
     err = controller->stopDevice();
     if (err == ErrorCode::EC_TIMEOUT) {
       throw CException(2,  string(__FUNCTION__), "## Error Setting device to stop state");
@@ -284,6 +287,9 @@ public:
 	if(readonly){
 	  counter++;
 	  retry=RETRY_LOOP;
+	  if(counter%1000==0){
+	    LDBG_<<"["<<counter<<"] cycle average us:"<<total_micro/ui_cycles;      
+	  }
 	}
 	//	LDBG_<<"["<<counter<<"] duration us:"<<packet_time;      
       }
@@ -546,7 +552,6 @@ int main(int argc, char* argv[]) {
 	} else {
 	  for(cnt=start;cnt<=max;(increment_v<0)?(cnt<<=1):cnt+=increment_v){
 	    bd_test.test(cnt,schedule_delay,repetition);
-	    sleep(1);
 	  }
 	}
       }
