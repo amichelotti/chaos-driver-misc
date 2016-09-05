@@ -288,7 +288,8 @@ public:
 	  counter++;
 	  retry=RETRY_LOOP;
 	  if(counter%1000==0){
-	    LDBG_<<"["<<counter<<"] cycle average us:"<<total_micro/ui_cycles;      
+	    wrapped_data->getBinaryValue("buffer",size);
+	    LDBG_<<"["<<counter<<"] cycle average us:"<<total_micro/ui_cycles <<" size:"<<size;      
 	  }
 	}
 	//	LDBG_<<"["<<counter<<"] duration us:"<<packet_time;      
