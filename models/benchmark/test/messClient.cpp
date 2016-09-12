@@ -95,7 +95,8 @@ public:
     if ( fs == NULL || !fs->good()) {
       throw CException(1, string(__FUNCTION__), "## cannot open " + filename);
     }
-
+    if(readonly)
+      return;
     err = controller->initDevice();
     if (err == ErrorCode::EC_TIMEOUT) throw CException(6,string(__FUNCTION__), "Set device to init state");
     sleep(1);
@@ -110,7 +111,9 @@ public:
     fs.reset();
     LAPP_ << "Wrote  " << filename<<endl;
     usleep(100000); // TODO: MAY NOT WORK IF THE DEVICE IS BUSY
-
+    if(readonly)
+      return;
+	
     err = controller->stopDevice();
     if (err == ErrorCode::EC_TIMEOUT) {
       throw CException(2,  string(__FUNCTION__), "## Error Setting device to stop state");
@@ -134,7 +137,7 @@ public:
 class perform_bandwidth_test : public perform_test {
 public:
   perform_bandwidth_test(string _fradix_name, DeviceController*ctrl) : perform_test(string("bandwidth_test"), _fradix_name, ctrl) {
-    *fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us), Cmd Latency (us), Cycles/s,UsrTime(%),SysTime(%)"<<endl;
+    *fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us),time shift sigma (us), Cmd Latency (us), Cycles/s,UsrTime(%),SysTime(%)"<<endl;
   }
 
   int test(int bytes,uint64_t delay,int repetition) {
@@ -281,16 +284,31 @@ public:
 	total_micro +=packet_time;
 	
 	ui_cycles++;
-	if(readonly)
+	if(readonly){
 	  counter++;
+	  retry=RETRY_LOOP;
+	  if(counter%1000==0){
+	    wrapped_data->getBinaryValue("buffer",size);
+	    LDBG_<<"["<<counter<<"] cycle average us:"<<total_micro/ui_cycles <<" size:"<<size<< " band:"<<total_micro*size*1000*1000/(ui_cycles*(1024*1024))<<" MB/s";      
+	  }
+	}
+	//	LDBG_<<"["<<counter<<"] duration us:"<<packet_time;      
       }
-      
+
     } while ((counter<repetition) && (retry-->0));
     prof_stat++;
     cu_prof_t cu_prof=controller->getProfileInfo();
     cputime+=cu_prof.usr_time;
     systime+=cu_prof.sys_time;
 
+    if(readonly){
+      *fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ",0,0,0,0,0,0,0,0,0,"<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
+      return 0;
+      
+    }
+    if(command_latency==0){
+      command_latency = fetch_data_us - start_test_us;
+    }
     if(retry<0){
       LAPP_<<"%% exiting for timeout";
 
@@ -319,6 +337,7 @@ public:
     }
     ui_sigma/=((ok_counter==0)?1:ok_counter);
     ui_sigma=sqrt(ui_sigma);
+    //    *fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us), Cmd Latency (us), Cycles/s,UsrTime(%),SysTime(%)"<<endl;
     *fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ","<<cycle_us<<","<<prof->tprof.cycle_us<<","<<prof->tprof.cycle_sigma<<","<<kbs<<","<<ui_packets_lost<<","<<ui_shift_average<<","<<ui_sigma<<","<< (int64_t)prof->tprof.cmd_arrival_time_us - (int64_t)start_test.time_of_day().total_microseconds()<<","<<prof->tprof.cycle_sec<<","<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
 
     //sleep(1);
@@ -538,7 +557,6 @@ int main(int argc, char* argv[]) {
 	} else {
 	  for(cnt=start;cnt<=max;(increment_v<0)?(cnt<<=1):cnt+=increment_v){
 	    bd_test.test(cnt,schedule_delay,repetition);
-	    sleep(1);
 	  }
 	}
       }
