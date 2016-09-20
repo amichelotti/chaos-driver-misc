@@ -1,5 +1,5 @@
 set datafile separator ","
-set yrange [1:1000000]
+set yrange [1:1500000]
 set logscale y 10
 set logscale x 2
 set xlabel 'bytes'

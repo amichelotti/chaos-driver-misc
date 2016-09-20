@@ -45,7 +45,7 @@ void CmdCalcTrxDelay::setHandler(CDataWrapper *data) {
 	
 	*o_lct_ts =  data->getUInt64Value(CmdCalcTrxDelay_TS_PARAM_KEY);
     //    std::cout << "cmd -"<<std::dec<<counter++<<"TS="<<*o_lct_ts<<std::endl;
-        LDBG_<<"RT command TS::"<<*o_lct_ts;
+        LAPP_<<"RoundTrip command TS::"<<*o_lct_ts;
 }
 
 void CmdCalcTrxDelay::acquireHandler() {

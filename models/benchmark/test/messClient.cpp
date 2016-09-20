@@ -37,7 +37,7 @@
 #include <boost/shared_ptr.hpp>
 #include "MessProfilePacketInfo.h"
 #include <boost/crc.hpp>
-#define RETRY_LOOP 10000
+#define RETRY_LOOP 100000
 #define BAND_REPETITION 100
 #define MAX_BUFFER 1024*1024
 
@@ -323,7 +323,7 @@ public:
 
 		
     if(ok_counter<1){
-      LERR_ << "## MANY out of sync PACKETS:"<<ui_packets_lost<<" received in sync:"<<ok_counter<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx;
+      LERR_ << "## MANY out of sync PACKETS:"<<ui_packets_lost<<" received in sync:"<<ok_counter<<" ui cycles:"<<ui_cycles<<" ui counter:"<<counter<<" cu counter:"<<prof->uidx<<" tag:"<<prof->ts_tag <<" start tag:"<< start_test_us;
       ui_packets_lost=repetition;
     }
 
@@ -377,8 +377,8 @@ public:
 
       test_delay_param_data.addInt64Value("sts", cur_ts = duration.total_microseconds());
       err = controller->submitSlowControlCommand("trx_delay",
-						 //         					       chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack,
-						 chaos_batch::SubmissionRuleType::SUBMIT_AND_Kill,
+						 chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack,
+						 //chaos_batch::SubmissionRuleType::SUBMIT_AND_Kill,
 						 100,
 						 command_id,
 						 0,
@@ -390,7 +390,7 @@ public:
       if (err != ErrorCode::EC_NO_ERROR) throw CException(2, "Error", "executing commant");
       got_ts= 0;
       got_delay=0;
-      //LAPP_<<"iteration :"<<idx<<" sending:"<<cur_ts;
+      LAPP_<<"iteration :"<<idx<<" sending:"<<cur_ts;
       do {
 	controller->fetchCurrentDeviceValue();
 	wrapped_data = controller->getCurrentData();

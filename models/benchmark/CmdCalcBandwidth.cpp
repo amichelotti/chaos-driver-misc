@@ -82,11 +82,11 @@ void CmdCalcBandwidth::setHandler(CDataWrapper *data) {
   samples=0;
   avg_cycle =0;
   avg_net_cycle=0;
-  //	getAttributeCache()->setOutputDomainAsChanged();
+  getAttributeCache()->setOutputDomainAsChanged();
   // initialize counter
   // acquiredData->addBinaryValue("profile", (char*)&hdr, sizeof(hdr));
   //    pushDataSet(acquiredData);
-  //	usleep(500000); // be sure ui is in the main loop
+  //  usleep(500000); // be sure ui is in the main loop
 
 
 
