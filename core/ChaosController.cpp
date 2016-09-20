@@ -663,6 +663,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "save" &&  (args!=0)) {
+        int ret;
 		// bundle_state.append_log("return channel :" + parm);
 	/*	chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
 		json_buf=data->getJSONString();
@@ -680,16 +681,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			return CHAOS_DEV_CMD;
 		}*/
         std::vector<std::string> other_snapped_device;
-        controller->createNewSnapshot(args,other_snapped_device);
+
+        ret=controller->createNewSnapshot(args,other_snapped_device);
+        CTRLDBG_ <<"SAVE snapshot for \""<< getPath()<<" snapname:" <<args <<" ret:"<<ret;
+
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "load" &&  (args!=0)) {
         chaos_data::CDataWrapper* io[2],*ret;
-				
+        int retc=0;
+		
 		std::string key=args;
 
-        controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainOutput, &io[0]);
-        controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainInput, &io[1]);
+        retc+=controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainOutput, &io[0]);
+        retc+=controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainInput, &io[1]);
+        CTRLDBG_ <<"LOAD snapshot for \""<< getPath()<<" snapname:" <<args <<" ret:"<<retc;
+
         std::map<int, chaos::common::data::CDataWrapper *> set;
         set[0]=io[0];
         set[1]=io[1];
