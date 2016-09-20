@@ -351,7 +351,7 @@ ChaosController::ChaosController(std::string p,uint32_t timeo_) {
 		throw chaos::CException(ret, "cannot allocate controller for:"+ path + " check if exists",__FUNCTION__);
 
 	}
-	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
+	/*db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
 	db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 
 		db->addDBServer("127.0.0.1");
@@ -359,14 +359,14 @@ ChaosController::ChaosController(std::string p,uint32_t timeo_) {
 				DPRINT("connected to cassandra");
 		} else {
 				ERR("cannot connect to cassandra");
-		}
+		}*/
 }
 
 ChaosController::ChaosController() {
 	controller=NULL;
 	state= chaos::CUStateKey::UNDEFINED;
 	//cassandra = ;
-	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
+/*	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
 	db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 
 	db->addDBServer("127.0.0.1");
@@ -376,14 +376,14 @@ ChaosController::ChaosController() {
 			ERR("cannot connect to cassandra");
 	}
 
-
+*/
 
 }
 ChaosController::~ChaosController() {
-	if(db){
+	/*if(db){
 		db->disconnect();
 	}
-
+*/
 	if(controller){
 		chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
 
@@ -392,50 +392,64 @@ ChaosController::~ChaosController() {
 
 
 }
+static const char* chaosDomainToString(int domain){
+    switch(domain){
+        case 0:
+            return "output";
+        case 1:
+            return "input";
+        case 2:
+            return "custom";
+        case 3:
+            return "system";
+        case 4:
+            return "health";
+        default:
+            return "uknown";
+    }
+}
+chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>& set){
+    std::map<int,chaos::common::data::CDataWrapper*>::iterator i;
+    chaos::common::data::CDataWrapper*data;
+    chaos::common::data::CDataWrapper resdata;
+    uint64_t time_stamp=boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
+    resdata.addStringValue("name",getPath());
+    resdata.addInt64Value("timestamp",time_stamp);
+
+    for(i=set.begin();i!=set.end();i++){
+        if(i->second){
+            data=normalizeToJson(i->second,binaryToTranslate);
+            //out<<",\"input\":"<<data->getJSONString();
+            resdata.addCSDataValue(chaosDomainToString(i->first),*data);
+        } else {
+            std::stringstream ss;
+            
+            ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
+            bundle_state.append_error(ss.str());
+            return bundle_state.getData();
+        }
+    }
+    data->reset();
+    data->appendAllElement(resdata);
+    data->appendAllElement(*bundle_state.getData());
+    //	CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
+    return data;
+
+}
+
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 	chaos::common::data::CDataWrapper*data=NULL;
 	try {
 		if(channel==-1){
-			uint64_t time_stamp=boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
 			chaos::common::data::CDataWrapper* idata = NULL,*odata=NULL;
 			chaos::common::data::CDataWrapper resdata;
 			std::stringstream out;
 			uint64_t ts=0;
-			idata=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainInput);
-			odata=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
-			if(odata==NULL){
-				std::stringstream ss;
-
-				ss<<"error fetching data from output channel ";
-				bundle_state.append_error(ss.str());
-				return bundle_state.getData();
-			}
-			//out<<"{\"name\":\""<<getPath()<<"\",\"timestamp\":"<<odata->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-			resdata.addStringValue("name",getPath());
-			resdata.addInt64Value("timestamp",time_stamp);
-			if(idata){
-				data=normalizeToJson(idata,binaryToTranslate);
-				//out<<",\"input\":"<<data->getJSONString();
-				resdata.addCSDataValue("input",*data);
-			}
-
-			if(odata){
-			//	out<<",\"output\":";
-				data=normalizeToJson(odata,binaryToTranslate);
-				//out<<data->getJSONString();
-				resdata.addCSDataValue("output",*data);
-
-			}
-//			out<<"}";
-			data->reset();
-			//CTRLDBG_<<"channel "<<channel<<" :"<<out.str();
-
-	//		data->setSerializedJsonData(out.str().c_str());
-			data->appendAllElement(resdata);
-			data->appendAllElement(*bundle_state.getData());
-		//	CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
-			return data;
-
+            std::map<int,chaos::common::data::CDataWrapper*> set;
+			set[chaos::ui::DatasetDomainInput]=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainInput);
+			set[chaos::ui::DatasetDomainOutput]=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
+            return combineDataSets(set);
+		
 		} else {
 			data=controller->fetchCurrentDatatasetFromDomain((chaos::ui::DatasetDomain)channel);
 			if(data==NULL){
@@ -650,7 +664,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 	} else if (cmd == "save" &&  (args!=0)) {
 		// bundle_state.append_log("return channel :" + parm);
-		chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
+	/*	chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
 		json_buf=data->getJSONString();
 		std::string k=path;
 		std::replace(k.begin(),k.end(),'/','_');
@@ -664,73 +678,36 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			json_buf=bundle_state.getData()->getJSONString();
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_CMD;
-		}
+		}*/
+        std::vector<std::string> other_snapped_device;
+        controller->createNewSnapshot(args,other_snapped_device);
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "load" &&  (args!=0)) {
-		::common::misc::data::blobRecord_t ret;
-
-		// bundle_state.append_log("return channel :" + parm);
-		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
-		//json_buf=data->getJSONString();
-		std::string k=path;
-		std::replace(k.begin(),k.end(),'/','_');
+        chaos_data::CDataWrapper* io[2],*ret;
+				
 		std::string key=args;
 
-		std::string tbl = "snapshot_"+ k;
-		//std::string mystring="{\"mykey\" : \"myvalue\"}";
-		//CTRLDBG_ <<"parsing json..."<<mystring;
+        controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainOutput, &io[0]);
+        controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainInput, &io[1]);
+        std::map<int, chaos::common::data::CDataWrapper *> set;
+        set[0]=io[0];
+        set[1]=io[1];
+        ret=combineDataSets(set);
+        if(ret){
+            json_buf=ret->getJSONString();
+        } else {
+            bundle_state.append_log("error making query on "+getPath() + " key:"+key);
 
-		if(strchr(args,'{')){
-			chaos::common::data::CDataWrapper data;
-			data.setSerializedJsonData(args);
-			data.addStringValue("tbl",tbl);
-
-			CTRLDBG_ <<"1 load tbl: "<< k<<" KEY:"<<data.getJSONString();
-
-
-
-
-			if(db->queryData(json_buf,data.getJSONString())!=0){
-				db->disconnect();
-				db->connect();
-				bundle_state.append_log("error making query "+data.getJSONString());
-				json_buf=bundle_state.getData()->getJSONString();
-				CALC_EXEC_TIME;
-				return CHAOS_DEV_CMD;
-
-			}
-			CTRLDBG_ <<"retriving dataset KEY:"<<data.getJSONString()<<" data:"<<json_buf;
-		} else {
-			CTRLDBG_ <<"load table: "<< k<<" key:"<<key;
-			if(db->queryData(tbl,key,ret)!=0){
-				db->disconnect();
-				db->connect();
-				bundle_state.append_log("error making query on "+tbl + " key:"+key);
-				json_buf=bundle_state.getData()->getJSONString();
-				CALC_EXEC_TIME;
-				return CHAOS_DEV_CMD;
-			} else {
-				std::stringstream ss;
-				ss<<ret;
-				json_buf=ss.str();
-				/*
-				if(ret.size()){
-						json_buf=ret[ret.size()-1].data;
-						CTRLDBG_ <<"retriving dataset "<<key<<"[" << ret[ret.size()-1].timestamp <<" data:"<<json_buf;
-
-				} else {
-					json_buf="{}";
-				}
-				*/
-			}
-		}
-
-
+            json_buf=bundle_state.getData()->getJSONString();
+            CALC_EXEC_TIME;
+            return CHAOS_DEV_CMD;
+        }
+	
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "list" ) {
-		::common::misc::data::blobRecord_t ret;
+	/*	::common::misc::data::blobRecord_t ret;
 		std::string k=path;
 		std::replace(k.begin(),k.end(),'/','_');
 		std::string tbl = "snapshot_"+ k;
@@ -739,6 +716,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		//json_buf=data->getJSONString();
 	  //		std::replace(path.begin(),path.end(),'/','_');
 	  //	std::string key = path + "_"+std::string(args);
+        controller->
 		if(db->queryData(tbl,"",ret)!=0){
 			db->disconnect();
 			db->connect();
@@ -755,7 +733,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		  json_buf=ss.str();
 		  CTRLDBG_ <<"retriving key list:"<<json_buf;
 
-
+*/
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "attr" && (args!=0)) {

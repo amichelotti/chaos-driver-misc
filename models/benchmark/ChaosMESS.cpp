@@ -76,7 +76,7 @@ void ChaosMESS::unitDefineActionAndDataset() throw(CException) {
                           DataType::Output,
                           4*1024*1024);
     
-	setDefaultCommand("DefaultCommand");
+	
 }
 
 void ChaosMESS::defineSharedVariable() {
