@@ -19,11 +19,9 @@ namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
 
 #define CmdCalcBandwidth_CMD_ALIAS		"calc_bandwidth"
 #define CmdCalcBandwidth_BYTES_PARAM_KEY	"bytes"
-
-#define CmdCalcBandwidth_BYTES_PARAM_KEY	"bytes"
 #define CmdCalcBandwidth_REPEAT_PARAM_KEY	"repeat"
 
-class CmdCalcBandwidth  : public ccc_slow_command::SlowCommand {
+DEFINE_BATCH_COMMAND_CLASS(  CmdCalcBandwidth ,ccc_slow_command::SlowCommand) {
 	uint8_t *buffer;
     int size;
     int repeat;

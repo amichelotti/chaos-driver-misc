@@ -1,7 +1,7 @@
 /*
  *	DefaultCommand.h
- *	!CHOAS
- *	Created by Bisegni Claudio.
+ *	!CHAOS
+ *	Created by Andrea Michelotti on 27/8/16.
  *
  *    	Copyright 2012 INFN, National Institute of Nuclear Physics
  *
@@ -28,6 +28,9 @@ using namespace chaos::common::data;
 
 using namespace chaos::cu::control_manager::slow_command;
 namespace chaos_batch = chaos::common::batch_command;
+BATCH_COMMAND_OPEN_DESCRIPTION(,DefaultCommand,"Default command",
+                                     "adf2973c-35de-11e5-855a-774defc0b6db")
+BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 DefaultCommand::DefaultCommand():o_lct_delay(NULL) {
    // setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)000000);

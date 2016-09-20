@@ -40,7 +40,7 @@ private:
      std::map<std::string,int> binaryToTranslate;
      uint64_t last_access,heart,reqtime,tot_us,naccess,refresh;
      int wostate;
-     ::common::misc::data::DBbase* db;
+   //  ::common::misc::data::DBbase* db;
     // NetworkBroker *broker;
      //chaos::common::message::MDSMessageChannel *mdsChannel;
                 //! Device MEssage channel to control via chaos rpc the device
@@ -180,6 +180,8 @@ protected:
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
   	chaos::common::data::CDataWrapper*fetch(int channel);
+    chaos::common::data::CDataWrapper*combineDataSets(std::map<int,chaos::common::data::CDataWrapper*>&);
+
 
 };
     }}
