@@ -662,24 +662,51 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		json_buf=data->getJSONString();
 		return CHAOS_DEV_OK;
 
-	} else if (cmd == "save" &&  (args!=0)) {
+    } else if (cmd == "queryhst" &&  (args!=0)) {
+        chaos_data::CDataWrapper p;
+        uint64_t start_ts=0,end_ts=0;
+        p.setSerializedJsonData(args);
+        if(p.hasKey("start")){
+            start_ts=p.getInt64Value("start");
+        }
+        
+        if(p.hasKey("end")){
+            end_ts=p.getInt64Value("end");
+        }
+
+
+        controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor);
+        if(query_cursor) {
+            uint32_t exported = 0;
+            if(query_cursor->hasNext()){
+                boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+                json_buf=q_result->getJSONString();
+                return CHAOS_DEV_OK;
+                
+            } else {
+                   controller->releaseQuery(query_cursor);
+            }
+        }
+        json_buf="{}";
+        return CHAOS_DEV_OK;
+
+    } else if (cmd == "queryhstnext") {
+        if(query_cursor) {
+            uint32_t exported = 0;
+            if(query_cursor->hasNext()){
+                boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+                json_buf=q_result->getJSONString();
+                return CHAOS_DEV_OK;
+                
+            } else {
+                controller->releaseQuery(query_cursor);
+            }
+        }
+        json_buf="{}";
+        return CHAOS_DEV_OK;
+        
+    } else if (cmd == "save" &&  (args!=0)) {
         int ret;
-		// bundle_state.append_log("return channel :" + parm);
-	/*	chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1);
-		json_buf=data->getJSONString();
-		std::string k=path;
-		std::replace(k.begin(),k.end(),'/','_');
-		std::string tbl = "snapshot_"+ k;
-		std::string key=args;
-		CTRLDBG_ <<"saving blk: "<< tbl<<" key:" <<key<<" data:"<<json_buf;
-		if(db->pushData(tbl,key,json_buf)!=0){
-			db->disconnect();
-			db->connect();
-			bundle_state.append_log("error pushing data on  "+tbl +" key:"+ key);
-			json_buf=bundle_state.getData()->getJSONString();
-			CALC_EXEC_TIME;
-			return CHAOS_DEV_CMD;
-		}*/
         std::vector<std::string> other_snapped_device;
 
         ret=controller->createNewSnapshot(args,other_snapped_device);
@@ -714,33 +741,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "list" ) {
-	/*	::common::misc::data::blobRecord_t ret;
-		std::string k=path;
-		std::replace(k.begin(),k.end(),'/','_');
-		std::string tbl = "snapshot_"+ k;
-		// bundle_state.append_log("return channel :" + parm);
-		//chaos::common::data::CDataWrapper*data=fetch((chaos::ui::DatasetDomain)-1));
-		//json_buf=data->getJSONString();
-	  //		std::replace(path.begin(),path.end(),'/','_');
-	  //	std::string key = path + "_"+std::string(args);
-        controller->
-		if(db->queryData(tbl,"",ret)!=0){
-			db->disconnect();
-			db->connect();
-			bundle_state.append_log("error making query on "+tbl);
-			json_buf=bundle_state.getData()->getJSONString();
-			CALC_EXEC_TIME;
-			return CHAOS_DEV_CMD;
-		}
-		std::stringstream ss;
-		::common::misc::data::_data_::format =0x3;
-		ss<<ret;
-		::common::misc::data::_data_::format =0xf;
-
-		  json_buf=ss.str();
-		  CTRLDBG_ <<"retriving key list:"<<json_buf;
-
-*/
+        ChaosStringVector snaps;
+        controller->getSnapshotList(snaps);
+        std::stringstream ss;
+        ss<<"[";
+        for(ChaosStringVector::iterator i = snaps.begin();i!=snaps.end();i++){
+            if((i+1) == snaps.end()){
+                ss<<"\""<<*i<<"\",";
+            } else{
+                ss<<"\""<<*i<<"\"";
+            }
+        }
+        ss<<"]";
+        json_buf=ss.str();
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "attr" && (args!=0)) {
