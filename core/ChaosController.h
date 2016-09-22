@@ -49,7 +49,7 @@ private:
 
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
-    haos::common::io::QueryCursor *query_cursor;
+     chaos::common::io::QueryCursor *query_cursor;
 
      int forceState(int dstState);
   public:  

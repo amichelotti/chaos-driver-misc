@@ -700,6 +700,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 
             } else {
                 controller->releaseQuery(query_cursor);
+		query_cursor=NULL;
             }
         }
         json_buf="{}";
