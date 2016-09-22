@@ -18,6 +18,7 @@
 #include <json/value.h>
 
 using namespace ::driver::misc;
+#define DBGET CTRLDBG_<<"["<<getPath()<<"]"
 
 #define CALC_EXEC_TIME \
 		tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
@@ -40,7 +41,7 @@ int ChaosController::forceState(int dstState){
 		oldstate=currState;
 		currState=getState();
 
-		CTRLDBG_ << "Current state ["<<getPath()<<"]:"<<currState<<" destination state:"<<dstState;
+		DBGET << "Current state :"<<currState<<" destination state:"<<dstState;
 		if(currState==dstState){
 		  return 0;
 		}
@@ -54,19 +55,19 @@ int ChaosController::forceState(int dstState){
 
 		switch(currState){
 		case chaos::CUStateKey::DEINIT:
-		  CTRLDBG_ << "[deinit] apply \"init\" to :"<<getPath();
+		  DBGET << "[deinit] apply \"init\"";
 		  controller->initDevice();
 		  break;
 
 		case chaos::CUStateKey::INIT:
 		  switch(dstState){
 		  case chaos::CUStateKey::DEINIT:
-		    CTRLDBG_ << "[init] apply \"deinit\" to :"<<getPath();
+		    DBGET << "[init] apply \"deinit\" ";
 		    controller->deinitDevice();
 		    break;
 		  case chaos::CUStateKey::START:
 		  case chaos::CUStateKey::STOP:
-		    CTRLDBG_ << "[init] apply \"start\" to :"<<getPath();
+		    DBGET << "[init] apply \"start\"";;
 		    controller->startDevice();
 		    break;
 
@@ -75,7 +76,7 @@ int ChaosController::forceState(int dstState){
 		  break;
 
 		case chaos::CUStateKey::START:
-		  CTRLDBG_ << "[start] apply \"stop\" to :"<<getPath();
+		  DBGET << "[start] apply \"stop\"";
 		  controller->stopDevice();
 		  break; 
 
@@ -84,11 +85,11 @@ int ChaosController::forceState(int dstState){
 		  switch(dstState){
 		  case chaos::CUStateKey::DEINIT:
 		  case chaos::CUStateKey::INIT:
-		    CTRLDBG_ << "[stop] apply \"deinit\" to :"<<getPath();
+		    DBGET << "[stop] apply \"deinit\"";
 		    controller->deinitDevice();
 		    break;
 		  case chaos::CUStateKey::START:
-		    CTRLDBG_ << "[stop] apply \"start\" to :"<<getPath();
+		    DBGET << "[stop] apply \"start\"";
 		    controller->startDevice();
 		    break;
 		    
@@ -200,11 +201,11 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 	schedule=0;
 	bundle_state.reset();
 	bundle_state.status(state);
-	CTRLDBG_ << "init CU NAME:\""<<path<<"\""<<" timeo:"<<timeo_;
-	/* CTRLDBG_<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
-    CTRLDBG_<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
-    CTRLDBG_<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
-    CTRLDBG_<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
+	DBGET << "init CU NAME:\""<<path<<"\""<<" timeo:"<<timeo_;
+	/* DBGET<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
+    DBGET<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
+    DBGET<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
+    DBGET<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
 	 */
 
 	//chaos::common::utility::InizializableService::initImplementation(chaos::common::async_central::AsyncCentralManager::getInstance(), 0, "AsyncCentralManager", __PRETTY_FUNCTION__);
@@ -214,7 +215,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 
 	if(controller!=NULL){
 
-		CTRLDBG_<<" removing existing controller";
+		DBGET<<" removing existing controller";
 		chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
 	}
 
@@ -246,10 +247,10 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 	}
 	std::vector<chaos::common::data::RangeValueInfo> vi=controller->getDeviceValuesInfo();
 	for(std::vector<chaos::common::data::RangeValueInfo>::iterator i=vi.begin();i!=vi.end();i++){
-		//CTRLDBG_<<"attr_name:"<< i->name<<"type:"<<i->valueType;
+		//DBGET<<"attr_name:"<< i->name<<"type:"<<i->valueType;
 		if((i->valueType==chaos::DataType::TYPE_BYTEARRAY) && (i->binType!=chaos::DataType::SUB_TYPE_NONE)){
 			binaryToTranslate.insert(std::make_pair(i->name,i->binType));
-			CTRLDBG_ << i->name<<" is binary of type:"<<i->binType;
+			DBGET << i->name<<" is binary of type:"<<i->binType;
 		}
 	}
 	chaos::common::data::CDataWrapper *  dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainSystem);
@@ -259,7 +260,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
 		CTRLERR_<<"cannot retrieve system dataset from "<<path;
 		return -3;
 	}
-	CTRLDBG_<<"initalization ok handle:"<<(void*)controller;
+	DBGET<<"initalization ok handle:"<<(void*)controller;
 	last_access =boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	return 0;
 }
@@ -281,7 +282,7 @@ int ChaosController::waitCmd(command_t&cmd){
 
 	} while((command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED) && (command_state.last_event!=chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)  && ((boost::posix_time::microsec_clock::local_time()-start).total_microseconds()<timeo));
 
-	CTRLDBG_ <<" Command state last event:"<<command_state.last_event;
+	DBGET <<" Command state last event:"<<command_state.last_event;
 	if((command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_COMPLETED)||(command_state.last_event==chaos::common::batch_command::BatchCommandEventType::EVT_RUNNING)){
 		return 0;
 	}
@@ -294,11 +295,11 @@ int ChaosController::sendCmd(command_t& cmd,bool wait,uint64_t perform_at,uint64
 		return -2;
 	if(perform_at){
 		cmd->param.addInt64Value("perform_at",perform_at);
-		CTRLDBG_ << "command will be performed at "<< perform_at;
+		DBGET << "command will be performed at "<< perform_at;
 
 	} else if(wait_for){
 		cmd->param.addInt64Value("wait_for",wait_for);
-		CTRLDBG_ << "command will be performed in "<< wait_for<<" us";
+		DBGET << "command will be performed in "<< wait_for<<" us";
 
 
 	}
@@ -332,13 +333,13 @@ int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uin
 	}
 	last_cmd=cmd;
 	if(wait){
-		CTRLDBG_ << "waiting command id:"<<cmd->command_id;
+		DBGET << "waiting command id:"<<cmd->command_id;
 		if((ret=waitCmd(cmd))!=0){
 			CTRLERR_<<"error waiting ret:"<<ret;
 
 			return ret;
 		}
-		CTRLDBG_ << "command performed";
+		DBGET << "command performed";
 	}
 	return ret;
 }
@@ -432,7 +433,7 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
     data->reset();
     data->appendAllElement(resdata);
     data->appendAllElement(*bundle_state.getData());
-    //	CTRLDBG_<<"channel "<<channel<<" :"<<odata->getJSONString();
+    //	DBGET<<"channel "<<channel<<" :"<<odata->getJSONString();
     return data;
 
 }
@@ -464,7 +465,7 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
 
 		data->appendAllElement(*bundle_state.getData());
 
-		CTRLDBG_<<"channel "<<channel<<" :"<<data->getJSONString();
+		DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
 
 	} catch (chaos::CException& e) {
 		std::stringstream ss;
@@ -485,7 +486,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	naccess++;
 	bundle_state.reset();
 	bundle_state.status(state);
-	CTRLDBG_<<"cmd:"<<cmd<< " args:"<<args<<" last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
+	DBGET<<"cmd:"<<cmd<< " args:"<<args<<" last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
 	try {
 		//Json::Reader rreader;
 		//Json::Value vvalue;
@@ -715,10 +716,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             snapname=p.getStringValue("snapname");
             std::vector<std::string> other;
             ret=controller->createNewSnapshot(snapname,other);
-            CTRLDBG_ <<"SAVE snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<ret;
+	    if(ret==0){
+	      DBGET <<"SAVE snapshot "<<snapname <<" ret:"<<ret;
+	    } else {
+	      bundle_state.append_error("error saving snapshot "+getPath() + " snapname:"+snapname);
+	      CALC_EXEC_TIME;
+	      return CHAOS_DEV_CMD;
+	    }
             return CHAOS_DEV_OK;
         }
-        bundle_state.append_log("error bad arguments for save snapshot "+getPath() + " key:"+std::string(args));
+        bundle_state.append_error("error bad arguments for save snapshot "+getPath() + " key:"+std::string(args));
         CALC_EXEC_TIME;
         return CHAOS_DEV_CMD;
 
@@ -730,10 +737,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         if(p.hasKey("snapname")){
             snapname=p.getStringValue("snapname");
             ret=controller->deleteSnapshot(snapname);
-            CTRLDBG_ <<"DELETE snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<ret;
+	    if(ret==0){
+	      DBGET <<"DELETE snapshot "<<snapname <<" ret:"<<ret;
             
-            return CHAOS_DEV_OK;
-
+	      return CHAOS_DEV_OK;
+	    }
+	    bundle_state.append_log("error deleting snapshot "+getPath() + " key:"+std::string(args));
+	    CALC_EXEC_TIME;
+	    return CHAOS_DEV_CMD;
         }
         
         bundle_state.append_log("error bad arguments for deleting snapshot "+getPath() + " key:"+std::string(args));
@@ -745,6 +756,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         chaos_data::CDataWrapper* io[2],*ret;
         chaos_data::CDataWrapper p;
         std::string snapname;
+	io[0]=0;
+	io[1]=0;
         p.setSerializedJsonData(args);
         if(p.hasKey("snapname")){
             snapname=p.getStringValue("snapname");
@@ -752,6 +765,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             
             retc+=controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
             retc+=controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainInput, &io[1]);
+	    if(retc || io[0]==NULL || io[1] ==NULL){
+	      bundle_state.append_error("error load snapshot "+getPath() + " snap name:"+snapname);
+	      json_buf=bundle_state.getData()->getJSONString();
+	      CALC_EXEC_TIME;
+	      return CHAOS_DEV_CMD;
+	    }
+	    
             std::map<int, chaos::common::data::CDataWrapper *> set;
             set[0]=io[0];
             set[1]=io[1];
@@ -760,26 +780,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf=ret->getJSONString();
             } else {
                 bundle_state.append_log("error making load snapshot "+getPath() + " snap name:"+snapname);
-                
                 json_buf=bundle_state.getData()->getJSONString();
                 CALC_EXEC_TIME;
                 return CHAOS_DEV_CMD;
             }
 
             
-            CTRLDBG_ <<"LOAD snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<retc;
+            DBGET <<"LOAD snapshot "<<snapname <<" ret:"<<retc;
             return CHAOS_DEV_OK;
             
-        }
+        } else {
+	  bundle_state.append_error("error bad arguments for load snapshot "+getPath() + " key:"+std::string(args));
+	  CALC_EXEC_TIME;
+	  return CHAOS_DEV_CMD;
+	}
 
       
-        
-		return CHAOS_DEV_OK;
-
+       
 	} else if (cmd == "list" ) {
         ChaosStringVector snaps;
-        controller->getSnapshotList(snaps);
+	int ret;
+        ret=controller->getSnapshotList(snaps);
         std::stringstream ss;
+	DBGET<<"list snapshot err:"<<ret;
         ss<<"[";
         for(ChaosStringVector::iterator i = snaps.begin();i!=snaps.end();i++){
             if((i+1) == snaps.end()){
@@ -790,7 +813,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         }
         ss<<"]";
         json_buf=ss.str();
-		return CHAOS_DEV_OK;
+	return CHAOS_DEV_OK;
 
 	} else if (cmd == "attr" && (args!=0)) {
 
@@ -804,12 +827,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			check.assign(data.getCStringValue(*i));
 			if(check.compare(0,2,"0x")==0){
 				sprintf(param,"%lld",strtoull(data.getCStringValue(*i),0,0));
-				CTRLDBG_<<"converted parameter:"<<param;
+				DBGET<<"converted parameter:"<<param;
 
 			} else {
 				strncpy(param,data.getCStringValue(*i),sizeof(param));
 			}
-			CTRLDBG_<<"applying \""<<i->c_str()<<"\"="<<param;
+			DBGET<<"applying \""<<i->c_str()<<"\"="<<param;
 			bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(param) + "\" to device:\"" + path+"\"");
 			err = controller->setAttributeToValue(i->c_str(), param, false);
 			if(err!=0){
@@ -821,7 +844,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 		}
 		json_buf=bundle_state.getData()->getJSONString();
-		CTRLDBG_<<"attribute applied:"<<json_buf;
+		DBGET<<"attribute applied:"<<json_buf;
 		return CHAOS_DEV_OK;
 	} else if (cmd == "recover") {
 		bundle_state.append_log("send recover from error:\"" + path);
@@ -992,7 +1015,7 @@ void ChaosController::dev_info_status::status(chaos::CUStateKey::ControlUnitStat
 }
 
 void ChaosController::dev_info_status::append_log(std::string log) {
-	CTRLDBG_ << log;
+       CTRLDBG_ << log;
 	snprintf(log_status, sizeof (log_status), "%s%s;", log_status, log.c_str());
 
 }
