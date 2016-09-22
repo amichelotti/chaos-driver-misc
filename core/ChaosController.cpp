@@ -707,37 +707,72 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         
     } else if (cmd == "save" &&  (args!=0)) {
         int ret;
-        std::vector<std::string> other_snapped_device;
-
-        ret=controller->createNewSnapshot(args,other_snapped_device);
-        CTRLDBG_ <<"SAVE snapshot for \""<< getPath()<<" snapname:" <<args <<" ret:"<<ret;
-
-		return CHAOS_DEV_OK;
-
-	} else if (cmd == "load" &&  (args!=0)) {
-        chaos_data::CDataWrapper* io[2],*ret;
-        int retc=0;
-		
-		std::string key=args;
-
-        retc+=controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainOutput, &io[0]);
-        retc+=controller->loadDatasetTypeFromSnapshotTag(key, chaos::ui::DatasetDomainInput, &io[1]);
-        CTRLDBG_ <<"LOAD snapshot for \""<< getPath()<<" snapname:" <<args <<" ret:"<<retc;
-
-        std::map<int, chaos::common::data::CDataWrapper *> set;
-        set[0]=io[0];
-        set[1]=io[1];
-        ret=combineDataSets(set);
-        if(ret){
-            json_buf=ret->getJSONString();
-        } else {
-            bundle_state.append_log("error making query on "+getPath() + " key:"+key);
-
-            json_buf=bundle_state.getData()->getJSONString();
-            CALC_EXEC_TIME;
-            return CHAOS_DEV_CMD;
+        chaos_data::CDataWrapper p;
+        std::string snapname;
+        p.setSerializedJsonData(args);
+        if(p.hasKey("snapname")){
+            snapname=p.getStringValue("snapname");
+            std::vector<std::string> other;
+            ret=controller->createNewSnapshot(snapname,other);
+            CTRLDBG_ <<"SAVE snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<ret;
+            return CHAOS_DEV_OK;
         }
-	
+        bundle_state.append_log("error bad arguments for save snapshot "+getPath() + " key:"+std::string(args));
+        CALC_EXEC_TIME;
+        return CHAOS_DEV_CMD;
+
+    } else if (cmd == "delete" &&  (args!=0)) {
+        int ret;
+        chaos_data::CDataWrapper p;
+        std::string snapname;
+        p.setSerializedJsonData(args);
+        if(p.hasKey("snapname")){
+            snapname=p.getStringValue("snapname");
+            ret=controller->deleteSnapshot(snapname);
+            CTRLDBG_ <<"DELETE snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<ret;
+            
+            return CHAOS_DEV_OK;
+
+        }
+        
+        bundle_state.append_log("error bad arguments for deleting snapshot "+getPath() + " key:"+std::string(args));
+        CALC_EXEC_TIME;
+        return CHAOS_DEV_CMD;
+        
+        
+    } else if (cmd == "load" &&  (args!=0)) {
+        chaos_data::CDataWrapper* io[2],*ret;
+        chaos_data::CDataWrapper p;
+        std::string snapname;
+        p.setSerializedJsonData(args);
+        if(p.hasKey("snapname")){
+            snapname=p.getStringValue("snapname");
+            int retc=0;
+            
+            retc+=controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
+            retc+=controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainInput, &io[1]);
+            std::map<int, chaos::common::data::CDataWrapper *> set;
+            set[0]=io[0];
+            set[1]=io[1];
+            ret=combineDataSets(set);
+            if(ret){
+                json_buf=ret->getJSONString();
+            } else {
+                bundle_state.append_log("error making load snapshot "+getPath() + " snap name:"+snapname);
+                
+                json_buf=bundle_state.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_CMD;
+            }
+
+            
+            CTRLDBG_ <<"LOAD snapshot for \""<< getPath()<<" snapname:" <<snapname <<" ret:"<<retc;
+            return CHAOS_DEV_OK;
+            
+        }
+
+      
+        
 		return CHAOS_DEV_OK;
 
 	} else if (cmd == "list" ) {
