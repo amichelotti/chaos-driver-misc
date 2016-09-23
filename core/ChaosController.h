@@ -26,6 +26,9 @@
 #define DEFAULT_DBTYPE "cassandra"
 #define DEFAULT_DBNAME "chaos"
 #define DEFAULT_DBREPLICATION "2"
+#define DEFAULT_PAGE 1000
+#define MAX_CONCURRENT_QUERY 100
+#define MAX_QUERY_ELEMENTS 100000
 namespace driver{
     
     namespace misc{
@@ -49,8 +52,8 @@ private:
 
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
-     chaos::common::io::QueryCursor *query_cursor;
-
+    uint32_t queryuid;
+    std::map<uint64_t,chaos::common::io::QueryCursor *> query_cursor_map;
      int forceState(int dstState);
   public:  
 
