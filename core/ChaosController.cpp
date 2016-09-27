@@ -243,9 +243,8 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
     refresh=0;
     naccess=0;
     if(getState()<0){
-        CTRLERR_<<"during getting state for device:"<<path;
-	wostate=1;
-        return -2;
+        DBGET<<"Uknown state for device assuming wostate";
+        wostate=1;
     }
     std::vector<chaos::common::data::RangeValueInfo> vi=controller->getDeviceValuesInfo();
     for(std::vector<chaos::common::data::RangeValueInfo>::iterator i=vi.begin();i!=vi.end();i++){
@@ -255,7 +254,14 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
             DBGET << i->name<<" is binary of type:"<<i->binType;
         }
     }
-    chaos::common::data::CDataWrapper *  dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainSystem);
+    chaos::common::data::CDataWrapper *  dataWrapper;
+    if(wostate){
+        dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
+
+    } else {
+        dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainSystem);
+    }
+    
     if(dataWrapper){
         json_dataset=dataWrapper->getJSONString();
     } else {
