@@ -171,6 +171,7 @@ int  ChaosController::getState(){
     if(controller->getState(state)>0){
         return state;
     }
+    state =chaos::CUStateKey::UNDEFINED;;
     return -1;
 }
 
@@ -243,6 +244,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
     naccess=0;
     if(getState()<0){
         CTRLERR_<<"during getting state for device:"<<path;
+	wostate=1;
         return -2;
     }
     std::vector<chaos::common::data::RangeValueInfo> vi=controller->getDeviceValuesInfo();
@@ -424,12 +426,13 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
             //out<<",\"input\":"<<data->getJSONString();
             resdata.addCSDataValue(chaosDomainToString(i->first),*data);
         } else {
-            std::stringstream ss;
-            
-            ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
-            bundle_state.append_error(ss.str());
-            return bundle_state.getData();
-        }
+	  
+	  chaos::common::data::CDataWrapper empty;
+	  resdata.addCSDataValue(chaosDomainToString(i->first),empty);
+	  //	  ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
+	  //	  bundle_state.append_error(ss.str());
+	  //	  return bundle_state.getData();
+	}
     }
     data->reset();
     data->appendAllElement(resdata);
@@ -466,7 +469,7 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
         
         data->appendAllElement(*bundle_state.getData());
         
-        DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
+	//        DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
         
     } catch (chaos::CException& e) {
         std::stringstream ss;
@@ -690,15 +693,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor,page);
                     if(query_cursor){
                         int cnt=0;
-                        res<<"{\"uid\":"<<queryuid<<",data:";
                        
                         query_cursor_map[++queryuid]=query_cursor;
+			res<<"{\"uid\":"<<queryuid<<",data:";
+
+			DBGET<<"paged query start:"<<start_ts<<" end:"<<end_ts<< " page uid "<<queryuid; 
                         current_query=queryuid;
                         res<<"[";
                         while((query_cursor->hasNext())&&(cnt<page)){
                             boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                             res<<q_result->getJSONString();
                             cnt++;
+			    DBGET<<"getting query page  "<<cnt;
                             if((query_cursor->hasNext())&&(cnt<page)){
                                 res<<",";
                             }
@@ -719,14 +725,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             } else {
                 controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor);
                 if(query_cursor){
+		  DBGET<<"not paged query start:"<<start_ts<<" end:"<<end_ts << " has next " <<(query_cursor->hasNext()); 
                     int cnt=0;
                     res<<"[";
                     while((query_cursor->hasNext())&& (cnt<MAX_QUERY_ELEMENTS)){
+
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         res<<q_result->getJSONString();
                         cnt++;
+			DBGET<<"getting query page  "<<cnt;
                         if((query_cursor->hasNext())&&(cnt<MAX_QUERY_ELEMENTS)){
                             res<<",";
+
                         }
                     }
                     res<<"]";
