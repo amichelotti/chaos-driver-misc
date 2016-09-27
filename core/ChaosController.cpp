@@ -257,7 +257,7 @@ int ChaosController::init(std::string p,uint64_t timeo_)  {
     chaos::common::data::CDataWrapper *  dataWrapper;
     if(wostate){
         dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainOutput);
-
+        
     } else {
         dataWrapper = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainSystem);
     }
@@ -432,13 +432,13 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
             //out<<",\"input\":"<<data->getJSONString();
             resdata.addCSDataValue(chaosDomainToString(i->first),*data);
         } else {
-	  
-	  chaos::common::data::CDataWrapper empty;
-	  resdata.addCSDataValue(chaosDomainToString(i->first),empty);
-	  //	  ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
-	  //	  bundle_state.append_error(ss.str());
-	  //	  return bundle_state.getData();
-	}
+            
+            chaos::common::data::CDataWrapper empty;
+            resdata.addCSDataValue(chaosDomainToString(i->first),empty);
+            //	  ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
+            //	  bundle_state.append_error(ss.str());
+            //	  return bundle_state.getData();
+        }
     }
     data->reset();
     data->appendAllElement(resdata);
@@ -475,7 +475,7 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel){
         
         data->appendAllElement(*bundle_state.getData());
         
-	//        DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
+        //        DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
         
     } catch (chaos::CException& e) {
         std::stringstream ss;
@@ -699,23 +699,30 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor,page);
                     if(query_cursor){
                         int cnt=0;
-                       
-                        query_cursor_map[++queryuid]=query_cursor;
-			res<<"{\"uid\":"<<queryuid<<",data:";
-
-			DBGET<<"paged query start:"<<start_ts<<" end:"<<end_ts<< " page uid "<<queryuid; 
+                        
+                        res<<"{\"data\":[";
+                        
+                        DBGET<<"paged query start:"<<start_ts<<" end:"<<end_ts<< " page uid "<<queryuid;
                         current_query=queryuid;
-                        res<<"[";
+                        
                         while((query_cursor->hasNext())&&(cnt<page)){
                             boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                             res<<q_result->getJSONString();
                             cnt++;
-			    DBGET<<"getting query page  "<<cnt;
+                            DBGET<<"getting query page  "<<cnt;
                             if((query_cursor->hasNext())&&(cnt<page)){
                                 res<<",";
                             }
                         }
-                        res<<"]}";
+                        res<<"]";
+                        if((query_cursor->hasNext()==false){
+                            res<<",\"uid\":0}"
+                            controller->releaseQuery(query_cursor);
+                        } else {
+                            query_cursor_map[++queryuid]=query_cursor;
+                            res<<",\"uid\":"<<queryuid<<"}";
+                        }
+
                     } else {
                         bundle_state.append_error("cannot perform specified query, no data? "+getPath());
                         CALC_EXEC_TIME;
@@ -731,22 +738,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             } else {
                 controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor);
                 if(query_cursor){
-		  DBGET<<"not paged query start:"<<start_ts<<" end:"<<end_ts << " has next " <<(query_cursor->hasNext()); 
+                    DBGET<<"not paged query start:"<<start_ts<<" end:"<<end_ts << " has next " <<(query_cursor->hasNext());
                     int cnt=0;
                     res<<"[";
                     while((query_cursor->hasNext())&& (cnt<MAX_QUERY_ELEMENTS)){
-
+                        
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         res<<q_result->getJSONString();
                         cnt++;
-			DBGET<<"getting query page  "<<cnt;
+                        DBGET<<"getting query page  "<<cnt;
                         if((query_cursor->hasNext())&&(cnt<MAX_QUERY_ELEMENTS)){
                             res<<",";
-
+                            
                         }
                     }
                     res<<"]";
-    
+                    
                 } else {
                     bundle_state.append_error("cannot perform specified query, no data? "+getPath());
                     CALC_EXEC_TIME;
@@ -767,7 +774,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             chaos_data::CDataWrapper p;
             p.setSerializedJsonData(args);
             std::stringstream res;
-
+            
             uint32_t uid=0;
             if(p.hasKey("uid")){
                 uid=p.getInt32Value("uid");
@@ -781,8 +788,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 if(query_cursor){
                     int cnt=0;
                     uint32_t page=query_cursor->getPageLen();
-                    res<<"{\"page\":"<<uid<<",data:[";
-
+                    res<<"{\"data\":[";
+                    
                     while((query_cursor->hasNext())&&(cnt<page)){
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         res<<q_result->getJSONString();
@@ -791,20 +798,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             res<<",";
                         }
                     }
-                    res<<"]}";
-                    if(query_cursor->hasNext()==false){
+                    res<<"]";
+                    if((query_cursor->hasNext()==false){
+                        res<<",\"uid\":0}"
                         controller->releaseQuery(query_cursor);
-                        if(uid){
-                            query_cursor_map.erase(query_cursor_map.find(uid));
-                        }
+                        query_cursor_map.erase(query_cursor_map.find(uid));
+
+                    } else {
+                        res<<",\"uid\":"<<uid<<"}";
                     }
+
                     json_buf=res.str();
                     return CHAOS_DEV_OK;
                 }
                 bundle_state.append_error("cannot perform specified query, no data? "+getPath());
                 CALC_EXEC_TIME;
                 return CHAOS_DEV_CMD;
-
+                
             } else {
                 std::stringstream ss;
                 ss<<"the uid "<<uid<<" does not exists "+getPath();
