@@ -715,12 +715,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             }
                         }
                         res<<"]";
-                        if((query_cursor->hasNext()==false){
-                            res<<",\"uid\":0}"
-                            controller->releaseQuery(query_cursor);
+                        if(query_cursor->hasNext()==false){
+			  res<<",\"uid\":0}";
+			  controller->releaseQuery(query_cursor);
                         } else {
-                            query_cursor_map[++queryuid]=query_cursor;
-                            res<<",\"uid\":"<<queryuid<<"}";
+			  query_cursor_map[++queryuid]=query_cursor;
+			  res<<",\"uid\":"<<queryuid<<"}";
                         }
 
                     } else {
@@ -799,11 +799,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                     }
                     res<<"]";
-                    if((query_cursor->hasNext()==false){
-                        res<<",\"uid\":0}"
-                        controller->releaseQuery(query_cursor);
-                        query_cursor_map.erase(query_cursor_map.find(uid));
-
+                    if(query_cursor->hasNext()==false){
+		      res<<",\"uid\":0}";
+		      controller->releaseQuery(query_cursor);
+		      query_cursor_map.erase(query_cursor_map.find(uid));
+		      
                     } else {
                         res<<",\"uid\":"<<uid<<"}";
                     }
