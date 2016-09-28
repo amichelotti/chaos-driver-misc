@@ -28,7 +28,7 @@
 #define DEFAULT_DBREPLICATION "2"
 #define DEFAULT_PAGE 1000
 #define MAX_CONCURRENT_QUERY 100
-#define MAX_QUERY_ELEMENTS 100000
+#define MAX_QUERY_ELEMENTS 1000
 namespace driver{
     
     namespace misc{

@@ -690,7 +690,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 end_ts=p.getInt64Value("end");
             }
             if(p.hasKey("uid")){
-                page=p.getInt32Value("uid");
+                page=p.getInt32Value("page");
                 paging=1;
             }
             
