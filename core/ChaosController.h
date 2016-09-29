@@ -53,7 +53,9 @@ private:
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
     uint32_t queryuid;
-    std::map<uint64_t,chaos::common::io::QueryCursor *> query_cursor_map;
+    typedef std::map<uint64_t,chaos::common::io::QueryCursor *> query_cursor_map_t;
+
+    query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
   public:  
 
