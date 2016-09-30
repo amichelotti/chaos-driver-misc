@@ -867,7 +867,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		      
                     } else {
                         res<<",\"uid\":"<<uid<<"}";
-			DBGET<<"queryhstnext some page missing still:"<<cnt<<"with uid:"<<uid<<" \""<<res.str()<<"\"";
+			DBGET<<"queryhstnext some page missing still:"<<cnt<<"with uid:"<<uid;
                     }
 
                     json_buf=res.str();
