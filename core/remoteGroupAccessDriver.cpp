@@ -25,8 +25,12 @@ remoteGroupAccessDriver::~remoteGroupAccessDriver() {
 }
 
 int remoteGroupAccessDriver::read(void *buffer, int addr, int bcount){
-    if(buffer==NULL)
-        return -1;
+    if(buffer==NULL){
+        CTRLERR_ <<"invalid buffer given";
+
+    	return -1;
+    }
+    CTRLDBG_<<"reading addr "<<addr<< "buffer size"<<bcount<<" group "<<group <<" data_group "<<data_group;
     
     if((addr==0) && group){
         memcpy(buffer,(void*)&group,sizeof(ChaosControllerGroup<ChaosController>*));
@@ -36,6 +40,7 @@ int remoteGroupAccessDriver::read(void *buffer, int addr, int bcount){
         memcpy(buffer,(void*)&data_group,sizeof(ChaosDatasetAttributeGroup*));
         return 1;
     }
+    CTRLERR_ <<"error reading";
     return 0;
 }
 int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
@@ -61,6 +66,7 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
    data_group=new ChaosDatasetAttributeGroup();
    if(group==NULL || data_group==NULL){
        CTRLERR_ <<" cannot create resources";
+       return -10;
    }
     for( std::vector<std::string>::iterator i=vars.begin();i!=vars.end();i++){
         if(!(*i).empty()){
@@ -74,8 +80,12 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
     }
    group->setTimeout(10000000);
    data_group->setTimeout(10000000);
+	CTRLDBG_<<"DONE";
+
+   return 0;
 }
 int remoteGroupAccessDriver::deinitIO(){
+	CTRLDBG_<<"DEINITIALIZING";
     if(group)
         delete group;
     group=NULL;
@@ -83,4 +93,5 @@ int remoteGroupAccessDriver::deinitIO(){
         delete data_group;
     
     data_group = NULL;
+    return 0;
 }

@@ -36,7 +36,7 @@ using namespace chaos::cu::driver_manager::driver;
 #define SCCUAPP LAPP_ << "[SCDataSync - " << getCUID() << "] - "<<__FUNCTION__<<":"
 #define SCCULDBG LDBG_ << "[SCDataSync - " << getCUID() << "] - "<<__FUNCTION__<<":"
 
-PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(driver::misc::SCDataSync)
+PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::misc::SCDataSync)
 
 using namespace ::driver::misc;
 /*
@@ -49,18 +49,17 @@ SCDataSync::SCDataSync(const string& _control_unit_id,
 chaos::cu::control_manager::SCAbstractControlUnit(_control_unit_id,
 												  _control_unit_param,
 												  _control_unit_drivers){
-     driver=new remoteGroupAccessInterface(getAccessoInstanceByIndex(0));
-     if((driver == NULL) || (driver->connect()!=0)){
-         throw chaos::CException(-1,"cannot connect with driver",__PRETTY_FUNCTION__);
-     }
-
+    
+  driver =NULL;
 }
 
 /*
  Base destructor
  */
 SCDataSync::~SCDataSync() {
+  if(driver){
     delete driver;
+  }
     
     
 }
@@ -70,7 +69,10 @@ SCDataSync::~SCDataSync() {
  Return the default configuration
  */
 void SCDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
-  
+   driver=new remoteGroupAccessInterface(getAccessoInstanceByIndex(0));
+     if((driver == NULL) || (driver->connect()!=0)){
+         throw chaos::CException(-1,"cannot connect with driver",__PRETTY_FUNCTION__);
+     }
     std::vector<ChaosDatasetAttribute*> ret= driver->getRemoteVariables();
     for(std::vector<ChaosDatasetAttribute*>::iterator i=ret.begin();i!=ret.end();i++){
         SCCULDBG<<"adding \""<<(*i)->getName()<<"\" desc: \""<<(*i)->getDesc()<<"\" type:"<<(*i)->getType()<<" dir:"<<(*i)->getDir()<<" size:"<<(*i)->getSize();

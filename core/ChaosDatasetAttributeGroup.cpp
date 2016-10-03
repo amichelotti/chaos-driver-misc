@@ -26,7 +26,14 @@ ChaosDatasetAttributeGroup::~ChaosDatasetAttributeGroup() {
     
 }
 
-
+ 
+void ChaosDatasetAttributeGroup::setUpdateMode(ChaosDatasetAttribute::UpdateMode mode,uint64_t ustime){
+      for(std::map<std::string,ChaosDatasetAttribute* >::iterator i=id2attr.begin();i!=id2attr.end();i++){
+         
+         i->second->setUpdateMode(mode,ustime);
+    }
+    
+}
 
 void ChaosDatasetAttributeGroup::add(ChaosDatasetAttribute& d){
     add(&d);
@@ -106,8 +113,11 @@ void ChaosDatasetAttributeGroup::remove(std::string path){
     
     
 ChaosDatasetAttribute* ChaosDatasetAttributeGroup::getAttr(std::string path){
-        if(id2attr.find(path)==id2attr.end())
+        if(id2attr.find(path)==id2attr.end()){
+            ATTRERR_<<"no attribute found with path \""<<path<<"\"";
+
             return NULL;
+        }
         return id2attr[path];
 }
 

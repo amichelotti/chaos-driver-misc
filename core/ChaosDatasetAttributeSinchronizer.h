@@ -77,7 +77,7 @@ public:
      if(ok==set.size()){
          return micro_spent;
      }
-     return 0;
+     return -1;
     }
     /**
      read and wait untill all the pool is synchronized in timestamp

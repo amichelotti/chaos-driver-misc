@@ -169,6 +169,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
         if(wait_for>= del){
             wait_for -=del;
         }
+        CTRLDBGG_<<"executing command on "<<(*i)->getPath()<<" cmd:"<<cmd->alias<<" "<<cmd->param.getJSONString();
         if((*i)->T::executeCmd(cmd,false,perform_at,wait_for)!=0){
             CTRLERRG_<<" executing command  "<<(*i)->getPath();   
             error=*i;

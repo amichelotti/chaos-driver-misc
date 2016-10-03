@@ -33,7 +33,12 @@ public:
     virtual ~ChaosDatasetAttributeGroup();
     
    
-    
+     /**
+     set the update mode
+     @param mode mode
+     @param ustime update time
+     */
+    void setUpdateMode(ChaosDatasetAttribute::UpdateMode mode,uint64_t ustime);
     /**
      set the interval or error  between two good synchronized attributes 
      @param interval (seconds or value ) t
