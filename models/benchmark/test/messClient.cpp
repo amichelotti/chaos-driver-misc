@@ -37,7 +37,7 @@
 #include <boost/shared_ptr.hpp>
 #include "MessProfilePacketInfo.h"
 #include <boost/crc.hpp>
-#define RETRY_LOOP 100000
+#define RETRY_LOOP 10000
 #define BAND_REPETITION 100
 #define MAX_BUFFER 1024*1024
 
@@ -50,8 +50,7 @@ using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::date_time;
 namespace chaos_batch = chaos::common::batch_command;
-bool readonly=false;
-bool wronly=false;
+
 #define OPT_MESS_DID                        "mess_device_id"
 #define OPT_MESS_PHASES_START               "start"
 #define OPT_MESS_PHASES_STOP                "stop"
@@ -70,11 +69,20 @@ bool wronly=false;
 #define OPT_MAX                 "max"
 #define OPT_INCREMENT                "increment"
 #define OPT_START                    "start"
+#define OPT_READ_DELAY                    "read_delay"
+#define OPT_DYN_PROF                    "dyn_prof_rate"
 
 #define OPT_TEST_REPETITION               "test_repetition"
+#define OPT_MAX_RETRY               "max_retry"
 
+#define OPT_TEST_UI_FREQ            "test_ui_freq"
 
-
+static bool readonly=false;
+static bool wronly=false;
+static bool test_ui_freq=false;
+static uint32_t read_delay=0;
+static uint32_t dyn_prof_rate=0;
+static uint32_t max_retry=RETRY_LOOP;
 class perform_test {
 
 protected:
@@ -95,7 +103,9 @@ public:
     if ( fs == NULL || !fs->good()) {
       throw CException(1, string(__FUNCTION__), "## cannot open " + filename);
     }
-    if(readonly)
+
+
+    if(readonly&& !test_ui_freq)
       return;
     err = controller->initDevice();
     if (err == ErrorCode::EC_TIMEOUT) throw CException(6,string(__FUNCTION__), "Set device to init state");
@@ -111,7 +121,7 @@ public:
     fs.reset();
     LAPP_ << "Wrote  " << filename<<endl;
     usleep(100000); // TODO: MAY NOT WORK IF THE DEVICE IS BUSY
-    if(readonly)
+    if(readonly&& !test_ui_freq)
       return;
 	
     err = controller->stopDevice();
@@ -151,8 +161,13 @@ public:
     boost::posix_time::ptime start_test = boost::posix_time::microsec_clock::local_time();
     int64_t start_test_us=start_test.time_of_day().total_microseconds();
     uint32_t counter =0;
+    if(test_ui_freq){
+      test_data.addInt32Value("repeat", 1);
+    } else {
+      test_data.addInt32Value("repeat", repetition);
+    }
     test_data.addInt32Value("bytes", bytes);
-    test_data.addInt32Value("repeat", repetition);
+
     test_data.addInt64Value("ts_tag", start_test_us);
     int ui_cu_time_shift[repetition];
 
@@ -173,13 +188,14 @@ public:
     double cputime=0,systime=0;
 
     int err;
-    int retry=RETRY_LOOP;
+    uint32_t retry=1000;
 		
     MessProfilePacketInfo *prof=0;
     controller->fetchCurrentDeviceValue();
     wrapped_data = controller->getCurrentData();
     retry=10;
-    if((readonly==false)||(wronly==true)){
+
+    if((readonly==false)||(wronly==true)||test_ui_freq){
       do{
 	start_test_us=start_test.time_of_day().total_microseconds();
 	err = controller->submitSlowControlCommand("calc_bandwidth",
@@ -200,12 +216,34 @@ public:
       
       if (err != ErrorCode::EC_NO_ERROR) throw CException(2, "Error", "executing command");
     }
-    retry=RETRY_LOOP;
+    retry=max_retry;
     if(wronly&&(!readonly))
       return 0;
-
+    if(test_ui_freq){
+      do {
+	LAPP_<<"* Waiting CU reacts to command tag="<<hex<<start_test_us<<dec;
+	int size;
+	controller->fetchCurrentDeviceValue();
+	wrapped_data = controller->getCurrentData();
+	prof = (MessProfilePacketInfo *)wrapped_data->getBinaryValue("profile",size);
+	if(prof && (prof->ts_tag == start_test_us)){
+	  LAPP_<<"* Got packet size:"<<bytes<<" starting ui test...";
+	  break;
+	}
+      } while(retry--);
+      if(retry<0){
+	LERR_<<"# CU didn't produced expected packet";
+	exit(1);
+      }
+      retry=max_retry;
+    }
     do {
       boost::posix_time::ptime start_loop = boost::posix_time::microsec_clock::local_time();
+      if(read_delay){
+	LDBG_<<"WATING ui_cycles:"<<ui_cycles<<" ui pkt counter:"<<counter<<" exp tag:" <<start_test_us<<" retry:"<<dec<<retry;
+	usleep(read_delay);
+      }
+
       controller->fetchCurrentDeviceValue();
       wrapped_data = controller->getCurrentData();
 
@@ -227,7 +265,7 @@ public:
 	    ui_cu_time_shift[ok_counter]=abs((long long)(fetch_data_us - prof->tprof.end_cycle_us));
 	    cu_ui_timeshift+=ui_cu_time_shift[ok_counter];
 	    ok_counter++;
-	    retry=RETRY_LOOP;
+	    retry=max_retry;
 	    counter++;
 	  } else if(prof->uidx>counter){
 	    int lost=(prof->uidx-counter);
@@ -238,17 +276,17 @@ public:
 	    } else {
 	      counter= prof->uidx+1;
 	      }*/
-	    retry=RETRY_LOOP;
+	    retry=max_retry;
 	    counter= prof->uidx+1;
-	  } else {
-#if 0
-	    //retrieve statistics
-	    prof_stat++;
-	    cu_prof_t cu_prof=controller->getProfileInfo();
-	    cputime+=cu_prof.usr_time;
-	    systime+=cu_prof.sys_time;
-#endif
-	  }
+	  } 
+
+	  if(dyn_prof_rate && ((ui_cycles%dyn_prof_rate) == 0)){
+	        prof_stat++;
+		cu_prof_t cu_prof=controller->getProfileInfo();
+		cputime+=cu_prof.usr_time;
+		systime+=cu_prof.sys_time;
+
+	  } 
 #ifdef CHECK_BUFFER		  
 	  // cout<<"received:"<<prof->uidx<<" exp:"<<counter<<" crc:"<<prof->crc32<<endl;
 	  if((prof->uidx==counter) && (prof->crc32!=0)){
@@ -286,7 +324,7 @@ public:
 	ui_cycles++;
 	if(readonly){
 	  counter++;
-	  retry=RETRY_LOOP;
+	  retry=max_retry;
 	  if(counter%1000==0){
 	    wrapped_data->getBinaryValue("buffer",size);
 	    LDBG_<<"["<<counter<<"] cycle average us:"<<total_micro/ui_cycles <<" size:"<<size<< " band:"<<total_micro*size*1000*1000/(ui_cycles*(1024*1024))<<" MB/s";      
@@ -294,9 +332,11 @@ public:
 	}
 	//	LDBG_<<"["<<counter<<"] duration us:"<<packet_time;      
       }
-
-    } while ((counter<repetition) && (retry-->0));
-    prof_stat++;
+      if(read_delay){
+	LDBG_<<"ts_tag:"<<hex<<prof->ts_tag<<" expected:"<<start_test_us<<dec<<" cu count:"<<prof->uidx<<" crc:"<<prof->crc32<<" local counter:"<<counter<<" retry:"<<retry;
+      }
+} while ((counter<repetition) && (retry-->0));
+  prof_stat++;
     cu_prof_t cu_prof=controller->getProfileInfo();
     cputime+=cu_prof.usr_time;
     systime+=cu_prof.sys_time;
@@ -305,6 +345,11 @@ public:
       *fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ",0,0,0,0,0,0,0,0,0,"<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
       return 0;
       
+    }
+    if(prof->ts_tag!=start_test_us){
+      LERR_<<"## bad iteration test ";
+      *fs << bytes << "," << total_micro/ui_cycles << "," << micro_min << "," << micro_max<< ",-1,-1,-1,-1,-1,-1,-1,-1,-1,"<<cputime/prof_stat<<","<<systime/prof_stat<<endl;
+      return 0;
     }
     if(command_latency==0){
       command_latency = fetch_data_us - start_test_us;
@@ -371,7 +416,7 @@ public:
 
     for (int idx = 0; idx < repetition; idx++) {
       CDataWrapper test_delay_param_data;
-      retry = RETRY_LOOP;
+      retry = max_retry;
       boost::posix_time::ptime time = boost::posix_time::microsec_clock::local_time();
       boost::posix_time::time_duration duration(time.time_of_day());
 
@@ -497,7 +542,7 @@ int main(int argc, char* argv[]) {
     std::vector<int> opcodes_sequence;
     CDeviceNetworkAddress deviceNetworkAddress;
     int repetition;
-
+    uint32_t ui_delay=0;
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_DID, po::value<string>(&mess_device_id), "The host of the mess monitor");
     //ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_INIT, "Initialize the monitor");
     //ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_START, "Start the monitor");
@@ -511,11 +556,15 @@ int main(int argc, char* argv[]) {
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_SCHED_DELAY, po::value<uint64_t>(&schedule_delay)->default_value(0), "Scheduler delay (us)");
 
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX, po::value<uint32_t>(&max)->default_value(MAX_BUFFER), "Max buffer (bandwidth test)/Max ui cyle (rt test)");
+    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_READ_DELAY, po::value<uint32_t>(&read_delay)->default_value(0), "Read Cycle delay (us)");
+    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_DYN_PROF, po::value<uint32_t>(&dyn_prof_rate)->default_value(0), "Read Profiling CU information rate (may delay ui cycle)");
 
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_INCREMENT, po::value<std::string>(&increment)->default_value("power2"), "Increment to be used in test: power2|<constant value>");
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_START, po::value<int32_t>(&start)->default_value(1), "start quantity in test ");
 
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_REPETITION, po::value<int>(&repetition)->default_value(BAND_REPETITION), "number of test repetions for better average results");
+    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX_RETRY, po::value<uint32_t>(&max_retry)->default_value(RETRY_LOOP), "number of retry to match the key");
+    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_UI_FREQ, po::value<bool>(&test_ui_freq)->default_value(false), "test ui frequency by packet size");
 
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("readonly", po::value<bool>(&readonly)->default_value(false), "just read");
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("wronly", po::value<bool>(&wronly)->default_value(false), "just lunch command to CU");
