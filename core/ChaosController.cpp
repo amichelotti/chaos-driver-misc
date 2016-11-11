@@ -418,7 +418,7 @@ static const char* chaosDomainToString(int domain){
         case 4:
             return "health";
         case 5:
-            return "alarm";
+            return "alarms";
         default:
             return "uknown";
     }
