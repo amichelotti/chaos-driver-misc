@@ -16,6 +16,9 @@
 #include <json/reader.h>
 #include <json/writer.h>
 #include <json/value.h>
+#include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
+using namespace chaos::ui;
+
 
 using namespace ::driver::misc;
 #define DBGET CTRLDBG_<<"["<<getPath()<<"]"
@@ -358,6 +361,8 @@ int ChaosController::executeCmd(command_t& cmd,bool wait,uint64_t perform_at,uin
 ChaosController::ChaosController(std::string p,uint32_t timeo_) {
     int ret;
     controller = NULL;
+    mdsChannel = LLRpcApi::getInstance()->getNewMetadataServerChannel();
+    if(!mdsChannel) throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
     
     if((ret=init(p,timeo_))!=0){
         throw chaos::CException(ret, "cannot allocate controller for:"+ path + " check if exists",__FUNCTION__);
@@ -372,12 +377,16 @@ ChaosController::ChaosController(std::string p,uint32_t timeo_) {
      } else {
      ERR("cannot connect to cassandra");
      }*/
+
 }
 
 ChaosController::ChaosController() {
     controller=NULL;
     queryuid=0;
     state= chaos::CUStateKey::UNDEFINED;
+    mdsChannel = LLRpcApi::getInstance()->getNewMetadataServerChannel();
+    if(!mdsChannel) throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
+
     //cassandra = ;
     /*	db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
      db->setDBParameters("replication",DEFAULT_DBREPLICATION);
@@ -397,6 +406,9 @@ ChaosController::~ChaosController() {
      db->disconnect();
      }
      */
+    if(mdsChannel){
+        LLRpcApi::getInstance()->deleteMessageChannel(mdsChannel);
+    }
     if(controller){
         chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
         
@@ -507,6 +519,59 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
     bundle_state.status(state);
     DBGET<<"cmd:"<<cmd<< " args:"<<args<<" last access:" <<reqtime - last_access<<" us ago"<< " timeo:"<<timeo;
     try {
+        // global commands
+        if (cmd== "cu_list") {
+            std::stringstream res;
+            std::string name;
+            bool alive=true;
+            
+            if(args!=NULL){
+                chaos_data::CDataWrapper p;
+                p.setSerializedJsonData(args);
+                if(p.hasKey("alive")){
+                    alive = p.getBoolValue("alive");
+                }
+                if(p.hasKey("name")){
+                    name = p.getCStringValue("name");
+                }
+            }
+            
+            
+            ChaosStringVector node_found;
+
+          if(mdsChannel->searchNode(name,
+                                  0,
+                                  alive,
+                                  0,
+                                  MAX_QUERY_ELEMENTS,
+                                  node_found,
+                                  MDS_TIMEOUT)==0){
+              std::stringstream ss;
+              ss<<"[";
+              for(ChaosStringVector::iterator i = node_found.begin();i!=node_found.end();i++){
+                  if(i+1!=node_found.end()){
+                      ss<<*i<<",";
+                  } else {
+                      ss<<*i;
+                  }
+              }
+              ss<<"]";
+              json_buf=ss.str();
+              CALC_EXEC_TIME;
+              return CHAOS_DEV_OK;
+              
+          }
+            json_buf="[]";
+             CTRLERR_<<"error performing command: "<<cmd;
+
+            return CHAOS_DEV_OK;
+
+        }
+        if(controller==NULL){
+            CTRLERR_<<"no controller defined "<<cmd;
+
+            return CHAOS_DEV_CMD;
+        }
         //Json::Reader rreader;
         //Json::Value vvalue;
         if (wostate == 0) {

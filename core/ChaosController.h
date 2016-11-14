@@ -36,6 +36,8 @@ class ChaosController{
     
     
 private:
+     chaos::common::message::MDSMessageChannel *mdsChannel;
+
      chaos::ui::DeviceController* controller;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
