@@ -59,6 +59,7 @@ private:
 
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
+     std::string vector2Json(ChaosStringVector& v);
   public:  
 
      typedef enum {
