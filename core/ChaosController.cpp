@@ -529,9 +529,9 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     ss << "[";
     for (ChaosStringVector::iterator i = node_found.begin(); i != node_found.end(); i++) {
         if (i + 1 != node_found.end()) {
-            ss << *i << ",";
+	  ss <<"\""<< *i << "\",";
         } else {
-            ss << *i;
+	  ss << "\""<<*i<<"\"";
         }
     }
     ss << "]";
@@ -887,6 +887,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             chaos::common::data::CDataWrapper* data = fetch(chaos::ui::DatasetDomainOutput);
             json_buf = data->getJSONString();
             return CHAOS_DEV_OK;
+        } else if (cmd == "desc") {
+            bundle_state.append_log("desc device:" + path);
+	    
+	    CDataWrapper* out;
+	    if (mdsChannel->getLastDatasetForDevice(path, &out, MDS_TIMEOUT) == 0) {
+	      json_buf =out->getJSONString();
+	      CALC_EXEC_TIME;
+	      return CHAOS_DEV_OK;
+	    } else {
+                bundle_state.append_error("error describing device:" + path);
+                init(path, timeo);
+                json_buf = bundle_state.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_CMD;
+            }
+
         } else if (cmd == "channel" && (args != 0)) {
             // bundle_state.append_log("return channel :" + parm);
             chaos::common::data::CDataWrapper*data = fetch((chaos::ui::DatasetDomain)atoi((char*) args));
