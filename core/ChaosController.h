@@ -59,6 +59,10 @@ private:
 
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
+     std::map<std::string,std::string> zone_to_cuname;
+     std::map<std::string,std::string> class_to_cuname;
+
+     void parseClassZone(ChaosStringVector&v);
      std::string vector2Json(ChaosStringVector& v);
   public:  
 
@@ -112,7 +116,7 @@ private:
     dev_info_status bundle_state;
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
-
+    
 
     virtual ~ChaosController();
     

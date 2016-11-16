@@ -537,6 +537,16 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     ss << "]";
     return ss.str();
 }
+void ChaosController::parseClassZone(ChaosStringVector&v){
+    const boost::regex e("^(.*)/(.*)/(.*)$");
+    boost::cmatch what;
+     for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
+         if(boost::regex_match(i->c_str(),what,e)){
+            zone_to_cuname[what[1]]=*i;
+            class_to_cuname[what[2]]=*i;
+         } 
+     }
+}
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
     int err;
@@ -585,6 +595,46 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         MDS_TIMEOUT) == 0) {
 
                     json_buf = vector2Json(node_found);
+                    CALC_EXEC_TIME;
+                    return CHAOS_DEV_OK;
+                }
+            } else  if (obj == "zone") {
+                json_buf = "[]";
+                ChaosStringVector dev_zone;
+                if (mdsChannel->searchNode(name,
+                        2,
+                        false,
+                        0,
+                        MAX_QUERY_ELEMENTS,
+                        node_found,
+                        MDS_TIMEOUT) == 0) {
+                    parseClassZone(node_found);
+                     std::map<std::string,std::string>::iterator c;
+                     for(c=zone_to_cuname.begin();c!=zone_to_cuname.end();c++){
+                         dev_zone.push_back(c->first);
+                     }
+
+                    json_buf = vector2Json(dev_zone);
+                    CALC_EXEC_TIME;
+                    return CHAOS_DEV_OK;
+                }
+            } else  if (obj == "class") {
+                json_buf = "[]";
+                ChaosStringVector dev_class;
+                if (mdsChannel->searchNode(name,
+                        2,
+                        false,
+                        0,
+                        MAX_QUERY_ELEMENTS,
+                        node_found,
+                        MDS_TIMEOUT) == 0) {
+                    parseClassZone(node_found);
+                     std::map<std::string,std::string>::iterator c;
+                     for(c=class_to_cuname.begin();c!=class_to_cuname.end();c++){
+                         dev_class.push_back(c->first);
+                     }
+
+                    json_buf = vector2Json(dev_class);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 }
