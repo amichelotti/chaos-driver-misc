@@ -577,7 +577,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = "[]";
 
                 if (mdsChannel->searchNode(name,
-                        0,
+                        2,
                         alive,
                         0,
                         MAX_QUERY_ELEMENTS,
