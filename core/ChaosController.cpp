@@ -565,9 +565,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             std::string name = "";
             std::string obj = "cu";
             bool alive = true;
-
+            chaos_data::CDataWrapper p;
             if (args != NULL) {
-                chaos_data::CDataWrapper p;
+             
                 p.setSerializedJsonData(args);
                 if (p.hasKey("alive")) {
                     alive = p.getBoolValue("alive");
@@ -621,6 +621,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             } else  if (obj == "class") {
                 json_buf = "[]";
                 ChaosStringVector dev_class;
+                if (p.hasKey("names")) {
+                    std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("names"));
+                       for (int idx = 0; idx < nodes->size(); idx++) {
+                        const std::string domain = nodes->getStringElementAtIndex(idx);
+                        if (mdsChannel->searchNode(domain,2,false,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT) == 0) {
+                            parseClassZone(node_found);
+                            std::map<std::string,std::string>::iterator c;
+                            for(c=class_to_cuname.begin();c!=class_to_cuname.end();c++){
+                                dev_class.push_back(c->first);
+                          }
+                    }
+                  
+                    }
+                     json_buf = vector2Json(dev_class);
+                    CALC_EXEC_TIME;
+                    return CHAOS_DEV_OK;
+                } else {
                 if (mdsChannel->searchNode(name,
                         2,
                         false,
@@ -637,6 +654,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     json_buf = vector2Json(dev_class);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
+                }
                 }
             } else if (obj == "snapshots") {
                 if (mdsChannel->searchSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
