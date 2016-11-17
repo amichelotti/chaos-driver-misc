@@ -529,23 +529,24 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     ss << "[";
     for (ChaosStringVector::iterator i = node_found.begin(); i != node_found.end(); i++) {
         if (i + 1 != node_found.end()) {
-	  ss <<"\""<< *i << "\",";
+            ss << "\"" << *i << "\",";
         } else {
-	  ss << "\""<<*i<<"\"";
+            ss << "\"" << *i << "\"";
         }
     }
     ss << "]";
     return ss.str();
 }
-void ChaosController::parseClassZone(ChaosStringVector&v){
+
+void ChaosController::parseClassZone(ChaosStringVector&v) {
     const boost::regex e("^(.*)/(.*)/(.*)$");
     boost::cmatch what;
-     for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
-         if(boost::regex_match(i->c_str(),what,e)){
-            zone_to_cuname[what[1]]=*i;
-            class_to_cuname[what[2]]=*i;
-         } 
-     }
+    for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
+        if (boost::regex_match(i->c_str(), what, e)) {
+            zone_to_cuname[what[1]] = *i;
+            class_to_cuname[what[2]] = *i;
+        }
+    }
 }
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
@@ -566,9 +567,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             std::string obj = "cu";
             bool alive = true;
             chaos_data::CDataWrapper p;
+            std::auto_ptr<CMultiTypeDataArrayWrapper> names;
+
             if (args != NULL) {
-             
+
                 p.setSerializedJsonData(args);
+                if (p.hasKey("names")) {
+                    names.reset(p.getVectorValue("names"));
+                }
+
                 if (p.hasKey("alive")) {
                     alive = p.getBoolValue("alive");
                 }
@@ -585,20 +592,34 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             ChaosStringVector node_found;
             if (obj == "cu") {
                 json_buf = "[]";
+                if (p.hasKey("names")) {
 
-                if (mdsChannel->searchNode(name,
-                        2,
-                        alive,
-                        0,
-                        MAX_QUERY_ELEMENTS,
-                        node_found,
-                        MDS_TIMEOUT) == 0) {
+                    for (int idx = 0; idx < names->size(); idx++) {
+                        ChaosStringVector node_tmp;
 
+                        const std::string domain = names->getStringElementAtIndex(idx);
+                        if (mdsChannel->searchNode(domain, 2, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
+                            node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                        }
+                    }
                     json_buf = vector2Json(node_found);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
+                } else {
+                    if (mdsChannel->searchNode(name,
+                            2,
+                            alive,
+                            0,
+                            MAX_QUERY_ELEMENTS,
+                            node_found,
+                            MDS_TIMEOUT) == 0) {
+
+                        json_buf = vector2Json(node_found);
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_OK;
+                    }
                 }
-            } else  if (obj == "zone") {
+            } else if (obj == "zone") {
                 json_buf = "[]";
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
@@ -609,52 +630,56 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         node_found,
                         MDS_TIMEOUT) == 0) {
                     parseClassZone(node_found);
-                     std::map<std::string,std::string>::iterator c;
-                     for(c=zone_to_cuname.begin();c!=zone_to_cuname.end();c++){
-                         dev_zone.push_back(c->first);
-                     }
+                    std::map<std::string, std::string>::iterator c;
+                    for (c = zone_to_cuname.begin(); c != zone_to_cuname.end(); c++) {
+                        dev_zone.push_back(c->first);
+                    }
 
                     json_buf = vector2Json(dev_zone);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 }
-            } else  if (obj == "class") {
+            } else if (obj == "class") {
                 json_buf = "[]";
                 ChaosStringVector dev_class;
                 if (p.hasKey("names")) {
                     std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("names"));
-                       for (int idx = 0; idx < nodes->size(); idx++) {
+                    for (int idx = 0; idx < names->size(); idx++) {
+                        ChaosStringVector node_tmp;
                         const std::string domain = nodes->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain,2,false,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT) == 0) {
-                            parseClassZone(node_found);
-                            std::map<std::string,std::string>::iterator c;
-                            for(c=class_to_cuname.begin();c!=class_to_cuname.end();c++){
-                                dev_class.push_back(c->first);
-                          }
+                        if (mdsChannel->searchNode(domain, 2, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
+                            node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                        }
                     }
-                  
-                    }
-                     json_buf = vector2Json(dev_class);
-                    CALC_EXEC_TIME;
-                    return CHAOS_DEV_OK;
-                } else {
-                if (mdsChannel->searchNode(name,
-                        2,
-                        false,
-                        0,
-                        MAX_QUERY_ELEMENTS,
-                        node_found,
-                        MDS_TIMEOUT) == 0) {
                     parseClassZone(node_found);
-                     std::map<std::string,std::string>::iterator c;
-                     for(c=class_to_cuname.begin();c!=class_to_cuname.end();c++){
-                         dev_class.push_back(c->first);
-                     }
+                    std::map<std::string, std::string>::iterator c;
+                    for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
+                        dev_class.push_back(c->first);
+                    }
+
+
 
                     json_buf = vector2Json(dev_class);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
-                }
+                } else {
+                    if (mdsChannel->searchNode(name,
+                            2,
+                            false,
+                            0,
+                            MAX_QUERY_ELEMENTS,
+                            node_found,
+                            MDS_TIMEOUT) == 0) {
+                        parseClassZone(node_found);
+                        std::map<std::string, std::string>::iterator c;
+                        for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
+                            dev_class.push_back(c->first);
+                        }
+
+                        json_buf = vector2Json(dev_class);
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_OK;
+                    }
                 }
             } else if (obj == "snapshots") {
                 if (mdsChannel->searchSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
@@ -681,20 +706,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     return CHAOS_DEV_OK;
 
                 }
-            }  else if (obj == "desc") {
-                 json_buf = "[]";
-                 if(name.size()>0){
-                     CDataWrapper* out;
-                     if (mdsChannel->getLastDatasetForDevice(name, &out, MDS_TIMEOUT) == 0) {
-                        json_buf =out->getJSONString();
+            } else if (obj == "desc") {
+                json_buf = "[]";
+                if (name.size() > 0) {
+                    CDataWrapper* out;
+                    if (mdsChannel->getLastDatasetForDevice(name, &out, MDS_TIMEOUT) == 0) {
+                        json_buf = out->getJSONString();
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
                     }
-                 } else {
-                   CTRLERR_ << "missing name " << cmd;
+                } else {
+                    CTRLERR_ << "missing name " << cmd;
 
-                 }
-                
+                }
+
             }
             CTRLERR_ << "error performing command: " << cmd;
             return CHAOS_DEV_CMD;
@@ -706,7 +731,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             bool alive = true;
 
             if (args != NULL) {
-             
+
                 p.setSerializedJsonData(args);
 
                 if (p.hasKey("name")) {
@@ -760,7 +785,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 return CHAOS_DEV_CMD;
             } else if (obj == "delete") {
                 if (mdsChannel->deleteSnapshot(name, MDS_TIMEOUT) == 0) {
-                   DBGET << "Deleted snapshot name:\"" << name << "\"";
+                    DBGET << "Deleted snapshot name:\"" << name << "\"";
 
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
@@ -957,13 +982,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             return CHAOS_DEV_OK;
         } else if (cmd == "desc") {
             bundle_state.append_log("desc device:" + path);
-	    
-	    CDataWrapper* out;
-	    if (mdsChannel->getLastDatasetForDevice(path, &out, MDS_TIMEOUT) == 0) {
-	      json_buf =out->getJSONString();
-	      CALC_EXEC_TIME;
-	      return CHAOS_DEV_OK;
-	    } else {
+
+            CDataWrapper* out;
+            if (mdsChannel->getLastDatasetForDevice(path, &out, MDS_TIMEOUT) == 0) {
+                json_buf = out->getJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_OK;
+            } else {
                 bundle_state.append_error("error describing device:" + path);
                 init(path, timeo);
                 json_buf = bundle_state.getData()->getJSONString();
@@ -1207,21 +1232,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p.setSerializedJsonData(args);
             if (p.hasKey("snapname")) {
                 snapname = p.getStringValue("snapname");
-                std::vector<std::string> other;
-                ret = controller->createNewSnapshot(snapname, other);
-                if (ret == 0) {
-                    DBGET << "SAVE snapshot " << snapname << " ret:" << ret;
-                } else {
-                    bundle_state.append_error("error saving snapshot " + getPath() + " snapname:" + snapname);
-                    CALC_EXEC_TIME;
-                    return CHAOS_DEV_CMD;
-                }
-                return CHAOS_DEV_OK;
+            } else {
+                snapname=args;
             }
-            bundle_state.append_error("error bad arguments for save snapshot " + getPath() + " key:" + std::string(args));
+            std::vector<std::string> other;
+            ret = controller->createNewSnapshot(snapname, other);
+            if (ret == 0) {
+                 DBGET << "SAVE snapshot " << snapname << " ret:" << ret;
+                 return CHAOS_DEV_OK;
+
+            } 
+            bundle_state.append_error("error saving snapshot " + getPath() + " snapname:" + snapname);
             CALC_EXEC_TIME;
             return CHAOS_DEV_CMD;
-
+           
         } else if (cmd == "delete" && (args != 0)) {
             int ret;
             chaos_data::CDataWrapper p;
@@ -1229,18 +1253,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p.setSerializedJsonData(args);
             if (p.hasKey("snapname")) {
                 snapname = p.getStringValue("snapname");
-                ret = controller->deleteSnapshot(snapname);
-                if (ret == 0) {
+            } else {
+                snapname=args;
+            }
+            ret = controller->deleteSnapshot(snapname);
+            if (ret == 0) {
                     DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
-
                     return CHAOS_DEV_OK;
                 }
-                bundle_state.append_log("error deleting snapshot " + getPath() + " key:" + std::string(args));
-                CALC_EXEC_TIME;
-                return CHAOS_DEV_CMD;
-            }
-
-            bundle_state.append_log("error bad arguments for deleting snapshot " + getPath() + " key:" + std::string(args));
+            bundle_state.append_log("error deleting snapshot " + getPath() + " key:" + std::string(args));
             CALC_EXEC_TIME;
             return CHAOS_DEV_CMD;
 
@@ -1254,6 +1275,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p.setSerializedJsonData(args);
             if (p.hasKey("snapname")) {
                 snapname = p.getStringValue("snapname");
+            } else {
+                snapname=args;
+            }
                 int retc = 0;
 
                 retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
@@ -1281,15 +1305,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                 DBGET << "LOAD snapshot " << snapname << " ret:" << retc;
                 return CHAOS_DEV_OK;
-
-            } else {
-                bundle_state.append_error("error bad arguments for load snapshot " + getPath() + " key:" + std::string(args));
-                CALC_EXEC_TIME;
-                return CHAOS_DEV_CMD;
-            }
-
-
-
         } else if (cmd == "list") {
             ChaosStringVector snaps;
             int ret;
