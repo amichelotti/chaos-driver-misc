@@ -695,8 +695,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     json_buf = vector2Json(node_found);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
-
                 }
+               CTRLERR_ << "insnapshot error";
+               return CHAOS_DEV_CMD;
+
             } else if (obj == "snapshotsof") {
                 json_buf = "[]";
 
