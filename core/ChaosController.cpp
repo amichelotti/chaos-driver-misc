@@ -1228,17 +1228,27 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "save" && (args != 0)) {
             int ret;
             chaos_data::CDataWrapper p;
-            std::string snapname;
-            p.setSerializedJsonData(args);
+            std::string snapname=args;
+            try {
+                p.setSerializedJsonData(args);
+                 if (p.hasKey("snapname")) {
+                     snapname = p.getStringValue("snapname");
+                }
+            } catch (std::exception ee) {
+                
+            }
+            json_buf = "{}";
             if (p.hasKey("snapname")) {
                 snapname = p.getStringValue("snapname");
             } else {
-                snapname=args;
             }
             std::vector<std::string> other;
             ret = controller->createNewSnapshot(snapname, other);
+            DBGET << "creating snapshot " << snapname << " ret:" << ret;
+
             if (ret == 0) {
                  DBGET << "SAVE snapshot " << snapname << " ret:" << ret;
+                 CALC_EXEC_TIME
                  return CHAOS_DEV_OK;
 
             } 
@@ -1249,19 +1259,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "delete" && (args != 0)) {
             int ret;
             chaos_data::CDataWrapper p;
-            std::string snapname;
-            p.setSerializedJsonData(args);
-            if (p.hasKey("snapname")) {
-                snapname = p.getStringValue("snapname");
-            } else {
-                snapname=args;
+             std::string snapname=args;
+            try {
+                p.setSerializedJsonData(args);
+                 if (p.hasKey("snapname")) {
+                     snapname = p.getStringValue("snapname");
+                }
+            } catch (std::exception ee) {
+                
             }
             ret = controller->deleteSnapshot(snapname);
             if (ret == 0) {
                     DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
                     return CHAOS_DEV_OK;
                 }
-            bundle_state.append_log("error deleting snapshot " + getPath() + " key:" + std::string(args));
+            bundle_state.append_error("error deleting snapshot " + getPath() + " key:" + std::string(args));
+            json_buf = bundle_state.getData()->getJSONString();
             CALC_EXEC_TIME;
             return CHAOS_DEV_CMD;
 
@@ -1269,16 +1282,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "load" && (args != 0)) {
             chaos_data::CDataWrapper * io[2], *ret;
             chaos_data::CDataWrapper p;
-            std::string snapname;
+            std::string snapname=args;
             io[0] = 0;
             io[1] = 0;
-            p.setSerializedJsonData(args);
-            if (p.hasKey("snapname")) {
-                snapname = p.getStringValue("snapname");
-            } else {
-                snapname=args;
+            try {
+                p.setSerializedJsonData(args);
+                 if (p.hasKey("snapname")) {
+                     snapname = p.getStringValue("snapname");
+                }
+            } catch (std::exception ee) {
+                
             }
                 int retc = 0;
+                 DBGET << "LOADING snapshot " << snapname;
 
                 retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
                 retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainInput, &io[1]);
@@ -1296,7 +1312,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 if (ret) {
                     json_buf = ret->getJSONString();
                 } else {
-                    bundle_state.append_log("error making load snapshot " + getPath() + " snap name:" + snapname);
+                    bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
                     json_buf = bundle_state.getData()->getJSONString();
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_CMD;
@@ -1308,22 +1324,30 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "list") {
             ChaosStringVector snaps;
             int ret;
+            controller->setRequestTimeWaith(50000);
             ret = controller->getSnapshotList(snaps);
             std::stringstream ss;
-            DBGET << "list snapshot err:" << ret;
-            ss << "[";
-            for (ChaosStringVector::iterator i = snaps.begin(); i != snaps.end(); i++) {
-                if ((i + 1) == snaps.end()) {
-                    ss << "\"" << *i << "\"";
+            
+            DBGET << "list "<<snaps.size()<<" snapshots err:" << ret;
+            if(ret==0){
+                ss << "[";
+                for (ChaosStringVector::iterator i = snaps.begin(); i != snaps.end(); i++) {
+                    if ((i + 1) == snaps.end()) {
+                        ss << "\"" << *i << "\"";
 
-                } else {
-                    ss << "\"" << *i << "\",";
+                    } else {
+                        ss << "\"" << *i << "\",";
 
+                    }
                 }
+                ss << "]";
+                json_buf = ss.str();
+                return CHAOS_DEV_OK;
+            } else {
+                bundle_state.append_error("error making listing snapshot for:" + getPath());
+                json_buf = bundle_state.getData()->getJSONString();
+                return CHAOS_DEV_CMD;
             }
-            ss << "]";
-            json_buf = ss.str();
-            return CHAOS_DEV_OK;
 
         } else if (cmd == "attr" && (args != 0)) {
 
@@ -1416,7 +1440,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
     } catch (std::exception ee) {
         bundle_state.append_error("unexpected error sending \"" + cmd + "\" args:\"" + std::string(args) + "\" to:" + path + " err:" + ee.what());
         json_buf = bundle_state.getData()->getJSONString();
-        return CHAOS_DEV_UKN;
+        return CHAOS_DEV_CMD;
     }
 
 }
