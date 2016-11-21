@@ -64,6 +64,8 @@ private:
 
      void parseClassZone(ChaosStringVector&v);
      std::string vector2Json(ChaosStringVector& v);
+     std::string map2Json(std::map<uint64_t,std::string> & v);
+
   public:  
 
      typedef enum {

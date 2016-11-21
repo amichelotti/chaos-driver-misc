@@ -524,11 +524,27 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
     return data;
 }
 
+std::string ChaosController::map2Json(std::map<uint64_t,std::string> & node){
+       std::stringstream ss;
+    ss << "[";
+    for (std::map<uint64_t,std::string>::iterator jj = node.begin(); jj != node.end(); jj++) {
+          if (std::distance(jj,node.end()) > 1) {
+            ss << "{\"name:\"" << jj->second << "\",\"ts\":"<<jj->first<<"},";
+        } else {
+            ss << "{\"name:\"" << jj->second << "\",\"ts\":"<<jj->first<<"}";
+        }
+    }
+    ss << "]";
+    return ss.str();
+        
+    
+}
+
 std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     std::stringstream ss;
     ss << "[";
     for (ChaosStringVector::iterator i = node_found.begin(); i != node_found.end(); i++) {
-        if (i + 1 != node_found.end()) {
+        if (std::distance(i,node_found.end())>1) {
             ss << "\"" << *i << "\",";
         } else {
             ss << "\"" << *i << "\"";
@@ -568,6 +584,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             bool alive = true;
             chaos_data::CDataWrapper p;
             std::auto_ptr<CMultiTypeDataArrayWrapper> names;
+            std::stringstream serr;
 
             if (args != NULL) {
 
@@ -588,11 +605,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
             }
 
-
+            DBGET<<"searching what "<<obj;
             ChaosStringVector node_found;
             if (obj == "cu") {
                 json_buf = "[]";
+
                 if (p.hasKey("names")) {
+                        DBGET<<"list CU";
 
                     for (int idx = 0; idx < names->size(); idx++) {
                         ChaosStringVector node_tmp;
@@ -606,6 +625,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
+                    DBGET<<"searching CU";
+
                     if (mdsChannel->searchNode(name,
                             2,
                             alive,
@@ -617,10 +638,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         json_buf = vector2Json(node_found);
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
+                    } else {
+                        serr<<"sarching node:"<<name;
                     }
                 }
             } else if (obj == "zone") {
                 json_buf = "[]";
+                DBGET<<"searching ZONE";
+
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
                         2,
@@ -638,19 +663,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     json_buf = vector2Json(dev_zone);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
+                } else {
+                    serr<<"searching zone:"<<name;
                 }
             } else if (obj == "class") {
                 json_buf = "[]";
                 ChaosStringVector dev_class;
+
                 if (p.hasKey("names")) {
+                    DBGET<<"searching CLASS LIST";
+
                     std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("names"));
                     for (int idx = 0; idx < names->size(); idx++) {
                         ChaosStringVector node_tmp;
                         const std::string domain = nodes->getStringElementAtIndex(idx);
                         if (mdsChannel->searchNode(domain, 2, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
                             node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                        } else {
+                            serr<<"searching class:"<<domain;
+                               bundle_state.append_error(serr.str());
+                            json_buf = bundle_state.getData()->getJSONString();
+                            return CHAOS_DEV_CMD;
                         }
-                    }
+                    } 
                     parseClassZone(node_found);
                     std::map<std::string, std::string>::iterator c;
                     for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
@@ -663,6 +698,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
+                   DBGET<<"searching CLASS";
+
                     if (mdsChannel->searchNode(name,
                             2,
                             false,
@@ -679,36 +716,58 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         json_buf = vector2Json(dev_class);
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
+                    } else {
+                        serr<< "searching node:"<<name;
                     }
                 }
+                 bundle_state.append_error(serr.str());
+                 json_buf = bundle_state.getData()->getJSONString();
+                 return CHAOS_DEV_CMD;
             } else if (obj == "snapshots") {
-                if (mdsChannel->searchSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
-                    json_buf = vector2Json(node_found);
+                 DBGET<<"searching SNAPSHOTS";
+
+                std::map<uint64_t,std::string> snap_l;
+                if (mdsChannel->searchSnapshot(name, snap_l, MDS_TIMEOUT) == 0) {
+                    json_buf = map2Json(snap_l);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
 
+                } else {
+                    serr<<" searching snapshot:"<<name;
+                
                 }
             } else if (obj == "insnapshot") {
                 json_buf = "[]";
+                DBGET<<"searching SNAPSHOT of the CU:"<<name;
 
                 if (mdsChannel->searchNodeForSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
+
                     json_buf = vector2Json(node_found);
+                                        DBGET<<"OK searchNodeForSnapshot snap:"<<json_buf;
+
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
+                } else {
+                  DBGET<<"ERRORE searchNodeForSnapshot snap:"<<name;
+                  serr<<" searching insnapshot:"<<name;
                 }
-               CTRLERR_ << "insnapshot error";
-               return CHAOS_DEV_CMD;
-
+             
             } else if (obj == "snapshotsof") {
                 json_buf = "[]";
-
+                DBGET<<"searching CU within SNAPSHOT:"<<name;
                 if (mdsChannel->searchSnapshotForNode(name, node_found, MDS_TIMEOUT) == 0) {
+                    DBGET<<"node found:"<<node_found[0];
                     json_buf = vector2Json(node_found);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
 
+                } else {
+                    DBGET<<"ERRORE searchSnapshotForNode ";
+                         serr<<" searching snapshotsof:"<<name;
                 }
             } else if (obj == "desc") {
+               DBGET<<"searching DESC of the CU:"<<name;
+
                 json_buf = "[]";
                 if (name.size() > 0) {
                     CDataWrapper* out;
@@ -718,19 +777,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         return CHAOS_DEV_OK;
                     }
                 } else {
-                    CTRLERR_ << "missing name " << cmd;
+                   serr<<" missing name";
 
                 }
 
+            } else {
+                serr<<"unknown 'search' arg:"<<args;
             }
-            CTRLERR_ << "error performing command: " << cmd;
-            return CHAOS_DEV_CMD;
+             bundle_state.append_error(serr.str());
+             json_buf = bundle_state.getData()->getJSONString();
+                 return CHAOS_DEV_CMD;
         } else if (cmd == "snapshot") {
             std::stringstream res;
             std::string name = "";
             std::string obj = "";
             chaos_data::CDataWrapper p;
             bool alive = true;
+            std::stringstream serr;
 
             if (args != NULL) {
 
@@ -739,24 +802,31 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 if (p.hasKey("name")) {
                     name = p.getCStringValue("name");
                 } else {
-                    CTRLERR_ << "missing snapshot name" << cmd;
+                    serr << "missing snapshot name" << cmd;
 
-                    return CHAOS_DEV_CMD;
+                   bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getJSONString();
+                 return CHAOS_DEV_CMD;
                 }
 
                 if (p.hasKey("what")) {
                     obj = p.getCStringValue("what");
                 } else {
-                    CTRLERR_ << "missing snapshot operation type" << cmd;
+                    serr << "missing snapshot operation type" << cmd;
+                      bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getJSONString();
+                 return CHAOS_DEV_CMD;
 
-                    return CHAOS_DEV_CMD;
                 }
             } else {
-                CTRLERR_ << "no parameters given" << cmd;
+                serr << "no parameters given" << cmd;
 
-                return CHAOS_DEV_CMD;
+               bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getJSONString();
+                 return CHAOS_DEV_CMD;
             }
 
+            DBGET<<"snapshot what "<<obj;
 
             ChaosStringVector node_found;
             if (obj == "create") {
@@ -775,22 +845,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         json_buf = vector2Json(node_found);
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
+                    } else {
+                        
+                      serr<<"error creating snapshot:"<<name;
+
                     }
 
                 } else {
-                    CTRLERR_ << "missing node list" << cmd;
+                    serr<<"missing \"node_list\" node list";
 
-                    return CHAOS_DEV_CMD;
                 }
-                CTRLERR_ << "error creating snapshot:\"" << name << "\"";
-
-                return CHAOS_DEV_CMD;
+           
             } else if (obj == "delete") {
                 if (mdsChannel->deleteSnapshot(name, MDS_TIMEOUT) == 0) {
                     DBGET << "Deleted snapshot name:\"" << name << "\"";
 
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
+
+                } else {
+                   serr<<"error deleting snapshot:"<<name;
 
                 }
             } else if (obj == "restore") {
@@ -800,12 +874,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
 
+                } else {
+                    serr<<"error restoring snapshot:"<<name;
                 }
+            }else {
+                serr<<"unknown 'snapshot' arg:"<<args;
             }
-
-            json_buf = "[]";
-            CTRLERR_ << "error performing command: " << cmd;
-            return CHAOS_DEV_OK;
+            bundle_state.append_error(serr.str());
+            json_buf = bundle_state.getData()->getJSONString();
+            return CHAOS_DEV_CMD;
         }
 
         if (controller == NULL) {
