@@ -529,9 +529,9 @@ std::string ChaosController::map2Json(std::map<uint64_t,std::string> & node){
     ss << "[";
     for (std::map<uint64_t,std::string>::iterator jj = node.begin(); jj != node.end(); jj++) {
           if (std::distance(jj,node.end()) > 1) {
-            ss << "{\"name:\"" << jj->second << "\",\"ts\":"<<jj->first<<"},";
+            ss << "{\"name\":\"" << jj->second << "\",\"ts\":"<<jj->first<<"},";
         } else {
-            ss << "{\"name:\"" << jj->second << "\",\"ts\":"<<jj->first<<"}";
+            ss << "{\"name\":\"" << jj->second << "\",\"ts\":"<<jj->first<<"}";
         }
     }
     ss << "]";
@@ -755,6 +755,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             } else if (obj == "snapshotsof") {
                 json_buf = "[]";
                 DBGET<<"searching CU within SNAPSHOT:"<<name;
+
                 if (mdsChannel->searchSnapshotForNode(name, node_found, MDS_TIMEOUT) == 0) {
                     DBGET<<"node found:"<<node_found[0];
                     json_buf = vector2Json(node_found);
