@@ -173,7 +173,7 @@ void CmdCalcBandwidth::acquireHandler() {
 	 // LAPP_<<" Avg:"<<hdr->tprof.cycle_us<<" Sigma:"<<hdr->tprof.cycle_sigma;
 
 	 }*/
-    BC_END_RUNNIG_PROPERTY;
+    BC_END_RUNNING_PROPERTY;
 
   }
   counter++;

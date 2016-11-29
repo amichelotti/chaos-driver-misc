@@ -36,6 +36,8 @@ class ChaosController{
     
     
 private:
+     chaos::common::message::MDSMessageChannel *mdsChannel;
+
      chaos::ui::DeviceController* controller;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
@@ -57,6 +59,13 @@ private:
 
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
+     std::map<std::string,std::string> zone_to_cuname;
+     std::map<std::string,std::string> class_to_cuname;
+
+     void parseClassZone(ChaosStringVector&v);
+     std::string vector2Json(ChaosStringVector& v);
+     std::string map2Json(std::map<uint64_t,std::string> & v);
+
   public:  
 
      typedef enum {
@@ -109,7 +118,7 @@ private:
     dev_info_status bundle_state;
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
-
+    
 
     virtual ~ChaosController();
     

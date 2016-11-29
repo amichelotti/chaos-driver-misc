@@ -60,6 +60,6 @@ void CmdCalcTrxDelay::acquireHandler() {
     *o_lct_delay = t.time_of_day().total_microseconds() - *o_lct_ts;
     LDBG_<<"RT delay TS::"<<*o_lct_delay;
     getAttributeCache()->setOutputDomainAsChanged();
-    BC_END_RUNNIG_PROPERTY;
+    BC_END_RUNNING_PROPERTY;
 
 }
