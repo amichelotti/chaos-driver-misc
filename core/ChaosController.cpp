@@ -540,6 +540,19 @@ std::string ChaosController::map2Json(std::map<uint64_t, std::string> & node) {
 
 }
 
+std::string ChaosController::dataset2Var(chaos::common::data::CDataWrapper*data,std::string& var_name){
+    std::stringstream res;
+    uint64_t ts = data->getInt64Value("dpck_ats");
+    uint64_t seq = data->getInt64Value("dpck_seq_id");
+    if (var_name.size() && data->hasKey(var_name)) {
+        chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
+        res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"" <<var_name<<"\":"<< v.asString() << "}";
+    } else {
+        res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"" <<var_name<<"\":{}}";
+    }
+    return res.str();
+}
+
 std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     std::stringstream ss;
     ss << "[";
@@ -1082,6 +1095,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             json_buf = data->getJSONString();
             return CHAOS_DEV_OK;
 
+        } else if (cmd == "readout" && (args != 0)) {
+            // bundle_state.append_log("return channel :" + parm);
+            std::string var_name=args;
+            chaos::common::data::CDataWrapper*data = fetch((chaos::ui::DatasetDomain)0);
+            json_buf = dataset2Var(data,var_name);
+            return CHAOS_DEV_OK;
+
+        } else if (cmd == "readin" && (args != 0)) {
+            // bundle_state.append_log("return channel :" + parm);
+            std::string var_name=args;
+            chaos::common::data::CDataWrapper*data = fetch((chaos::ui::DatasetDomain)1);
+            json_buf = dataset2Var(data,var_name);
+            return CHAOS_DEV_OK;
+
         } else if (cmd == "queryhst" && (args != 0)) {
             chaos_data::CDataWrapper p;
             uint64_t start_ts = 0, end_ts = 0xffffffff;
@@ -1136,10 +1163,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                             data = normalizeToJson(q_result.get(), binaryToTranslate);
                             if (var_name.size() && data->hasKey(var_name)) {
-                                uint64_t ts = data->getInt64Value("dpck_ats");
-                                uint64_t seq = data->getInt64Value("dpck_seq_id");
-                                CDataWrapper*p = data->getCSDataValue(var_name);
-                                res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                                res << dataset2Var(data,var_name);
                             } else {
                                 res << data->getJSONString();
                             }
@@ -1187,10 +1211,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         data = normalizeToJson(q_result.get(), binaryToTranslate);
                         if (var_name.size() && data->hasKey(var_name)) {
-                            uint64_t ts = data->getInt64Value("dpck_ats");
-                            uint64_t seq = data->getInt64Value("dpck_seq_id");
-                            CDataWrapper*p = data->getCSDataValue(var_name);
-                            res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                                res << dataset2Var(data,var_name);
                         } else {
                             res << data->getJSONString();
                         }
@@ -1283,10 +1304,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         data = normalizeToJson(q_result.get(), binaryToTranslate);
                         if (var_name.size() && data->hasKey(var_name)) {
-                            uint64_t ts = data->getInt64Value("dpck_ats");
-                            uint64_t seq = data->getInt64Value("dpck_seq_id");
-                            CDataWrapper*p = data->getCSDataValue(var_name);
-                            res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                                res << dataset2Var(data,var_name);
                         } else {
                             res << data->getJSONString();
                         }
