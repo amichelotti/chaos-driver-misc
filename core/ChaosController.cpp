@@ -524,27 +524,27 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
     return data;
 }
 
-std::string ChaosController::map2Json(std::map<uint64_t,std::string> & node){
-       std::stringstream ss;
+std::string ChaosController::map2Json(std::map<uint64_t, std::string> & node) {
+    std::stringstream ss;
     ss << "[";
-    for (std::map<uint64_t,std::string>::iterator jj = node.begin(); jj != node.end(); jj++) {
-          if (std::distance(jj,node.end()) > 1) {
-            ss << "{\"name\":\"" << jj->second << "\",\"ts\":"<<jj->first<<"},";
+    for (std::map<uint64_t, std::string>::iterator jj = node.begin(); jj != node.end(); jj++) {
+        if (std::distance(jj, node.end()) > 1) {
+            ss << "{\"name\":\"" << jj->second << "\",\"ts\":" << jj->first << "},";
         } else {
-            ss << "{\"name\":\"" << jj->second << "\",\"ts\":"<<jj->first<<"}";
+            ss << "{\"name\":\"" << jj->second << "\",\"ts\":" << jj->first << "}";
         }
     }
     ss << "]";
     return ss.str();
-        
-    
+
+
 }
 
 std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
     std::stringstream ss;
     ss << "[";
     for (ChaosStringVector::iterator i = node_found.begin(); i != node_found.end(); i++) {
-        if (std::distance(i,node_found.end())>1) {
+        if (std::distance(i, node_found.end()) > 1) {
             ss << "\"" << *i << "\",";
         } else {
             ss << "\"" << *i << "\"";
@@ -605,13 +605,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
             }
 
-            DBGET<<"searching what "<<obj;
+            DBGET << "searching what " << obj;
             ChaosStringVector node_found;
             if (obj == "cu") {
                 json_buf = "[]";
 
                 if (p.hasKey("names")) {
-                        DBGET<<"list CU";
+                    DBGET << "list CU";
 
                     for (int idx = 0; idx < names->size(); idx++) {
                         ChaosStringVector node_tmp;
@@ -625,7 +625,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
-                    DBGET<<"searching CU";
+                    DBGET << "searching CU";
 
                     if (mdsChannel->searchNode(name,
                             2,
@@ -639,12 +639,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
                     } else {
-                        serr<<"sarching node:"<<name;
+                        serr << "sarching node:" << name;
                     }
                 }
             } else if (obj == "zone") {
                 json_buf = "[]";
-                DBGET<<"searching ZONE";
+                DBGET << "searching ZONE";
 
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
@@ -664,14 +664,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
-                    serr<<"searching zone:"<<name;
+                    serr << "searching zone:" << name;
                 }
             } else if (obj == "class") {
                 json_buf = "[]";
                 ChaosStringVector dev_class;
 
                 if (p.hasKey("names")) {
-                    DBGET<<"searching CLASS LIST";
+                    DBGET << "searching CLASS LIST";
 
                     std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("names"));
                     for (int idx = 0; idx < names->size(); idx++) {
@@ -680,12 +680,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         if (mdsChannel->searchNode(domain, 2, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
                             node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                         } else {
-                            serr<<"searching class:"<<domain;
-                               bundle_state.append_error(serr.str());
+                            serr << "searching class:" << domain;
+                            bundle_state.append_error(serr.str());
                             json_buf = bundle_state.getData()->getJSONString();
                             return CHAOS_DEV_CMD;
                         }
-                    } 
+                    }
                     parseClassZone(node_found);
                     std::map<std::string, std::string>::iterator c;
                     for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
@@ -698,7 +698,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
-                   DBGET<<"searching CLASS";
+                    DBGET << "searching CLASS";
 
                     if (mdsChannel->searchNode(name,
                             2,
@@ -717,57 +717,57 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
                     } else {
-                        serr<< "searching node:"<<name;
+                        serr << "searching node:" << name;
                     }
                 }
-                 bundle_state.append_error(serr.str());
-                 json_buf = bundle_state.getData()->getJSONString();
-                 return CHAOS_DEV_CMD;
+                bundle_state.append_error(serr.str());
+                json_buf = bundle_state.getData()->getJSONString();
+                return CHAOS_DEV_CMD;
             } else if (obj == "snapshots") {
-                 DBGET<<"searching SNAPSHOTS";
+                DBGET << "searching SNAPSHOTS";
 
-                std::map<uint64_t,std::string> snap_l;
+                std::map<uint64_t, std::string> snap_l;
                 if (mdsChannel->searchSnapshot(name, snap_l, MDS_TIMEOUT) == 0) {
                     json_buf = map2Json(snap_l);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
 
                 } else {
-                    serr<<" searching snapshot:"<<name;
-                
+                    serr << " searching snapshot:" << name;
+
                 }
             } else if (obj == "insnapshot") {
                 json_buf = "[]";
-                DBGET<<"searching SNAPSHOT of the CU:"<<name;
+                DBGET << "searching SNAPSHOT of the CU:" << name;
 
                 if (mdsChannel->searchNodeForSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
 
                     json_buf = vector2Json(node_found);
-                                        DBGET<<"OK searchNodeForSnapshot snap:"<<json_buf;
+                    DBGET << "OK searchNodeForSnapshot snap:" << json_buf;
 
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 } else {
-                  DBGET<<"ERRORE searchNodeForSnapshot snap:"<<name;
-                  serr<<" searching insnapshot:"<<name;
+                    DBGET << "ERRORE searchNodeForSnapshot snap:" << name;
+                    serr << " searching insnapshot:" << name;
                 }
-             
+
             } else if (obj == "snapshotsof") {
                 json_buf = "[]";
-                DBGET<<"searching CU within SNAPSHOT:"<<name;
+                DBGET << "searching CU within SNAPSHOT:" << name;
 
                 if (mdsChannel->searchSnapshotForNode(name, node_found, MDS_TIMEOUT) == 0) {
-                    DBGET<<"node found:"<<node_found[0];
+                    DBGET << "node found:" << node_found[0];
                     json_buf = vector2Json(node_found);
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
 
                 } else {
-                    DBGET<<"ERRORE searchSnapshotForNode ";
-                         serr<<" searching snapshotsof:"<<name;
+                    DBGET << "ERRORE searchSnapshotForNode ";
+                    serr << " searching snapshotsof:" << name;
                 }
             } else if (obj == "desc") {
-               DBGET<<"searching DESC of the CU:"<<name;
+                DBGET << "searching DESC of the CU:" << name;
 
                 json_buf = "[]";
                 if (name.size() > 0) {
@@ -778,16 +778,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         return CHAOS_DEV_OK;
                     }
                 } else {
-                   serr<<" missing name";
+                    serr << " missing name";
 
                 }
 
             } else {
-                serr<<"unknown 'search' arg:"<<args;
+                serr << "unknown 'search' arg:" << args;
             }
-             bundle_state.append_error(serr.str());
-             json_buf = bundle_state.getData()->getJSONString();
-                 return CHAOS_DEV_CMD;
+            bundle_state.append_error(serr.str());
+            json_buf = bundle_state.getData()->getJSONString();
+            return CHAOS_DEV_CMD;
         } else if (cmd == "snapshot") {
             std::stringstream res;
             std::string name = "";
@@ -805,29 +805,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else {
                     serr << "missing snapshot name" << cmd;
 
-                   bundle_state.append_error(serr.str());
+                    bundle_state.append_error(serr.str());
                     json_buf = bundle_state.getData()->getJSONString();
-                 return CHAOS_DEV_CMD;
+                    return CHAOS_DEV_CMD;
                 }
 
                 if (p.hasKey("what")) {
                     obj = p.getCStringValue("what");
                 } else {
                     serr << "missing snapshot operation type" << cmd;
-                      bundle_state.append_error(serr.str());
+                    bundle_state.append_error(serr.str());
                     json_buf = bundle_state.getData()->getJSONString();
-                 return CHAOS_DEV_CMD;
+                    return CHAOS_DEV_CMD;
 
                 }
             } else {
                 serr << "no parameters given" << cmd;
 
-               bundle_state.append_error(serr.str());
-                    json_buf = bundle_state.getData()->getJSONString();
-                 return CHAOS_DEV_CMD;
+                bundle_state.append_error(serr.str());
+                json_buf = bundle_state.getData()->getJSONString();
+                return CHAOS_DEV_CMD;
             }
 
-            DBGET<<"snapshot what "<<obj;
+            DBGET << "snapshot what " << obj;
 
             ChaosStringVector node_found;
             if (obj == "create") {
@@ -847,16 +847,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         CALC_EXEC_TIME;
                         return CHAOS_DEV_OK;
                     } else {
-                        
-                      serr<<"error creating snapshot:"<<name;
+
+                        serr << "error creating snapshot:" << name;
 
                     }
 
                 } else {
-                    serr<<"missing \"node_list\" node list";
+                    serr << "missing \"node_list\" node list";
 
                 }
-           
+
             } else if (obj == "delete") {
                 if (mdsChannel->deleteSnapshot(name, MDS_TIMEOUT) == 0) {
                     DBGET << "Deleted snapshot name:\"" << name << "\"";
@@ -865,7 +865,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     return CHAOS_DEV_OK;
 
                 } else {
-                   serr<<"error deleting snapshot:"<<name;
+                    serr << "error deleting snapshot:" << name;
 
                 }
             } else if (obj == "restore") {
@@ -876,10 +876,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     return CHAOS_DEV_OK;
 
                 } else {
-                    serr<<"error restoring snapshot:"<<name;
+                    serr << "error restoring snapshot:" << name;
                 }
-            }else {
-                serr<<"unknown 'snapshot' arg:"<<args;
+            } else {
+                serr << "unknown 'snapshot' arg:" << args;
             }
             bundle_state.append_error(serr.str());
             json_buf = bundle_state.getData()->getJSONString();
@@ -1090,6 +1090,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int limit = MAX_QUERY_ELEMENTS;
             uint32_t current_query = 0;
             std::stringstream res;
+            std::string var_name;
             chaos::common::io::QueryCursor *query_cursor = NULL;
             p.setSerializedJsonData(args);
             if (p.hasKey("start")) {
@@ -1115,6 +1116,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
             }
 
+            if (p.hasKey("var")) {
+                var_name = p.getStringValue("var");
+            }
+
             if (paging) {
                 if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
                     controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor, page);
@@ -1130,7 +1135,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
                             boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                             data = normalizeToJson(q_result.get(), binaryToTranslate);
-                            res << data->getJSONString();
+                            if (var_name.size() && data->hasKey(var_name)) {
+                                uint64_t ts = data->getInt64Value("dpck_ats");
+                                uint64_t seq = data->getInt64Value("dpck_seq_id");
+                                CDataWrapper*p = data->getCSDataValue(var_name);
+                                res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                            } else {
+                                res << data->getJSONString();
+                            }
                             cnt++;
                             DBGET << "getting query page  " << cnt;
                             if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
@@ -1174,7 +1186,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         data = normalizeToJson(q_result.get(), binaryToTranslate);
-                        res << data->getJSONString();
+                        if (var_name.size() && data->hasKey(var_name)) {
+                            uint64_t ts = data->getInt64Value("dpck_ats");
+                            uint64_t seq = data->getInt64Value("dpck_seq_id");
+                            CDataWrapper*p = data->getCSDataValue(var_name);
+                            res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                        } else {
+                            res << data->getJSONString();
+                        }
                         cnt++;
                         DBGET << "getting query page  " << cnt;
                         if ((query_cursor->hasNext())&&(cnt < limit)) {
@@ -1234,6 +1253,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p.setSerializedJsonData(args);
             std::stringstream res;
             bool clear_req = false;
+            std::string var_name;
             int cnt = 0;
             uint32_t uid = 0;
             if (p.hasKey("uid")) {
@@ -1247,6 +1267,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (p.hasKey("clear")) {
                 clear_req = p.getBoolValue("clear");
             }
+
+            if (p.hasKey("var")) {
+                var_name = p.getStringValue("var");
+            }
             DBGET << "querynext uid:" << uid << " clear:" << clear_req;
             if (query_cursor_map.find(uid) != query_cursor_map.end()) {
                 query_cursor = query_cursor_map[uid];
@@ -1258,7 +1282,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     while ((query_cursor->hasNext())&&(cnt < page)) {
                         boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
                         data = normalizeToJson(q_result.get(), binaryToTranslate);
-                        res << data->getJSONString();
+                        if (var_name.size() && data->hasKey(var_name)) {
+                            uint64_t ts = data->getInt64Value("dpck_ats");
+                            uint64_t seq = data->getInt64Value("dpck_seq_id");
+                            CDataWrapper*p = data->getCSDataValue(var_name);
+                            res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << "," << p->getJSONString() << "}";
+                        } else {
+                            res << data->getJSONString();
+                        }
                         cnt++;
                         if ((query_cursor->hasNext())&&(cnt < page)) {
                             res << ",";
@@ -1308,14 +1339,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "save" && (args != 0)) {
             int ret;
             chaos_data::CDataWrapper p;
-            std::string snapname=args;
+            std::string snapname = args;
             try {
                 p.setSerializedJsonData(args);
-                 if (p.hasKey("snapname")) {
-                     snapname = p.getStringValue("snapname");
+                if (p.hasKey("snapname")) {
+                    snapname = p.getStringValue("snapname");
                 }
             } catch (std::exception ee) {
-                
+
             }
             json_buf = "{}";
             if (p.hasKey("snapname")) {
@@ -1327,32 +1358,32 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             DBGET << "creating snapshot " << snapname << " ret:" << ret;
 
             if (ret == 0) {
-                 DBGET << "SAVE snapshot " << snapname << " ret:" << ret;
-                 CALC_EXEC_TIME
-                 return CHAOS_DEV_OK;
+                DBGET << "SAVE snapshot " << snapname << " ret:" << ret;
+                CALC_EXEC_TIME
+                return CHAOS_DEV_OK;
 
-            } 
+            }
             bundle_state.append_error("error saving snapshot " + getPath() + " snapname:" + snapname);
             CALC_EXEC_TIME;
             return CHAOS_DEV_CMD;
-           
+
         } else if (cmd == "delete" && (args != 0)) {
             int ret;
             chaos_data::CDataWrapper p;
-             std::string snapname=args;
+            std::string snapname = args;
             try {
                 p.setSerializedJsonData(args);
-                 if (p.hasKey("snapname")) {
-                     snapname = p.getStringValue("snapname");
+                if (p.hasKey("snapname")) {
+                    snapname = p.getStringValue("snapname");
                 }
             } catch (std::exception ee) {
-                
+
             }
             ret = controller->deleteSnapshot(snapname);
             if (ret == 0) {
-                    DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
-                    return CHAOS_DEV_OK;
-                }
+                DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
+                return CHAOS_DEV_OK;
+            }
             bundle_state.append_error("error deleting snapshot " + getPath() + " key:" + std::string(args));
             json_buf = bundle_state.getData()->getJSONString();
             CALC_EXEC_TIME;
@@ -1362,54 +1393,54 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "load" && (args != 0)) {
             chaos_data::CDataWrapper * io[2], *ret;
             chaos_data::CDataWrapper p;
-            std::string snapname=args;
+            std::string snapname = args;
             io[0] = 0;
             io[1] = 0;
             try {
                 p.setSerializedJsonData(args);
-                 if (p.hasKey("snapname")) {
-                     snapname = p.getStringValue("snapname");
+                if (p.hasKey("snapname")) {
+                    snapname = p.getStringValue("snapname");
                 }
             } catch (std::exception ee) {
-                
+
             }
-                int retc = 0;
-                 DBGET << "LOADING snapshot " << snapname;
+            int retc = 0;
+            DBGET << "LOADING snapshot " << snapname;
 
-                retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
-                retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainInput, &io[1]);
-                if (retc || io[0] == NULL || io[1] == NULL) {
-                    bundle_state.append_error("error load snapshot " + getPath() + " snap name:" + snapname);
-                    json_buf = bundle_state.getData()->getJSONString();
-                    CALC_EXEC_TIME;
-                    return CHAOS_DEV_CMD;
-                }
+            retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainOutput, &io[0]);
+            retc += controller->loadDatasetTypeFromSnapshotTag(snapname, chaos::ui::DatasetDomainInput, &io[1]);
+            if (retc || io[0] == NULL || io[1] == NULL) {
+                bundle_state.append_error("error load snapshot " + getPath() + " snap name:" + snapname);
+                json_buf = bundle_state.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_CMD;
+            }
 
-                std::map<int, chaos::common::data::CDataWrapper *> set;
-                set[0] = io[0];
-                set[1] = io[1];
-                ret = combineDataSets(set);
-                if (ret) {
-                    json_buf = ret->getJSONString();
-                } else {
-                    bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
-                    json_buf = bundle_state.getData()->getJSONString();
-                    CALC_EXEC_TIME;
-                    return CHAOS_DEV_CMD;
-                }
+            std::map<int, chaos::common::data::CDataWrapper *> set;
+            set[0] = io[0];
+            set[1] = io[1];
+            ret = combineDataSets(set);
+            if (ret) {
+                json_buf = ret->getJSONString();
+            } else {
+                bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
+                json_buf = bundle_state.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_CMD;
+            }
 
 
-                DBGET << "LOAD snapshot " << snapname << " ret:" << retc;
-                return CHAOS_DEV_OK;
+            DBGET << "LOAD snapshot " << snapname << " ret:" << retc;
+            return CHAOS_DEV_OK;
         } else if (cmd == "list") {
             ChaosStringVector snaps;
             int ret;
             controller->setRequestTimeWaith(50000);
             ret = controller->getSnapshotList(snaps);
             std::stringstream ss;
-            
-            DBGET << "list "<<snaps.size()<<" snapshots err:" << ret;
-            if(ret==0){
+
+            DBGET << "list " << snaps.size() << " snapshots err:" << ret;
+            if (ret == 0) {
                 ss << "[";
                 for (ChaosStringVector::iterator i = snaps.begin(); i != snaps.end(); i++) {
                     if ((i + 1) == snaps.end()) {
