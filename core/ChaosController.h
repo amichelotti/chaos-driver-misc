@@ -110,7 +110,7 @@ private:
         uint32_t submission_checker_steps_delay;
         uint64_t command_id;
         chaos::common::batch_command::SubmissionRuleType::SubmissionRule sub_rule;
-        command(){priority=50; scheduler_steps_delay=0;submission_checker_steps_delay=0;sub_rule=chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_Kill;}
+        command(){priority=50; scheduler_steps_delay=0;submission_checker_steps_delay=0;sub_rule=chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL;}
 
     };
     

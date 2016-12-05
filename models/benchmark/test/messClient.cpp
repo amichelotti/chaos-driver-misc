@@ -199,7 +199,7 @@ public:
       do{
 	start_test_us=start_test.time_of_day().total_microseconds();
 	err = controller->submitSlowControlCommand("calc_bandwidth",
-						   chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack,
+						   chaos_batch::SubmissionRuleType::SUBMIT_AND_STACK,
 						   100,
 						   command_id,
 						   0,
@@ -422,8 +422,8 @@ public:
 
       test_delay_param_data.addInt64Value("sts", cur_ts = duration.total_microseconds());
       err = controller->submitSlowControlCommand("trx_delay",
-						 chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack,
-						 //chaos_batch::SubmissionRuleType::SUBMIT_AND_Kill,
+						 chaos_batch::SubmissionRuleType::SUBMIT_AND_STACK,
+						 //chaos_batch::SubmissionRuleType::SUBMIT_AND_KILL,
 						 100,
 						 command_id,
 						 0,
