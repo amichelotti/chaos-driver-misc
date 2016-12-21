@@ -940,12 +940,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			ChaosStringVector node_found;
 			if (obj == "set") {
-				if (p.hasKey("var")) {
+				if (p.hasKey("value")) {
 					CDataWrapper*var;
-					var=p.getCSDataValue(name);
+					var=p.getCSDataValue("value");
 					if(var){
 						if (mdsChannel->setVariable(name, *var, MDS_TIMEOUT) == 0) {
-							DBGET << "Save variable name:\"" << name << "\"";
+							DBGET << "Save variable name:\"" << name << "\":"<<var->getJSONString();
+							json_buf =var->getJSONString();
 							CALC_EXEC_TIME;
 							return CHAOS_DEV_OK;
 						} else {
@@ -971,11 +972,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				}
 			} else if(obj=="get"){
 				CDataWrapper* res=0;
-				if ((mdsChannel->getVariable(name, &res, MDS_TIMEOUT) == 0)&& res!=0) {
-					json_buf = res->getJSONString();
-					DBGET << "Retrived  variable name:\"" << name << "\":"<<json_buf;
-					delete res;
-					return CHAOS_DEV_CMD;
+				if ((mdsChannel->getVariable(name, &res, MDS_TIMEOUT) == 0)) {
+					if(res==NULL){
+						json_buf="{}";
+						DBGET << "no variable name:\"" << name << "\":";
+					} else {
+						json_buf = res->getJSONString();
+						DBGET << "Retrived  variable name:\"" << name << "\":"<<json_buf;
+						delete res;
+					}
+					return CHAOS_DEV_OK;
+;
 				} else {
 					serr << "no variable found with name :\"" << name<<"\"";
 
@@ -990,7 +997,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else if(obj=="del"){
 				if (mdsChannel->removeVariable(name, MDS_TIMEOUT) == 0) {
 					DBGET << "Removed  variable name:\"" << name << "\":"<<json_buf;
-					return CHAOS_DEV_CMD;
+					json_buf="{}";
+					return CHAOS_DEV_OK;
+
 				} else {
 					serr << "no variable found with name :\"" << name<<"\"";
 
@@ -1004,7 +1013,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf = vector2Json(node_found);
 					CALC_EXEC_TIME;
 					DBGET << "list  variable name:\"" << name << "\":"<<json_buf;
-					return CHAOS_DEV_CMD;
+					return CHAOS_DEV_OK;
 				} else {
 					serr << "no variable found with name :\"" << name<<"\"";
 
