@@ -784,10 +784,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 				json_buf = "[]";
 				if (name.size() > 0) {
-					CDataWrapper* out;
-					if (mdsChannel->getLastDatasetForDevice(name, &out, MDS_TIMEOUT) == 0) {
-						json_buf = out->getJSONString();
-						CALC_EXEC_TIME;
+					CDataWrapper* out=0;
+					if (mdsChannel->getFullNodeDescription(name, &out, MDS_TIMEOUT) == 0) {
+						json_buf ="{}";
+						if(out){
+							json_buf = out->getJSONString();
+							CALC_EXEC_TIME;
+							delete out;
+						}
 						return CHAOS_DEV_OK;
 					}
 				} else {
