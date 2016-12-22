@@ -1207,16 +1207,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "desc") {
 			bundle_state.append_log("desc device:" + path);
 
-			CDataWrapper* out;
-			if (mdsChannel->getLastDatasetForDevice(path, &out, MDS_TIMEOUT) == 0) {
-				json_buf = out->getJSONString();
-				CALC_EXEC_TIME;
+			CDataWrapper* out=0;
+			if (mdsChannel->getFullNodeDescription(path, &out, MDS_TIMEOUT) == 0) {
+				json_buf="{}";
+				if(out){
+					json_buf = out->getJSONString();
+					CALC_EXEC_TIME;
+					delete out;
+
+				}
+
 				return CHAOS_DEV_OK;
 			} else {
 				bundle_state.append_error("error describing device:" + path);
 				init(path, timeo);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
+				if(out){
+					delete out;
+				}
 				return CHAOS_DEV_CMD;
 			}
 
