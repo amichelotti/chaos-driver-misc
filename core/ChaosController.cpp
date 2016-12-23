@@ -546,9 +546,9 @@ std::string ChaosController::dataset2Var(chaos::common::data::CDataWrapper*data,
 	uint64_t seq = data->getInt64Value("dpck_seq_id");
 	if (var_name.size() && data->hasKey(var_name)) {
 		chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
-		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"" <<var_name<<"\":"<< v.asString() << "}";
+		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<< v.asString() << "}";
 	} else {
-		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"" <<var_name<<"\":{}}";
+		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\": {}}";
 	}
 	return res.str();
 }
@@ -1312,13 +1312,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 								res << data->getJSONString();
 							}
 							cnt++;
-							DBGET << "getting query page  " << cnt;
+						//	DBGET << "getting query page  " << cnt;
 							if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
 								res << ",";
 							}
 						}
 						res << "]";
-						if ((query_cursor->hasNext()&&(cnt < limit))) {
+						if ((query_cursor->hasNext())) {
 							query_cursor_map[++queryuid] = query_cursor;
 							res << ",\"uid\":" << queryuid << "}";
 							DBGET << "continue on UID:" << queryuid;
@@ -1360,7 +1360,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							res << data->getJSONString();
 						}
 						cnt++;
-						DBGET << "getting query page  " << cnt;
+					//	DBGET << "getting query page  " << cnt;
 						if ((query_cursor->hasNext())&&(cnt < limit)) {
 							res << ",";
 
