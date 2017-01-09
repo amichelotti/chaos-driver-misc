@@ -343,6 +343,20 @@ int ChaosController::sendCmd(command_t& cmd, bool wait, uint64_t perform_at, uin
 
 }
 
+
+void ChaosController::cleanUpQuery(){
+	uint64_t now=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
+
+	for(query_cursor_map_t::iterator i=query_cursor_map.begin();i!=query_cursor_map.end();i++){
+		if((now - i->second.qt)> QUERY_PAGE_MAX_TIME){
+			DBGET << " Expired max time for paged query, removing uid:"<<i->first;
+			controller->releaseQuery(i->second.qc);
+			query_cursor_map_t::iterator tmp=i++;
+			query_cursor_map.erase(tmp);
+		}
+
+	}
+}
 int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, uint64_t wait_for) {
 	int ret = sendCmd(cmd, wait, perform_at, wait_for);
 	if (ret != 0) {
@@ -1264,12 +1278,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			std::string var_name;
 			chaos::common::io::QueryCursor *query_cursor = NULL;
 			p.setSerializedJsonData(args);
+			cleanUpQuery();
 			if (p.hasKey("start")) {
 				start_ts = p.getInt64Value("start");
+				if(start_ts==-1){
+					start_ts=reqtime/1000;
+				}
 			}
 
 			if (p.hasKey("end")) {
 				end_ts = p.getInt64Value("end");
+				if(end_ts==-1){
+					end_ts=reqtime/1000;
+				}
 			}
 			if (p.hasKey("page")) {
 				page = p.getInt32Value("page");
@@ -1319,7 +1340,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						}
 						res << "]";
 						if ((query_cursor->hasNext())) {
-							query_cursor_map[++queryuid] = query_cursor;
+							qc_t q_nfo;
+							q_nfo.qt = reqtime;
+							q_nfo.qc=query_cursor;
+							query_cursor_map[++queryuid] = q_nfo;
 							res << ",\"uid\":" << queryuid << "}";
 							DBGET << "continue on UID:" << queryuid;
 						} else {
@@ -1438,7 +1462,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 			DBGET << "querynext uid:" << uid << " clear:" << clear_req;
 			if (query_cursor_map.find(uid) != query_cursor_map.end()) {
-				query_cursor = query_cursor_map[uid];
+				query_cursor = query_cursor_map[uid].qc;
 				if (query_cursor) {
 					cnt = 0;
 					uint32_t page = query_cursor->getPageLen();
@@ -1511,10 +1535,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			}
 			json_buf = "{}";
-			if (p.hasKey("snapname")) {
-				snapname = p.getStringValue("snapname");
-			} else {
-			}
+
 			std::vector<std::string> other;
 			ret = controller->createNewSnapshot(snapname, other);
 			DBGET << "creating snapshot " << snapname << " ret:" << ret;

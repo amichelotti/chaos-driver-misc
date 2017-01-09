@@ -6,7 +6,6 @@
  */
 
 #ifndef ChaosController_H
-#define	ChaosController_H
 #include <map>
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
@@ -16,6 +15,7 @@
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
+#define	ChaosController_H
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 3000
 #define MDS_STEP_TIMEOUT 1000
@@ -29,6 +29,8 @@
 #define DEFAULT_PAGE 1000
 #define MAX_CONCURRENT_QUERY 100
 #define MAX_QUERY_ELEMENTS 1000
+#define QUERY_PAGE_MAX_TIME 1000*1000*60*5
+
 namespace driver{
     
     namespace misc{
@@ -55,8 +57,9 @@ private:
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
     uint32_t queryuid;
-    typedef std::map<uint64_t,chaos::common::io::QueryCursor *> query_cursor_map_t;
+    typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
 
+    typedef std::map<uint64_t,qc_t> query_cursor_map_t;
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
      std::map<std::string,std::string> zone_to_cuname;
@@ -66,6 +69,7 @@ private:
      std::string vector2Json(ChaosStringVector& v);
      std::string map2Json(std::map<uint64_t,std::string> & v);
      std::string dataset2Var(chaos::common::data::CDataWrapper*c,std::string& name);
+     void cleanUpQuery();
   public:  
 
      typedef enum {
