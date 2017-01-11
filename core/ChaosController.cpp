@@ -584,6 +584,8 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
 void ChaosController::parseClassZone(ChaosStringVector&v) {
 	const boost::regex e("^(.*)/(.*)/(.*)$");
 	boost::cmatch what;
+	zone_to_cuname.clear();
+	class_to_cuname.clear();
 	for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
 		if (boost::regex_match(i->c_str(), what, e)) {
 			zone_to_cuname[what[1]] = *i;
@@ -725,7 +727,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_OK;
 				} else {
-					DBGET << "searching CLASS";
+					DBGET << "searching CLASS inside:"<<name;
 
 					if (mdsChannel->searchNode(name,
 							2,
@@ -861,16 +863,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			DBGET << "snapshot what " << obj;
 
 			ChaosStringVector node_found;
-			if (obj == "create") {
-				ChaosStringVector node_found;
 
-				if (p.hasKey("node_list")) {
-					std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("node_list"));
-					for (int idx = 0; idx < nodes->size(); idx++) {
-						const std::string domain = nodes->getStringElementAtIndex(idx);
-						node_found.push_back(domain);
-						DBGET << "adding \"" << domain << "\" to snapshot name:\"" << name << "\"";
-					}
+			if (p.hasKey("node_list")) {
+				std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("node_list"));
+				for (int idx = 0; idx < nodes->size(); idx++) {
+					const std::string domain = nodes->getStringElementAtIndex(idx);
+					node_found.push_back(domain);
+					//DBGET << "adding \"" << domain << "\" to snapshot name:\"" << name << "\"";
+				}
+			}
+			if (obj == "create") {
+				if(node_found.empty()){
+					serr << "missing \"node_list\" node list";
+
+
+				} else {
 					if (mdsChannel->createNewSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
 						DBGET << "Created snapshot name:\"" << name << "\"";
 
@@ -878,15 +885,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						CALC_EXEC_TIME;
 						return CHAOS_DEV_OK;
 					} else {
-
 						serr << "error creating snapshot:" << name;
 
 					}
-
-				} else {
-					serr << "missing \"node_list\" node list";
-
 				}
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
 
 			} else if (obj == "delete") {
 				if (mdsChannel->deleteSnapshot(name, MDS_TIMEOUT) == 0) {
@@ -897,8 +902,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 				} else {
 					serr << "error deleting snapshot:" << name;
-
 				}
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
 			} else if (obj == "restore") {
 				if (mdsChannel->restoreSnapshot(name, MDS_TIMEOUT) == 0) {
 					DBGET << "Restore snapshot name:\"" << name << "\"";
@@ -909,7 +916,31 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				} else {
 					serr << "error restoring snapshot:" << name;
 				}
+			} else if (obj == "load") {
+				if(node_found.empty()){
+
+					serr << "missing \"node_list\" node list";
+				} else {
+					std::stringstream sres;
+					for(ChaosStringVector::iterator i=node_found.begin();i!=node_found.end();i++){
+						CDataWrapper res;
+						sres<<"[";
+						if (mdsChannel->loadSnapshotNodeDataset(name,*i,res, MDS_TIMEOUT) == 0) {
+								DBGET << "load snapshot name:\"" << name << "\": CU:"<<*i;
+								if((i+1)==node_found.end()){
+									sres<<res.getJSONString();
+								} else {
+									sres<<res.getJSONString()<<",";
+								}
+						}
+				}
+					sres<<"]";
+					json_buf=sres.str();
+					CALC_EXEC_TIME
+					return CHAOS_DEV_OK;
+				}
 			} else {
+
 				serr << "unknown 'snapshot' arg:" << args;
 			}
 			bundle_state.append_error(serr.str());
@@ -1702,7 +1733,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			bundle_state.append_log("send cmd:\"" + cmd + "\" args: \"" + std::string(args) + "\" to device:" + path);
 			command_t command = prepareCommand(cmd);
 			command->param.setSerializedJsonData(args);
-
+			command->priority=prio;
+			command->sub_rule=(submission_mode==1)?chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL:chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 			err = sendCmd(command, false);
 			if (err != 0) {
 				init(path, timeo);
