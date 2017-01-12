@@ -457,9 +457,11 @@ static const char* chaosDomainToString(int domain) {
 	case 4:
 		return "health";
 	case 5:
-		return "alarms";
+		return "device_alarms";
+	case 6:
+		return "cu_alarms";
 	default:
-		return "uknown";
+		return "unknown";
 	}
 }
 
@@ -507,7 +509,9 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 			set[chaos::ui::DatasetDomainHealth] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainHealth);
 			set[chaos::ui::DatasetDomainSystem] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainSystem);
 			set[chaos::ui::DatasetDomainCustom] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainCustom);
-			set[chaos::ui::DatasetDomainAlarm] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainAlarm);
+			set[chaos::ui::DatasetDomainDevAlarm] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainDevAlarm);
+			set[chaos::ui::DatasetDomainCUAlarm] = controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainCUAlarm);
+
 			return combineDataSets(set);
 
 		} else {
