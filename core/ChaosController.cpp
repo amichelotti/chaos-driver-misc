@@ -444,26 +444,7 @@ ChaosController::~ChaosController() {
 
 }
 
-static const char* chaosDomainToString(int domain) {
-	switch (domain) {
-	case 0:
-		return "output";
-	case 1:
-		return "input";
-	case 2:
-		return "custom";
-	case 3:
-		return "system";
-	case 4:
-		return "health";
-	case 5:
-		return "device_alarms";
-	case 6:
-		return "cu_alarms";
-	default:
-		return "unknown";
-	}
-}
+
 
 chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>& set) {
 	std::map<int, chaos::common::data::CDataWrapper*>::iterator i;
@@ -477,11 +458,11 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 		if (i->second) {
 			data = normalizeToJson(i->second, binaryToTranslate);
 			//out<<",\"input\":"<<data->getJSONString();
-			resdata.addCSDataValue(chaosDomainToString(i->first), *data);
+			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *data);
 		} else {
 
 			chaos::common::data::CDataWrapper empty;
-			resdata.addCSDataValue(chaosDomainToString(i->first), empty);
+			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), empty);
 			//	  ss<<"error fetching data from \""<<chaosDomainToString(i->first)<<"\" channel ";
 			//	  bundle_state.append_error(ss.str());
 			//	  return bundle_state.getData();
@@ -926,9 +907,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "missing \"node_list\" node list";
 				} else {
 					std::stringstream sres;
+					sres<<"[";
+
 					for(ChaosStringVector::iterator i=node_found.begin();i!=node_found.end();i++){
 						CDataWrapper res;
-						sres<<"[";
 						if (mdsChannel->loadSnapshotNodeDataset(name,*i,res, MDS_TIMEOUT) == 0) {
 								DBGET << "load snapshot name:\"" << name << "\": CU:"<<*i;
 								if((i+1)==node_found.end()){
