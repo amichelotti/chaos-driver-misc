@@ -1075,10 +1075,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		if (wostate == 0) {
 			std::stringstream ss;
 
-			if (((reqtime - last_access) > (timeo)) || ((next_state > 0)&&(state != next_state))) {
-				if (updateState() == 0) {
-					ss << " [" << path << "] HB expired" << (reqtime - last_access) << " us greater than " << timeo << " us, removing device";
-					init(path, timeo);
+			if ((cmd!="init")&&(((reqtime - last_access) > (timeo)) || ((next_state > 0)&&(state != next_state)))) {
+				if (updateState() < 0) {
+					ss << " [" << path << "] HB expired:" << (reqtime - last_access) << " us greater than " << timeo << " us, removing device";
 					bundle_state.append_error(ss.str());
 					json_buf = bundle_state.getData()->getJSONString();
 					CALC_EXEC_TIME;
@@ -1106,7 +1105,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 
 		} else if (cmd == "status") {
-			DPRINT("fetch dataset of %s (stateless)\n", path.c_str());
 			bundle_state.status(chaos::CUStateKey::START);
 			state = chaos::CUStateKey::START;
 			bundle_state.append_log("stateless device");
@@ -1119,20 +1117,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		if (cmd == "init") {
 			wostate = 0;
 
-			if (updateState() == 0) {
-				init(path, timeo);
-				json_buf = bundle_state.getData()->getJSONString();
-				CALC_EXEC_TIME;
-				return CHAOS_DEV_HB_TIMEOUT;
-			}
+
 
 			if (state != chaos::CUStateKey::INIT) {
 				bundle_state.append_log("init device:" + path);
 				err = controller->initDevice();
 				if (err != 0) {
 					bundle_state.append_error("initializing device:" + path);
-					init(path, timeo);
+					//init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
+					if((state == chaos::CUStateKey::DEINIT) || (state==chaos::CUStateKey::UNDEFINED)){
+						init(path, timeo);
+					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_INIT;
 				}
@@ -1140,14 +1136,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else {
 				bundle_state.append_log("device:" + path + " already initialized");
 			}
+
 			chaos::common::data::CDataWrapper* data = fetch(chaos::ui::DatasetDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "start") {
 			wostate = 0;
 
-			if (updateState() == 0) {
-				init(path, timeo);
+			if (updateState() < 0) {
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_HB_TIMEOUT;
@@ -1158,8 +1154,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				err = controller->startDevice();
 				if (err != 0) {
 					bundle_state.append_error("starting device:" + path);
-					init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
+
+					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)|| (state==chaos::CUStateKey::INIT)){
+						init(path, timeo);
+					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_START;
 				}
@@ -1174,8 +1173,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "stop") {
 			wostate = 0;
 
-			if (updateState() == 0) {
-				init(path, timeo);
+			if (updateState() < 0) {
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_HB_TIMEOUT;
@@ -1186,8 +1184,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				err = controller->stopDevice();
 				if (err != 0) {
 					bundle_state.append_error("stopping device:" + path);
-					init(path, timeo);
+					//init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
+
+					if((state == chaos::CUStateKey::START) || (state==chaos::CUStateKey::UNDEFINED)){
+						init(path, timeo);
+					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_STOP;
 				}
@@ -1202,8 +1204,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "deinit") {
 			wostate = 0;
 
-			if (updateState() == 0) {
-				init(path, timeo);
+			if (updateState() < 0) {
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_HB_TIMEOUT;
@@ -1214,8 +1215,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				err = controller->deinitDevice();
 				if (err != 0) {
 					bundle_state.append_error("deinitializing device:" + path);
-					init(path, timeo);
+				//	init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
+					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)){
+						init(path, timeo);
+					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_DEINIT;
 				}
@@ -1761,6 +1765,7 @@ int ChaosController::updateState() {
 	uint64_t h;
 	last_state = state;
 	h = controller->getState(state);
+	//DBGET <<" HB timestamp:"<<h<<" state:"<<state;
 	if (h == 0) {
 		//bundle_state.append_error("cannot access to HB");
 		wostate = 1;
@@ -1773,7 +1778,7 @@ int ChaosController::updateState() {
 		bundle_state.append_error(ss.str());
 		bundle_state.status(state);
 		init(path, timeo);
-		return 0;
+		return -2;
 	}
 	heart = h;
 	bundle_state.status(state);
