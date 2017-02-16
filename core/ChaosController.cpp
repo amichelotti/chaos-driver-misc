@@ -684,7 +684,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				json_buf = "[]";
 				ChaosStringVector dev_class;
 
-				if (p.hasKey("names")) {
+				if (p.hasKey("names") && p.isVector("names")) {
 					DBGET << "searching CLASS LIST";
 
 					std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("names"));
@@ -849,7 +849,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			ChaosStringVector node_found;
 
-			if (p.hasKey("node_list")) {
+			if (p.hasKey("node_list") && p.isVector("node_list")) {
 				std::auto_ptr<CMultiTypeDataArrayWrapper> nodes(p.getVectorValue("node_list"));
 				for (int idx = 0; idx < nodes->size(); idx++) {
 					const std::string domain = nodes->getStringElementAtIndex(idx);
@@ -859,7 +859,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 			if (obj == "create") {
 				if(node_found.empty()){
-					serr << "missing \"node_list\" node list";
+					serr << "missing \"node_list\" json vector";
 
 
 				} else {
@@ -904,7 +904,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else if (obj == "load") {
 				if(node_found.empty()){
 
-					serr << "missing \"node_list\" node list";
+					serr << "missing \"node_list\" json vector";
 				} else {
 					std::stringstream sres;
 					sres<<"[";
