@@ -345,16 +345,22 @@ int ChaosController::sendCmd(command_t& cmd, bool wait, uint64_t perform_at, uin
 
 
 void ChaosController::cleanUpQuery(){
-	uint64_t now=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
-
+	uint64_t now=boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
+	int cleanedup=0;
 	for(query_cursor_map_t::iterator i=query_cursor_map.begin();i!=query_cursor_map.end();i++){
-		if((now - i->second.qt)> QUERY_PAGE_MAX_TIME){
-			DBGET << " Expired max time for paged query, removing uid:"<<i->first;
-			controller->releaseQuery(i->second.qc);
-			query_cursor_map_t::iterator tmp=i++;
-			query_cursor_map.erase(tmp);
+		unsigned long diff=(now - i->second.qt);
+		if(diff> QUERY_PAGE_MAX_TIME){
+			DBGET << " Expired max time for paged query, removing uid:"<<i->first <<" query started at:"<< diff/1000 <<" s ago";
+			if(i->second.qc){
+				controller->releaseQuery(i->second.qc);
+			}
+			query_cursor_map.erase(i);
+			cleanedup++;
 		}
 
+	}
+	if(cleanedup){
+		DBGET << " cleaned up "<<cleanedup;
 	}
 }
 int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, uint64_t wait_for) {
@@ -386,6 +392,7 @@ int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, 
 ChaosController::ChaosController(std::string p, uint32_t timeo_) {
 	int ret;
 	controller = NULL;
+	heart=0;
 	mdsChannel = LLRpcApi::getInstance()->getNewMetadataServerChannel();
 	if (!mdsChannel) throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
 
@@ -409,6 +416,7 @@ ChaosController::ChaosController() {
 	controller = NULL;
 	queryuid = 0;
 	state = chaos::CUStateKey::UNDEFINED;
+	heart=0;
 	mdsChannel = LLRpcApi::getInstance()->getNewMetadataServerChannel();
 	if (!mdsChannel) throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
 
@@ -586,7 +594,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 	naccess++;
 	bundle_state.reset();
 	bundle_state.status(state);
-	DBGET << "cmd:" << cmd << " args:" << args << " last access:" << reqtime - last_access << " us ago" << " timeo:" << timeo;
+	DBGET << "cmd:" << cmd << " args:" << args << " last access:" << (reqtime - last_access)*1.0/1000.0 << " ms ago" << " timeo:" << timeo;
 	json_buf = "[]";
 
 	try {
@@ -912,14 +920,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					for(ChaosStringVector::iterator i=node_found.begin();i!=node_found.end();i++){
 						CDataWrapper res;
 						if (mdsChannel->loadSnapshotNodeDataset(name,*i,res, MDS_TIMEOUT) == 0) {
-								DBGET << "load snapshot name:\"" << name << "\": CU:"<<*i;
-								if((i+1)==node_found.end()){
-									sres<<res.getJSONString();
-								} else {
-									sres<<res.getJSONString()<<",";
-								}
+							DBGET << "load snapshot name:\"" << name << "\": CU:"<<*i;
+							if((i+1)==node_found.end()){
+								sres<<res.getJSONString();
+							} else {
+								sres<<res.getJSONString()<<",";
+							}
 						}
-				}
+					}
 					sres<<"]";
 					json_buf=sres.str();
 					CALC_EXEC_TIME
@@ -1017,7 +1025,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						delete res;
 					}
 					return CHAOS_DEV_OK;
-;
+					;
 				} else {
 					serr << "no variable found with name :\"" << name<<"\"";
 
@@ -1075,32 +1083,34 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		if (wostate == 0) {
 			std::stringstream ss;
 
-			if ((cmd!="init")&&(((reqtime - last_access) > (timeo)) || ((next_state > 0)&&(state != next_state)))) {
-				if (updateState() < 0) {
+			if ((state == chaos::CUStateKey::RECOVERABLE_ERROR) || (state == chaos::CUStateKey::FATAL_ERROR)) {
+				chaos::common::data::CDataWrapper*data = fetch(chaos::ui::DatasetDomainHealth);
+				std::string ll;
+
+				if (data->hasKey("nh_led")) {
+					ll = std::string("domain:") + data->getCStringValue("nh_led");
+				}
+				if (data->hasKey("nh_lem")) {
+					ll = ll + std::string(" msg:") + data->getCStringValue("nh_lem");
+				}
+				bundle_state.append_error(ll);
+				json_buf = bundle_state.getData()->getJSONString();
+				CALC_EXEC_TIME;
+
+
+				return (state == chaos::CUStateKey::RECOVERABLE_ERROR) ? CHAOS_DEV_RECOVERABLE_ERROR : CHAOS_DEV_FATAL_ERROR;
+			}
+			if (((cmd!="init")|| ((next_state > 0)&&(state != next_state))) &&((reqtime - last_access) > CHECK_HB)) {
+				if (checkHB() == 0) {
 					ss << " [" << path << "] HB expired:" << (reqtime - last_access) << " us greater than " << timeo << " us, removing device";
 					bundle_state.append_error(ss.str());
 					json_buf = bundle_state.getData()->getJSONString();
+					init(path, timeo);
+
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_HB_TIMEOUT;
 				}
 				last_access = reqtime;
-				if ((state == chaos::CUStateKey::RECOVERABLE_ERROR) || (state == chaos::CUStateKey::FATAL_ERROR)) {
-					chaos::common::data::CDataWrapper*data = fetch(chaos::ui::DatasetDomainHealth);
-					std::string ll;
-
-					if (data->hasKey("nh_led")) {
-						ll = std::string("domain:") + data->getCStringValue("nh_led");
-					}
-					if (data->hasKey("nh_lem")) {
-						ll = ll + std::string(" msg:") + data->getCStringValue("nh_lem");
-					}
-					bundle_state.append_error(ll);
-					json_buf = bundle_state.getData()->getJSONString();
-					CALC_EXEC_TIME;
-
-
-					return (state == chaos::CUStateKey::RECOVERABLE_ERROR) ? CHAOS_DEV_RECOVERABLE_ERROR : CHAOS_DEV_FATAL_ERROR;
-				}
 
 			}
 
@@ -1215,7 +1225,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				err = controller->deinitDevice();
 				if (err != 0) {
 					bundle_state.append_error("deinitializing device:" + path);
-				//	init(path, timeo);
+					//	init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
 					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)){
 						init(path, timeo);
@@ -1354,7 +1364,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 								res << data->getJSONString();
 							}
 							cnt++;
-						//	DBGET << "getting query page  " << cnt;
+							//	DBGET << "getting query page  " << cnt;
 							if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
 								res << ",";
 							}
@@ -1362,24 +1372,38 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						res << "]";
 						if ((query_cursor->hasNext())) {
 							qc_t q_nfo;
-							q_nfo.qt = reqtime;
+							q_nfo.qt = reqtime/1000;
 							q_nfo.qc=query_cursor;
 							query_cursor_map[++queryuid] = q_nfo;
 							res << ",\"uid\":" << queryuid << "}";
 							DBGET << "continue on UID:" << queryuid;
 						} else {
-							res << ",\"uid\":0}";
-							DBGET << "queryhst no more pages items:" << cnt << " \"" << res.str() << "\"";
+							int32_t err;
+							if(err=query_cursor->getError()){
+								controller->releaseQuery(query_cursor);
+								bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", %getPath() %err));
+								json_buf = bundle_state.getData()->getJSONString();
+								/// TODO : perche' devo rinizializzare il controller?
+								init(path, timeo);
+
+								CALC_EXEC_TIME;
+								return CHAOS_DEV_CMD;
+							} else {
+								res << ",\"uid\":0}";
+								DBGET << "queryhst no more pages items:" << cnt;
+							}
 							controller->releaseQuery(query_cursor);
 						}
 
 					} else {
 						bundle_state.append_error("cannot perform specified query, no data? " + getPath());
+						json_buf = bundle_state.getData()->getJSONString();
 						CALC_EXEC_TIME;
 						return CHAOS_DEV_CMD;
 					}
 				} else {
-					bundle_state.append_error("to many concurrent queries, please try later on " + getPath());
+					bundle_state.append_error("too many concurrent queries, please try later on " + getPath());
+					json_buf = bundle_state.getData()->getJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
@@ -1405,7 +1429,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							res << data->getJSONString();
 						}
 						cnt++;
-					//	DBGET << "getting query page  " << cnt;
+						//	DBGET << "getting query page  " << cnt;
 						if ((query_cursor->hasNext())&&(cnt < limit)) {
 							res << ",";
 
@@ -1415,6 +1439,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 				} else {
 					bundle_state.append_error("cannot perform specified query, no data? " + getPath());
+					json_buf = bundle_state.getData()->getJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
@@ -1470,6 +1495,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				uid = p.getInt32Value("uid");
 			} else {
 				bundle_state.append_error("must specify a valid page uid " + getPath());
+				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
@@ -1484,6 +1510,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			DBGET << "querynext uid:" << uid << " clear:" << clear_req;
 			if (query_cursor_map.find(uid) != query_cursor_map.end()) {
 				query_cursor = query_cursor_map[uid].qc;
+				query_cursor_map[uid].qt = reqtime/1000;
 				if (query_cursor) {
 					cnt = 0;
 					uint32_t page = query_cursor->getPageLen();
@@ -1504,20 +1531,32 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					}
 					res << "]";
 					if ((!query_cursor->hasNext()) || clear_req) {
+						int32_t err;
+						if(err=query_cursor->getError()){
+							controller->releaseQuery(query_cursor);
+							query_cursor_map.erase(query_cursor_map.find(uid));
+							bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", %getPath() %uid %err));
+							json_buf = bundle_state.getData()->getJSONString();
+							CALC_EXEC_TIME;
+							init(path, timeo);
+
+							return CHAOS_DEV_CMD;
+						}
 						res << ",\"uid\":0}";
-						DBGET << "queryhstnext no more pages items:" << cnt << "with uid:" << uid << " \"" << res.str() << "\"";
+						DBGET << "queryhstnext no more pages items:" << cnt << " with uid:" << uid;
 						controller->releaseQuery(query_cursor);
 						query_cursor_map.erase(query_cursor_map.find(uid));
 
 					} else {
 						res << ",\"uid\":" << uid << "}";
-						DBGET << "queryhstnext some page missing still:" << cnt << "with uid:" << uid;
+						DBGET << "some page still missing:" << cnt << " with uid:" << uid;
 					}
 
 					json_buf = res.str();
 					return CHAOS_DEV_OK;
 				}
 				bundle_state.append_error("cannot perform specified query, no data? " + getPath());
+				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 
@@ -1761,6 +1800,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 }
 
+uint64_t ChaosController::checkHB() {
+	uint64_t h=0;
+	h = controller->getState(state);
+	//DBGET <<" HB timestamp:"<<h<<" state:"<<state;
+	if (h == 0) {
+		//bundle_state.append_error("cannot access to HB");
+		wostate = 1;
+		state = chaos::CUStateKey::START;
+		return 0;
+	}
+	if ((heart > 0) &&((h - heart) == 0)) {
+		std::stringstream ss;
+		ss << "device is dead, last HB " << h << "us , removing";
+		bundle_state.append_error(ss.str());
+		return 0;
+	}
+	heart=h;
+	return h;
+}
 int ChaosController::updateState() {
 	uint64_t h;
 	last_state = state;
@@ -1772,15 +1830,7 @@ int ChaosController::updateState() {
 		state = chaos::CUStateKey::START;
 		return -1;
 	}
-	if ((heart > 0) &&((h - heart) > HEART_BEAT_MAX)) {
-		std::stringstream ss;
-		ss << "device is dead " << (h - heart) << " ms of inactivity, removing";
-		bundle_state.append_error(ss.str());
-		bundle_state.status(state);
-		init(path, timeo);
-		return -2;
-	}
-	heart = h;
+
 	bundle_state.status(state);
 
 	return (int) state;

@@ -29,7 +29,8 @@
 #define DEFAULT_PAGE 1000
 #define MAX_CONCURRENT_QUERY 100
 #define MAX_QUERY_ELEMENTS 1000
-#define QUERY_PAGE_MAX_TIME 1000*1000*60*5
+#define QUERY_PAGE_MAX_TIME 1000*60*1 // 1 min
+#define CHECK_HB 10*1000*1000 //10 s
 
 namespace driver{
     
@@ -194,6 +195,8 @@ private:
      * @return negative if error
      */
     int updateState();
+    uint64_t checkHB();
+
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
