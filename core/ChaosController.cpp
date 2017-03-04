@@ -629,17 +629,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			DBGET << "searching what " << obj;
 			ChaosStringVector node_found;
-			if (obj == "cu") {
+
+
+			if (obj == "cu" || obj == "us" || obj == "agent") {
 				json_buf = "[]";
 
+				int node_type=2;
+				if(obj=="agent")
+					node_type = 3;
+				if(obj=="us")
+					node_type =1;
+
 				if (p.hasKey("names")) {
-					DBGET << "list CU";
+					DBGET << "list nodes of type:"<<node_type<<"("<<obj<<")";
 
 					for (int idx = 0; idx < names->size(); idx++) {
 						ChaosStringVector node_tmp;
 
 						const std::string domain = names->getStringElementAtIndex(idx);
-						if (mdsChannel->searchNode(domain, 2, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
+						if (mdsChannel->searchNode(domain, node_type, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
 							node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
 						}
 					}
@@ -647,10 +655,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_OK;
 				} else {
-					DBGET << "searching CU";
+					DBGET << "searching node \""<<name<<"\" type:"<<node_type<<" ("<<obj<<")";
 
 					if (mdsChannel->searchNode(name,
-							2,
+							node_type,
 							alive,
 							0,
 							MAX_QUERY_ELEMENTS,
@@ -1307,6 +1315,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			uint32_t current_query = 0;
 			std::stringstream res;
 			std::string var_name;
+			int channel=0;
 			chaos::common::io::QueryCursor *query_cursor = NULL;
 			p.setSerializedJsonData(args);
 			cleanUpQuery();
@@ -1331,6 +1340,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				paging = 1;
 			}
 
+			if (p.hasKey("channel")) {
+							channel = p.getInt32Value("page");
+
+			}
 			if (p.hasKey("limit")) {
 				limit = p.getInt32Value("limit");
 				if ((limit > 0)&&(limit <= page)) {
@@ -1345,7 +1358,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			if (paging) {
 				if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
-					controller->executeTimeIntervallQuery(chaos::ui::DatasetDomainOutput, start_ts, end_ts, &query_cursor, page);
+					controller->executeTimeIntervallQuery((chaos::ui::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
 					if (query_cursor) {
 						cnt = 0;
 						bool n = query_cursor->hasNext();
@@ -1384,7 +1397,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 								bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", %getPath() %err));
 								json_buf = bundle_state.getData()->getJSONString();
 								/// TODO : perche' devo rinizializzare il controller?
-								init(path, timeo);
+								//init(path, timeo);
 
 								CALC_EXEC_TIME;
 								return CHAOS_DEV_CMD;
@@ -1538,7 +1551,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", %getPath() %uid %err));
 							json_buf = bundle_state.getData()->getJSONString();
 							CALC_EXEC_TIME;
-							init(path, timeo);
+							//init(path, timeo);
 
 							return CHAOS_DEV_CMD;
 						}
