@@ -10,9 +10,11 @@
 #include <map>
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
-
+#ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
-
+#else
+#include <ChaosMetadataServiceClient/node_controller/CUController.h>
+#endif
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
@@ -63,7 +65,13 @@ class ChaosDatasetAttribute{
     void setUpdateMode(UpdateMode mode,uint64_t ustime);
     
     datinfo& getInfo();
+#ifdef __CHAOS_UI__
     typedef boost::shared_ptr<chaos::ui::DeviceController> ctrl_t;
+#else
+    typedef boost::shared_ptr<chaos::metadata_service_client::node_controller::CUController> ctrl_t;
+
+#endif
+
 private:
     uint64_t update_time;
     uint32_t timeo;

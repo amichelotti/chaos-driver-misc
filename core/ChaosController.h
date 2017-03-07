@@ -5,17 +5,27 @@
  * Created on September 2, 2015, 5:29 PM
  */
 
-#ifndef ChaosController_H
+#ifndef __ChaosController_H
+#define	__ChaosController_H
+
+
 #include <map>
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <boost/shared_ptr.hpp>
+#ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
+#define UI_PREFIX chaos::ui
+#else
+#define UI_PREFIX chaos::metadata_service_client::node_controller
+
+#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+
+#endif
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
-#define	ChaosController_H
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 3000
 #define MDS_STEP_TIMEOUT 1000
@@ -40,8 +50,13 @@ class ChaosController{
     
 private:
      chaos::common::message::MDSMessageChannel *mdsChannel;
-
+     chaos::metadata_service_client::ChaosMetadataServiceClient*mds_client;
+#ifdef __CHAOS_UI__
      chaos::ui::DeviceController* controller;
+#else
+     chaos::metadata_service_client::node_controller::CUController* controller;
+#endif
+     std::vector<std::string> mds_server_l;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
      uint64_t timeo,schedule;
@@ -71,6 +86,8 @@ private:
      std::string map2Json(std::map<uint64_t,std::string> & v);
      std::string dataset2Var(chaos::common::data::CDataWrapper*c,std::string& name);
      void cleanUpQuery();
+     void initializeClient();
+     void deinitializeClient();
   public:  
 
      typedef enum {

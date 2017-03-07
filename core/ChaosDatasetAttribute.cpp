@@ -7,8 +7,13 @@
 
 #include "ChaosDatasetAttribute.h"
 #include <chaos/common/exception/CException.h>
+#ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
+#else
+#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+
+#endif
 using namespace ::driver::misc;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo_psh > ChaosDatasetAttribute::paramToDataset;
@@ -24,7 +29,13 @@ int ChaosDatasetAttribute::allocateController(std::string cu){
 
 	try{
 	  if(controllers.find(cu)==controllers.end()){
+#ifdef __CHAOS_UI__
 	        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
+#else
+	        chaos::metadata_service_client::node_controller::CUController *cu_ctrl = NULL;
+	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
+	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getNewCUController(cu,&cu_ctrl);
+#endif
 	        controllers[cu]=controller;
 	        controller->setupTracking();
 	        ATTRDBG_ << " Allocating New controller:"<<controller.get();
@@ -149,8 +160,12 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         uint64_t tget=pt.time_of_day().total_microseconds();
         pt= boost::posix_time::microsec_clock::local_time();
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_parent]->tget)> update_time)) ){
+#ifdef __CHAOS_UI__
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
+#else
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::metadata_service_client::node_controller::DatasetDomainInput:chaos::metadata_service_client::node_controller::DatasetDomainOutput);
 
+#endif
             if(tmpw==NULL){
                 throw chaos::CException(-1000,"cannot retrieve data for:"+attr_path,__PRETTY_FUNCTION__);
             }
