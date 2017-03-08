@@ -45,7 +45,8 @@ int ChaosDatasetAttribute::allocateController(std::string cu){
 	        chaos::metadata_service_client::node_controller::CUController *cu_ctrl = NULL;
 	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
 	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getNewCUController(cu,&cu_ctrl);
-	        controllers[cu]=cu_ctrl;
+		controller=cu_ctrl;
+	        controllers[cu]=controller;
 
 #endif
 	        controller->setupTracking();
