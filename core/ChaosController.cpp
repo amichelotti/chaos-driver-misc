@@ -254,7 +254,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 
 		controller = chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_ / 1000);
 #else
-		ChaosMetadataServiceClient::getInstance()->enableMonitor();
+	//	ChaosMetadataServiceClient::getInstance()->enableMonitor();
 		ChaosMetadataServiceClient::getInstance()->getNewCUController(path,&controller);
 #endif
 	} catch (chaos::CException &e) {
@@ -442,7 +442,7 @@ void ChaosController::initializeClient(){
 	if (!mds_client)
 		throw chaos::CException(-1, "cannot instatiate MDS CLIENT", "ChaosController()");
 
-	mds_client->enableMonitor();
+	//mds_client->enableMonitor();
 	mds_client->start();
 
 }

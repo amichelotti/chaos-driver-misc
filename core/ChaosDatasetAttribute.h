@@ -45,7 +45,7 @@ class ChaosDatasetAttribute{
     
 
     datinfo_psh info;
-
+    static int initialize_framework;
     ChaosDatasetAttribute(std::string path,uint32_t timeo=5000);
 
     ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
@@ -68,7 +68,7 @@ class ChaosDatasetAttribute{
 #ifdef __CHAOS_UI__
     typedef boost::shared_ptr<chaos::ui::DeviceController> ctrl_t;
 #else
-    typedef boost::shared_ptr<chaos::metadata_service_client::node_controller::CUController> ctrl_t;
+    typedef chaos::metadata_service_client::node_controller::CUController* ctrl_t;
 
 #endif
 

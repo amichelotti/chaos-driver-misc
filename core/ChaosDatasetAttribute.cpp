@@ -7,9 +7,10 @@
 
 #include "ChaosDatasetAttribute.h"
 #include <chaos/common/exception/CException.h>
+#include <chaos/cu_toolkit/ChaosCUToolkit.h>
+
 #ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
-#include <chaos/cu_toolkit/ChaosCUToolkit.h>
 #else
 #include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
@@ -24,21 +25,31 @@ std::string ChaosDatasetAttribute::getGroup(){
     res.erase(0,attr_parent.find_last_of(chaos::PATH_SEPARATOR)+1);
     return res;
 }
+ int ChaosDatasetAttribute::initialize_framework=0;
 
 int ChaosDatasetAttribute::allocateController(std::string cu){
+	if(!initialize_framework){
+		ATTRDBG_<<" Initializing ChaosMetadataServiceClient Framework ...";
+		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init();
+		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->start();
+		initialize_framework++;
+		ATTRDBG_<<" END ChaosMetadataServiceClient Framework ...";
 
+	}
 	try{
 	  if(controllers.find(cu)==controllers.end()){
 #ifdef __CHAOS_UI__
 	        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
+	        controllers[cu]=controller;
 #else
 	        chaos::metadata_service_client::node_controller::CUController *cu_ctrl = NULL;
 	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
 	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getNewCUController(cu,&cu_ctrl);
+	        controllers[cu]=cu_ctrl;
+
 #endif
-	        controllers[cu]=controller;
 	        controller->setupTracking();
-	        ATTRDBG_ << " Allocating New controller:"<<controller.get();
+	        ATTRDBG_ << " Allocating New controller:"<<controller;
 
 	    } else {
 	    	//CDataWrapper data;
