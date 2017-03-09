@@ -254,7 +254,6 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 
 		controller = chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_ / 1000);
 #else
-	//	ChaosMetadataServiceClient::getInstance()->enableMonitor();
 		ChaosMetadataServiceClient::getInstance()->getNewCUController(path,&controller);
 #endif
 	} catch (chaos::CException &e) {
@@ -442,15 +441,18 @@ void ChaosController::initializeClient(){
 	if (!mds_client)
 		throw chaos::CException(-1, "cannot instatiate MDS CLIENT", "ChaosController()");
 
-	//mds_client->enableMonitor();
+
+	mds_client->init();
 	mds_client->start();
 
 }
 void ChaosController::deinitializeClient(){
 
-	if(mds_client){
+	/*
+	 * if(mds_client){
 		mds_client->stop();
 	}
+	*/
 
 }
 ChaosController::ChaosController() {
@@ -634,7 +636,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 		}
 	}
 }
-#define PARSE_QUERY_PARMS(args,check_what) \
+#define PARSE_QUERY_PARMS(args,check_name,check_what) \
 	std::string name = "";\
 	std::string what = "";\
 	bool alive = true;\
@@ -676,7 +678,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 		if (p.hasKey("node_list") && p.isVector("node_list")) {\
 			node_list.reset(p.getVectorValue("node_list"));\
 		}\
-		if((names.get() == NULL) && name.empty()){\
+		if((names.get() == NULL) && name.empty() && check_name){\
 			serr << "missing 'name' or 'names'" << cmd;\
 			bundle_state.append_error(serr.str());\
 			json_buf = bundle_state.getData()->getJSONString();\
@@ -692,6 +694,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 
 
 #define EXECUTE_CHAOS_API(api_name,time_out,...) \
+	    DBGET<<" " <<" Executing Api:\""<< # api_name<<"\"" ;\
 chaos::metadata_service_client::api_proxy::ApiProxyResult apires=  GET_CHAOS_API_PTR(api_name)->execute( __VA_ARGS__ );\
 apires->setTimeout(time_out);\
 apires->wait();\
@@ -717,7 +720,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		// global commands
 		if (cmd == "search") {
 			std::stringstream res;
-			PARSE_QUERY_PARMS(args,false);
+			PARSE_QUERY_PARMS(args,false,false);
 			if(what == ""){
 				what = "cu";
 			}
@@ -732,7 +735,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				if(what=="us")
 					node_type =1;
 
-				if (names->size()) {
+				if ((names.get() ) && names->size()) {
 					DBGET << "list nodes of type:"<<node_type<<"("<<what<<")";
 
 					for (int idx = 0; idx < names->size(); idx++) {
@@ -792,7 +795,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				json_buf = "[]";
 				ChaosStringVector dev_class;
 
-				if (names->size()) {
+				if (names.get() && names->size()) {
 					DBGET << "searching CLASS LIST";
 
 					for (int idx = 0; idx < names->size(); idx++) {
@@ -915,7 +918,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			return CHAOS_DEV_CMD;
 		} else if (cmd == "snapshot") {
 			std::stringstream res;
-			PARSE_QUERY_PARMS(args,true);
+			PARSE_QUERY_PARMS(args,true,true);
 			DBGET << "snapshot what " << what;
 
 			ChaosStringVector node_found;
@@ -1002,7 +1005,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			return CHAOS_DEV_CMD;
 		} else if (cmd == "variable") {
 			std::stringstream res;
-			PARSE_QUERY_PARMS(args,true);
+			PARSE_QUERY_PARMS(args,true,true);
 			DBGET << "variable what " << what;
 
 			ChaosStringVector node_found;
@@ -1082,7 +1085,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 		} else if(cmd== "node"){
 			std::stringstream res;
-			PARSE_QUERY_PARMS(args,true);
+			PARSE_QUERY_PARMS(args,true,true);
 			if(node_type.empty()){
 				serr << cmd <<" must specify 'type'";
 
@@ -1100,16 +1103,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf="{}";
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
-					EXECUTE_CHAOS_API(api_proxy::unit_server::GetDescription,3000,name);
-					chaos::common::data::CDataWrapper *r=apires->getResult();
-					if(r){
-						json_buf=r->getJSONString();
-						delete r;
+					chaos::common::data::CDataWrapper* r,w;
+					std::vector<std::string> vname;
+					EXECUTE_CHAOS_API(api_proxy::control_unit::SearchInstancesByUS,3000,name,vname,0,10000);
+					r=apires->getResult();
+					if(r && r->hasKey("node_search_result_page")){
+						w.appendAllElement(*r->getCSDataValue("node_search_result_page"));
+						json_buf=w.getJSONString();
 					}
+
 					return CHAOS_DEV_OK;
 				}
 			} else if(node_type == "cu"){
-				if(parent.empty()){
+				if(parent.empty() && (what != "get")){
 					serr << cmd <<" must specify 'parent'";
 
 					bundle_state.append_error(serr.str());
@@ -1133,10 +1139,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
 	                 EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance,3000,name);
+
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
 						json_buf=r->getJSONString();
-						delete r;
 					}
 					return CHAOS_DEV_OK;
 				}
@@ -1164,7 +1170,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
 						json_buf=r->getJSONString();
-						delete r;
 					}
 					return CHAOS_DEV_OK;
 				} else if(what=="start"){
