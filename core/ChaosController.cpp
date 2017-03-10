@@ -8,6 +8,7 @@
 #include "ChaosController.h"
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/NewUS.h>
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/DeleteUS.h>
+#include <ChaosMetadataServiceClient/api_proxy/unit_server/GetSetFullUnitServer.h>
 
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/ManageCUType.h>
 
@@ -923,7 +924,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			ChaosStringVector node_found;
 
-			if (node_list->size()) {
+			if (node_list.get() && node_list->size()) {
 				for (int idx = 0; idx < node_list->size(); idx++) {
 					const std::string domain = node_list->getStringElementAtIndex(idx);
 					node_found.push_back(domain);
@@ -1095,7 +1096,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 			if(node_type == "us"){
 				if(what == "set"){
-		             EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS,3000,name);
+					EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,3000,name,json_value,0);
+
 		             json_buf="{}";
 		             return CHAOS_DEV_OK;
 				} else if(what=="del"){
@@ -1103,13 +1105,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf="{}";
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
-					chaos::common::data::CDataWrapper* r,w;
+					chaos::common::data::CDataWrapper* r;
 					std::vector<std::string> vname;
-					EXECUTE_CHAOS_API(api_proxy::control_unit::SearchInstancesByUS,3000,name,vname,0,10000);
+					EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,3000,name);
 					r=apires->getResult();
-					if(r && r->hasKey("node_search_result_page")){
-						w.appendAllElement(*r->getCSDataValue("node_search_result_page"));
-						json_buf=w.getJSONString();
+					if(r ){
+
+						json_buf=r->getJSONString();
 					}
 
 					return CHAOS_DEV_OK;
