@@ -121,7 +121,7 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     resize(attr_size);
     
-    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size;
+    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<")";
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
@@ -196,7 +196,9 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             	       std::memcpy(ptr_cache,tmp,attr_size);
             	}
             } else {
-            	 throw chaos::CException(-1000,"cannot variable \""+attr_name +"\" not found in:"+attr_path,__PRETTY_FUNCTION__);
+            	std::stringstream ss;
+            	ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path;
+            	 throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
             }
             cache_updated=tget;
         } else if((upd_mode==NOTBEFORE)){
