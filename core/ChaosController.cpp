@@ -16,6 +16,7 @@
 #include <ChaosMetadataServiceClient/api_proxy/control_unit/Delete.h>
 #include <ChaosMetadataServiceClient/api_proxy/control_unit/DeleteInstance.h>
 #include <ChaosMetadataServiceClient/api_proxy/agent/agent.h>
+#include <ChaosMetadataServiceClient/api_proxy/logging/logging.h>
 
 #include <chaos/common/exception/CException.h>
 #ifdef __CHAOS_UI__
@@ -647,13 +648,27 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 	chaos::common::data::CDataWrapper *json_value=NULL;\
 	std::stringstream serr;\
 	std::string node_type,parent;\
+	int64_t seq_id=0,start_ts=0,end_ts=chaos::common::utility::TimingUtil::getTimeStamp();\
+	int page=30;\
 	if (args != NULL) {\
 		p.setSerializedJsonData(args);\
 		if (p.hasKey("names")&&  p.isVector("names")) {\
 			names.reset(p.getVectorValue("names"));\
 		}\
+		if (p.hasKey("seq")) {\
+					seq_id=p.getInt64Value("seq");\
+		}\
+		if (p.hasKey("page")) {\
+							page=p.getInt32Value("page");\
+		}\
 		if (p.hasKey("type")) {\
 					node_type=p.getCStringValue("type");\
+		}\
+		if (p.hasKey("start")) {\
+			start_ts=p.getInt64Value("start");\
+		}\
+		if (p.hasKey("end")) {\
+			end_ts=p.getInt64Value("end");\
 		}\
 		if (p.hasKey("parent")) {\
 					parent=p.getCStringValue("parent");\
@@ -1089,7 +1104,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			std::stringstream res;
 			PARSE_QUERY_PARMS(args,true,true);
 			if(node_type.empty()){
-				serr << cmd <<" must specify 'type'";
+				serr << cmd <<" parameters must specify 'type'";
 
 				bundle_state.append_error(serr.str());
 				json_buf = bundle_state.getData()->getJSONString();
@@ -1119,7 +1134,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				}
 			} else if(node_type == "cu"){
 				if(parent.empty() && (what != "get")){
-					serr << cmd <<" must specify 'parent'";
+					serr << cmd <<" \""<<args<<"\" must specify 'parent'";
 
 					bundle_state.append_error(serr.str());
 					json_buf = bundle_state.getData()->getJSONString();
@@ -1159,11 +1174,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					 return CHAOS_DEV_OK;
 				} else if(what=="del"){
 					if(parent.empty()){
-										serr << cmd <<" must specify 'parent'";
+						serr << cmd <<" must specify 'parent'";
 
-										bundle_state.append_error(serr.str());
-										json_buf = bundle_state.getData()->getJSONString();
-										return CHAOS_DEV_CMD;
+						bundle_state.append_error(serr.str());
+						json_buf = bundle_state.getData()->getJSONString();
+						return CHAOS_DEV_CMD;
 					}
 	                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation,3000,name,parent);
 
@@ -1185,8 +1200,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
 							json_buf=r->getJSONString();
+					} else {
+						json_buf="{}";
+						return CHAOS_DEV_CMD;
+
 					}
-					json_buf="{}";
 				   return CHAOS_DEV_OK;
 				} else if(what=="stop"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationStop);
@@ -1197,7 +1215,34 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf="{}";
 				   return CHAOS_DEV_OK;
 				}
-		} }// node // global commands
+				serr << cmd <<" bad command format";
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
+		}
+		} else if(cmd=="log"){
+			PARSE_QUERY_PARMS(args,true,true);
+			if(what=="search"){
+				std::vector<std::string> domains;
+
+				domains.push_back(node_type);
+				EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry,3000,name,domains,start_ts,end_ts,seq_id,page);
+				chaos::common::data::CDataWrapper *r=apires->getResult();
+				if(r){
+						json_buf=r->getJSONString();
+				} else {
+					json_buf="[]";
+					return CHAOS_DEV_CMD;
+
+				}
+			   return CHAOS_DEV_OK;
+
+			}
+			serr << cmd <<" bad command format";
+			bundle_state.append_error(serr.str());
+			json_buf = bundle_state.getData()->getJSONString();
+			return CHAOS_DEV_CMD;
+		} // log global commands
 
 
 
@@ -1445,14 +1490,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (p.hasKey("start")) {
 				start_ts = p.getInt64Value("start");
 				if(start_ts==-1){
-					start_ts=reqtime/1000;
+					start_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
 				}
 			}
 
 			if (p.hasKey("end")) {
 				end_ts = p.getInt64Value("end");
 				if(end_ts==-1){
-					end_ts=reqtime/1000;
+					end_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
 				}
 			}
 			if (p.hasKey("page")) {
