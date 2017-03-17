@@ -295,10 +295,10 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	}
 	chaos::common::data::CDataWrapper * dataWrapper;
 	if (wostate) {
-		dataWrapper = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainOutput);
+		dataWrapper = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
 
 	} else {
-		dataWrapper = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainSystem);
+		dataWrapper = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
 	}
 
 	if (dataWrapper) {
@@ -545,13 +545,13 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 			std::stringstream out;
 			uint64_t ts = 0;
 			std::map<int, chaos::common::data::CDataWrapper*> set;
-			set[UI_PREFIX::DatasetDomainInput] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainInput);
-			set[UI_PREFIX::DatasetDomainOutput] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainOutput);
-			set[UI_PREFIX::DatasetDomainHealth] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainHealth);
-			set[UI_PREFIX::DatasetDomainSystem] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainSystem);
-			set[UI_PREFIX::DatasetDomainCustom] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainCustom);
-			set[UI_PREFIX::DatasetDomainDevAlarm] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainDevAlarm);
-			set[UI_PREFIX::DatasetDomainCUAlarm] = controller->fetchCurrentDatatasetFromDomain(UI_PREFIX::DatasetDomainCUAlarm);
+			set[KeyDataStorageDomainInput] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
+			set[KeyDataStorageDomainOutput] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
+			set[KeyDataStorageDomainHealth] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
+			set[KeyDataStorageDomainSystem] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
+			set[KeyDataStorageDomainCustom] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
+			set[KeyDataStorageDomainDevAlarm] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
+			set[KeyDataStorageDomainCUAlarm] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
 
 			return combineDataSets(set);
 
@@ -1260,7 +1260,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			std::stringstream ss;
 
 			if ((state == chaos::CUStateKey::RECOVERABLE_ERROR) || (state == chaos::CUStateKey::FATAL_ERROR)) {
-				chaos::common::data::CDataWrapper*data = fetch(UI_PREFIX::DatasetDomainHealth);
+				chaos::common::data::CDataWrapper*data = fetch(KeyDataStorageDomainHealth);
 				std::string ll;
 
 				if (data->hasKey("nh_led")) {
@@ -1294,7 +1294,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			bundle_state.status(chaos::CUStateKey::START);
 			state = chaos::CUStateKey::START;
 			bundle_state.append_log("stateless device");
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_OK;
@@ -1323,7 +1323,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already initialized");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "start") {
@@ -1353,7 +1353,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already started");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "stop") {
@@ -1384,7 +1384,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already stopped");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "deinit") {
@@ -1413,7 +1413,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else {
 				bundle_state.append_log("device:" + path + " already deinitialized");
 			}
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "sched" && (args != 0)) {
@@ -1426,7 +1426,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
-			chaos::common::data::CDataWrapper* data = fetch(UI_PREFIX::DatasetDomainOutput);
+			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "desc") {
@@ -1456,21 +1456,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 		} else if (cmd == "channel" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
-			chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
+			chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
 			json_buf = data->getJSONString();
 			return CHAOS_DEV_OK;
 
 		} else if (cmd == "readout" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
 			std::string var_name=args;
-			chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)0);
+			chaos::common::data::CDataWrapper*data = fetch(KeyDataStorageDomainOutput);
 			json_buf = dataset2Var(data,var_name);
 			return CHAOS_DEV_OK;
 
 		} else if (cmd == "readin" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
 			std::string var_name=args;
-			chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)1);
+			chaos::common::data::CDataWrapper*data = fetch(KeyDataStorageDomainInput);
 			json_buf = dataset2Var(data,var_name);
 			return CHAOS_DEV_OK;
 
@@ -1593,7 +1593,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_OK;
 			} else {
 				chaos::common::data::CDataWrapper*data;
-				controller->executeTimeIntervallQuery(UI_PREFIX::DatasetDomainOutput, start_ts, end_ts, &query_cursor);
+				controller->executeTimeIntervallQuery(KeyDataStorageDomainOutput, start_ts, end_ts, &query_cursor);
 				bool n = query_cursor->hasNext();
 				if (query_cursor) {
 					DBGET << "not paged query start:" << start_ts << " end:" << end_ts << " has next: " << (query_cursor->hasNext());
@@ -1831,8 +1831,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			int retc = 0;
 			DBGET << "LOADING snapshot " << snapname;
 
-			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, UI_PREFIX::DatasetDomainOutput, &io[0]);
-			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, UI_PREFIX::DatasetDomainInput, &io[1]);
+			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, KeyDataStorageDomainOutput, &io[0]);
+			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, KeyDataStorageDomainInput, &io[1]);
 			if (retc || io[0] == NULL || io[1] == NULL) {
 				bundle_state.append_error("error load snapshot " + getPath() + " snap name:" + snapname);
 				json_buf = bundle_state.getData()->getJSONString();

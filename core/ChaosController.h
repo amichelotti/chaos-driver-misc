@@ -22,6 +22,7 @@
 #include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
 #endif
+using namespace chaos::cu::data_manager;
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"

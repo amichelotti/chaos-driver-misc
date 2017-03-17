@@ -16,6 +16,7 @@
 
 #endif
 using namespace ::driver::misc;
+using namespace chaos::cu::data_manager;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo_psh > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
@@ -177,7 +178,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 #ifdef __CHAOS_UI__
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
 #else
-            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::metadata_service_client::node_controller::DatasetDomainInput:chaos::metadata_service_client::node_controller::DatasetDomainOutput);
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?KeyDataStorageDomainInput:KeyDataStorageDomainOutput);
 
 #endif
             if(tmpw==NULL){
