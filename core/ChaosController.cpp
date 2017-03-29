@@ -138,11 +138,11 @@ int ChaosController::forceState(int dstState) {
 		if ((boost::posix_time::microsec_clock::local_time() - start).total_microseconds() > timeo) {
 			retry--;
 			CTRLERR_ << "[" << getPath() << "] Timeout of " << timeo << " us elapsed:" << (boost::posix_time::microsec_clock::local_time() - start).total_microseconds() << "  Retry:" << retry;
-			if (init(path, timeo) != 0) {
+			/*if (init(path, timeo) != 0) {
 				CTRLERR_ << "cannot retrive controller for:" << path;
 				return -1;
 
-			}
+				}*/
 			start = boost::posix_time::microsec_clock::local_time();
 
 		}
@@ -278,6 +278,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	tot_us = 0;
 	refresh = 0;
 	naccess = 0;
+	setUid(path);
 	if (getState() < 0) {
 		DBGET << "Uknown state for device assuming wostate";
 		wostate = 1;
@@ -414,7 +415,7 @@ int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, 
 	return ret;
 }
 
-ChaosController::ChaosController(std::string p, uint32_t timeo_) {
+ChaosController::ChaosController(std::string p, uint32_t timeo_):common::misc::scheduler::SchedTimeElem(p,0) {
 	int ret;
 	controller = NULL;
 	heart=0;
@@ -425,6 +426,9 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) {
 		throw chaos::CException(ret, "cannot allocate controller for:" + path + " check if exists", __FUNCTION__);
 
 	}
+	cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX+1);
+
+
 	/*db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
      db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 
@@ -457,12 +461,18 @@ void ChaosController::deinitializeClient(){
 	*/
 
 }
-ChaosController::ChaosController() {
+uint64_t ChaosController::sched(){
+	CDataWrapper* res=fetch(-1);
+
+	return 0;
+}
+ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0) {
 	controller = NULL;
 	queryuid = 0;
 	state = chaos::CUStateKey::UNDEFINED;
 	heart=0;
 	mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
+	cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX+1);
 
 
 	if (!mdsChannel) throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
@@ -1226,7 +1236,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				std::vector<std::string> domains;
 
 				domains.push_back(node_type);
-				EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry,3000,name,domains,start_ts,end_ts,seq_id,page);
+				//EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry,3000,name,domains,start_ts,end_ts,seq_id,page);
+				EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,3000,name,domains,seq_id,page);
 				chaos::common::data::CDataWrapper *r=apires->getResult();
 				if(r){
 						json_buf=r->getJSONString();
@@ -1281,7 +1292,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					ss << " [" << path << "] HB expired:" << (reqtime - last_access) << " us greater than " << timeo << " us, removing device";
 					bundle_state.append_error(ss.str());
 					json_buf = bundle_state.getData()->getJSONString();
-					init(path, timeo);
+					//					init(path, timeo);
 
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_HB_TIMEOUT;
@@ -1343,7 +1354,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf = bundle_state.getData()->getJSONString();
 
 					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)|| (state==chaos::CUStateKey::INIT)){
-						init(path, timeo);
+					  //init(path, timeo);
 					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_START;
@@ -1374,7 +1385,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf = bundle_state.getData()->getJSONString();
 
 					if((state == chaos::CUStateKey::START) || (state==chaos::CUStateKey::UNDEFINED)){
-						init(path, timeo);
+					  //						init(path, timeo);
 					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_STOP;
@@ -1404,7 +1415,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					//	init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
 					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)){
-						init(path, timeo);
+					  //						init(path, timeo);
 					}
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_DEINIT;
@@ -1421,7 +1432,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->setScheduleDelay(atol((char*) args));
 			if (err != 0) {
 				bundle_state.append_error("error set scheduling:" + path);
-				init(path, timeo);
+				//				init(path, timeo);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
@@ -1445,7 +1456,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_OK;
 			} else {
 				bundle_state.append_error("error describing device:" + path);
-				init(path, timeo);
+				//				init(path, timeo);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				if(out){
@@ -1906,7 +1917,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				err = controller->setAttributeToValue(i->c_str(), param, false);
 				if (err != 0) {
 					bundle_state.append_error("error setting attribute:" + path + "/" + *i + "\"=" + data.getCStringValue(*i));
-					init(path, timeo);
+					//					init(path, timeo);
 					json_buf = bundle_state.getData()->getJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
@@ -1932,7 +1943,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->restoreDeviceToTag(args);
 			if (err != 0) {
 				bundle_state.append_error("error setting restoring:\"" + path + "\" with tag:\"" + std::string(args) + "\"");
-				init(path, timeo);
+				//				init(path, timeo);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;

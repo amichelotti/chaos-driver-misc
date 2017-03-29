@@ -13,6 +13,8 @@
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <boost/shared_ptr.hpp>
+#include <common/misc/scheduler/SchedTimeElem.h>
+
 #ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 #define UI_PREFIX chaos::ui
@@ -46,7 +48,7 @@ using namespace chaos::cu::data_manager;
 namespace driver{
     
     namespace misc{
-class ChaosController{
+class ChaosController: public ::common::misc::scheduler::SchedTimeElem {
     
     
 private:
@@ -81,6 +83,8 @@ private:
      int forceState(int dstState);
      std::map<std::string,std::string> zone_to_cuname;
      std::map<std::string,std::string> class_to_cuname;
+
+     std::vector<std::string> cachedChannel_v;
 
      void parseClassZone(ChaosStringVector&v);
      std::string vector2Json(ChaosStringVector& v);
@@ -142,7 +146,7 @@ private:
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
     
-
+    virtual uint64_t sched();
     virtual ~ChaosController();
     
    

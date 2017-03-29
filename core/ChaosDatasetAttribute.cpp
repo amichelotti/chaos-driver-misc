@@ -33,7 +33,7 @@ int ChaosDatasetAttribute::allocateController(std::string cu){
 		ATTRDBG_<<" Initializing ChaosMetadataServiceClient Framework ...";
 		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init();
 		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->start();
-        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
+        //chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
 
 		initialize_framework++;
 		ATTRDBG_<<" END ChaosMetadataServiceClient Framework ...";
