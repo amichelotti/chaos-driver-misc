@@ -1520,7 +1520,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 
 			if (p.hasKey("channel")) {
-							channel = p.getInt32Value("page");
+					if((p.getInt32Value("channel")>=0) && (p.getInt32Value("channel") <=DPCK_LAST_DATASET_INDEX)){
+						channel = p.getInt32Value("channel");
+					}
 
 			}
 			if (p.hasKey("limit")) {
