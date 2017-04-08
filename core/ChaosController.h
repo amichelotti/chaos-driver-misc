@@ -76,6 +76,7 @@ private:
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
     uint32_t queryuid;
+    boost::mutex iomutex;
     typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
 
     typedef std::map<uint64_t,qc_t> query_cursor_map_t;

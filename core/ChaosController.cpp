@@ -548,6 +548,7 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 	chaos::common::data::CDataWrapper*data = NULL;
+
 	try {
 		if (channel == -1) {
 			chaos::common::data::CDataWrapper* idata = NULL, *odata = NULL;
@@ -734,6 +735,7 @@ if(apires->getError()){\
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
 	int err;
+	boost::mutex::scoped_lock(iomutex);
 	last_access = reqtime;
 	reqtime = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	naccess++;
