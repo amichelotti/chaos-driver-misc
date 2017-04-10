@@ -52,13 +52,13 @@ void ChaosController::setTimeout(uint64_t timeo_us) {
 }
 
 int ChaosController::forceState(int dstState) {
-	int currState = -100, oldstate;
+	chaos::CUStateKey::ControlUnitState  currState, oldstate;
 	boost::posix_time::ptime start;
 	int retry = 10;
 
 	do {
 		oldstate = currState;
-		currState = getState();
+		getState(currState);
 
 		DBGET << "Current state :" << currState << " destination state:" << dstState;
 		if (currState == dstState) {
@@ -189,14 +189,34 @@ int ChaosController::deinit(int force) {
 	return controller->deinitDevice();
 }
 
-int ChaosController::getState() {
+uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState & stat) {
+	uint64_t ret=0;
+	CDataWrapper*tmp=controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth);
+	stat=chaos::CUStateKey::UNDEFINED;
+	if(tmp && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)){
+	     std::string state=tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
+	        if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
+	        	stat=chaos::CUStateKey::START;
+	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOPING))
+	        	stat= chaos::CUStateKey::STOP;
+	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INITING))
+	        	stat= chaos::CUStateKey::INIT;
+	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINITING)|| (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD))
+	        	stat= chaos::CUStateKey::DEINIT;
+	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_RERROR))
+	        	stat= chaos::CUStateKey::RECOVERABLE_ERROR;
+	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_FERROR))
+	        	stat= chaos::CUStateKey::FATAL_ERROR;
 
-	if (controller->getState(state) > 0) {
-		return state;
+	        if(tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP)){
+	            ret = tmp->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP);
+	        }
+	        return ret;
 	}
-	state = chaos::CUStateKey::UNDEFINED;
-	;
-	return -1;
+
+
+
+	return 0;
 }
 
 uint64_t ChaosController::getTimeStamp() {
@@ -279,7 +299,15 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	refresh = 0;
 	naccess = 0;
 	setUid(path);
-	if (getState() < 0) {
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
+
+	if (getState(state) == 0) {
 		DBGET << "Uknown state for device assuming wostate";
 		wostate = 1;
 	}
@@ -296,10 +324,10 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	}
 	chaos::common::data::CDataWrapper * dataWrapper;
 	if (wostate) {
-		dataWrapper = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
+		dataWrapper = controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput);
 
 	} else {
-		dataWrapper = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
+		dataWrapper = controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem);
 	}
 
 	if (dataWrapper) {
@@ -309,6 +337,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 		return -3;
 	}
 	DBGET << "initalization ok handle:" << (void*) controller;
+
 	last_access = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	return 0;
 }
@@ -457,13 +486,21 @@ void ChaosController::deinitializeClient(){
 	/*
 	 * if(mds_client){
 		mds_client->stop();
-	}
+	}s
 	*/
 
 }
-uint64_t ChaosController::sched(){
-	CDataWrapper* res=fetch(-1);
-
+uint64_t ChaosController::sched(uint64_t ts){
+	//CDataWrapper* res=fetch(-1);
+	//DBGET<<"SCHED START";
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
+	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
+	//DBGET<<"SCHED STOP";
 	return 0;
 }
 ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0) {
@@ -556,18 +593,18 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 			std::stringstream out;
 			uint64_t ts = 0;
 			std::map<int, chaos::common::data::CDataWrapper*> set;
-			set[KeyDataStorageDomainInput] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
-			set[KeyDataStorageDomainOutput] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
-			set[KeyDataStorageDomainHealth] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
-			set[KeyDataStorageDomainSystem] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
-			set[KeyDataStorageDomainCustom] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
-			set[KeyDataStorageDomainDevAlarm] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
-			set[KeyDataStorageDomainCUAlarm] = controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
+			set[KeyDataStorageDomainInput] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainInput);
+			set[KeyDataStorageDomainOutput] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput);
+			set[KeyDataStorageDomainHealth] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth);
+			set[KeyDataStorageDomainSystem] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem);
+			set[KeyDataStorageDomainCustom] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainCustom);
+			set[KeyDataStorageDomainDevAlarm] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm);
+			set[KeyDataStorageDomainCUAlarm] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm);
 
 			return combineDataSets(set);
 
 		} else {
-			data = controller->fetchCurrentDatatasetFromDomain((UI_PREFIX::DatasetDomain)channel);
+			data = controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel);
 			if (data == NULL) {
 				std::stringstream ss;
 				ss << "error fetching data from channel " << channel;
@@ -1998,7 +2035,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 uint64_t ChaosController::checkHB() {
 	uint64_t h=0;
-	h = controller->getState(state);
+	h = getState(state);
 	//DBGET <<" HB timestamp:"<<h<<" state:"<<state;
 	if (h == 0) {
 		//bundle_state.append_error("cannot access to HB");
@@ -2018,7 +2055,7 @@ uint64_t ChaosController::checkHB() {
 int ChaosController::updateState() {
 	uint64_t h;
 	last_state = state;
-	h = controller->getState(state);
+	h =getState(state);
 	//DBGET <<" HB timestamp:"<<h<<" state:"<<state;
 	if (h == 0) {
 		//bundle_state.append_error("cannot access to HB");

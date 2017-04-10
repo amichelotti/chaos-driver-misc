@@ -147,7 +147,7 @@ private:
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
     
-    virtual uint64_t sched();
+    virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
     
    
@@ -162,7 +162,7 @@ private:
      * @return the state or negative if error
      *  
      */
-    virtual int getState();
+    virtual uint64_t getState( chaos::CUStateKey::ControlUnitState & state);
     virtual uint64_t getTimeStamp();
     /**
      * send a command
