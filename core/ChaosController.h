@@ -77,6 +77,8 @@ private:
      chaos::common::data::CDataWrapper data_out;
     uint32_t queryuid;
     boost::mutex iomutex;
+    boost::mutex ioctrl;
+
     typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
 
     typedef std::map<uint64_t,qc_t> query_cursor_map_t;
@@ -94,6 +96,7 @@ private:
      void cleanUpQuery();
      void initializeClient();
      void deinitializeClient();
+     uint64_t  last_input,last_system,last_health,last_custom,last_output,calc_freq,last_packid,last_ts;
   public:  
 
      typedef enum {
@@ -225,7 +228,7 @@ protected:
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
   	chaos::common::data::CDataWrapper*fetch(int channel);
-    chaos::common::data::CDataWrapper*combineDataSets(std::map<int,chaos::common::data::CDataWrapper*>&);
+    chaos::common::data::CDataWrapper*combineDataSets(std::map<int, boost::shared_ptr<chaos::common::data::CDataWrapper> >&);
 
 
 };

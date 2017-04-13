@@ -178,7 +178,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
 #ifdef __CHAOS_UI__
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
 #else
-            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?KeyDataStorageDomainInput:KeyDataStorageDomainOutput);
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?KeyDataStorageDomainInput:KeyDataStorageDomainOutput).get();
 
 #endif
             if(tmpw==NULL){
