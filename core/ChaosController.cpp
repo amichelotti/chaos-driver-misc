@@ -508,10 +508,27 @@ uint64_t ChaosController::sched(uint64_t ts){
 	//CDataWrapper* res=fetch(-1);
 	//DBGET<<"SCHED START";
 	uint64_t inactivity=2000*1000;
-//	boost::mutex::scoped_lock(iomutex);
-	CDataWrapper* outw=controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput).get();
-	uint64_t now_ts=outw->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-	uint64_t pckid= outw->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+	/*if(ioctrl.try_lock()==false){
+		return 0;
+	}*/
+	boost::mutex::scoped_lock(ioctrl);
+
+	CDataWrapper outw;
+	uint64_t now_ts=0;
+	uint64_t pckid=0;
+	if((controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput,&outw)==0)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
+		now_ts=outw.getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+		pckid= outw.getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+		if(outw.hasKey("device_alarm")&&outw.getInt32Value("device_alarm")){
+				controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,0);
+
+		}
+		if(outw.hasKey("cu_alarm")&&outw.getInt32Value("cu_alarm")){
+			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm,0);
+		}
+
+
+	}
 	//DBGET<<" SCHED pckts: "<<(pckid - last_packid ) << " time: "<<(now_ts - last_ts)<<" Freq:"<<calc_freq;
 	calc_freq = 0;
 
@@ -519,7 +536,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 	last_packid = pckid;
 	last_ts = now_ts;
 	if((ts-last_input)>CU_INPUT_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput,0);
 		last_input=ts;
 	}
 
@@ -527,27 +544,20 @@ uint64_t ChaosController::sched(uint64_t ts){
 	//uint64_t now_ts=outw->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 
 	if((ts-last_health)>CU_HEALTH_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth,0);
 		last_health=ts;
 
 	}
 	if((ts-last_system)>CU_SYSTEM_UPDATE_US){
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
+			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,0);
 			last_system=ts;
 
 	}
 	if((ts-last_system)>CU_CUSTOM_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom,0);
 
 	}
-	if(outw->hasKey("device_alarm")&&outw->getInt32Value("device_alarm")){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
-	}
-	if(outw->hasKey("cu_alarm")&&outw->getInt32Value("cu_alarm")){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
-	}
-
-	uint64_t now=common::debug::getUsTime();
+		uint64_t now=common::debug::getUsTime();
 
 	if((pckid - last_packid )>0){
 		calc_freq=((now_ts - last_ts)*1000 - (now -ts))/(pckid - last_packid );
@@ -612,9 +622,9 @@ ChaosController::~ChaosController() {
 
 
 
-chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int, boost::shared_ptr<chaos::common::data::CDataWrapper> >& set) {
-	std::map<int, boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i;
-	chaos::common::data::CDataWrapper*data;
+chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*> set) {
+	std::map<int, chaos::common::data::CDataWrapper* >::iterator i;
+	chaos::common::data::CDataWrapper*data=NULL;
 	chaos::common::data::CDataWrapper resdata;
 	uint64_t time_stamp = boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
 	resdata.addStringValue("name", getPath());
@@ -622,7 +632,7 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 
 	for (i = set.begin(); i != set.end(); i++) {
 		if (i->second) {
-			data = normalizeToJson(i->second.get(), binaryToTranslate);
+			data = normalizeToJson(i->second, binaryToTranslate);
 			//out<<",\"input\":"<<data->getJSONString();
 			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *data);
 		} else {
@@ -636,10 +646,12 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 			//return bundle_state.getData();
 		}
 	}
-	data->reset();
-	data->appendAllElement(resdata);
+	if(data){
+		data->reset();
+		data->appendAllElement(resdata);
 	//	data->appendAllElement(*bundle_state.getData());
 	//	DBGET<<"channel "<<channel<<" :"<<odata->getJSONString();
+	}
 	return data;
 
 }
@@ -647,7 +659,6 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 //	boost::mutex::scoped_lock(iomutex);
 
-	 boost::shared_ptr<chaos::common::data::CDataWrapper> data ;
 	 chaos::common::data::CDataWrapper* retdata=NULL;
 	try {
 		if (channel == -1) {
@@ -655,26 +666,37 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 			chaos::common::data::CDataWrapper resdata;
 			std::stringstream out;
 			uint64_t ts = 0;
-			std::map<int,  boost::shared_ptr<chaos::common::data::CDataWrapper> > set;
-			set[KeyDataStorageDomainInput] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainInput);
-			set[KeyDataStorageDomainOutput] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput);
-			set[KeyDataStorageDomainHealth] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth);
-			set[KeyDataStorageDomainSystem] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem);
-			set[KeyDataStorageDomainCustom] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainCustom);
-			set[KeyDataStorageDomainDevAlarm] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm);
-			set[KeyDataStorageDomainCUAlarm] = controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm);
+			std::map<int,  chaos::common::data::CDataWrapper* > set;
+			CDataWrapper ch[7];
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainInput,&ch[0]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput,&ch[1]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth,&ch[2]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem,&ch[3]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainCustom,&ch[4]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm,&ch[5]);
+			controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm,&ch[6]);
+			set[KeyDataStorageDomainInput]=&ch[0];
+			set[KeyDataStorageDomainOutput]=&ch[1];
+			set[KeyDataStorageDomainHealth]=&ch[2];
+			set[KeyDataStorageDomainSystem]=&ch[3];
+			set[KeyDataStorageDomainCustom]=&ch[4];
+			set[KeyDataStorageDomainDevAlarm]=&ch[5];
+			set[KeyDataStorageDomainCUAlarm]=&ch[6];
+
+
 			retdata=combineDataSets(set);
 
 
 		} else {
-			data = controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel);
-			if (data.get() == NULL) {
+			CDataWrapper data;
+
+			if (controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel,&data) !=0 ) {
 				std::stringstream ss;
 				ss << "error fetching data from channel " << channel;
 				bundle_state.append_error(ss.str());
 				return bundle_state.getData();
 			}
-			retdata = normalizeToJson(data.get(), binaryToTranslate);
+			retdata = normalizeToJson(&data, binaryToTranslate);
 		}
 
 
@@ -1966,12 +1988,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_CMD;
 			}
 
-			std::map<int, boost::shared_ptr<chaos::common::data::CDataWrapper> > set;
-			boost::shared_ptr<chaos::common::data::CDataWrapper> shio0(io[0]);
-			boost::shared_ptr<chaos::common::data::CDataWrapper> shio1(io[1]);
-			set[0] = shio0;
-			set[1] = shio1;
+			std::map<int, chaos::common::data::CDataWrapper* > set;
+
+			set[KeyDataStorageDomainOutput] = io[0];
+			set[KeyDataStorageDomainInput] = io[1];
 			ret = combineDataSets(set);
+
+
 			if (ret) {
 				json_buf = ret->getJSONString();
 			} else {
@@ -2048,7 +2071,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->recoverDeviceFromError();
 			if (err != 0) {
 				bundle_state.append_error("error recovering from error " + path);
-				init(path, timeo);
+				//init(path, timeo);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
@@ -2075,7 +2098,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			command->sub_rule=(submission_mode==1)?chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL:chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 			err = sendCmd(command, false);
 			if (err != 0) {
-				init(path, timeo);
+			/*	init(path, timeo);*/
 				err = sendCmd(command, false);
 				if (err != 0) {
 					bundle_state.append_error("error sending command:" + cmd + " " + std::string(args) + " to:" + path);

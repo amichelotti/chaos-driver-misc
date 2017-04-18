@@ -228,7 +228,7 @@ protected:
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
   	chaos::common::data::CDataWrapper*fetch(int channel);
-    chaos::common::data::CDataWrapper*combineDataSets(std::map<int, boost::shared_ptr<chaos::common::data::CDataWrapper> >&);
+    chaos::common::data::CDataWrapper*combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
 
 
 };
