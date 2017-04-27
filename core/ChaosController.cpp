@@ -1208,8 +1208,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						if(json_value->hasKey(chaos::datasetTypeToHuman(cnt))&&json_value->isCDataWrapperValue(chaos::datasetTypeToHuman(cnt))){
 							CDataWrapper *ds=json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
 							if(ds->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)&& ds->isStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+								std::string uid=ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
 								DBGET << "set snapshot name:\"" << name << "\": dataset:"<<chaos::datasetTypeToHuman(cnt);
-								EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,3000,name,ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID),chaos::datasetTypeToHuman(cnt),*ds);
+								std::string dataset_name=uid+std::string(chaos::datasetTypeToPostfix(cnt));
+								EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,3000,name,uid,dataset_name,*ds);
 
 							}
 
