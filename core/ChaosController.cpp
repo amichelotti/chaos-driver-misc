@@ -11,6 +11,7 @@
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/GetSetFullUnitServer.h>
 
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/ManageCUType.h>
+#include <ChaosMetadataServiceClient/api_proxy/service/SetSnapshotDatasetsForNode.h>
 
 #include <ChaosMetadataServiceClient/api_proxy/control_unit/SetInstanceDescription.h>
 #include <ChaosMetadataServiceClient/api_proxy/control_unit/Delete.h>
@@ -493,7 +494,7 @@ void ChaosController::deinitializeClient(){
 	/*
 	 * if(mds_client){
 		mds_client->stop();
-	}s
+	}sc
 	*/
 
 }
@@ -511,22 +512,32 @@ uint64_t ChaosController::sched(uint64_t ts){
 	/*if(ioctrl.try_lock()==false){
 		return 0;
 	}*/
-	boost::mutex::scoped_lock(ioctrl);
 
 	CDataWrapper outw;
 	uint64_t now_ts=0;
 	uint64_t pckid=0;
+	CDataWrapper all;
+
 	if((controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput,&outw)==0)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
 		now_ts=outw.getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid= outw.getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
 		if(outw.hasKey("device_alarm")&&outw.getInt32Value("device_alarm")){
-				controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,0);
+			CDataWrapper alrm;
+			boost::mutex::scoped_lock(iomutex);
 
+			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,&alrm);
+			cachedJsonChannels[KeyDataStorageDomainDevAlarm]=alrm.getJSONString();
 		}
 		if(outw.hasKey("cu_alarm")&&outw.getInt32Value("cu_alarm")){
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm,0);
-		}
+			CDataWrapper alrm;
+			boost::mutex::scoped_lock(iomutex);
 
+			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm,&alrm);
+			cachedJsonChannels[KeyDataStorageDomainCUAlarm]=alrm.getJSONString();
+		}
+		boost::mutex::scoped_lock(iomutex);
+
+		cachedJsonChannels[KeyDataStorageDomainOutput]=outw.getJSONString();
 
 	}
 	//DBGET<<" SCHED pckts: "<<(pckid - last_packid ) << " time: "<<(now_ts - last_ts)<<" Freq:"<<calc_freq;
@@ -536,7 +547,11 @@ uint64_t ChaosController::sched(uint64_t ts){
 	last_packid = pckid;
 	last_ts = now_ts;
 	if((ts-last_input)>CU_INPUT_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput,0);
+		CDataWrapper data;
+		boost::mutex::scoped_lock(iomutex);
+
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput,&data);
+		cachedJsonChannels[KeyDataStorageDomainInput]=data.getJSONString();
 		last_input=ts;
 	}
 
@@ -544,20 +559,44 @@ uint64_t ChaosController::sched(uint64_t ts){
 	//uint64_t now_ts=outw->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 
 	if((ts-last_health)>CU_HEALTH_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth,0);
+		CDataWrapper data;
+		boost::mutex::scoped_lock(iomutex);
+
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth,&data);
+		cachedJsonChannels[KeyDataStorageDomainHealth]=data.getJSONString();
+
 		last_health=ts;
 
 	}
 	if((ts-last_system)>CU_SYSTEM_UPDATE_US){
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,0);
+		CDataWrapper data;
+		boost::mutex::scoped_lock(iomutex);
+
+			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,&data);
+			cachedJsonChannels[KeyDataStorageDomainSystem]=data.getJSONString();
+
 			last_system=ts;
 
 	}
 	if((ts-last_system)>CU_CUSTOM_UPDATE_US){
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom,0);
+		CDataWrapper data;
+		boost::mutex::scoped_lock(iomutex);
+
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom,&data);
+		cachedJsonChannels[KeyDataStorageDomainCustom]=data.getJSONString();
 
 	}
-		uint64_t now=common::debug::getUsTime();
+	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
+		CDataWrapper tmp;
+		controller->getCurrentDatasetForDomain((chaos::metadata_service_client::node_controller::DatasetDomain)cnt,&tmp);
+		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),tmp);
+
+	}
+	all.appendAllElement(*bundle_state.getData());
+	boost::mutex::scoped_lock(iomutex);
+
+	cachedJsonChannels[-1]=all.getJSONString();
+	uint64_t now=common::debug::getUsTime();
 
 	if((pckid - last_packid )>0){
 		calc_freq=((now_ts - last_ts)*1000 - (now -ts))/(pckid - last_packid );
@@ -654,6 +693,10 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 	}
 	return data;
 
+}
+const std::string&  ChaosController::fetchJson(int channel){
+	boost::mutex::scoped_lock(iomutex);
+	return cachedJsonChannels[channel];
 }
 
 chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
@@ -1125,8 +1168,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				} else {
 					serr << "error restoring snapshot:" << name;
 				}
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
 			} else if (what == "load") {
-				if(node_found.empty()){
+				if(node_found.empty()&&(mdsChannel->searchNodeForSnapshot(name, node_found, MDS_TIMEOUT) != 0)){
 
 					serr << "missing \"node_list\" json vector";
 				} else {
@@ -1149,6 +1195,34 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					CALC_EXEC_TIME
 					return CHAOS_DEV_OK;
 				}
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
+			} else if (what == "set") {
+				if(json_value==NULL){
+
+					serr << "missing \"value\"JSON_CU_DATASET dataset";
+				} else {
+
+					for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
+						if(json_value->hasKey(chaos::datasetTypeToHuman(cnt))&&json_value->isCDataWrapperValue(chaos::datasetTypeToHuman(cnt))){
+							CDataWrapper *ds=json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
+							if(ds->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)&& ds->isStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+								DBGET << "set snapshot name:\"" << name << "\": dataset:"<<chaos::datasetTypeToHuman(cnt);
+								EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,3000,name,ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID),chaos::datasetTypeToHuman(cnt),*ds);
+
+							}
+
+						}
+					}
+
+					json_buf=json_value->getJSONString();
+					CALC_EXEC_TIME
+					return CHAOS_DEV_OK;
+				}
+				bundle_state.append_error(serr.str());
+				json_buf = bundle_state.getData()->getJSONString();
+				return CHAOS_DEV_CMD;
 			} else {
 
 				serr << "unknown 'snapshot' arg:" << args;
@@ -1346,6 +1420,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationStop);
 					json_buf="{}";
 				   return CHAOS_DEV_OK;
+				} else if(what=="kill"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationKill);
+					json_buf="{}";
+				   return CHAOS_DEV_OK;
 				} else if(what=="restart"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationRestart);
 					json_buf="{}";
@@ -1433,8 +1511,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			bundle_state.status(chaos::CUStateKey::START);
 			state = chaos::CUStateKey::START;
 			bundle_state.append_log("stateless device");
-			chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
+			//json_buf = data->getJSONString();
+			json_buf=fetchJson(KeyDataStorageDomainOutput);
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_OK;
 		}
@@ -1460,8 +1539,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already initialized");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(-1);
-			json_buf = data->getJSONString();
+		//	chaos::common::data::CDataWrapper* data = fetch(-1);
+		//	json_buf = data->getJSONString();
+			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "start") {
 			wostate = 0;
@@ -1491,8 +1571,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already started");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(-1);
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper* data = fetch(-1);
+			//json_buf = data->getJSONString();
+			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "stop") {
 			wostate = 0;
@@ -1525,8 +1606,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				bundle_state.append_log("device:" + path + " already stopped");
 			}
 
-			chaos::common::data::CDataWrapper* data = fetch(-1);
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper* data = fetch(-1);
+			//json_buf = data->getJSONString();
+			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "deinit") {
 			wostate = 0;
@@ -1556,8 +1638,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else {
 				bundle_state.append_log("device:" + path + " already deinitialized");
 			}
-			chaos::common::data::CDataWrapper* data = fetch(-1);
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper* data = fetch(-1);
+			//json_buf = data->getJSONString();
+			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "sched" && (args != 0)) {
 			bundle_state.append_log("sched device:" + path);
@@ -1570,8 +1653,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_CMD;
 			*/
 			}
-			chaos::common::data::CDataWrapper* data = fetch(-1);
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper* data = fetch(-1);
+			//json_buf = data->getJSONString();
+			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "desc") {
 			bundle_state.append_log("desc device:" + path);
@@ -1595,15 +1679,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				if(out){
 					delete out;
 				}
-				chaos::common::data::CDataWrapper* data = fetch(-1);
-				json_buf = data->getJSONString();
+				//chaos::common::data::CDataWrapper* data = fetch(-1);
+				//json_buf = data->getJSONString();
+				json_buf = fetchJson(-1);
 				return CHAOS_DEV_OK;
 			}
 
 		} else if (cmd == "channel" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
-			chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
-			json_buf = data->getJSONString();
+			//chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
+			//json_buf = data->getJSONString();
+			json_buf = fetchJson(atoi((char*) args));
 			return CHAOS_DEV_OK;
 
 		} else if (cmd == "readout" && (args != 0)) {
@@ -2117,8 +2203,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 
-		chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
-		json_buf = data->getJSONString();
+	//	chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
+		//json_buf = data->getJSONString();
+		json_buf=fetchJson(atoi((char*) args));
 		return CHAOS_DEV_OK;
 	} catch (chaos::CException e) {
 		bundle_state.append_error("error sending \"" + cmd + "\" args:\"" + std::string(args) + "\" to:" + path + " err:" + e.what());

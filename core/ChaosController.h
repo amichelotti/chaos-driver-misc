@@ -75,6 +75,10 @@ private:
 
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
+    std::map<int,std::string> cachedJsonChannels;
+
+
+
     uint32_t queryuid;
     boost::mutex iomutex;
     boost::mutex ioctrl;
@@ -228,6 +232,8 @@ protected:
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
   	chaos::common::data::CDataWrapper*fetch(int channel);
+  	const std::string& fetchJson(int channel);
+
     chaos::common::data::CDataWrapper*combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
 
 
