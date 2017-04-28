@@ -2051,11 +2051,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 		} else if (cmd == "load" && (args != 0)) {
-			chaos_data::CDataWrapper * io[2], *ret;
+			chaos_data::CDataWrapper  res;
 			chaos_data::CDataWrapper p;
 			std::string snapname = args;
-			io[0] = 0;
-			io[1] = 0;
+
 			try {
 				p.setSerializedJsonData(args);
 				if (p.hasKey("snapname")) {
@@ -2066,35 +2065,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 			int retc = 0;
 			DBGET << "LOADING snapshot " << snapname;
+			if (mdsChannel->loadSnapshotNodeDataset(snapname,getPath(),res, MDS_TIMEOUT) == 0) {
+				DBGET << "load snapshot name:\"" << snapname << "\": CU:"<<getPath();
+				json_buf = res.getJSONString();
+				return CHAOS_DEV_OK;
 
-			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, KeyDataStorageDomainOutput, &io[0]);
-			retc += controller->loadDatasetTypeFromSnapshotTag(snapname, KeyDataStorageDomainInput, &io[1]);
-			if (retc || io[0] == NULL || io[1] == NULL) {
-				bundle_state.append_error("error load snapshot " + getPath() + " snap name:" + snapname);
-				json_buf = bundle_state.getData()->getJSONString();
-				CALC_EXEC_TIME;
-				return CHAOS_DEV_CMD;
 			}
+			bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
+			json_buf = bundle_state.getData()->getJSONString();
+			CALC_EXEC_TIME;
+			return CHAOS_DEV_CMD;
 
-			std::map<int, chaos::common::data::CDataWrapper* > set;
-
-			set[KeyDataStorageDomainOutput] = io[0];
-			set[KeyDataStorageDomainInput] = io[1];
-			ret = combineDataSets(set);
-
-
-			if (ret) {
-				json_buf = ret->getJSONString();
-			} else {
-				bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
-				json_buf = bundle_state.getData()->getJSONString();
-				CALC_EXEC_TIME;
-				return CHAOS_DEV_CMD;
-			}
-
-
-			DBGET << "LOAD snapshot " << snapname << " ret:" << retc;
-			return CHAOS_DEV_OK;
 		} else if (cmd == "list") {
 			ChaosStringVector snaps;
 			int ret;
