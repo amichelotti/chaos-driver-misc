@@ -840,7 +840,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 							page=p.getInt32Value("page");\
 		}\
 		if (p.hasKey("type")) {\
-					node_type=p.getCStringValue("type");\
+					node_type=p.getStringValue("type");\
 		}\
 		if (p.hasKey("start")) {\
 			start_ts=p.getInt64Value("start");\
@@ -849,16 +849,16 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 			end_ts=p.getInt64Value("end");\
 		}\
 		if (p.hasKey("parent")) {\
-					parent=p.getCStringValue("parent");\
+					parent=p.getStringValue("parent");\
 		}\
 		if (p.hasKey("alive")) {\
 			alive = p.getBoolValue("alive");\
 		}\
 		if (p.hasKey("name")) {\
-			name = p.getCStringValue("name");\
+			name = p.getStringValue("name");\
 		}\
 		if (p.hasKey("what")) {\
-			what = p.getCStringValue("what");\
+			what = p.getStringValue("what");\
 		}\
 		if (p.hasKey("value")) {\
 			json_value=p.getCSDataValue("value");\
@@ -873,7 +873,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 			node_list.reset(p.getVectorValue("node_list"));\
 		}\
 		if((names.get() == NULL) && name.empty() && check_name){\
-			serr << "missing 'name' or 'names'" << cmd;\
+			serr << "missing 'name' or 'names' in command:\"" << cmd<<"\"";\
 			bundle_state.append_error(serr.str());\
 			json_buf = bundle_state.getData()->getJSONString();\
 					return CHAOS_DEV_CMD;\
