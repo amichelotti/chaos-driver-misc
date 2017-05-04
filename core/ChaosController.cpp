@@ -1203,21 +1203,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 					serr << "missing \"value\"JSON_CU_DATASET dataset";
 				} else {
-
+					api_proxy::service::VectorDatasetValue datasets;
+					std::string uid;
 					for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
 						if(json_value->hasKey(chaos::datasetTypeToHuman(cnt))&&json_value->isCDataWrapperValue(chaos::datasetTypeToHuman(cnt))){
 							CDataWrapper *ds=json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
 							if(ds->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)&& ds->isStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
-								std::string uid=ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+								uid=ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
 								DBGET << "set snapshot name:\"" << name << "\": dataset:"<<chaos::datasetTypeToHuman(cnt);
 								std::string dataset_name=uid+std::string(chaos::datasetTypeToPostfix(cnt));
-								EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,3000,name,uid,dataset_name,*ds);
-
+								datasets.push_back(api_proxy::service::SetSnapshotDatasetsForNode::createDatasetValue(dataset_name,*ds));
 							}
 
 						}
 					}
-
+					if(!datasets.empty()){
+						EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,3000,name,uid,datasets);
+					}
 					json_buf=json_value->getJSONString();
 					CALC_EXEC_TIME
 					return CHAOS_DEV_OK;
