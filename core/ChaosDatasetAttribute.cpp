@@ -95,7 +95,6 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     		ATTRDBG_ << " controller of "<<cu<<" is not ready, retry:"<<retry;
     	}
     } while((ret<0)&& (retry--));
-
     upd_mode=EVERYTIME;
     update_time=0;
     if(ret<0){
