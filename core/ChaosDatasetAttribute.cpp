@@ -113,15 +113,13 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     } else {
     	info = paramToDataset[attr_parent];
     }
-    try{
-        get(&attr_size);
-    } catch(chaos::CException e){
-        ATTRDBG_<<"%% WARNING  no data present in live for:"<<attr_path;
-    }
+
+    get(&attr_size);
+
 
     resize(attr_size);
     
-    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<")";
+    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": ((attr_type.dir == chaos::DataType::Output)?"Output":"Other"))<<")";
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
@@ -130,6 +128,7 @@ void ChaosDatasetAttribute::resize(int32_t newsize) throw (chaos::CException){
         ptr_cache=realloc(ptr_cache,newsize);
         cache_size = newsize;
         if(ptr_cache==NULL){
+        	ATTRERR_<<"cannot allcate memory cache for:"<<attr_path;
                 throw chaos::CException(-1001,"cannot allocate memory cache for:"+attr_path,__PRETTY_FUNCTION__);
 
         }
@@ -197,8 +196,10 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             	}
             } else {
             	std::stringstream ss;
-            	ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path;
-            	 throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
+
+            	ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path<<" json:"<<tmpw->getJSONString();
+            	ATTRERR_<<ss.str();
+            	throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
             }
             cache_updated=tget;
         } else if((upd_mode==NOTBEFORE)){

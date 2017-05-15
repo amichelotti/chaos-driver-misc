@@ -521,14 +521,14 @@ uint64_t ChaosController::sched(uint64_t ts){
 	if((controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput,&outw)==0)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
 		now_ts=outw.getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid= outw.getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-		if(outw.hasKey("device_alarm")&&outw.getInt32Value("device_alarm")){
+		if(outw.hasKey("device_alarm")/*&&outw.getInt32Value("device_alarm")*/){
 			CDataWrapper alrm;
 			boost::mutex::scoped_lock(iomutex);
 
 			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,&alrm);
 			cachedJsonChannels[KeyDataStorageDomainDevAlarm]=alrm.getJSONString();
 		}
-		if(outw.hasKey("cu_alarm")&&outw.getInt32Value("cu_alarm")){
+		if(outw.hasKey("cu_alarm")/*&&outw.getInt32Value("cu_alarm")*/){
 			CDataWrapper alrm;
 			boost::mutex::scoped_lock(iomutex);
 
@@ -1524,91 +1524,38 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 		if (cmd == "init") {
 			wostate = 0;
-			if (state != chaos::CUStateKey::INIT) {
-				bundle_state.append_log("init device:" + path);
-				err = controller->initDevice();
-				if (err != 0) {
-					bundle_state.append_error("initializing device:" + path);
-					/*
-					json_buf = bundle_state.getData()->getJSONString();
-					if((state == chaos::CUStateKey::DEINIT) || (state==chaos::CUStateKey::UNDEFINED)){
-						init(path, timeo);
-					}
-					CALC_EXEC_TIME;
-					return CHAOS_DEV_INIT;
-					*/
-				}
-				next_state = chaos::CUStateKey::INIT;
-			} else {
-				bundle_state.append_log("device:" + path + " already initialized");
+			bundle_state.append_log("init device:" + path);
+			err = controller->initDevice();
+			if (err != 0) {
+				bundle_state.append_error("initializing device:" + path);
+				CALC_EXEC_TIME;
+				return CHAOS_DEV_CMD;
 			}
+				next_state = chaos::CUStateKey::INIT;
 
-		//	chaos::common::data::CDataWrapper* data = fetch(-1);
-		//	json_buf = data->getJSONString();
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "start") {
 			wostate = 0;
-
-		/*	if (updateState() < 0) {
-				json_buf = bundle_state.getData()->getJSONString();
+			err = controller->startDevice();
+			if (err != 0) {
+				bundle_state.append_error("starting device:" + path);
 				CALC_EXEC_TIME;
-				return CHAOS_DEV_HB_TIMEOUT;
+				return CHAOS_DEV_CMD;
 			}
-*/
-			if (state != chaos::CUStateKey::START) {
-				bundle_state.append_log("start device:" + path);
-				err = controller->startDevice();
-				if (err != 0) {
-					bundle_state.append_error("starting device:" + path);
-				/*	json_buf = bundle_state.getData()->getJSONString();
-
-					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)|| (state==chaos::CUStateKey::INIT)){
-					  //init(path, timeo);
-					}
-					CALC_EXEC_TIME;
-					return CHAOS_DEV_START;
-					*/
-				}
-				next_state = chaos::CUStateKey::START;
-			} else {
-				bundle_state.append_log("device:" + path + " already started");
-			}
-
-			//chaos::common::data::CDataWrapper* data = fetch(-1);
-			//json_buf = data->getJSONString();
+			next_state = chaos::CUStateKey::START;
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "stop") {
 			wostate = 0;
-
-
-
-		/* if (updateState() < 0) {
+			err = controller->stopDevice();
+			if (err != 0) {
+				bundle_state.append_error("stopping device:" + path);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
-				return CHAOS_DEV_HB_TIMEOUT;
+				return CHAOS_DEV_CMD;
 			}
-*/
-			if (state != chaos::CUStateKey::STOP) {
-				bundle_state.append_log("stop device:" + path);
-				err = controller->stopDevice();
-				if (err != 0) {
-					bundle_state.append_error("stopping device:" + path);
-					//init(path, timeo);
-			/*		json_buf = bundle_state.getData()->getJSONString();
-
-					if((state == chaos::CUStateKey::START) || (state==chaos::CUStateKey::UNDEFINED)){
-					  //						init(path, timeo);
-					}
-					CALC_EXEC_TIME;
-					return CHAOS_DEV_STOP;
-					*/
-				}
-				next_state = chaos::CUStateKey::STOP;
-			} else {
-				bundle_state.append_log("device:" + path + " already stopped");
-			}
+			next_state = chaos::CUStateKey::STOP;
 
 			//chaos::common::data::CDataWrapper* data = fetch(-1);
 			//json_buf = data->getJSONString();
@@ -1616,34 +1563,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			return CHAOS_DEV_OK;
 		} else if (cmd == "deinit") {
 			wostate = 0;
-
-			/*if (updateState() < 0) {
+			err = controller->deinitDevice();
+			if (err != 0) {
+				bundle_state.append_error("deinitializing device:" + path);
 				json_buf = bundle_state.getData()->getJSONString();
 				CALC_EXEC_TIME;
-				return CHAOS_DEV_HB_TIMEOUT;
+				return CHAOS_DEV_CMD;
 			}
-			*/
+			next_state = chaos::CUStateKey::DEINIT;
 
-			if (state != chaos::CUStateKey::DEINIT) {
-				bundle_state.append_log("deinitializing device:" + path);
-				err = controller->deinitDevice();
-				if (err != 0) {
-					bundle_state.append_error("deinitializing device:" + path);
-					//	init(path, timeo);
-				/*	json_buf = bundle_state.getData()->getJSONString();
-					if((state == chaos::CUStateKey::STOP) || (state==chaos::CUStateKey::UNDEFINED)){
-					  //						init(path, timeo);
-					}
-					CALC_EXEC_TIME;
-					return CHAOS_DEV_DEINIT;
-					*/
-				}
-				next_state = chaos::CUStateKey::DEINIT;
-			} else {
-				bundle_state.append_log("device:" + path + " already deinitialized");
-			}
-			//chaos::common::data::CDataWrapper* data = fetch(-1);
-			//json_buf = data->getJSONString();
+
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "sched" && (args != 0)) {
