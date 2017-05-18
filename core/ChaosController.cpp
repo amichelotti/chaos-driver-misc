@@ -1705,6 +1705,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 						while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
 							boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+							DBGET << "OBJ  " <<q_result->getJSONString();
 							data = normalizeToJson(q_result.get(), binaryToTranslate);
 							if (var_name.size() && data->hasKey(var_name)) {
 								res << dataset2Var(data,var_name);
