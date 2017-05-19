@@ -391,9 +391,9 @@ int ChaosController::sendCmd(command_t& cmd, bool wait, uint64_t perform_at, uin
 
 	}
 	CTRLAPP_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getJSONString();
-	if (controller->submitSlowControlCommand(cmd->alias, cmd->sub_rule, cmd->priority, cmd->command_id, 0, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, &cmd->param) != 0) {
-		CTRLERR_ << "error submitting";
-		return -1;
+	if ((err=controller->submitSlowControlCommand(cmd->alias, cmd->sub_rule, cmd->priority, cmd->command_id, 0, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, &cmd->param)) != 0) {
+		CTRLERR_ << "["<<getPath()<<"] error submitting: err:"<<err<< " timeout set to:"<<controller->getRequestTimeWaith();
+		return err;
 	}
 
 	chaos::common::batch_command::CommandState command_state;
@@ -2102,7 +2102,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			/*	init(path, timeo);*/
 				err = sendCmd(command, false);
 				if (err != 0) {
-					bundle_state.append_error("error sending command:" + cmd + " " + std::string(args) + " to:" + path);
+					std::stringstream ss;
+					ss<<"error sending command:'"<< cmd<< "' args:'" << std::string(args)<< "' to:'"<<path<<"' err:"<< err;
+					bundle_state.append_error(ss.str());
 					json_buf = bundle_state.getData()->getJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
