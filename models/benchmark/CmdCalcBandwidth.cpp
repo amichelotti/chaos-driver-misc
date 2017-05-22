@@ -10,13 +10,15 @@
 #include <boost/crc.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/random/random_device.hpp>
-
+#include <chaos/common/data/cache/AbstractSharedDomainCache.h>
 using namespace chaos;
 
 using namespace chaos::common::data;
 
 using namespace chaos::cu::control_manager::slow_command;
 namespace chaos_batch = chaos::common::batch_command;
+using namespace chaos::common::data::cache;
+
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(,CmdCalcBandwidth,CmdCalcBandwidth_CMD_ALIAS,
                                      "Start the bandwith test",
                                      "adf2973c-35dd-11e5-855a-774defc0b6db")

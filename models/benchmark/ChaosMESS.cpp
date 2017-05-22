@@ -18,7 +18,7 @@ using namespace chaos::common::data;
 
 using namespace chaos::cu::control_manager::slow_command;
 using namespace chaos::cu::driver_manager::driver;
-
+using namespace chaos::common::data::cache;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(ChaosMESS);
 /*
  Construct a new CU with an identifier

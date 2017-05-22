@@ -517,7 +517,16 @@ uint64_t ChaosController::sched(uint64_t ts){
 	uint64_t now_ts=0;
 	uint64_t pckid=0;
 	CDataWrapper all;
+	controller->fetchAllDataset();
+	ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX+1];
+	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
+		boost::mutex::scoped_lock(iomutex);
+		channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
+		cachedJsonChannels[cnt] =channels[cnt]->getJSONString();
+		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
+	}
 
+#if 0
 	if((controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput,&outw)==0)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
 		now_ts=outw.getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid= outw.getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
@@ -586,12 +595,15 @@ uint64_t ChaosController::sched(uint64_t ts){
 		cachedJsonChannels[KeyDataStorageDomainCustom]=data.getJSONString();
 
 	}
+
+
 	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
 		CDataWrapper tmp;
 		controller->getCurrentDatasetForDomain((chaos::metadata_service_client::node_controller::DatasetDomain)cnt,&tmp);
 		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),tmp);
 
 	}
+#endif
 	all.appendAllElement(*bundle_state.getData());
 	boost::mutex::scoped_lock(iomutex);
 
@@ -1345,6 +1357,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					}
 
 					return CHAOS_DEV_OK;
+				} else if(what=="start"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationLaunch);
+					json_buf="{}";
+				   return CHAOS_DEV_OK;
+				} else if(what=="stop"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationStop);
+					json_buf="{}";
+				   return CHAOS_DEV_OK;
+				} else if(what=="kill"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationKill);
+					json_buf="{}";
+				   return CHAOS_DEV_OK;
+				} else if(what=="restart"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationRestart);
+					json_buf="{}";
+				   return CHAOS_DEV_OK;
 				}
 			} else if(node_type == "cu"){
 				if(parent.empty() && (what != "get")){
@@ -1405,10 +1433,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						json_buf=r->getJSONString();
 					}
 					return CHAOS_DEV_OK;
-				} else if(what=="start"){
-					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationLaunch);
-					json_buf="{}";
-				   return CHAOS_DEV_OK;
 				} else if(what=="info"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::CheckAgentHostedProcess,3000,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
@@ -1419,18 +1443,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						return CHAOS_DEV_CMD;
 
 					}
-				   return CHAOS_DEV_OK;
-				} else if(what=="stop"){
-					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationStop);
-					json_buf="{}";
-				   return CHAOS_DEV_OK;
-				} else if(what=="kill"){
-					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationKill);
-					json_buf="{}";
-				   return CHAOS_DEV_OK;
-				} else if(what=="restart"){
-					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,3000,name,chaos::service_common::data::agent::NodeAssociationOperationRestart);
-					json_buf="{}";
 				   return CHAOS_DEV_OK;
 				}
 				serr << cmd <<" bad command format";

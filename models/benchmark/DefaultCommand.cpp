@@ -25,9 +25,12 @@
 using namespace chaos;
 
 using namespace chaos::common::data;
+#include <chaos/common/data/cache/AbstractSharedDomainCache.h>
 
 using namespace chaos::cu::control_manager::slow_command;
 namespace chaos_batch = chaos::common::batch_command;
+using namespace chaos::common::data::cache;
+
 BATCH_COMMAND_OPEN_DESCRIPTION(,DefaultCommand,"Default command",
                                      "adf2973c-35de-11e5-855a-774defc0b6db")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
