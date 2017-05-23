@@ -255,6 +255,10 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 
 	bundle_state.reset();
 	bundle_state.status(state);
+	for(int cnt=-1;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
+		cachedJsonChannels[cnt]="{}";
+	}
+
 	DBGET << "init CU NAME:\"" << path << "\"" << " timeo:" << timeo_;
 	/* DBGET<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
      DBGET<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
@@ -1427,6 +1431,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf="{}";
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadAgentDescription,3000,name);
+					chaos::common::data::CDataWrapper *r=apires->getResult();
+					if(r){
+						json_buf=r->getJSONString();
+					}
+					return CHAOS_DEV_OK;
+				} else if(what=="list"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::ListNodeForAgent,3000,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
