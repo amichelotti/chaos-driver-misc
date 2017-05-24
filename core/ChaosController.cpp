@@ -1350,6 +1350,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS,3000,name);
 					json_buf="{}";
 					return CHAOS_DEV_OK;
+				} else if(what=="create"){
+					EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS,3000,name);
+					json_buf="{}";
+					return CHAOS_DEV_OK;
 				} else if(what=="get"){
 					chaos::common::data::CDataWrapper* r;
 					std::vector<std::string> vname;
@@ -1431,7 +1435,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					json_buf="{}";
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
-					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadAgentDescription,3000,name);
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadNodeAssociation,3000,name,parent);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
 						json_buf=r->getJSONString();
@@ -1445,6 +1449,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					}
 					return CHAOS_DEV_OK;
 				} else if(what=="info"){
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadAgentDescription,3000,name);
+					chaos::common::data::CDataWrapper *r=apires->getResult();
+					if(r){
+							json_buf=r->getJSONString();
+					} else {
+						json_buf="{}";
+						return CHAOS_DEV_CMD;
+
+					}
+				   return CHAOS_DEV_OK;
+				} else if(what=="check"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::CheckAgentHostedProcess,3000,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
@@ -1492,7 +1507,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 		if (controller == NULL) {
-			CTRLERR_ << "no controller defined " << cmd;
+			CTRLERR_ << "no controller defined for cmd:\"" << cmd<<"\"";
 
 			return CHAOS_DEV_CMD;
 		}
