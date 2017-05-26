@@ -797,12 +797,21 @@ std::string ChaosController::dataset2Var(chaos::common::data::CDataWrapper*data,
 	std::stringstream res;
 	uint64_t ts = data->getInt64Value("dpck_ats");
 	uint64_t seq = data->getInt64Value("dpck_seq_id");
-	if (var_name.size() && data->hasKey(var_name)) {
-		chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
-		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<< v.asString() << "}";
-	} else {
+	if(var_name.size()==0 || !data->hasKey(var_name)){
 		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\": {}}";
+		return res.str();
 	}
+	if(data->isVectorValue(var_name)){
+		ChaosUniquePtr<CMultiTypeDataArrayWrapper> dw(data->getVectorValue(var_name));
+		//ChaosUniquePtr<CDataWrapper> dw(data->getCSDataValue(var_name));
+		//SONElement obj(data->getRawValuePtr(var_name));
+		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<<dw->getJSONString() << "}";
+
+	} else {
+			chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
+			res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<< v.asString() << "}";
+	}
+
 	return res.str();
 }
 
@@ -1712,8 +1721,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 
 			if (p.hasKey("channel")) {
-					if((p.getInt32Value("channel")>=0) && (p.getInt32Value("channel") <=DPCK_LAST_DATASET_INDEX)){
-						channel = p.getInt32Value("channel");
+					if(p.isInt32Value("channel")){
+						if((p.getInt32Value("channel")>=0) && (p.getInt32Value("channel") <=DPCK_LAST_DATASET_INDEX)){
+							channel = p.getInt32Value("channel");
+						}
+					}
+					if(p.isStringValue("channel")){
+						channel=chaos::HumanTodatasetType(p.getStringValue("channel"));
 					}
 
 			}
@@ -1743,13 +1757,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 						while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
 							boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
-							DBGET << "OBJ  " <<q_result->getJSONString();
+						//	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
 							data = normalizeToJson(q_result.get(), binaryToTranslate);
 							if (var_name.size() && data->hasKey(var_name)) {
 								res << dataset2Var(data,var_name);
 							} else {
 								res << data->getJSONString();
 							}
+						//	DBGET << "OBJ  " <<res;
 							cnt++;
 							//	DBGET << "getting query page  " << cnt;
 							if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
