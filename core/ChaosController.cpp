@@ -924,7 +924,32 @@ if(apires->getError()){\
     json_buf = bundle_state.getData()->getJSONString();\
     return CHAOS_DEV_CMD;\
 }
-
+uint64_t ChaosController::offsetToTimestamp(const std::string& off){
+    boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
+    boost::smatch what;
+          //        std::string::const_iterator start = input.begin() ;
+          //std::string::const_iterator end = input.end() ;
+    if(boost::regex_match(off,what,mm)){
+    	int64_t toff=0;
+    	std::string dd=what[2];
+    	std::string h=what[3];
+    	std::string m=what[4];
+    	std::string s=what[5];
+    	std::string ms=what[6];
+    	std::string sign=what[1];
+    	toff+=(strtoul(dd.c_str(),0,0)*(3600*24))+
+    				(strtoul(h.c_str(),0,0)*(3600))+
+						(strtoul(m.c_str(),0,0)*(60))+
+						(strtoul(s.c_str(),0,0));
+    	toff*=1000*((sign=="-")?-1:1);
+    	toff+=(strtoul(s.c_str(),0,0));
+    	uint64_t ret=chaos::common::utility::TimingUtil::getTimeStamp();
+    	ret+=toff;
+    	DBGET<<"offset "<<off<<" offset epoch: "<<std::dec<<ret;
+    	return ret;
+    }
+    return 0;
+}
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
 	int err;
 	boost::mutex::scoped_lock(ioctrl);
@@ -1700,16 +1725,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			p.setSerializedJsonData(args);
 			cleanUpQuery();
 			if (p.hasKey("start")) {
-				start_ts = p.getInt64Value("start");
-				if(start_ts==-1){
-					start_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
+				if(p.isStringValue("start")){
+					start_ts=offsetToTimestamp(p.getStringValue("start"));
+				} else {
+					start_ts = p.getInt64Value("start");
+					if(start_ts==-1){
+						start_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
+					}
 				}
 			}
 
 			if (p.hasKey("end")) {
-				end_ts = p.getInt64Value("end");
-				if(end_ts==-1){
-					end_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
+				if(p.isStringValue("end")){
+					end_ts=offsetToTimestamp(p.getStringValue("end"));
+				} else {
+					end_ts = p.getInt64Value("end");
+					if(end_ts==-1){
+						end_ts=chaos::common::utility::TimingUtil::getLocalTimeStamp();
+					}
 				}
 			}
 			if (p.hasKey("page")) {

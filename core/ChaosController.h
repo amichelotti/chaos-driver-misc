@@ -84,7 +84,7 @@ private:
     boost::mutex ioctrl;
 
     typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
-
+    uint64_t offsetToTimestamp(const std::string&);
     typedef std::map<uint64_t,qc_t> query_cursor_map_t;
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
