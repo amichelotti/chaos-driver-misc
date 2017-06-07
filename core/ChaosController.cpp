@@ -250,8 +250,6 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	path = p;
 	state = chaos::CUStateKey::UNDEFINED;
 	schedule = 0;
-	last_input=last_system=last_health=last_custom=last_output=0;
-	calc_freq=last_packid=0;
 
 	bundle_state.reset();
 	bundle_state.status(state);
@@ -318,6 +316,11 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
 	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
 	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
+	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
+		last_ts[cnt]=0;
+	    last_pckid[cnt]=0;
+	}
+	delta_update=0;
 	iomutex.unlock();
 	if (getState(state) == 0) {
 		DBGET << "Uknown state for device assuming wostate";
@@ -512,7 +515,6 @@ void ChaosController::deinitializeClient(){
 uint64_t ChaosController::sched(uint64_t ts){
 	//CDataWrapper* res=fetch(-1);
 	//DBGET<<"SCHED START";
-	uint64_t inactivity=2000*1000;
 	/*if(ioctrl.try_lock()==false){
 		return 0;
 	}*/
@@ -526,6 +528,19 @@ uint64_t ChaosController::sched(uint64_t ts){
 	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
 		boost::mutex::scoped_lock(iomutex);
 		channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
+		uint64_t ts,pckid;
+		ts=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+		pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+		if(pckid>last_pckid[cnt]){
+			delta_update=std::min(delta_update,(ts-last_ts[cnt])*1000/(pckid-last_pckid[cnt]));
+			//DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(ts-last_ts[cnt]);
+;
+			last_pckid[cnt]= pckid;
+			last_ts[cnt]=ts;
+		} else{
+			delta_update+=100;
+		}
+
 		cachedJsonChannels[cnt] =channels[cnt]->getJSONString();
 		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
 	}
@@ -612,20 +627,9 @@ uint64_t ChaosController::sched(uint64_t ts){
 	boost::mutex::scoped_lock(iomutex);
 
 	cachedJsonChannels[-1]=all.getJSONString();
-	uint64_t now=common::debug::getUsTime();
-
-	if((pckid - last_packid )>0){
-		calc_freq=((now_ts - last_ts)*1000 - (now -ts))/(pckid - last_packid );
-		DBGET<<"pckts: "<<(pckid - last_packid ) << " time: "<<(now_ts - last_ts)<<" Freq:"<<calc_freq <<" us";
-		calc_freq = std::min(calc_freq/2,(uint64_t)CU_FREQ_UPDATE_US);
-	}
-	inactivity=std::min(inactivity,CU_INPUT_UPDATE_US - (now-last_input));
-	inactivity=std::min(inactivity,CU_HEALTH_UPDATE_US - (now-last_health));
-	inactivity=std::min(inactivity,CU_SYSTEM_UPDATE_US - (now-last_system));
-	inactivity=std::min(inactivity,calc_freq);
 
 	//DBGET<<"SCHED STOP";
-	return inactivity;
+	return delta_update;
 }
 ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0) {
 	controller = NULL;
