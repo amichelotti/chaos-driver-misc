@@ -100,7 +100,9 @@ private:
      void cleanUpQuery();
      void initializeClient();
      void deinitializeClient();
-     uint64_t  last_input,last_system,last_health,last_custom,last_output,calc_freq,last_packid,last_ts;
+     uint64_t  last_ts[DPCK_LAST_DATASET_INDEX+1],delta_update;
+     uint64_t  last_pckid[DPCK_LAST_DATASET_INDEX+1];
+
   public:  
 
      typedef enum {
