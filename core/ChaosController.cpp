@@ -1778,6 +1778,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			if (paging) {
 				if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
+					DBGET << "START PAGED QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
+
 					controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
 					if (query_cursor) {
 						cnt = 0;
@@ -1847,6 +1849,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_OK;
 			} else {
 				chaos::common::data::CDataWrapper*data;
+				DBGET << "START QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
+
 				controller->executeTimeIntervallQuery(KeyDataStorageDomainOutput, start_ts, end_ts, &query_cursor);
 				bool n = query_cursor->hasNext();
 				if (query_cursor) {
