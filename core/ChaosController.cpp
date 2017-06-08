@@ -6,6 +6,8 @@
  */
 
 #include "ChaosController.h"
+#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/NewUS.h>
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/DeleteUS.h>
 #include <ChaosMetadataServiceClient/api_proxy/unit_server/GetSetFullUnitServer.h>
@@ -34,6 +36,7 @@ using namespace chaos::ui;
 #include <json/reader.h>
 #include <json/writer.h>
 #include <json/value.h>
+using namespace chaos::cu::data_manager;
 using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
 
