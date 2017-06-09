@@ -15,16 +15,10 @@
 #include <boost/shared_ptr.hpp>
 #include <common/misc/scheduler/SchedTimeElem.h>
 
-#ifdef __CHAOS_UI__
-#include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
-#define UI_PREFIX chaos::ui
-#else
 #define UI_PREFIX chaos::metadata_service_client::node_controller
 
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+//#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
-#endif
-using namespace chaos::cu::data_manager;
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"
@@ -44,7 +38,15 @@ using namespace chaos::cu::data_manager;
 #define MAX_QUERY_ELEMENTS 1000
 #define QUERY_PAGE_MAX_TIME 1000*60*1 // 1 min
 #define CHECK_HB 10*1000*1000 //10 s
+namespace chaos{
+namespace metadata_service_client{
+	class ChaosMetadataServiceClient;
+namespace node_controller{
+	class CUController;
 
+}
+}
+}
 namespace driver{
     
     namespace misc{
@@ -54,11 +56,8 @@ class ChaosController: public ::common::misc::scheduler::SchedTimeElem {
 private:
      chaos::common::message::MDSMessageChannel *mdsChannel;
      chaos::metadata_service_client::ChaosMetadataServiceClient*mds_client;
-#ifdef __CHAOS_UI__
-     chaos::ui::DeviceController* controller;
-#else
      chaos::metadata_service_client::node_controller::CUController* controller;
-#endif
+
      std::vector<std::string> mds_server_l;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
