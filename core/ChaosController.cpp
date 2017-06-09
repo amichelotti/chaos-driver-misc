@@ -535,13 +535,13 @@ uint64_t ChaosController::sched(uint64_t ts){
 		ts=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
 		if(pckid>last_pckid[cnt]){
-			delta_update=std::min(delta_update,(ts-last_ts[cnt])*1000/2.0*(pckid-last_pckid[cnt]));
+			delta_update=std::min(delta_update,(ts-last_ts[cnt])*1000/(2*(pckid-last_pckid[cnt])));
 			//DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(ts-last_ts[cnt]);
 ;
 			last_pckid[cnt]= pckid;
 			last_ts[cnt]=ts;
 		} else{
-			delta_update+=100;
+			delta_update+=50;
 		}
 
 		cachedJsonChannels[cnt] =channels[cnt]->getJSONString();

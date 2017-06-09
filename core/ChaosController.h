@@ -17,7 +17,6 @@
 
 #define UI_PREFIX chaos::metadata_service_client::node_controller
 
-//#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
@@ -29,7 +28,6 @@
 #define MDS_RETRY 3
 #define HEART_BEAT_MAX 60000000
 #define CALC_AVERAGE_REFRESH 5
-#include <common/misc/data/core/DBbaseFactory.h>
 #define DEFAULT_DBTYPE "cassandra"
 #define DEFAULT_DBNAME "chaos"
 #define DEFAULT_DBREPLICATION "2"
@@ -227,13 +225,13 @@ private:
      */
     int updateState();
     uint64_t checkHB();
+    chaos::common::data::CDataWrapper*fetch(int channel);
+      	const std::string& fetchJson(int channel);
 
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
-  	chaos::common::data::CDataWrapper*fetch(int channel);
-  	const std::string& fetchJson(int channel);
 
     chaos::common::data::CDataWrapper*combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
 
