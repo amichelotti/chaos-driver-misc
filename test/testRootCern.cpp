@@ -27,11 +27,13 @@ int main(int argc, char** argv) {
     	std::cout<<"Usage is:"<<argv[0]<<" <metadataserver> <CUID>"<<std::endl;
     	return -1;
     }
-    is<<"metadata-server="<<argv[1];
-    istringstream iis(is.str().c_str());
+    char*options[]={"app","--metadata-server","localhost:5000"};
+  //  is<<"metadata-server="<<argv[1]<<std::endl<<"event-disable=true"<<std::endl;
+   // istringstream iis(is.str().c_str());
+  //  std::cout<<"options:"<<is.str().c_str();
 
-	ChaosMetadataServiceClient::getInstance()->init(iis);
-
+	ChaosMetadataServiceClient::getInstance()->init(3,options);
+	ChaosMetadataServiceClient::getInstance()->start();
     ChaosController mycu(argv[2]);
     chaos::common::data::CDataWrapper *d=mycu.fetch(0);
 

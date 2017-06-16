@@ -19,6 +19,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_cli
  TARGET_LINK_LIBRARIES(testRootCern ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 
  INSTALL_TARGETS(/bin testSumOperatorUI)
+ INSTALL_TARGETS(/bin testRootCern)
 
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
