@@ -15,7 +15,12 @@
 #include "ChaosDatasetAttributeSinchronizer.h"
 using namespace std;
 using namespace chaos::metadata_service_client;
-
+#include <iostream>
+#include <TRandom1.h>
+#include <TH1F.h>
+#include <TApplication.h>
+#include "TROOT.h"
+#include "TRint.h"
 /*
  * 
  */
@@ -23,22 +28,26 @@ using namespace driver::misc;
 int main(int argc, char** argv) {
 
     stringstream is;
-    if(argc<3){
-    	std::cout<<"Usage is:"<<argv[0]<<" <metadataserver> <CUID>"<<std::endl;
-    	return -1;
-    }
-    char*options[]={"app","--metadata-server","localhost:5000"};
+    //    if(argc<3){
+   //	std::cout<<"Usage is:"<<argv[0]<<" <metadataserver> <CUID>"<<std::endl;
+    //	return -1;
+    //    }
+    //    char*options[]={"app","--metadata-server","localhost:5000"};
   //  is<<"metadata-server="<<argv[1]<<std::endl<<"event-disable=true"<<std::endl;
    // istringstream iis(is.str().c_str());
   //  std::cout<<"options:"<<is.str().c_str();
 
-	ChaosMetadataServiceClient::getInstance()->init(3,options);
+	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
 	ChaosMetadataServiceClient::getInstance()->start();
-    ChaosController mycu(argv[2]);
-    chaos::common::data::CDataWrapper *d=mycu.fetch(0);
+	TRint *rootapp = new TRint("Rint", &argc, argv);
+
+	//TApplication* rootapp = new TApplication("example",&argc, argv);
+	  rootapp->Run();
+	  //    ChaosController mycu(argv[2]);
+	  //    chaos::common::data::CDataWrapper *d=mycu.fetch(0);
 
     
-     std::cout<<"dataset:"<<d->getJSONString();
+	  //     std::cout<<"dataset:"<<d->getJSONString();
     return 0;
 }
 

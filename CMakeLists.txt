@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(chaos_driver_misc)
+option(CERN_ROOT "Enable Cern Root" OFF)
+
 SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/RTVme.cpp)
 
 add_subdirectory(models)
@@ -8,18 +10,30 @@ IF (BUILD_FORCE_STATIC)
     ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
 ELSE ()
     ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
-ENDIF ()
+ENDIF()
 INCLUDE_DIRECTORIES(./core)
+
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_client chaos_common common_misc_data common_misc_scheduler uv common_vme vme common_debug ${FrameworkLib})
 
- ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
- ADD_EXECUTABLE(testRootCern test/testRootCern.cpp)
+ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
- TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
- TARGET_LINK_LIBRARIES(testRootCern ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 
- INSTALL_TARGETS(/bin testSumOperatorUI)
- INSTALL_TARGETS(/bin testRootCern)
+TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
+
+IF (CERN_ROOT)
+  IF (NOT CERN_ROOT_PREFIX)
+    SET(CERN_ROOT_PREFIX ${CMAKE_INSTALL_PREFIX})
+  ENDIF()
+  INCLUDE_DIRECTORIES(${CERN_ROOT_PREFIX}/include)
+  LINK_DIRECTORIES(${CERN_ROOT_PREFIX}/lib)
+ 
+  ADD_EXECUTABLE(chaosRoot test/testRootCern.cpp)
+  TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} )
+  INSTALL_TARGETS(/bin chaosRoot) 
+ENDIF()
+
+INSTALL_TARGETS(/bin testSumOperatorUI)
+
 
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
