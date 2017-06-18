@@ -932,8 +932,17 @@ if(apires->getError()){\
     return CHAOS_DEV_CMD;\
 }
 uint64_t ChaosController::offsetToTimestamp(const std::string& off){
+	boost::smatch what;
+	boost::regex ts_ms("([0-9]{13})");
+
+	if(boost::regex_match(off,what,ts_ms)){
+    	std::string dd=what[1];
+
+		return strtoull(dd.c_str(),0,0);
+	}
+
     boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
-    boost::smatch what;
+
           //        std::string::const_iterator start = input.begin() ;
           //std::string::const_iterator end = input.end() ;
     if(boost::regex_match(off,what,mm)){
@@ -944,19 +953,119 @@ uint64_t ChaosController::offsetToTimestamp(const std::string& off){
     	std::string s=what[5];
     	std::string ms=what[6];
     	std::string sign=what[1];
-    	toff+=(strtoul(dd.c_str(),0,0)*(3600*24))+
-    				(strtoul(h.c_str(),0,0)*(3600))+
-						(strtoul(m.c_str(),0,0)*(60))+
-						(strtoul(s.c_str(),0,0));
+    	toff+=(strtoull(dd.c_str(),0,0)*(3600*24))+
+    				(strtoull(h.c_str(),0,0)*(3600))+
+						(strtoull(m.c_str(),0,0)*(60))+
+						(strtoull(s.c_str(),0,0));
     	toff*=1000*((sign=="-")?-1:1);
     	toff+=(strtoul(s.c_str(),0,0));
     	uint64_t ret=chaos::common::utility::TimingUtil::getTimeStamp();
     	ret+=toff;
-    	DBGET<<"offset "<<off<<" offset epoch: "<<std::dec<<ret;
+    	//DBGET<<"offset "<<off<<" offset epoch: "<<std::dec<<ret;
     	return ret;
     }
-    return 0;
+    namespace bt = boost::posix_time;
+    const std::locale formats[] = {
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y/%m/%d %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%d.%m.%Y %H:%M:%S")),
+    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d"))};
+    const int formats_n = sizeof(formats)/sizeof(formats[0]);
+    bt::ptime pt;
+    for(int i=0; i<formats_n; ++i){
+            std::istringstream is(off);
+            is.imbue(formats[i]);
+            is >> pt;
+            if(pt != bt::ptime()) break;
+    }
+    bt::ptime timet_start(boost::gregorian::date(1970,1,1));
+    bt::time_duration diff = pt - timet_start;
+    return (diff.ticks()/bt::time_duration::rep_type::ticks_per_second)*1000;
+
 }
+
+int32_t ChaosController::queryHistory(const std::string& start,const std::string& end,int channel,std::vector<boost::shared_ptr<CDataWrapper> >&res, int page){
+	uint64_t start_ts=offsetToTimestamp(start);
+	uint64_t end_ts=offsetToTimestamp(end);
+	int32_t ret=0,err=0;
+	chaos::common::io::QueryCursor *query_cursor = NULL;
+	if(page==0){
+		controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+		if(query_cursor==NULL){
+			CTRLERR_<<" error during intervall query, no cursor available";
+			return -1;
+		}
+		while ((query_cursor->hasNext())) {
+					boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+					res.push_back(q_result);
+		}
+
+	} else {
+		int cnt=0;
+		controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor,page);
+		if(query_cursor==NULL){
+			CTRLERR_<<" error during intervall query, no cursor available";
+			return -1;
+		}
+
+		while ((query_cursor->hasNext())&&(cnt < page)) {
+			boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+			res.push_back(q_result);
+			cnt++;
+		}
+		if ((query_cursor->hasNext())) {
+			qc_t q_nfo;
+			q_nfo.qt = reqtime/1000;
+			q_nfo.qc=query_cursor;
+			query_cursor_map[++queryuid] = q_nfo;
+			return queryuid;
+		}
+	}
+	if(query_cursor && (err=query_cursor->getError())){
+		controller->releaseQuery(query_cursor);
+		return -abs(err);
+	} else {
+		controller->releaseQuery(query_cursor);
+	}
+	return 0;
+}
+
+int32_t ChaosController::queryNext(int32_t uid,std::vector<boost::shared_ptr<CDataWrapper> >&res){
+	chaos::common::io::QueryCursor *query_cursor = NULL;
+	int cnt,err;
+	if (query_cursor_map.find(uid) != query_cursor_map.end()) {
+		query_cursor = query_cursor_map[uid].qc;
+		query_cursor_map[uid].qt = reqtime/1000;
+		if (query_cursor) {
+			cnt = 0;
+			uint32_t page = query_cursor->getPageLen();
+			if(query_cursor->hasNext()){
+				boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+				if(err=query_cursor->getError()){
+					query_cursor_map.erase(query_cursor_map.find(uid));
+					controller->releaseQuery(query_cursor);
+					return -abs(err);
+				} else {
+					res.push_back(q_result);
+					if(!query_cursor->hasNext()){
+						query_cursor_map.erase(query_cursor_map.find(uid));
+						controller->releaseQuery(query_cursor);
+						return 0;
+					}
+					return uid;
+				}
+			} else {
+				query_cursor_map.erase(query_cursor_map.find(uid));
+				controller->releaseQuery(query_cursor);
+				return 0;
+			}
+		}
+	}
+	CTRLERR_<<" no cursor available with uid "<<uid;
+
+	return -1;
+}
+
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
 	int err;
 	boost::mutex::scoped_lock(ioctrl);
@@ -1858,7 +1967,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				chaos::common::data::CDataWrapper*data;
 				DBGET << "START QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
 
-				controller->executeTimeIntervallQuery(KeyDataStorageDomainOutput, start_ts, end_ts, &query_cursor);
+				controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
 				bool n = query_cursor->hasNext();
 				if (query_cursor) {
 					DBGET << "not paged query start:" << start_ts << " end:" << end_ts << " has next: " << (query_cursor->hasNext());

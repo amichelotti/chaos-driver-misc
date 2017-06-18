@@ -226,7 +226,18 @@ private:
     int updateState();
     uint64_t checkHB();
     chaos::common::data::CDataWrapper*fetch(int channel);
-      	const std::string& fetchJson(int channel);
+    const std::string& fetchJson(int channel);
+    /*
+     * perform a history query from start to end, return a vector of result
+     * @param[in] start epoch timestamp in ms or string offset start search
+     *  @param[in] end epoch timestamp in ms or string offset end search
+     *  @param[out] res result
+     *  @param[in]  page page len =o if full search
+     *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
+     * */
+    int32_t queryHistory(const std::string& start,const std::string& end,int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page=0);
+    int32_t queryNext(int32_t id,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res);
+
 
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
