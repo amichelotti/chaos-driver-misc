@@ -5,7 +5,6 @@
  * Created on September 10, 2015, 11:24 AM
  */
 
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 #include <driver/misc/core/ChaosController.h>
 #include "rootUtil.h"
 using namespace std;
@@ -78,7 +77,7 @@ static void createBranch(TTree* tr,const std::string&prefix,const std::string& k
 						  varname<<"/D";
 
 		}
-		 LDBG_<<"create ROOT BRANCH \""<<brname<<"\""<< "variable:\""<<varname<<"\"";
+		LDBG_<<"create ROOT BRANCH \""<<brname<<"\""<< "variable:\""<<varname.str()<<"\"";
 
 		  tr->Branch(brname.c_str(),(void*)cd->getRawValuePtr(key),varname.str().c_str());
 		  tr->Fill();
