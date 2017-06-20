@@ -996,7 +996,9 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 			return -1;
 		}
 		while ((query_cursor->hasNext())) {
+
 					boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+
 					res.push_back(q_result);
 		}
 
@@ -1028,6 +1030,17 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 		controller->releaseQuery(query_cursor);
 	}
 	return 0;
+}
+bool ChaosController::queryHasNext(int32_t uid){
+	chaos::common::io::QueryCursor *query_cursor = NULL;
+	if (query_cursor_map.find(uid) != query_cursor_map.end()) {
+			query_cursor = query_cursor_map[uid].qc;
+			query_cursor_map[uid].qt = reqtime/1000;
+			if (query_cursor) {
+				return query_cursor->hasNext();
+			}
+	}
+	return false;
 }
 
 int32_t ChaosController::queryNext(int32_t uid,std::vector<boost::shared_ptr<CDataWrapper> >&res){

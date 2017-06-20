@@ -20,17 +20,6 @@ ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
 TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 
-IF (CERN_ROOT)
-  IF (NOT CERN_ROOT_PREFIX)
-    SET(CERN_ROOT_PREFIX ${CMAKE_INSTALL_PREFIX})
-  ENDIF()
-  INCLUDE_DIRECTORIES(${CERN_ROOT_PREFIX}/include)
-  LINK_DIRECTORIES(${CERN_ROOT_PREFIX}/lib)
- 
-  ADD_EXECUTABLE(chaosRoot test/testRootCern.cpp models/cernRoot/rootUtil.cpp)
-  TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} )
-  INSTALL_TARGETS(/bin chaosRoot) 
-ENDIF()
 
 INSTALL_TARGETS(/bin testSumOperatorUI)
 
