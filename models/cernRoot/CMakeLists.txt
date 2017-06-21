@@ -9,8 +9,8 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CERN_ROOT_PREFIX}/include)
 LINK_DIRECTORIES(${CERN_ROOT_PREFIX}/lib)
 
-ADD_LIBRARY(${PROJECT_NAME} SHARED rootUtil.cpp)
-ADD_EXECUTABLE(chaosRoot chaosRoot.cpp)
+ADD_LIBRARY(${PROJECT_NAME} SHARED rootUtil.cpp chaos.cxx)
+ADD_EXECUTABLE(chaosRoot chaosRoot.cpp )
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_driver_misc chaos_metadata_service_client  chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ) 
 #TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ) 

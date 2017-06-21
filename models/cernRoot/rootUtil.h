@@ -4,6 +4,7 @@
 #ifndef __ROOT_UTIL__
 #define __ROOT_UTIL__
 #include "TTree.h"
+
 namespace chaos{
 	namespace common{
 		namespace data{
@@ -11,7 +12,6 @@ namespace chaos{
 		}
 	}
 }
-
 
 
 TTree* buildTree(const std::string& name,const std::string& desc,const std::string &prefix,chaos::common::data::CDataWrapper*cd);

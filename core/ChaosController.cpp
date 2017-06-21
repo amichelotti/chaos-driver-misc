@@ -684,9 +684,9 @@ ChaosController::~ChaosController() {
 
 
 
-chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*> set) {
+boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*> set) {
 	std::map<int, chaos::common::data::CDataWrapper* >::iterator i;
-	chaos::common::data::CDataWrapper*data=NULL;
+	boost::shared_ptr<chaos::common::data::CDataWrapper> data;
 	chaos::common::data::CDataWrapper resdata;
 	uint64_t time_stamp = boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
 	resdata.addStringValue("name", getPath());
@@ -696,7 +696,7 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 		if (i->second) {
 			data = normalizeToJson(i->second, binaryToTranslate);
 			//out<<",\"input\":"<<data->getJSONString();
-			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *data);
+			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *(data.get()));
 		} else {
 			std::stringstream ss;
 			chaos::common::data::CDataWrapper empty;
@@ -708,7 +708,7 @@ chaos::common::data::CDataWrapper*ChaosController::combineDataSets(std::map<int,
 			//return bundle_state.getData();
 		}
 	}
-	if(data){
+	if(data.get()){
 		data->reset();
 		data->appendAllElement(resdata);
 	//	data->appendAllElement(*bundle_state.getData());
@@ -722,10 +722,10 @@ const std::string&  ChaosController::fetchJson(int channel){
 	return cachedJsonChannels[channel];
 }
 
-chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
+boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int channel) {
 //	boost::mutex::scoped_lock(iomutex);
 
-	 chaos::common::data::CDataWrapper* retdata=NULL;
+	 boost::shared_ptr<chaos::common::data::CDataWrapper> retdata;
 	try {
 		if (channel == -1) {
 			chaos::common::data::CDataWrapper* idata = NULL, *odata = NULL;
@@ -758,9 +758,11 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 
 			if (controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel,&data) !=0 ) {
 				std::stringstream ss;
+				retdata.reset(new CDataWrapper());
 				ss << "error fetching data from channel " << channel;
 				bundle_state.append_error(ss.str());
-				return bundle_state.getData();
+				retdata->appendAllElement(*bundle_state.getData());
+				return retdata;
 			}
 			retdata = normalizeToJson(&data, binaryToTranslate);
 		}
@@ -772,14 +774,18 @@ chaos::common::data::CDataWrapper* ChaosController::fetch(int channel) {
 
 	} catch (chaos::CException& e) {
 		std::stringstream ss;
+		retdata.reset(new CDataWrapper());
 		ss << "exception fetching data from channel " << channel << " \"" << e.what() << "\"";
 		bundle_state.append_error(ss.str());
-		return bundle_state.getData();
+		retdata->appendAllElement(*bundle_state.getData());
+		return retdata;
 	}
-	if(retdata){
+	if(retdata.get()){
 		retdata->appendAllElement(*bundle_state.getData());
 	} else {
-		return bundle_state.getData();
+		retdata.reset(new CDataWrapper());
+		retdata->appendAllElement(*bundle_state.getData());
+
 	}
 	return retdata;
 }
@@ -998,8 +1004,8 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 		while ((query_cursor->hasNext())) {
 
 					boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
-
-					res.push_back(q_result);
+					boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
+					res.push_back(cd);
 		}
 
 	} else {
@@ -1012,7 +1018,8 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 
 		while ((query_cursor->hasNext())&&(cnt < page)) {
 			boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
-			res.push_back(q_result);
+			boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
+			res.push_back(cd);
 			cnt++;
 		}
 		if ((query_cursor->hasNext())) {
@@ -1059,7 +1066,8 @@ int32_t ChaosController::queryNext(int32_t uid,std::vector<boost::shared_ptr<CDa
 					controller->releaseQuery(query_cursor);
 					return -abs(err);
 				} else {
-					res.push_back(q_result);
+					boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
+					res.push_back(cd);
 					if(!query_cursor->hasNext()){
 						query_cursor_map.erase(query_cursor_map.find(uid));
 						controller->releaseQuery(query_cursor);
@@ -1829,15 +1837,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "readout" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
 			std::string var_name=args;
-			chaos::common::data::CDataWrapper*data = fetch(KeyDataStorageDomainOutput);
-			json_buf = dataset2Var(data,var_name);
+			boost::shared_ptr<chaos::common::data::CDataWrapper> data = fetch(KeyDataStorageDomainOutput);
+			json_buf = dataset2Var(data.get(),var_name);
 			return CHAOS_DEV_OK;
 
 		} else if (cmd == "readin" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
 			std::string var_name=args;
-			chaos::common::data::CDataWrapper*data = fetch(KeyDataStorageDomainInput);
-			json_buf = dataset2Var(data,var_name);
+			boost::shared_ptr<chaos::common::data::CDataWrapper> data = fetch(KeyDataStorageDomainInput);
+			json_buf = dataset2Var(data.get(),var_name);
 			return CHAOS_DEV_OK;
 
 		} else if (cmd == "queryhst" && (args != 0)) {
@@ -1914,7 +1922,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						cnt = 0;
 						bool n = query_cursor->hasNext();
 						res << "{\"data\":[";
-						chaos::common::data::CDataWrapper*data;
+						boost::shared_ptr<chaos::common::data::CDataWrapper> data;
 						DBGET << "paged query start:" <<std::dec<< start_ts << " end:" << end_ts << " page uid " << queryuid << " has next:" << n;
 						current_query = queryuid;
 
@@ -1924,7 +1932,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						//	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
 							data = normalizeToJson(q_result.get(), binaryToTranslate);
 							if (var_name.size() && data->hasKey(var_name)) {
-								res << dataset2Var(data,var_name);
+								res << dataset2Var(data.get(),var_name);
 							} else {
 								res << data->getJSONString();
 							}
@@ -1977,7 +1985,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				json_buf = res.str();
 				return CHAOS_DEV_OK;
 			} else {
-				chaos::common::data::CDataWrapper*data;
+				boost::shared_ptr<chaos::common::data::CDataWrapper> data;
 				DBGET << "START QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
 
 				controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
@@ -1992,7 +2000,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
 						data = normalizeToJson(q_result.get(), binaryToTranslate);
 						if (var_name.size() && data->hasKey(var_name)) {
-							res << dataset2Var(data,var_name);
+							res << dataset2Var(data.get(),var_name);
 						} else {
 							res << data->getJSONString();
 						}
@@ -2052,7 +2060,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "queryhstnext") {
 			chaos::common::io::QueryCursor *query_cursor = NULL;
 			chaos_data::CDataWrapper p;
-			chaos_data::CDataWrapper* data;
+			boost::shared_ptr<CDataWrapper> data;
 			p.setSerializedJsonData(args);
 			std::stringstream res;
 			bool clear_req = false;
@@ -2088,7 +2096,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
 						data = normalizeToJson(q_result.get(), binaryToTranslate);
 						if (var_name.size() && data->hasKey(var_name)) {
-							res << dataset2Var(data,var_name);
+							res << dataset2Var(data.get(),var_name);
 						} else {
 							res << data->getJSONString();
 						}
@@ -2391,11 +2399,12 @@ int ChaosController::updateState() {
 	return (int) state;
 }
 
-chaos::common::data::CDataWrapper* ChaosController::normalizeToJson(chaos::common::data::CDataWrapper*src, std::map<std::string, int>& list) {
-	data_out.reset();
+boost::shared_ptr<chaos::common::data::CDataWrapper>  ChaosController::normalizeToJson(chaos::common::data::CDataWrapper*src, std::map<std::string, int>& list) {
+	boost::shared_ptr<chaos::common::data::CDataWrapper> data_res(new CDataWrapper());
+
   if (list.empty()){
-	data_out.appendAllElement(*src);
-    return &data_out;
+	 data_res->appendAllElement(*src);
+    return data_res;
   }
 
 	std::vector<std::string> contained_key;
@@ -2414,9 +2423,9 @@ chaos::common::data::CDataWrapper* ChaosController::normalizeToJson(chaos::commo
 					//  if(data[cnt]<1.0e-308)data[cnt]=1.0e-208;
 					//  else
 					//    if(data[cnt]>1.0e+308)data[cnt]=1.0e+308;
-					data_out.appendDoubleToArray(data[cnt]);
+					data_res->appendDoubleToArray(data[cnt]);
 				}
-				data_out.finalizeArrayForKey(rkey->first);
+				data_res->finalizeArrayForKey(rkey->first);
 
 			} else if (rkey->second == chaos::DataType::SUB_TYPE_INT32) {
 				int cnt;
@@ -2424,33 +2433,33 @@ chaos::common::data::CDataWrapper* ChaosController::normalizeToJson(chaos::commo
 				int size = src->getValueSize(rkey->first);
 				int elems = size / sizeof (int32_t);
 				for (cnt = 0; cnt < elems; cnt++) {
-					data_out.appendInt32ToArray(data[cnt]);
+					data_res->appendInt32ToArray(data[cnt]);
 				}
-				data_out.finalizeArrayForKey(rkey->first);
+				data_res->finalizeArrayForKey(rkey->first);
 			} else if (rkey->second == chaos::DataType::SUB_TYPE_INT64) {
 				int cnt;
 				int64_t *data = (int64_t*) src->getRawValuePtr(rkey->first);
 				int size = src->getValueSize(rkey->first);
 				int elems = size / sizeof (int64_t);
 				for (cnt = 0; cnt < elems; cnt++) {
-					data_out.appendInt64ToArray(data[cnt]);
-					//  data_out.appendDoubleToArray(data[cnt]);
+					data_res->appendInt64ToArray(data[cnt]);
+					//  data_res->appendDoubleToArray(data[cnt]);
 				}
-				data_out.finalizeArrayForKey(rkey->first);
+				data_res->finalizeArrayForKey(rkey->first);
 			}/*else if(rkey->second ==chaos::DataType::TYPE_INT64) {
-	      data_out.addDoubleValue(rkey->first,(double)src->getInt64Value(rkey->first));
+	      data_res->addDoubleValue(rkey->first,(double)src->getInt64Value(rkey->first));
 	      }*/ else {
 	    	  // LDBG_ << "adding not translated key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
-	    	  data_out.appendAllElement(*src->getCSDataValue(*k));
-	    	  src->copyKeyTo(*k, data_out);
+	    	  data_res->appendAllElement(*src->getCSDataValue(*k));
+	    	  src->copyKeyTo(*k,  *data_res.get());
 	      }
 		} else {
 			//LDBG_ << "adding normal key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
-			src->copyKeyTo(*k, data_out);
+			src->copyKeyTo(*k, *data_res.get());
 
 		}
 	}
-	return &data_out;
+	return data_res;
 }
 
 ChaosController::dev_info_status::dev_info_status() {

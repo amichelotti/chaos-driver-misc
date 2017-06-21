@@ -225,7 +225,7 @@ private:
      */
     int updateState();
     uint64_t checkHB();
-    chaos::common::data::CDataWrapper*fetch(int channel);
+    boost::shared_ptr<chaos::common::data::CDataWrapper> fetch(int channel);
     const std::string& fetchJson(int channel);
     /*
      * perform a history query from start to end, return a vector of result
@@ -243,10 +243,10 @@ private:
 
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
-      chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
+      boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
 
-    chaos::common::data::CDataWrapper*combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
+      boost::shared_ptr<chaos::common::data::CDataWrapper> combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
 
 
 };
