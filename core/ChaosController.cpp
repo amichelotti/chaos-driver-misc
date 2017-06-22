@@ -332,9 +332,9 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	std::vector<chaos::common::data::RangeValueInfo> vi = controller->getDeviceValuesInfo();
 	for (std::vector<chaos::common::data::RangeValueInfo>::iterator i = vi.begin(); i != vi.end(); i++) {
 		DBGET << "attr_name:" << i->name << "type:" << i->valueType;
-		if ((i->valueType == chaos::DataType::TYPE_BYTEARRAY) && (i->binType != chaos::DataType::SUB_TYPE_NONE)) {
-			binaryToTranslate.insert(std::make_pair(i->name, i->binType));
-			DBGET << i->name << " is binary of type:" << i->binType;
+		if ((i->valueType == chaos::DataType::TYPE_BYTEARRAY) && i->binType.size()&&(i->binType[0] != chaos::DataType::BinarySubtype::SUB_TYPE_NONE)) {
+			binaryToTranslate.insert(std::make_pair(i->name, i->binType[0]));
+			DBGET << i->name << " is binary of type:" << i->binType[0];
 		} /*else if((i->valueType==chaos::DataType::TYPE_INT64)){
 	binaryToTranslate.insert(std::make_pair(i->name,i->valueType));
 	DBGET << i->name<<" is of type64 :"<<i->valueType;

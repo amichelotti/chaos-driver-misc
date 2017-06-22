@@ -119,7 +119,7 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
 
     resize(attr_size);
     
-    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": ((attr_type.dir == chaos::DataType::Output)?"Output":"Other"))<<")";
+    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType[0]<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": ((attr_type.dir == chaos::DataType::Output)?"Output":"Other"))<<")";
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }

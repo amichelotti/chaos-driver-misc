@@ -104,7 +104,7 @@ public:
     std::string getDesc(){return attr_desc;}
     chaos::common::data::RangeValueInfo& getValueInfo(){return attr_type;}
     chaos::DataType::DataType getType(){return attr_type.valueType;}
-    chaos::DataType::BinarySubtype getBinaryType(){return attr_type.binType;}
+    chaos::common::data::VectorBinSubtype getBinaryType(){return attr_type.binType;}
 
     chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
