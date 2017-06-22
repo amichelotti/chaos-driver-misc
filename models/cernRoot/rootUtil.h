@@ -19,7 +19,7 @@
  * @parm pageLen[in] perform a paged query (0, means no paging), in case of paged query queryNextChaosTree must be used to retrieve successive elements.
  * @return the tree on success, 0 otherwise
  * */
-TTree* queryChaosTree(const std::string&chaosNode,const std::string& start,const std::string&end,const int channel,const std::string treeid="",const std::string desc="",int pageLen=0 );
+TTree* queryChaosTree(const std::string&chaosNode,const std::string& start,const std::string&end,const int channel,const std::string& treeid="",const std::string& desc="",int pageLen=0 );
 /**
  * Append to an existing Tree the data retrived
  * performs a time interval search of data

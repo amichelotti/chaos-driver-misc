@@ -15,17 +15,18 @@ using namespace chaos::metadata_service_client;
 
 using namespace chaos::common::data;
 using namespace driver::misc;
-typedef struct {
-	TTree* associated;
-	uint32_t page_uid;
-	int32_t channel;
-	uint32_t page;
-	bool treeAllocated;
-	char* branchBuffer;
-	int32_t size;
-	std::string branchContent;
-	std::string brname;
-	ChaosController*ctrl;
+typedef struct treeQuery{
+  TTree* associated;
+  uint32_t page_uid;
+  int32_t channel;
+  uint32_t page;
+  bool treeAllocated;
+  char* branchBuffer;
+  int32_t size;
+  std::string branchContent;
+  std::string brname;
+  ChaosController*ctrl;
+  treeQuery(){associated=NULL;size=0;ctrl=NULL;branchBuffer=NULL;}
 } treeQuery_t;
 
 static std::map<TTree*, treeQuery_t> queries;
@@ -184,7 +185,7 @@ static void createBranch(TTree* tr, const std::string&prefix,
 #endif
 static TTree* buildTree(const std::string& name, const std::string& desc) {
 	TTree* tr = new TTree(name.c_str(), desc.c_str());
-	LDBG_<<"create ROOT TREE \""<<name<<"\""<< "desc:\""<<desc<<"\"";
+	LDBG_<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\"";
 
 	if (tr == NULL) {
 		LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree  \""<<name<<"\"";
@@ -237,8 +238,9 @@ static int addTree(treeQuery_t& query, chaos::common::data::CDataWrapper*cd) {
 
 			query.size+=cd->getValueSize(*it);
 		}
-		query.associated->Fill();
+	
 	}
+	query.associated->Fill();
 	return 0;
 }
 TTree* queryChaosTree(TTree* tree_ret, const std::string&chaosNode,
@@ -282,6 +284,7 @@ TTree* queryChaosTree(TTree* tree_ret, const std::string&chaosNode,
 		q.ctrl = ctrl;
 		q.channel = channel;
 		queries[tree_ret] = q;
+		createBranch(q,res[0].get());
 		for (std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
 				res.begin(); i != res.end(); i++) {
 			addTree(q, i->get());
@@ -303,7 +306,7 @@ TTree* queryChaosTree(TTree* tree_ret, const std::string&chaosNode,
 }
 
 TTree* queryChaosTree(const std::string&chaosNode, const std::string& start,
-		const std::string&end, const int channel, const std::string branchid,
+		      const std::string&end, const int channel, const std::string& branchid,const std::string& desc,
 		int pageLen) {
 	return queryChaosTree((TTree*) NULL, chaosNode, start, end, channel, branchid,"",
 			pageLen);
