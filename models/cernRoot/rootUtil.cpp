@@ -41,18 +41,24 @@ static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd)
 		query.branchBuffer=0;
 	}
 	query.size=0;
+
 	for (std::vector<std::string>::iterator it = contained_key.begin();
 			it != contained_key.end(); it++) {
-		varname << *it;
+		int found=0;
+
 		int type_size = CDataWrapperTypeDouble;
 		if (cd->isVector(*it)) {
 			int size = 0;
 			CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+			varname << *it;
+
 			varname << "[" << da->size() << "]";
+			found++;
 			if (da->size()) {
 				if (da->isDoubleElementAtIndex(0)) {
 					type_size = CDataWrapperTypeDouble;
 					query.size+=da->size()*sizeof(double);
+
 				} else if (da->isInt32ElementAtIndex(0)) {
 					type_size = CDataWrapperTypeInt32;
 					query.size+=da->size()*sizeof(int32_t);
@@ -67,9 +73,22 @@ static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd)
 
 				}
 			}
+			LDBG_<<" BELE "<<varname<<" tot size:"<<query.size;
+
 		} else {
-			type_size = cd->getValueType(*it);
-			query.size+=cd->getValueSize(*it);
+			if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
+
+				type_size = cd->getValueType(*it);
+				query.size+=cd->getValueSize(*it);
+
+				/*if((type_size==CDataWrapperTypeString)){
+					int ret;
+					if(!(ret=(cd->getValueSize(*it)%4))){
+						query.size+=ret;
+					}
+				}*/
+				LDBG_<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query.size;
+			}
 		}
 		switch (type_size) {
 		case CDataWrapperTypeNoType:
@@ -77,22 +96,32 @@ static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd)
 		case CDataWrapperTypeNULL:
 			break;
 		case CDataWrapperTypeBool:
+			varname << *it;
 			varname << "/O";
+			found++;
 			break;
 		case CDataWrapperTypeInt32:
+			found++;
+			varname << *it;
 			varname << "/I";
 
 			break;
 		case CDataWrapperTypeInt64:
+			found++;
+			varname << *it;
 			varname << "/L";
 
 			break;
 		case CDataWrapperTypeDouble:
+			found++;
+			varname << *it;
 			varname << "/D";
 
 			break;
 		case CDataWrapperTypeString:
-			varname << "/C";
+	//		found++;
+	//		varname << *it;
+	//		varname << "/C";
 
 			break;
 		case CDataWrapperTypeBinary:
@@ -102,17 +131,16 @@ static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd)
 		case CDataWrapperTypeVector:
 			break;
 		default:
-			varname << "/D";
-
+			break;
 		}
-		if((it+1)!= contained_key.end()){
+		if(found &&( (it+1)!= contained_key.end())){
 			varname<<":";
 		}
 	}
 	query.branchContent=varname.str();
 	query.branchBuffer=(char*)malloc(query.size);
 	query.associated->Branch(query.brname.c_str(), (void*)query.branchBuffer,varname.str().c_str());
-	LDBG_<<"create ROOT BRANCH \""<<query.brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query.size;
+	LDBG_<<"create ROOT BRANCH \""<<query.brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query.size<<" address 0x"<<std::hex<<(uint64_t)query.branchBuffer<<std::dec;
 
 	return query.size;
 }
@@ -234,12 +262,23 @@ static int addTree(treeQuery_t& query, chaos::common::data::CDataWrapper*cd) {
 						}
 					}
 		} else {
-			memcpy(query.branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+			//LDBG_<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
+			switch(cd->getValueType(*it)){
+			case CDataWrapperTypeDouble:
+			case CDataWrapperTypeInt64:
+			case CDataWrapperTypeBool:
+			case CDataWrapperTypeInt32:{
+				memcpy(query.branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+				ptr+=cd->getValueSize(*it);
+				break;
+			}
+			}
 
-			query.size+=cd->getValueSize(*it);
 		}
 	
 	}
+	LDBG_<<" WRITE ELE "<<query.brname<<" tot size:"<<ptr <<" address 0x"<<std::hex<<(uint64_t)query.branchBuffer<<std::dec;;
+
 	query.associated->Fill();
 	return 0;
 }
