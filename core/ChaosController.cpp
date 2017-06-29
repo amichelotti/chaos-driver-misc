@@ -1003,7 +1003,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 		}
 		while ((query_cursor->hasNext())) {
 
-					boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+			ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 					boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
 					res.push_back(cd);
 		}
@@ -1017,7 +1017,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 		}
 
 		while ((query_cursor->hasNext())&&(cnt < page)) {
-			boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+			ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 			boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
 			res.push_back(cd);
 			cnt++;
@@ -1060,7 +1060,7 @@ int32_t ChaosController::queryNext(int32_t uid,std::vector<boost::shared_ptr<CDa
 			cnt = 0;
 			uint32_t page = query_cursor->getPageLen();
 			if(query_cursor->hasNext()){
-				boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+				ChaosSharedPtr<CDataWrapper>q_result(query_cursor->next());
 				if(err=query_cursor->getError()){
 					query_cursor_map.erase(query_cursor_map.find(uid));
 					controller->releaseQuery(query_cursor);
@@ -1928,7 +1928,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 						while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
-							boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+							ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 						//	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
 							data = normalizeToJson(q_result.get(), binaryToTranslate);
 							if (var_name.size() && data->hasKey(var_name)) {
@@ -1997,7 +1997,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 					while ((query_cursor->hasNext())&& (cnt < limit)) {
 
-						boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+						ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 						data = normalizeToJson(q_result.get(), binaryToTranslate);
 						if (var_name.size() && data->hasKey(var_name)) {
 							res << dataset2Var(data.get(),var_name);
@@ -2093,7 +2093,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					res << "{\"data\":[";
 
 					while ((query_cursor->hasNext())&&(cnt < page)) {
-						boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+						ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 						data = normalizeToJson(q_result.get(), binaryToTranslate);
 						if (var_name.size() && data->hasKey(var_name)) {
 							res << dataset2Var(data.get(),var_name);
@@ -2146,7 +2146,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (query_cursor) {
 				uint32_t exported = 0;
 				if (query_cursor->hasNext()) {
-					boost::shared_ptr<CDataWrapper> q_result(query_cursor->next());
+					ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
 					json_buf = q_result->getJSONString();
 					return CHAOS_DEV_OK;
 
