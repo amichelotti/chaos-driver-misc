@@ -73,7 +73,7 @@ static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd)
 
 				}
 			}
-			LDBG_<<" BELE "<<varname<<" tot size:"<<query.size;
+			//	LDBG_<<" BELE "<<varname<<" tot size:"<<query.size;
 
 		} else {
 			if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
