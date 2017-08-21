@@ -12,7 +12,7 @@
 #ifdef __CHAOS_UI__
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #else
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 
 #endif
 using namespace ::driver::misc;

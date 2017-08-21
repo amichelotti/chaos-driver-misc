@@ -6,20 +6,20 @@
  */
 
 #include "ChaosController.h"
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
-#include <ChaosMetadataServiceClient/api_proxy/unit_server/NewUS.h>
-#include <ChaosMetadataServiceClient/api_proxy/unit_server/DeleteUS.h>
-#include <ChaosMetadataServiceClient/api_proxy/unit_server/GetSetFullUnitServer.h>
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/NewUS.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/DeleteUS.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/GetSetFullUnitServer.h>
 
-#include <ChaosMetadataServiceClient/api_proxy/unit_server/ManageCUType.h>
-#include <ChaosMetadataServiceClient/api_proxy/service/SetSnapshotDatasetsForNode.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/ManageCUType.h>
+#include <chaos_metadata_service_client/api_proxy/service/SetSnapshotDatasetsForNode.h>
 
-#include <ChaosMetadataServiceClient/api_proxy/control_unit/SetInstanceDescription.h>
-#include <ChaosMetadataServiceClient/api_proxy/control_unit/Delete.h>
-#include <ChaosMetadataServiceClient/api_proxy/control_unit/DeleteInstance.h>
-#include <ChaosMetadataServiceClient/api_proxy/agent/agent.h>
-#include <ChaosMetadataServiceClient/api_proxy/logging/logging.h>
+#include <chaos_metadata_service_client/api_proxy/control_unit/SetInstanceDescription.h>
+#include <chaos_metadata_service_client/api_proxy/control_unit/Delete.h>
+#include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
+#include <chaos_metadata_service_client/api_proxy/agent/agent.h>
+#include <chaos_metadata_service_client/api_proxy/logging/logging.h>
 
 #include <chaos/common/exception/CException.h>
 #ifdef __CHAOS_UI__
