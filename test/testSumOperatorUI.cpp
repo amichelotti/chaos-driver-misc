@@ -6,7 +6,7 @@
  */
 
 #include <cstdlib>
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 
 #include "ChaosDatasetAttribute.h"
 #include "ChaosDatasetAttributeGroup.h"
