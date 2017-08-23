@@ -5,8 +5,8 @@
  * Created on September 10, 2015, 11:24 AM
  */
 
-#include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
 
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <driver/misc/core/ChaosController.h>
 using namespace std;
 #include "TROOT.h"
