@@ -9,7 +9,7 @@ environment/project/cdt.managedbuild.toolchain.gnu.cross.base.477606046/CHAOS_PR
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.477606046/CHAOS_PREFIX/value=/home/michelo/chaos_bundle_x86_64/chaos-x86_64-dynamic-release
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.477606046/append=true
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.477606046/appendContributed=true
-indexer/indexAllFiles=false
+indexer/indexAllFiles=true
 indexer/indexAllHeaderVersions=false
 indexer/indexAllVersionsSpecificHeaders=
 indexer/indexOnOpen=true
