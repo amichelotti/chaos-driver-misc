@@ -13,7 +13,7 @@ ELSE ()
 ENDIF()
 INCLUDE_DIRECTORIES(./core)
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_client chaos_common common_misc_data common_misc_scheduler uv common_vme vme common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_client chaos_common common_misc_data common_misc_scheduler common_vme vme common_debug ${FrameworkLib})
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 
