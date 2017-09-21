@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 	ChaosMetadataServiceClient::getInstance()->start();
 	 if (0) {
 		 TTree* tt= queryChaosTree("buttami","-3m","-1",0,"");
-		 printf("%x",tt);
+		 printf("%p",tt);
 
 	 }
 	 root_opts[nroot_opts++]=argv[0];
