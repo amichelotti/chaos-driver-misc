@@ -87,8 +87,8 @@ void RTDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
         DPRINT("dynamic adding attribute: %s size :%d dir: %d type:%d",name.c_str(),(*i)->getSize(),(*i)->getDir(),(*i)->getType());
         if((*i)->getType()!=chaos::DataType::TYPE_BYTEARRAY){
             addAttributeToDataSet(name,(*i)->getDesc(),(*i)->getType(),(*i)->getDir());
-        } else if((*i)->getBinaryType()!=chaos::DataType::SUB_TYPE_NONE){
-            addBinaryAttributeAsSubtypeToDataSet(name,(*i)->getDesc(),(*i)->getBinaryType(),(*i)->getSize(),(*i)->getDir());
+        } else if((*i)->getBinaryType()[0]!=chaos::DataType::SUB_TYPE_NONE){
+            addBinaryAttributeAsSubtypeToDataSet(name,(*i)->getDesc(),(*i)->getBinaryType()[0],(*i)->getSize(),(*i)->getDir());
         }
     }
    

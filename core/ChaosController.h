@@ -5,40 +5,58 @@
  * Created on September 2, 2015, 5:29 PM
  */
 
-#ifndef ChaosController_H
-#define	ChaosController_H
+#ifndef __ChaosController_H
+#define	__ChaosController_H
+
+
 #include <map>
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <boost/shared_ptr.hpp>
-#include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
+#include <common/misc/scheduler/SchedTimeElem.h>
+
+#define UI_PREFIX chaos::metadata_service_client::node_controller
+
+
 
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
-#define MDS_TIMEOUT 3000
+#define MDS_TIMEOUT 10000
 #define MDS_STEP_TIMEOUT 1000
 #define MDS_RETRY 3
 #define HEART_BEAT_MAX 60000000
 #define CALC_AVERAGE_REFRESH 5
-#include <common/misc/data/core/DBbaseFactory.h>
 #define DEFAULT_DBTYPE "cassandra"
 #define DEFAULT_DBNAME "chaos"
 #define DEFAULT_DBREPLICATION "2"
 #define DEFAULT_PAGE 1000
 #define MAX_CONCURRENT_QUERY 100
 #define MAX_QUERY_ELEMENTS 1000
+#define QUERY_PAGE_MAX_TIME 1000*60*1 // 1 min
+#define CHECK_HB 10*1000*1000 //10 s
+namespace chaos{
+namespace metadata_service_client{
+	class ChaosMetadataServiceClient;
+namespace node_controller{
+	class CUController;
+
+}
+}
+}
 namespace driver{
     
     namespace misc{
-class ChaosController{
+class ChaosController: public ::common::misc::scheduler::SchedTimeElem {
     
     
 private:
      chaos::common::message::MDSMessageChannel *mdsChannel;
+     chaos::metadata_service_client::ChaosMetadataServiceClient*mds_client;
+     chaos::metadata_service_client::node_controller::CUController* controller;
 
-     chaos::ui::DeviceController* controller;
+     std::vector<std::string> mds_server_l;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
      uint64_t timeo,schedule;
@@ -54,17 +72,33 @@ private:
 
      std::string json_dataset;
      chaos::common::data::CDataWrapper data_out;
-    uint32_t queryuid;
-    typedef std::map<uint64_t,chaos::common::io::QueryCursor *> query_cursor_map_t;
+    std::map<int,std::string> cachedJsonChannels;
 
+
+
+    uint32_t queryuid;
+    boost::mutex iomutex;
+    boost::mutex ioctrl;
+
+    typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
+    uint64_t offsetToTimestamp(const std::string&);
+    typedef std::map<uint64_t,qc_t> query_cursor_map_t;
     query_cursor_map_t query_cursor_map;
      int forceState(int dstState);
      std::map<std::string,std::string> zone_to_cuname;
      std::map<std::string,std::string> class_to_cuname;
 
+     std::vector<std::string> cachedChannel_v;
+
      void parseClassZone(ChaosStringVector&v);
      std::string vector2Json(ChaosStringVector& v);
      std::string map2Json(std::map<uint64_t,std::string> & v);
+     std::string dataset2Var(chaos::common::data::CDataWrapper*c,std::string& name);
+     void cleanUpQuery();
+     void initializeClient();
+     void deinitializeClient();
+     uint64_t  last_ts[DPCK_LAST_DATASET_INDEX+1],delta_update;
+     uint64_t  last_pckid[DPCK_LAST_DATASET_INDEX+1];
 
   public:  
 
@@ -110,7 +144,7 @@ private:
         uint32_t submission_checker_steps_delay;
         uint64_t command_id;
         chaos::common::batch_command::SubmissionRuleType::SubmissionRule sub_rule;
-        command(){priority=50; scheduler_steps_delay=0;submission_checker_steps_delay=0;sub_rule=chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_Kill;}
+        command(){priority=50; scheduler_steps_delay=0;submission_checker_steps_delay=0;sub_rule=chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL;}
 
     };
     
@@ -119,7 +153,7 @@ private:
     ChaosController();
     ChaosController(std::string path,uint32_t timeo=DEFAULT_TIMEOUT_FOR_CONTROLLER);
     
-
+    virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
     
    
@@ -134,7 +168,7 @@ private:
      * @return the state or negative if error
      *  
      */
-    virtual int getState();
+    virtual uint64_t getState( chaos::CUStateKey::ControlUnitState & state);
     virtual uint64_t getTimeStamp();
     /**
      * send a command
@@ -190,12 +224,29 @@ private:
      * @return negative if error
      */
     int updateState();
+    uint64_t checkHB();
+    boost::shared_ptr<chaos::common::data::CDataWrapper> fetch(int channel);
+    const std::string& fetchJson(int channel);
+    /*
+     * perform a history query from start to end, return a vector of result
+     * @param[in] start epoch timestamp in ms or string offset start search
+     *  @param[in] end epoch timestamp in ms or string offset end search
+     *  @param[out] res result
+     *  @param[in]  page page len =o if full search
+     *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
+     * */
+    int32_t queryHistory(const std::string& start,const std::string& end,int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page=0);
+    int32_t queryNext(int32_t id,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res);
+    bool queryHasNext(int32_t id);
+
+
+
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
-      chaos::common::data::CDataWrapper*normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
+      boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
-  	chaos::common::data::CDataWrapper*fetch(int channel);
-    chaos::common::data::CDataWrapper*combineDataSets(std::map<int,chaos::common::data::CDataWrapper*>&);
+
+      boost::shared_ptr<chaos::common::data::CDataWrapper> combineDataSets(std::map<int, chaos::common::data::CDataWrapper*>);
 
 
 };

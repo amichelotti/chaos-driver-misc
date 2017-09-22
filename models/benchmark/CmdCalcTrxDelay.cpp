@@ -9,6 +9,7 @@
 #include "CmdCalcTrxDelay.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <chaos/common/data/cache/AbstractSharedDomainCache.h>
 
 using namespace chaos;
 
@@ -16,6 +17,7 @@ using namespace chaos::common::data;
 
 using namespace chaos::cu::control_manager::slow_command;
 namespace chaos_batch = chaos::common::batch_command;
+using namespace chaos::common::data::cache;
 
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(,CmdCalcTrxDelay,CmdCalcTrxDelay_CMD_ALIAS,
                                     "Start the trx delay (ping)",

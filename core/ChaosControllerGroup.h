@@ -122,19 +122,20 @@ for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++) delete (*i);}
            }
     }
     }
-int getState(){
-    int ret=0,prev=-1;
+uint64_t getState( chaos::CUStateKey::ControlUnitState &state){
+	 chaos::CUStateKey::ControlUnitState ret,prev;
+	 uint64_t rett;
     error=0;
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
-        if((ret=(*i)->T::getState())<0){
+        if((rett=(*i)->T::getState(ret))==0){
             error=*i;
             CTRLERRG_<<" getting state  "<<(*i)->getPath();   
 
-            return ret;
+            return 0;
         }
-        if((prev>-1)&& (prev!=ret) ){
+        if((prev!=ret) ){
             //the states are different
-            return -2;
+            return 0;
         }
         prev=ret;
     }

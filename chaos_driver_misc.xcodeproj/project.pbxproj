@@ -6,402 +6,1685 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		817D73A1117A4FBA876DDE41 /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 064DF17205CF4CD685BAF4E7 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				543FBF366CEC4A23AF132D27 /* CMake Rules */,
+			);
+			dependencies = (
+				1864AFA5E11742FA8FD4A04C /* PBXTargetDependency */,
+				8C8A3F1F8D2D497AB14E3216 /* PBXTargetDependency */,
+				72E6A8B57A2549CE9A6918B5 /* PBXTargetDependency */,
+				8CD5F8ABE53348FA93549BCF /* PBXTargetDependency */,
+				A368A7D1041A4DC4A38666B0 /* PBXTargetDependency */,
+				1954702608DE4911B59A3DCD /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
+		DA4209FEB2B14AAC8BF06D44 /* install */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = DC725F9DF95D43CC8EF17024 /* Build configuration list for PBXAggregateTarget "install" */;
+			buildPhases = (
+				EC46FE4417F94FFFA3780822 /* CMake PostBuild Rules */,
+			);
+			dependencies = (
+				CC060D55887E4F6FAEEE9FBF /* PBXTargetDependency */,
+			);
+			name = install;
+			productName = install;
+		};
+		F7CFA392362541C58F152594 /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = A3813F7E769742C4A1E720C8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				635BA94100464EDB9F59FEA4 /* CMake Rules */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
-		32C25DCE1DB4F97800A46C2B /* ChaosMESS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DC31DB4F97800A46C2B /* ChaosMESS.cpp */; };
-		32C25DCF1DB4F97800A46C2B /* CmdCalcBandwidth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DC51DB4F97800A46C2B /* CmdCalcBandwidth.cpp */; };
-		32C25DD01DB4F97800A46C2B /* CmdCalcTrxDelay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DC71DB4F97800A46C2B /* CmdCalcTrxDelay.cpp */; };
-		32C25DD11DB4F97800A46C2B /* DefaultCommand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DC91DB4F97800A46C2B /* DefaultCommand.cpp */; };
-		32C25DD21DB4F97800A46C2B /* DummyDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DCB1DB4F97800A46C2B /* DummyDriver.cpp */; };
-		32C25DD41DB4F97F00A46C2B /* messMonitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DD31DB4F97F00A46C2B /* messMonitor.cpp */; };
-		32C25DE11DB4FBCA00A46C2B /* messClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C25DE01DB4FBCA00A46C2B /* messClient.cpp */; };
+		01CE7BE402334E05A8262355 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/test/testSumOperatorUI.cpp */ = {isa = PBXBuildFile; fileRef = 3551A6DEBDAC46808139D598 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/test/testSumOperatorUI.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		04C98436AEB342098EDA8FA3 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessDriver.cpp */ = {isa = PBXBuildFile; fileRef = 4EF178719A7B48AC9171321D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessDriver.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		04DD06217B2A403CA0E31BCF /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/ChaosMESS.cpp */ = {isa = PBXBuildFile; fileRef = B907D2BD8D82458EB47F6868 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/ChaosMESS.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		08852C8529BA40B28515EF03 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosController.cpp */ = {isa = PBXBuildFile; fileRef = B6C2CBCF71594FBA9F365DE4 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosController.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		25721285D36C4D79B9EFB73E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTDataSync.cpp */ = {isa = PBXBuildFile; fileRef = AAE1DEBB13D142CC99BBEF41 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTDataSync.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		2907B53251DD4A2080C3D872 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DefaultCommand.cpp */ = {isa = PBXBuildFile; fileRef = FE28BE609F5340C6B3F1ECCF /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DefaultCommand.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		2D19D2E62A5D4A4489D9EB4C /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/SCDataSync.cpp */ = {isa = PBXBuildFile; fileRef = BFA30343CFC74B1385D8A08A /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/SCDataSync.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		30F7B4487791455EBE29C2D9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttribute.cpp */ = {isa = PBXBuildFile; fileRef = 3E3BD5895EAD48718E7EAEDD /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttribute.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		464CE070EC264FD0A30C2A5E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessInterface.cpp */ = {isa = PBXBuildFile; fileRef = 94663BC980744E60BDA12D77 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessInterface.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		4A341CB63760462E9F24268F /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = A48D073232E64662B3EB8DC2 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */; settings = {COMPILER_FLAGS = ""; }; };
+		5832FFF08B5746DFA25D84B9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeGroup.cpp */ = {isa = PBXBuildFile; fileRef = 54E79C70381145B1A29645C8 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeGroup.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		83C4069B91EE49E3BE5D18EB /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messMonitor.cpp */ = {isa = PBXBuildFile; fileRef = CECC373C7036417AB12A96D9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messMonitor.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		8797CDE89B9C42EFA2C654E0 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 145B58DD13414FBCA17D157B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */; settings = {COMPILER_FLAGS = ""; }; };
+		A4B193E4858D4253808760AA /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 6214E8537B6340D9A279FA3B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */; settings = {COMPILER_FLAGS = ""; }; };
+		BDB5F203175945C8A91A5684 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = E7B04CEEEE9443F9BF4B4951 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */; settings = {COMPILER_FLAGS = ""; }; };
+		C2552DD57A38473CA79FB915 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeSinchronizer.cpp */ = {isa = PBXBuildFile; fileRef = 60D6B3BC92D3440390EB2F20 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeSinchronizer.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		C73CCB29C45D436B826C6F6B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcTrxDelay.cpp */ = {isa = PBXBuildFile; fileRef = 06CEF159018C414F9343C73C /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcTrxDelay.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		E350FAC04F63409684FAF865 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcBandwidth.cpp */ = {isa = PBXBuildFile; fileRef = 021D924ED3244605B33872AB /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcBandwidth.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		EA44F8CE7B314D45B5DC4AF3 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/CmdSync.cpp */ = {isa = PBXBuildFile; fileRef = 0FA7390F2A9B47B597087EA9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/CmdSync.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		EC7A7E14DA9A4A88A2884674 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTVme.cpp */ = {isa = PBXBuildFile; fileRef = C4C7C7AAC74544429040DEAC /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTVme.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		EEC03F6E00A84A57B81DB01F /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DummyDriver.cpp */ = {isa = PBXBuildFile; fileRef = 712A279DF1B94CB291174583 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DummyDriver.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		F860CDD5439548AE94651A9E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messClient.cpp */ = {isa = PBXBuildFile; fileRef = 245DD4B8301940E9AB10409D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messClient.cpp */; settings = {COMPILER_FLAGS = ""; }; };
+		FAFF8478EE5E4FA98638B477 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = D2D82F70896846879FC0DB07 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */; settings = {COMPILER_FLAGS = ""; }; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		32C25DA91DB4F88000A46C2B /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+/* Begin PBXBuildStyle section */
+		345E57A9E3EA4C938F55C158 = {
+			isa = PBXBuildStyle;
 		};
-		32C25DD71DB4FBB500A46C2B /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+		7BD4D3B7372E4AE1ABEF7426 /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
 		};
-/* End PBXCopyFilesBuildPhase section */
+		8FFA4BF5A6094FF5B363B436 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+		9A98CFF5B55E4F07BC233213 /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		C3CE4ED37399416A9E469E32 /* RelWithDebInfo */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = RelWithDebInfo;
+		};
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+		18179459494B4E528A6BB3C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7CFA392362541C58F152594;
+			remoteInfo = ZERO_CHECK;
+		};
+		22722EE1F541474FB19A57CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EC7777809FBE4A188DD79334;
+			remoteInfo = MessMonitor;
+		};
+		2DD972C4C62E48AA93E6B182 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EBC909BEC0164EE9A1E95FB3;
+			remoteInfo = chaos_driver_misc_benchmark;
+		};
+		410B8AE9D3E348A89BE516DD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4A7BE10A9F1D43CBB8430B6C;
+			remoteInfo = chaos_driver_misc;
+		};
+		48BBA886D9C44B82A16AA5C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4A7BE10A9F1D43CBB8430B6C;
+			remoteInfo = chaos_driver_misc;
+		};
+		4E0C6F86483B49DE89146698 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5ADD0EB485A2473D871A0874;
+			remoteInfo = testSumOperatorUI;
+		};
+		7C4B12861C0D4EABB7B47012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 323BE1EFF51C4BF99320DAC3;
+			remoteInfo = MessClient;
+		};
+		7D4C2F341BF943FB92A1E140 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7CFA392362541C58F152594;
+			remoteInfo = ZERO_CHECK;
+		};
+		92F19923A98E4C6A9CEC907C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 817D73A1117A4FBA876DDE41;
+			remoteInfo = ALL_BUILD;
+		};
+		955A4E5040FB4C779DDB01B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EBC909BEC0164EE9A1E95FB3;
+			remoteInfo = chaos_driver_misc_benchmark;
+		};
+		C7F70F74B766479DA3A4BF11 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EBC909BEC0164EE9A1E95FB3;
+			remoteInfo = chaos_driver_misc_benchmark;
+		};
+		E828F4AC9BCA49068E35C950 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FED9FA51B1AD462984327212 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F7CFA392362541C58F152594;
+			remoteInfo = ZERO_CHECK;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		32C25DAB1DB4F88000A46C2B /* MessMonitor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MessMonitor; sourceTree = BUILT_PRODUCTS_DIR; };
-		32C25DC31DB4F97800A46C2B /* ChaosMESS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChaosMESS.cpp; path = models/benchmark/ChaosMESS.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DC41DB4F97800A46C2B /* ChaosMESS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChaosMESS.h; path = models/benchmark/ChaosMESS.h; sourceTree = SOURCE_ROOT; };
-		32C25DC51DB4F97800A46C2B /* CmdCalcBandwidth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CmdCalcBandwidth.cpp; path = models/benchmark/CmdCalcBandwidth.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DC61DB4F97800A46C2B /* CmdCalcBandwidth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CmdCalcBandwidth.h; path = models/benchmark/CmdCalcBandwidth.h; sourceTree = SOURCE_ROOT; };
-		32C25DC71DB4F97800A46C2B /* CmdCalcTrxDelay.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CmdCalcTrxDelay.cpp; path = models/benchmark/CmdCalcTrxDelay.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DC81DB4F97800A46C2B /* CmdCalcTrxDelay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CmdCalcTrxDelay.h; path = models/benchmark/CmdCalcTrxDelay.h; sourceTree = SOURCE_ROOT; };
-		32C25DC91DB4F97800A46C2B /* DefaultCommand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DefaultCommand.cpp; path = models/benchmark/DefaultCommand.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DCA1DB4F97800A46C2B /* DefaultCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DefaultCommand.h; path = models/benchmark/DefaultCommand.h; sourceTree = SOURCE_ROOT; };
-		32C25DCB1DB4F97800A46C2B /* DummyDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DummyDriver.cpp; path = models/benchmark/DummyDriver.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DCC1DB4F97800A46C2B /* DummyDriver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DummyDriver.h; path = models/benchmark/DummyDriver.h; sourceTree = SOURCE_ROOT; };
-		32C25DCD1DB4F97800A46C2B /* MessProfilePacketInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessProfilePacketInfo.h; path = models/benchmark/MessProfilePacketInfo.h; sourceTree = SOURCE_ROOT; };
-		32C25DD31DB4F97F00A46C2B /* messMonitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = messMonitor.cpp; path = models/benchmark/test/messMonitor.cpp; sourceTree = SOURCE_ROOT; };
-		32C25DD91DB4FBB500A46C2B /* MessClient */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MessClient; sourceTree = BUILT_PRODUCTS_DIR; };
-		32C25DE01DB4FBCA00A46C2B /* messClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = messClient.cpp; path = models/benchmark/test/messClient.cpp; sourceTree = SOURCE_ROOT; };
+		021D924ED3244605B33872AB /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcBandwidth.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = CmdCalcBandwidth.cpp; path = models/benchmark/CmdCalcBandwidth.cpp; sourceTree = SOURCE_ROOT; };
+		06CEF159018C414F9343C73C /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcTrxDelay.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = CmdCalcTrxDelay.cpp; path = models/benchmark/CmdCalcTrxDelay.cpp; sourceTree = SOURCE_ROOT; };
+		0FA7390F2A9B47B597087EA9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/CmdSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = CmdSync.cpp; path = core/CmdSync.cpp; sourceTree = SOURCE_ROOT; };
+		145B58DD13414FBCA17D157B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		1467C08C2D6B49FF9E1E600E /* MessClient */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = MessClient; sourceTree = BUILT_PRODUCTS_DIR; };
+		245DD4B8301940E9AB10409D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messClient.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = messClient.cpp; path = models/benchmark/test/messClient.cpp; sourceTree = SOURCE_ROOT; };
+		3551A6DEBDAC46808139D598 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/test/testSumOperatorUI.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = testSumOperatorUI.cpp; path = test/testSumOperatorUI.cpp; sourceTree = SOURCE_ROOT; };
+		355C844EADB94C3693044454 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		36D7AC6FC580482B8F2AD4D1 /* MessMonitor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = MessMonitor; sourceTree = BUILT_PRODUCTS_DIR; };
+		3E3BD5895EAD48718E7EAEDD /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttribute.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ChaosDatasetAttribute.cpp; path = core/ChaosDatasetAttribute.cpp; sourceTree = SOURCE_ROOT; };
+		41846FCB1418439BBF23B21D /* testSumOperatorUI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = testSumOperatorUI; sourceTree = BUILT_PRODUCTS_DIR; };
+		4EF178719A7B48AC9171321D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessDriver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = remoteGroupAccessDriver.cpp; path = core/remoteGroupAccessDriver.cpp; sourceTree = SOURCE_ROOT; };
+		4F4835EFCEAD476ABB423A7D /* chaos_driver_misc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libchaos_driver_misc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		54E79C70381145B1A29645C8 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeGroup.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ChaosDatasetAttributeGroup.cpp; path = core/ChaosDatasetAttributeGroup.cpp; sourceTree = SOURCE_ROOT; };
+		60D6B3BC92D3440390EB2F20 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeSinchronizer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ChaosDatasetAttributeSinchronizer.cpp; path = core/ChaosDatasetAttributeSinchronizer.cpp; sourceTree = SOURCE_ROOT; };
+		6214E8537B6340D9A279FA3B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = models/benchmark/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		712A279DF1B94CB291174583 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DummyDriver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DummyDriver.cpp; path = models/benchmark/DummyDriver.cpp; sourceTree = SOURCE_ROOT; };
+		74F8832E54A04FC2A21F19EA /* chaos_driver_misc_benchmark */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libchaos_driver_misc_benchmark.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		94663BC980744E60BDA12D77 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessInterface.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = remoteGroupAccessInterface.cpp; path = core/remoteGroupAccessInterface.cpp; sourceTree = SOURCE_ROOT; };
+		A48D073232E64662B3EB8DC2 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = models/benchmark/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		AAE1DEBB13D142CC99BBEF41 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTDataSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RTDataSync.cpp; path = core/RTDataSync.cpp; sourceTree = SOURCE_ROOT; };
+		B6C2CBCF71594FBA9F365DE4 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosController.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ChaosController.cpp; path = core/ChaosController.cpp; sourceTree = SOURCE_ROOT; };
+		B907D2BD8D82458EB47F6868 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/ChaosMESS.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ChaosMESS.cpp; path = models/benchmark/ChaosMESS.cpp; sourceTree = SOURCE_ROOT; };
+		BFA30343CFC74B1385D8A08A /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/SCDataSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SCDataSync.cpp; path = core/SCDataSync.cpp; sourceTree = SOURCE_ROOT; };
+		C4C7C7AAC74544429040DEAC /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTVme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RTVme.cpp; path = core/RTVme.cpp; sourceTree = SOURCE_ROOT; };
+		CB20921F20744900BE7DF14E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		CECC373C7036417AB12A96D9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messMonitor.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = messMonitor.cpp; path = models/benchmark/test/messMonitor.cpp; sourceTree = SOURCE_ROOT; };
+		D2D82F70896846879FC0DB07 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		E7B04CEEEE9443F9BF4B4951 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = models/benchmark/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		FE28BE609F5340C6B3F1ECCF /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DefaultCommand.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DefaultCommand.cpp; path = models/benchmark/DefaultCommand.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		32C25DA81DB4F88000A46C2B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		32C25DD61DB4FBB500A46C2B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
-		32C25DAC1DB4F88000A46C2B /* MessMonitor */ = {
+		040D1005329E4DE094E66C06 /* chaos_driver_misc */ = {
 			isa = PBXGroup;
 			children = (
-				32C25DD31DB4F97F00A46C2B /* messMonitor.cpp */,
-				32C25DC31DB4F97800A46C2B /* ChaosMESS.cpp */,
-				32C25DC41DB4F97800A46C2B /* ChaosMESS.h */,
-				32C25DC51DB4F97800A46C2B /* CmdCalcBandwidth.cpp */,
-				32C25DC61DB4F97800A46C2B /* CmdCalcBandwidth.h */,
-				32C25DC71DB4F97800A46C2B /* CmdCalcTrxDelay.cpp */,
-				32C25DC81DB4F97800A46C2B /* CmdCalcTrxDelay.h */,
-				32C25DC91DB4F97800A46C2B /* DefaultCommand.cpp */,
-				32C25DCA1DB4F97800A46C2B /* DefaultCommand.h */,
-				32C25DCB1DB4F97800A46C2B /* DummyDriver.cpp */,
-				32C25DCC1DB4F97800A46C2B /* DummyDriver.h */,
-				32C25DCD1DB4F97800A46C2B /* MessProfilePacketInfo.h */,
+				3F3CAEFE7E9845CD910E65AF /* Source Files */,
+				D2D82F70896846879FC0DB07 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */,
 			);
-			path = MessMonitor;
+			name = chaos_driver_misc;
 			sourceTree = "<group>";
 		};
-		32C25DDA1DB4FBB500A46C2B /* MessClient */ = {
+		050E6CA4D4BD4624899834CB /* CMake Rules */ = {
 			isa = PBXGroup;
 			children = (
-				32C25DE01DB4FBCA00A46C2B /* messClient.cpp */,
 			);
-			path = MessClient;
+			name = "CMake Rules";
 			sourceTree = "<group>";
 		};
-		53EBBBFE1D703C3000BD1D8B = {
+		0B7789D1100B4F8EA6804682 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
-				32C25DAC1DB4F88000A46C2B /* MessMonitor */,
-				32C25DDA1DB4FBB500A46C2B /* MessClient */,
-				53EBBC081D703C3000BD1D8B /* Products */,
+				245DD4B8301940E9AB10409D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messClient.cpp */,
 			);
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		53EBBC081D703C3000BD1D8B /* Products */ = {
+		29F16AEB45BD4AAEA75B95D0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				32C25DAB1DB4F88000A46C2B /* MessMonitor */,
-				32C25DD91DB4FBB500A46C2B /* MessClient */,
+				4F4835EFCEAD476ABB423A7D /* chaos_driver_misc */,
+				41846FCB1418439BBF23B21D /* testSumOperatorUI */,
+				1467C08C2D6B49FF9E1E600E /* MessClient */,
+				36D7AC6FC580482B8F2AD4D1 /* MessMonitor */,
+				74F8832E54A04FC2A21F19EA /* chaos_driver_misc_benchmark */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		325A219A9D2A445A8A08E39B /* MessClient */ = {
+			isa = PBXGroup;
+			children = (
+				0B7789D1100B4F8EA6804682 /* Source Files */,
+				A48D073232E64662B3EB8DC2 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */,
+			);
+			name = MessClient;
+			sourceTree = "<group>";
+		};
+		3A8F8293BE1244AAAE5EBD6D = {
+			isa = PBXGroup;
+			children = (
+				BED8D31DB8C748D48361B7A0 /* Sources */,
+				4D0E2C6036844CB8BB86A466 /* Resources */,
+				29F16AEB45BD4AAEA75B95D0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3BB5FA6849CD4EA2A5815895 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		3F3CAEFE7E9845CD910E65AF /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				B6C2CBCF71594FBA9F365DE4 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosController.cpp */,
+				3E3BD5895EAD48718E7EAEDD /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttribute.cpp */,
+				54E79C70381145B1A29645C8 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeGroup.cpp */,
+				60D6B3BC92D3440390EB2F20 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeSinchronizer.cpp */,
+				0FA7390F2A9B47B597087EA9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/CmdSync.cpp */,
+				AAE1DEBB13D142CC99BBEF41 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTDataSync.cpp */,
+				C4C7C7AAC74544429040DEAC /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTVme.cpp */,
+				BFA30343CFC74B1385D8A08A /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/SCDataSync.cpp */,
+				4EF178719A7B48AC9171321D /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessDriver.cpp */,
+				94663BC980744E60BDA12D77 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessInterface.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		4387EB27198D49D0B30E025C /* MessMonitor */ = {
+			isa = PBXGroup;
+			children = (
+				AF8A6048BEDA482680C86BD6 /* Source Files */,
+				E7B04CEEEE9443F9BF4B4951 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */,
+			);
+			name = MessMonitor;
+			sourceTree = "<group>";
+		};
+		4D0E2C6036844CB8BB86A466 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		63D4DBF1AEB647F4996659D1 /* chaos_driver_misc_benchmark */ = {
+			isa = PBXGroup;
+			children = (
+				EAE62760909E4E77B295CF97 /* Source Files */,
+				6214E8537B6340D9A279FA3B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeLists.txt */,
+			);
+			name = chaos_driver_misc_benchmark;
+			sourceTree = "<group>";
+		};
+		80034CD3DFC744F58156F7B6 /* testSumOperatorUI */ = {
+			isa = PBXGroup;
+			children = (
+				A88830ADF56245E1B781F1F1 /* Source Files */,
+				145B58DD13414FBCA17D157B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */,
+			);
+			name = testSumOperatorUI;
+			sourceTree = "<group>";
+		};
+		A88830ADF56245E1B781F1F1 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				3551A6DEBDAC46808139D598 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/test/testSumOperatorUI.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		AF8A6048BEDA482680C86BD6 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				CECC373C7036417AB12A96D9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messMonitor.cpp */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		BCC36AE45FAA4639A5EF2D79 /* ZERO_CHECK */ = {
+			isa = PBXGroup;
+			children = (
+				050E6CA4D4BD4624899834CB /* CMake Rules */,
+				355C844EADB94C3693044454 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */,
+			);
+			name = ZERO_CHECK;
+			sourceTree = "<group>";
+		};
+		BED8D31DB8C748D48361B7A0 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				80034CD3DFC744F58156F7B6 /* testSumOperatorUI */,
+				040D1005329E4DE094E66C06 /* chaos_driver_misc */,
+				DE7631E0B91D4C8494164E0E /* ALL_BUILD */,
+				BCC36AE45FAA4639A5EF2D79 /* ZERO_CHECK */,
+				325A219A9D2A445A8A08E39B /* MessClient */,
+				63D4DBF1AEB647F4996659D1 /* chaos_driver_misc_benchmark */,
+				4387EB27198D49D0B30E025C /* MessMonitor */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		DE7631E0B91D4C8494164E0E /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				3BB5FA6849CD4EA2A5815895 /* CMake Rules */,
+				CB20921F20744900BE7DF14E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeLists.txt */,
+			);
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		EAE62760909E4E77B295CF97 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				B907D2BD8D82458EB47F6868 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/ChaosMESS.cpp */,
+				021D924ED3244605B33872AB /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcBandwidth.cpp */,
+				06CEF159018C414F9343C73C /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcTrxDelay.cpp */,
+				FE28BE609F5340C6B3F1ECCF /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DefaultCommand.cpp */,
+				712A279DF1B94CB291174583 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DummyDriver.cpp */,
+			);
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		32C25DAA1DB4F88000A46C2B /* MessMonitor */ = {
+		323BE1EFF51C4BF99320DAC3 /* MessClient */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 32C25DAF1DB4F88000A46C2B /* Build configuration list for PBXNativeTarget "MessMonitor" */;
+			buildConfigurationList = 1F04333BDD8A4A6EAD5A937F /* Build configuration list for PBXNativeTarget "MessClient" */;
 			buildPhases = (
-				32C25DA71DB4F88000A46C2B /* Sources */,
-				32C25DA81DB4F88000A46C2B /* Frameworks */,
-				32C25DA91DB4F88000A46C2B /* CopyFiles */,
+				6E6578685C1945E7B8450AA5 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-			);
-			name = MessMonitor;
-			productName = MessMonitor;
-			productReference = 32C25DAB1DB4F88000A46C2B /* MessMonitor */;
-			productType = "com.apple.product-type.tool";
-		};
-		32C25DD81DB4FBB500A46C2B /* MessClient */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 32C25DDD1DB4FBB500A46C2B /* Build configuration list for PBXNativeTarget "MessClient" */;
-			buildPhases = (
-				32C25DD51DB4FBB500A46C2B /* Sources */,
-				32C25DD61DB4FBB500A46C2B /* Frameworks */,
-				32C25DD71DB4FBB500A46C2B /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
+				DDF53CFA8EFA45A7A107AF5F /* PBXTargetDependency */,
 			);
 			name = MessClient;
 			productName = MessClient;
-			productReference = 32C25DD91DB4FBB500A46C2B /* MessClient */;
+			productReference = 1467C08C2D6B49FF9E1E600E /* MessClient */;
+			productType = "com.apple.product-type.tool";
+		};
+		4A7BE10A9F1D43CBB8430B6C /* chaos_driver_misc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8285F381804F473E9CA4B540 /* Build configuration list for PBXNativeTarget "chaos_driver_misc" */;
+			buildPhases = (
+				C62ECD61BBEC4141AE298438 /* Sources */,
+				560C09B7292D408C94A7EBCD /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				69DA1D41AA844706A67F62CE /* PBXTargetDependency */,
+			);
+			name = chaos_driver_misc;
+			productName = chaos_driver_misc;
+			productReference = 4F4835EFCEAD476ABB423A7D /* chaos_driver_misc */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		5ADD0EB485A2473D871A0874 /* testSumOperatorUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45E5BB23714D4FD982958AB9 /* Build configuration list for PBXNativeTarget "testSumOperatorUI" */;
+			buildPhases = (
+				CDEC04D8128048D6AE481436 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9698F27CDCE8427698D2566E /* PBXTargetDependency */,
+				43AA2B44FCE048C99D1B3F60 /* PBXTargetDependency */,
+			);
+			name = testSumOperatorUI;
+			productName = testSumOperatorUI;
+			productReference = 41846FCB1418439BBF23B21D /* testSumOperatorUI */;
+			productType = "com.apple.product-type.tool";
+		};
+		EBC909BEC0164EE9A1E95FB3 /* chaos_driver_misc_benchmark */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43A6B0248D8241A3B9EE8EC4 /* Build configuration list for PBXNativeTarget "chaos_driver_misc_benchmark" */;
+			buildPhases = (
+				A26A1B3CCDE647B4B6B6587B /* Sources */,
+				C3A84ADE7F724188951A2D70 /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = chaos_driver_misc_benchmark;
+			productName = chaos_driver_misc_benchmark;
+			productReference = 74F8832E54A04FC2A21F19EA /* chaos_driver_misc_benchmark */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		EC7777809FBE4A188DD79334 /* MessMonitor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 24F2258E655F4CE39DBDBE91 /* Build configuration list for PBXNativeTarget "MessMonitor" */;
+			buildPhases = (
+				12C31720F5FE4474AAF54DE0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				381CE3190ACE4D21A4024C92 /* PBXTargetDependency */,
+			);
+			name = MessMonitor;
+			productName = MessMonitor;
+			productReference = 36D7AC6FC580482B8F2AD4D1 /* MessMonitor */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		53EBBBFF1D703C3000BD1D8B /* Project object */ = {
+		FED9FA51B1AD462984327212 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0730;
-				ORGANIZATIONNAME = "andrea michelotti";
-				TargetAttributes = {
-					32C25DAA1DB4F88000A46C2B = {
-						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = ZZ5BMKV37Y;
-						ProvisioningStyle = Automatic;
-					};
-					32C25DD81DB4FBB500A46C2B = {
-						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = ZZ5BMKV37Y;
-						ProvisioningStyle = Automatic;
-					};
-				};
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 0900;
 			};
-			buildConfigurationList = 53EBBC021D703C3000BD1D8B /* Build configuration list for PBXProject "chaos_driver_misc" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
+			buildConfigurationList = C35BA902155D471D90D0A9D7 /* Build configuration list for PBXProject "chaos_driver_misc" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				9A98CFF5B55E4F07BC233213 /* Debug */,
+				8FFA4BF5A6094FF5B363B436 /* Release */,
+				7BD4D3B7372E4AE1ABEF7426 /* MinSizeRel */,
+				C3CE4ED37399416A9E469E32 /* RelWithDebInfo */,
 			);
-			mainGroup = 53EBBBFE1D703C3000BD1D8B;
-			productRefGroup = 53EBBC081D703C3000BD1D8B /* Products */;
-			projectDirPath = "";
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = 3A8F8293BE1244AAAE5EBD6D;
+			projectDirPath = .;
 			projectRoot = "";
 			targets = (
-				32C25DAA1DB4F88000A46C2B /* MessMonitor */,
-				32C25DD81DB4FBB500A46C2B /* MessClient */,
+				817D73A1117A4FBA876DDE41 /* ALL_BUILD */,
+				F7CFA392362541C58F152594 /* ZERO_CHECK */,
+				4A7BE10A9F1D43CBB8430B6C /* chaos_driver_misc */,
+				DA4209FEB2B14AAC8BF06D44 /* install */,
+				5ADD0EB485A2473D871A0874 /* testSumOperatorUI */,
+				323BE1EFF51C4BF99320DAC3 /* MessClient */,
+				EC7777809FBE4A188DD79334 /* MessMonitor */,
+				EBC909BEC0164EE9A1E95FB3 /* chaos_driver_misc_benchmark */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		2D86C383D55E4060818D7854 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		543FBF366CEC4A23AF132D27 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/michelo/progetti/xcode/chaos_bundle/driver/misc -f /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		560C09B7292D408C94A7EBCD /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/michelo/progetti/xcode/chaos_bundle/driver/misc -f /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeScripts/chaos_driver_misc_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		635BA94100464EDB9F59FEA4 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/michelo/progetti/xcode/chaos_bundle/driver/misc -f /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		B7589B36EE844EDBA6B53F65 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		C3A84ADE7F724188951A2D70 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark -f /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CMakeScripts/chaos_driver_misc_benchmark_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		E077A2CAE7554AA1BA852351 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		EC46FE4417F94FFFA3780822 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/michelo/progetti/xcode/chaos_bundle/driver/misc -f /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/CMakeScripts/install_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		32C25DA71DB4F88000A46C2B /* Sources */ = {
+		12C31720F5FE4474AAF54DE0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C25DD41DB4F97F00A46C2B /* messMonitor.cpp in Sources */,
-				32C25DD21DB4F97800A46C2B /* DummyDriver.cpp in Sources */,
-				32C25DCE1DB4F97800A46C2B /* ChaosMESS.cpp in Sources */,
-				32C25DCF1DB4F97800A46C2B /* CmdCalcBandwidth.cpp in Sources */,
-				32C25DD01DB4F97800A46C2B /* CmdCalcTrxDelay.cpp in Sources */,
-				32C25DD11DB4F97800A46C2B /* DefaultCommand.cpp in Sources */,
+				83C4069B91EE49E3BE5D18EB /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messMonitor.cpp */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		32C25DD51DB4FBB500A46C2B /* Sources */ = {
+		6E6578685C1945E7B8450AA5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C25DE11DB4FBCA00A46C2B /* messClient.cpp in Sources */,
+				F860CDD5439548AE94651A9E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/test/messClient.cpp */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A26A1B3CCDE647B4B6B6587B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				04DD06217B2A403CA0E31BCF /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/ChaosMESS.cpp */,
+				E350FAC04F63409684FAF865 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcBandwidth.cpp */,
+				C73CCB29C45D436B826C6F6B /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/CmdCalcTrxDelay.cpp */,
+				2907B53251DD4A2080C3D872 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DefaultCommand.cpp */,
+				EEC03F6E00A84A57B81DB01F /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/DummyDriver.cpp */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C62ECD61BBEC4141AE298438 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				08852C8529BA40B28515EF03 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosController.cpp */,
+				30F7B4487791455EBE29C2D9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttribute.cpp */,
+				5832FFF08B5746DFA25D84B9 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeGroup.cpp */,
+				C2552DD57A38473CA79FB915 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/ChaosDatasetAttributeSinchronizer.cpp */,
+				EA44F8CE7B314D45B5DC4AF3 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/CmdSync.cpp */,
+				25721285D36C4D79B9EFB73E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTDataSync.cpp */,
+				EC7A7E14DA9A4A88A2884674 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/RTVme.cpp */,
+				2D19D2E62A5D4A4489D9EB4C /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/SCDataSync.cpp */,
+				04C98436AEB342098EDA8FA3 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessDriver.cpp */,
+				464CE070EC264FD0A30C2A5E /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/core/remoteGroupAccessInterface.cpp */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CDEC04D8128048D6AE481436 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01CE7BE402334E05A8262355 /* /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/test/testSumOperatorUI.cpp */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		1864AFA5E11742FA8FD4A04C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5ADD0EB485A2473D871A0874 /* testSumOperatorUI */;
+			targetProxy = 4E0C6F86483B49DE89146698 /* PBXContainerItemProxy */;
+		};
+		1954702608DE4911B59A3DCD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EC7777809FBE4A188DD79334 /* MessMonitor */;
+			targetProxy = 22722EE1F541474FB19A57CD /* PBXContainerItemProxy */;
+		};
+		381CE3190ACE4D21A4024C92 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EBC909BEC0164EE9A1E95FB3 /* chaos_driver_misc_benchmark */;
+			targetProxy = 2DD972C4C62E48AA93E6B182 /* PBXContainerItemProxy */;
+		};
+		43AA2B44FCE048C99D1B3F60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7CFA392362541C58F152594 /* ZERO_CHECK */;
+			targetProxy = 7D4C2F341BF943FB92A1E140 /* PBXContainerItemProxy */;
+		};
+		69DA1D41AA844706A67F62CE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7CFA392362541C58F152594 /* ZERO_CHECK */;
+			targetProxy = E828F4AC9BCA49068E35C950 /* PBXContainerItemProxy */;
+		};
+		72E6A8B57A2549CE9A6918B5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F7CFA392362541C58F152594 /* ZERO_CHECK */;
+			targetProxy = 18179459494B4E528A6BB3C9 /* PBXContainerItemProxy */;
+		};
+		8C8A3F1F8D2D497AB14E3216 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4A7BE10A9F1D43CBB8430B6C /* chaos_driver_misc */;
+			targetProxy = 48BBA886D9C44B82A16AA5C9 /* PBXContainerItemProxy */;
+		};
+		8CD5F8ABE53348FA93549BCF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 323BE1EFF51C4BF99320DAC3 /* MessClient */;
+			targetProxy = 7C4B12861C0D4EABB7B47012 /* PBXContainerItemProxy */;
+		};
+		9698F27CDCE8427698D2566E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4A7BE10A9F1D43CBB8430B6C /* chaos_driver_misc */;
+			targetProxy = 410B8AE9D3E348A89BE516DD /* PBXContainerItemProxy */;
+		};
+		A368A7D1041A4DC4A38666B0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EBC909BEC0164EE9A1E95FB3 /* chaos_driver_misc_benchmark */;
+			targetProxy = 955A4E5040FB4C779DDB01B1 /* PBXContainerItemProxy */;
+		};
+		CC060D55887E4F6FAEEE9FBF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 817D73A1117A4FBA876DDE41 /* ALL_BUILD */;
+			targetProxy = 92F19923A98E4C6A9CEC907C /* PBXContainerItemProxy */;
+		};
+		DDF53CFA8EFA45A7A107AF5F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EBC909BEC0164EE9A1E95FB3 /* chaos_driver_misc_benchmark */;
+			targetProxy = C7F70F74B766479DA3A4BF11 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		32C25DB01DB4F88000A46C2B /* Debug */ = {
+		045F44AFD3B8405FB1F8217C /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/../../usr/local/bin";
-				DEVELOPMENT_TEAM = ZZ5BMKV37Y;
-				INSTALL_PATH = "$(SRCROOT)/../../usr/local/bin";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_LDFLAGS = (
-					"-lchaos_cutoolkit",
-					"-lchaos_common",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		32C25DB11DB4F88000A46C2B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/../../usr/local/bin";
-				DEVELOPMENT_TEAM = ZZ5BMKV37Y;
-				INSTALL_PATH = "$(SRCROOT)/../../usr/local/bin";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_LDFLAGS = (
-					"-lchaos_cutoolkit",
-					"-lchaos_common",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		32C25DDE1DB4FBB500A46C2B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				DEVELOPMENT_TEAM = ZZ5BMKV37Y;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MTL_ENABLE_DEBUG_INFO = YES;
-				OTHER_LDFLAGS = (
-					"-lchaos_uitoolkit",
-					"-lchaos_common",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		32C25DDF1DB4FBB500A46C2B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				DEVELOPMENT_TEAM = ZZ5BMKV37Y;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"-lchaos_uitoolkit",
-					"-lchaos_common",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		53EBBC0C1D703C3300BD1D8B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../usr/local/include;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../usr/local/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		0D261FCF62764FE59EE52815 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		1473D0ECB78348ACB8108B6F /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_driver_misc.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libvme.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = testSumOperatorUI;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		18151071F23148639374FEC0 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		1E920F852E844D029C52FC8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_benchmark_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG -fPIC   -O2 -g -O3";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  -lpthread /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_common.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc_benchmark;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		2242CB56600A4DCDB28A6C8C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		24791455FC4949CDAFBCD23E /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/build;
+			};
+			name = RelWithDebInfo;
+		};
+		25D697046BFF4AFCBBBFA783 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/build;
 			};
 			name = Debug;
 		};
-		53EBBC0D1D703C3300BD1D8B /* Release */ = {
+		2609B1407E284243AD8B93A2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../usr/local/include;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../usr/local/lib";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				SDKROOT = macosx;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_cutoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessMonitor;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Release;
+		};
+		2C92891469574C6EAF3C4F76 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_cutoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessMonitor;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		397F21F160CB4E42A990E071 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/build;
+			};
+			name = Release;
+		};
+		3A1BE2595B774D159D629C00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_uitoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessClient;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		3C2EBC7966FE4C6D8999BD94 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++        -DNDEBUG   -O2 -g";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_driver_misc.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libvme.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = testSumOperatorUI;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		57645F79255848C5870EED8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++      -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_cutoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessMonitor;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		5885EA9CC34540D09252FBD2 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++        -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_uitoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessClient;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		5F5462F42546483BB6A2E959 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++    -fPIC   -O2 -g";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libvme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		5F8B7F5A4A2740DDB7CCB83A /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++        -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_cutoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessMonitor;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		683E2855DDF745C09AB02528 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++        -DNDEBUG -fPIC   -O2 -g";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libvme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		79CE4151D85C426883DFDEAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG -fPIC   -O2 -g";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libvme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		83BA59D48F20416C848F9F2B /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		877B69052C12499FA5D4010B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		89AB91431DD54302BFB3E8F6 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		9DFD30597CFE4F2B867CA976 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_driver_misc.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Release/libvme.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = testSumOperatorUI;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		A8AE2D014C854875A945A4E1 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG   -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_uitoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessClient;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		AD6AD871553C4F0B8129703A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++      -O2 -g -O3";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_driver_misc_benchmark.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_uitoolkit.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_common.1.0.0.dylib -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MessClient;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		AE912EA0DF4A46BFB1567BC4 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG -fPIC   -O2 -g";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libvme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		AF0816675917402F907E33CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++      -O2 -g";
+				OTHER_LDFLAGS = "-stdlib=libc++ -Wl,-headerpad_max_install_names  /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_driver_misc.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_metadata_service_client.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_misc_data.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_misc_scheduler.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_common.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_vme.a /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libcommon_debug.a -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libvme.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = testSumOperatorUI;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		BFDAE8FBF8174B15BF5397A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		C0CD8F2D45C54AD78A3B2CEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_benchmark_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++    -fPIC   -O2 -g -O3";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  -lpthread /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/Debug/libchaos_common.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc_benchmark;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		D5C4176834884DA3AB4495EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		F0862A37F62B4C1C9A3AF550 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		FB8DF9F33EB1492FAB3147C1 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_benchmark_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++        -DNDEBUG -fPIC   -O2 -g -O3";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  -lpthread /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/RelWithDebInfo/libchaos_common.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc_benchmark;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		FBC12651A01341B9A28F1F57 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .dylib;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",chaos_driver_misc_benchmark_EXPORTS,DEBUG,CHAOS);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/.,/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark/..);
+				INSTALL_PATH = "/Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel";
+				LIBRARY_SEARCH_PATHS = " /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME) /Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_CPLUSPLUSFLAGS = "-Wno-deprecated -fPIC -std=c++11 -stdlib=libc++     -DNDEBUG -fPIC   -O2 -g -O3";
+				OTHER_LDFLAGS = " -dynamiclib -Wl,-headerpad_max_install_names  -lpthread /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_cutoolkit.1.0.0.dylib /Users/michelo/progetti/xcode/chaos_bundle/build-x86_64-Darwin/MinSizeRel/libchaos_common.1.0.0.dylib -lboost_random -lboost_program_options -lboost_date_time -lboost_system -lboost_chrono -lboost_regex -lboost_log_setup -lboost_log -lboost_filesystem -lboost_thread -lboost_atomic -lzmq -ljsoncpp -lpthread -ldl";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = chaos_driver_misc_benchmark;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/models/benchmark;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		FC2BF7DA7FCD4412BF907667 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		FCA6CE6992CF4FC68FA787F5 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc/build;
+			};
+			name = MinSizeRel;
+		};
+		FCAEA1940639410A9042EFDC /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/..,/Users/michelo/progetti/xcode/chaos_bundle/.,/Users/michelo/progetti/xcode/chaos_bundle/../..,/Users/michelo/progetti/xcode/chaos_bundle/..,"/Users/michelo/progetti/xcode/chaos_bundle/chaosframework/config/../chaos-distrib-x86_64-Darwin/include",/Users/michelo/progetti/xcode/chaos_bundle/driver/misc/./core);
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/michelo/progetti/xcode/chaos_bundle/driver/misc;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		32C25DAF1DB4F88000A46C2B /* Build configuration list for PBXNativeTarget "MessMonitor" */ = {
+		064DF17205CF4CD685BAF4E7 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				32C25DB01DB4F88000A46C2B /* Debug */,
-				32C25DB11DB4F88000A46C2B /* Release */,
+				FC2BF7DA7FCD4412BF907667 /* Debug */,
+				BFDAE8FBF8174B15BF5397A4 /* Release */,
+				F0862A37F62B4C1C9A3AF550 /* MinSizeRel */,
+				18151071F23148639374FEC0 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		32C25DDD1DB4FBB500A46C2B /* Build configuration list for PBXNativeTarget "MessClient" */ = {
+		1F04333BDD8A4A6EAD5A937F /* Build configuration list for PBXNativeTarget "MessClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				32C25DDE1DB4FBB500A46C2B /* Debug */,
-				32C25DDF1DB4FBB500A46C2B /* Release */,
+				AD6AD871553C4F0B8129703A /* Debug */,
+				3A1BE2595B774D159D629C00 /* Release */,
+				A8AE2D014C854875A945A4E1 /* MinSizeRel */,
+				5885EA9CC34540D09252FBD2 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
-		53EBBC021D703C3000BD1D8B /* Build configuration list for PBXProject "chaos_driver_misc" */ = {
+		24F2258E655F4CE39DBDBE91 /* Build configuration list for PBXNativeTarget "MessMonitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				53EBBC0C1D703C3300BD1D8B /* Debug */,
-				53EBBC0D1D703C3300BD1D8B /* Release */,
+				57645F79255848C5870EED8F /* Debug */,
+				2609B1407E284243AD8B93A2 /* Release */,
+				2C92891469574C6EAF3C4F76 /* MinSizeRel */,
+				5F8B7F5A4A2740DDB7CCB83A /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
+		};
+		43A6B0248D8241A3B9EE8EC4 /* Build configuration list for PBXNativeTarget "chaos_driver_misc_benchmark" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0CD8F2D45C54AD78A3B2CEE /* Debug */,
+				1E920F852E844D029C52FC8A /* Release */,
+				FBC12651A01341B9A28F1F57 /* MinSizeRel */,
+				FB8DF9F33EB1492FAB3147C1 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		45E5BB23714D4FD982958AB9 /* Build configuration list for PBXNativeTarget "testSumOperatorUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF0816675917402F907E33CA /* Debug */,
+				9DFD30597CFE4F2B867CA976 /* Release */,
+				1473D0ECB78348ACB8108B6F /* MinSizeRel */,
+				3C2EBC7966FE4C6D8999BD94 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8285F381804F473E9CA4B540 /* Build configuration list for PBXNativeTarget "chaos_driver_misc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F5462F42546483BB6A2E959 /* Debug */,
+				79CE4151D85C426883DFDEAE /* Release */,
+				AE912EA0DF4A46BFB1567BC4 /* MinSizeRel */,
+				683E2855DDF745C09AB02528 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A3813F7E769742C4A1E720C8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D5C4176834884DA3AB4495EB /* Debug */,
+				2242CB56600A4DCDB28A6C8C /* Release */,
+				045F44AFD3B8405FB1F8217C /* MinSizeRel */,
+				89AB91431DD54302BFB3E8F6 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C35BA902155D471D90D0A9D7 /* Build configuration list for PBXProject "chaos_driver_misc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25D697046BFF4AFCBBBFA783 /* Debug */,
+				397F21F160CB4E42A990E071 /* Release */,
+				FCA6CE6992CF4FC68FA787F5 /* MinSizeRel */,
+				24791455FC4949CDAFBCD23E /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DC725F9DF95D43CC8EF17024 /* Build configuration list for PBXAggregateTarget "install" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				877B69052C12499FA5D4010B /* Debug */,
+				0D261FCF62764FE59EE52815 /* Release */,
+				FCAEA1940639410A9042EFDC /* MinSizeRel */,
+				83BA59D48F20416C848F9F2B /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 53EBBBFF1D703C3000BD1D8B /* Project object */;
+	rootObject = FED9FA51B1AD462984327212 /* Project object */;
 }

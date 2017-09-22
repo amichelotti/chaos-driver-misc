@@ -37,7 +37,7 @@ DEFINE_BATCH_COMMAND_CLASS(  CmdCalcBandwidth ,ccc_slow_command::SlowCommand) {
         uint64_t prep_time;
         uint64_t start_cycle;
         boost::posix_time::ptime st_prep,end_prep;
-	boost::shared_ptr<SharedCacheLockDomain> r_lock;
+	boost::shared_ptr<chaos::common::data::cache::SharedCacheLockDomain> r_lock;
 	MessProfilePacketInfo * hdr;
 protected:
 	// return the implemented handler

@@ -7,9 +7,16 @@
 
 #include "ChaosDatasetAttribute.h"
 #include <chaos/common/exception/CException.h>
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
+
+#ifdef __CHAOS_UI__
+#include <chaos/ui_toolkit/ChaosUIToolkit.h>
+#else
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
+
+#endif
 using namespace ::driver::misc;
+using namespace chaos::cu::data_manager;
 
 std::map< std::string,ChaosDatasetAttribute::datinfo_psh > ChaosDatasetAttribute::paramToDataset;
 std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::controllers;
@@ -19,15 +26,34 @@ std::string ChaosDatasetAttribute::getGroup(){
     res.erase(0,attr_parent.find_last_of(chaos::PATH_SEPARATOR)+1);
     return res;
 }
+ int ChaosDatasetAttribute::initialize_framework=0;
 
 int ChaosDatasetAttribute::allocateController(std::string cu){
+	if(!initialize_framework){
+		ATTRDBG_<<" Initializing ChaosMetadataServiceClient Framework ...";
+		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init();
+		chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->start();
+        //chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->enableMonitor();
 
+		initialize_framework++;
+		ATTRDBG_<<" END ChaosMetadataServiceClient Framework ...";
+
+	}
 	try{
 	  if(controllers.find(cu)==controllers.end()){
+#ifdef __CHAOS_UI__
 	        controller= ctrl_t (chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(cu, timeo));
 	        controllers[cu]=controller;
+#else
+	        chaos::metadata_service_client::node_controller::CUController *cu_ctrl = NULL;
+	        chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getNewCUController(cu,&cu_ctrl);
+
+		controller=cu_ctrl;
+	        controllers[cu]=controller;
+
+#endif
 	        controller->setupTracking();
-	        ATTRDBG_ << " Allocating New controller:"<<controller.get();
+	        ATTRDBG_ << " Allocating New controller:"<<controller;
 
 	    } else {
 	    	//CDataWrapper data;
@@ -69,7 +95,6 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     		ATTRDBG_ << " controller of "<<cu<<" is not ready, retry:"<<retry;
     	}
     } while((ret<0)&& (retry--));
-
     upd_mode=EVERYTIME;
     update_time=0;
     if(ret<0){
@@ -88,15 +113,16 @@ ChaosDatasetAttribute::ChaosDatasetAttribute(std::string path,uint32_t timeo_) {
     } else {
     	info = paramToDataset[attr_parent];
     }
-    try{
-        get(&attr_size);
-    } catch(chaos::CException e){
-        ATTRDBG_<<"%% WARNING  no data present in live for:"<<attr_path;
-    }
+
+    get(&attr_size);
+
 
     resize(attr_size);
-    
-    ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType<<" size:"<<attr_size;
+    if(attr_type.binType.size()){
+    	ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<" subtype:"<<attr_type.binType[0]<<" size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": ((attr_type.dir == chaos::DataType::Output)?"Output":"Other"))<<")";
+    } else {
+    	ATTRDBG_<<"Retrieved "<<attr_path<<" desc:\""<<attr_desc<<"\" "<< " type:"<<attr_type.valueType<<"  size:"<<attr_size << " Direction:"<<((attr_type.dir == chaos::DataType::Input)?"Input": ((attr_type.dir == chaos::DataType::Output)?"Output":"Other"))<<")";
+    }
  }
 ChaosDatasetAttribute::ChaosDatasetAttribute(const ChaosDatasetAttribute& orig) {
 }
@@ -105,6 +131,7 @@ void ChaosDatasetAttribute::resize(int32_t newsize) throw (chaos::CException){
         ptr_cache=realloc(ptr_cache,newsize);
         cache_size = newsize;
         if(ptr_cache==NULL){
+        	ATTRERR_<<"cannot allcate memory cache for:"<<attr_path;
                 throw chaos::CException(-1001,"cannot allocate memory cache for:"+attr_path,__PRETTY_FUNCTION__);
 
         }
@@ -149,8 +176,12 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         uint64_t tget=pt.time_of_day().total_microseconds();
         pt= boost::posix_time::microsec_clock::local_time();
         if(upd_mode==EVERYTIME || ((upd_mode==NOTBEFORE)&& ((tget - paramToDataset[attr_parent]->tget)> update_time)) ){
+#ifdef __CHAOS_UI__
             chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?chaos::ui::DatasetDomainInput: chaos::ui::DatasetDomainOutput);
+#else
+            chaos::common::data::CDataWrapper*tmpw=controller->fetchCurrentDatatasetFromDomain((attr_type.dir == chaos::DataType::Input)?KeyDataStorageDomainInput:KeyDataStorageDomainOutput).get();
 
+#endif
             if(tmpw==NULL){
                 throw chaos::CException(-1000,"cannot retrieve data for:"+attr_path,__PRETTY_FUNCTION__);
             }
@@ -167,7 +198,11 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             	       std::memcpy(ptr_cache,tmp,attr_size);
             	}
             } else {
-            	 throw chaos::CException(-1000,"cannot variable \""+attr_name +"\" not found in:"+attr_path,__PRETTY_FUNCTION__);
+            	std::stringstream ss;
+
+            	ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path<<" json:"<<tmpw->getJSONString();
+            	ATTRERR_<<ss.str();
+            	throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
             }
             cache_updated=tget;
         } else if((upd_mode==NOTBEFORE)){

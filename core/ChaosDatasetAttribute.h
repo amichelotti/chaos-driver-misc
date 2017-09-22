@@ -10,12 +10,19 @@
 #include <map>
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
-
-#include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
-
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
+
+namespace chaos{
+namespace metadata_service_client{
+	class ChaosMetadataServiceClient;
+namespace node_controller{
+	class CUController;
+
+}
+}
+}
 
 namespace driver{
     
@@ -43,7 +50,7 @@ class ChaosDatasetAttribute{
     
 
     datinfo_psh info;
-
+    static int initialize_framework;
     ChaosDatasetAttribute(std::string path,uint32_t timeo=5000);
 
     ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
@@ -63,7 +70,9 @@ class ChaosDatasetAttribute{
     void setUpdateMode(UpdateMode mode,uint64_t ustime);
     
     datinfo& getInfo();
-    typedef boost::shared_ptr<chaos::ui::DeviceController> ctrl_t;
+    typedef chaos::metadata_service_client::node_controller::CUController* ctrl_t;
+
+
 private:
     uint64_t update_time;
     uint32_t timeo;
@@ -95,7 +104,7 @@ public:
     std::string getDesc(){return attr_desc;}
     chaos::common::data::RangeValueInfo& getValueInfo(){return attr_type;}
     chaos::DataType::DataType getType(){return attr_type.valueType;}
-    chaos::DataType::BinarySubtype getBinaryType(){return attr_type.binType;}
+    chaos::common::data::VectorBinSubtype getBinaryType(){return attr_type.binType;}
 
     chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
