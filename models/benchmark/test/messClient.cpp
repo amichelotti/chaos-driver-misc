@@ -188,7 +188,7 @@ public:
     double cputime=0,systime=0;
 
     int err;
-    uint32_t retry=1000;
+    int retry=1000;
 		
     MessProfilePacketInfo *prof=0;
     controller->fetchCurrentDeviceValue();
