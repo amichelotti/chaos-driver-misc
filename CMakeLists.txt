@@ -5,6 +5,7 @@ option(CERN_ROOT "Enable Cern Root" OFF)
 SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp ${optional_src})
 
 add_subdirectory(models)
+FILE(WRITE generators/UnitServerIgnore "disabled ${PROJECT_NAME}")
 IF (BUILD_FORCE_STATIC)
     SET(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--whole-archive -lchaos_common -Wl,--no-whole-archive")
     ADD_LIBRARY(${PROJECT_NAME} STATIC ${src})
