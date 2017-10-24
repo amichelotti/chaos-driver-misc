@@ -8,7 +8,7 @@ ENDIF()
 
 ADD_LIBRARY(${PROJECT_NAME} STATIC RTVme.cpp)
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_common  chaos_cutoolkit common_vme vme)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_common  chaos_cutoolkit common_vme)
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
 installHeaders(.)
 
