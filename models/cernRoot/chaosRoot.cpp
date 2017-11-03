@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 	char* root_opts[120];
 	int nroot_opts=0;
 	std::string buf;
-	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give tu CERN ROOT interpreter ");
+	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
 	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
 	ChaosMetadataServiceClient::getInstance()->start();
 	 if (0) {
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
 	TRint *rootapp = new TRint("Rint", &nroot_opts, root_opts);
 	rootapp->SetPrompt("chaosRoot[%d]>");
-	  rootapp->Run();
+	rootapp->Run();
 
     return 0;
 }
