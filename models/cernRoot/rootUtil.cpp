@@ -40,13 +40,14 @@ static std::map<TTree*, treeQuery_t> queries;
 static std::map<std::string, ChaosController*> ctrls;
 //create a unique branch with all dataset
 
-static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::CDataWrapper*cd,std::string brname,bool multiple=true) {
+static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::CDataWrapper*cd,const std::string& brname,bool multiple=true) {
     std::stringstream varname;
     std::vector<std::string> contained_key;
     int disable_dump=0;
     cd->getAllKey(contained_key);
     branchAlloc_t*query=NULL;
     int branch_counter=0;
+    std::string branch_prefix;
     if(contained_key.size()==0){
         return NULL;
     }
@@ -57,7 +58,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
     } else {
         query = new branchAlloc_t[1];
         q.nbranch=1;
-
+        branch_prefix=brname+std::string(".");
     }
     LDBG_<<" creating "<<q.nbranch<<" branches";
 
@@ -75,7 +76,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         if(multiple==false){
             branch_counter=0;
         } else {
-            varname.str(brname+std::string("."));
+            varname.str(branch_prefix);
             if(query[branch_counter].size>0){
                 free(query[branch_counter].branchBuffer);
                 query[branch_counter].branchBuffer=0;
@@ -112,7 +113,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             //	LDBG_<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
         } else {
-            if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
+            if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt32)||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
 
                 type_size = cd->getValueType(*it);
                 query[branch_counter].size+=cd->getValueSize(*it);
@@ -132,9 +133,9 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         case CDataWrapperTypeNULL:
             break;
         case CDataWrapperTypeBool:
-            varname << *it;
-            varname << "/O";
             found++;
+            varname <<*it<< "/O";
+
             break;
         case CDataWrapperTypeInt32:
             found++;
@@ -156,9 +157,9 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             break;
         case CDataWrapperTypeString:
             disable_dump=1;
-             //       found++;
-             //       varname << *it;
-             //   varname << "/C";
+     //               found++;
+     //               varname << *it;
+     //           varname << "/C";
 
             break;
         case CDataWrapperTypeBinary:
