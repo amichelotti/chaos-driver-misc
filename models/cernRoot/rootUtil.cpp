@@ -58,7 +58,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
     } else {
         query = new branchAlloc_t[1];
         q.nbranch=1;
-        branch_prefix=brname+std::string(".");
+        branch_prefix="";//brname+std::string("__");
     }
     LDBG_<<" creating "<<q.nbranch<<" branches";
 
@@ -87,7 +87,8 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         if (cd->isVector(*it)) {
             int size = 0;
             CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
-            varname << *it;
+            //if(!multiple)
+                varname <<*it;
 
             varname << "[" << da->size() << "]";
             found++;
@@ -134,24 +135,29 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             break;
         case CDataWrapperTypeBool:
             found++;
-            varname <<*it<< "/O";
+         //   if(!multiple)
+                varname <<*it;
+            varname << "/O";
 
             break;
         case CDataWrapperTypeInt32:
             found++;
-            varname << *it;
+       //     if(!multiple)
+                varname <<*it;
             varname << "/I";
 
             break;
         case CDataWrapperTypeInt64:
             found++;
-            varname << *it;
+           // if(!multiple)
+                varname <<*it;
             varname << "/L";
 
             break;
         case CDataWrapperTypeDouble:
             found++;
-            varname << *it;
+            //if(!multiple)
+                varname <<*it;
             varname << "/D";
 
             break;
