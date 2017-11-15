@@ -37,7 +37,7 @@ typedef struct treeQuery{
 } treeQuery_t;
 
 static std::map<TTree*, treeQuery_t> queries;
-static std::map<std::string, ChaosController*> ctrls;
+//static std::map<std::string, ChaosController*> ctrls;
 //create a unique branch with all dataset
 
 static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::CDataWrapper*cd,const std::string& brname,bool multiple=true) {
@@ -289,12 +289,14 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
 
         ChaosController* ctrl = NULL;
         std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
-        if (ctrls.find(chaosNode) != ctrls.end()) {
+   /*     if (ctrls.find(chaosNode) != ctrls.end()) {
             ctrl = ctrls[chaosNode];
         } else {
             ctrl = new ChaosController(chaosNode);
             ctrls[chaosNode] = ctrl;
         }
+*/
+        ctrl = new ChaosController(chaosNode);
 
         int32_t ret = ctrl->queryHistory(start, end, channel, res, pageLen);
         int cnt = 0;
@@ -395,16 +397,17 @@ bool queryNextChaosTree(TTree*tree) {
             return false;
         }
         if (uid == 0) {
-            LDBG_<<"ROOT paged query ended, free resources";
-            delete ctrl;
-            queries.erase(page);
+            LDBG_<<"ROOT paged query ended";
+            queryFree(tree);
+
             return false;
         } else if(uid>0) {
             return true;
         } else {
-            LERR_<<"ROOT paged query error, free resources";
-            delete ctrl;
-            queries.erase(page);
+            LERR_<<"ROOT paged query error";
+          //  delete ctrl;
+           // queries.erase(page);
+            queryFree(tree);
             return false;
         }
     }
@@ -417,6 +420,7 @@ bool queryFree(TTree*tree) {
         LDBG_<<" removing "<< page->second.nbranch<<" branches";
         delete [] page->second.branch;
         delete page->second.ctrl;
+
         queries.erase(page);
     }
 }
