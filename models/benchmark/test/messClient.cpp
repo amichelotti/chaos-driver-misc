@@ -220,10 +220,10 @@ public:
     if(test_ui_freq){
       do {
 	LAPP_<<"* Waiting CU reacts to command tag="<<hex<<start_test_us<<dec;
-	int size;
+    uint32_t size;
 	controller->fetchCurrentDeviceValue();
 	wrapped_data = controller->getCurrentData();
-	prof = (MessProfilePacketInfo *)wrapped_data->getBinaryValue("profile",size);
+    prof = (MessProfilePacketInfo *)(wrapped_data->getBinaryValue("profile",size));
 	if(prof && (prof->ts_tag == start_test_us)){
 	  LAPP_<<"* Got packet size:"<<bytes<<" starting ui test...";
 	  break;
@@ -246,7 +246,7 @@ public:
       wrapped_data = controller->getCurrentData();
 
       if (wrapped_data) {
-	int size;
+    uint32_t size;
 	fetch_data_us =  boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	prof = (MessProfilePacketInfo *)wrapped_data->getBinaryValue("profile",size);
 	//   cout<<"read:"<<duration0.total_microseconds()<<endl;
