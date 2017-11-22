@@ -544,7 +544,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 			delta_update+=50;
 		}
 
-		cachedJsonChannels[cnt] =channels[cnt]->getJSONString();
+        cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
 		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
 	}
 
@@ -629,7 +629,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 	all.appendAllElement(*bundle_state.getData());
 	boost::mutex::scoped_lock(iomutex);
 
-	cachedJsonChannels[-1]=all.getJSONString();
+    cachedJsonChannels[-1]=all.getCompliantJSONString();
 
 	//DBGET<<"SCHED STOP";
 	return delta_update;
