@@ -28,7 +28,6 @@
 #include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 #include <chaos/ui_toolkit/HighLevelApi/HLDataApi.h>
 #include <stdio.h>
-#include <chaos/common/bson/bson.h>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
@@ -45,7 +44,6 @@ using namespace std;
 using namespace chaos;
 using namespace chaos::ui;
 using namespace chaos::common::data;
-using namespace bson;
 using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::date_time;
@@ -188,7 +186,7 @@ public:
     double cputime=0,systime=0;
 
     int err;
-    uint32_t retry=1000;
+    int retry=1000;
 		
     MessProfilePacketInfo *prof=0;
     controller->fetchCurrentDeviceValue();
@@ -222,10 +220,10 @@ public:
     if(test_ui_freq){
       do {
 	LAPP_<<"* Waiting CU reacts to command tag="<<hex<<start_test_us<<dec;
-	int size;
+    uint32_t size;
 	controller->fetchCurrentDeviceValue();
 	wrapped_data = controller->getCurrentData();
-	prof = (MessProfilePacketInfo *)wrapped_data->getBinaryValue("profile",size);
+    prof = (MessProfilePacketInfo *)(wrapped_data->getBinaryValue("profile",size));
 	if(prof && (prof->ts_tag == start_test_us)){
 	  LAPP_<<"* Got packet size:"<<bytes<<" starting ui test...";
 	  break;
@@ -248,7 +246,7 @@ public:
       wrapped_data = controller->getCurrentData();
 
       if (wrapped_data) {
-	int size;
+    uint32_t size;
 	fetch_data_us =  boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 	prof = (MessProfilePacketInfo *)wrapped_data->getBinaryValue("profile",size);
 	//   cout<<"read:"<<duration0.total_microseconds()<<endl;

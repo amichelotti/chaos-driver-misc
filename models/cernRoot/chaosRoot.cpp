@@ -20,28 +20,31 @@ using namespace chaos::metadata_service_client;
 
 int main(int argc, char** argv) {
 	std::string rootopt;
-	char* root_opts[120];
+    const char* root_opts[120];
 	int nroot_opts=0;
 	std::string buf;
-	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give tu CERN ROOT interpreter ");
+	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
 	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
 	ChaosMetadataServiceClient::getInstance()->start();
 	 if (0) {
-		 TTree* tt= queryChaosTree("buttami","-3m","-1",0,"");
-		 printf("%p",tt);
+         TTree* tt= queryChaosTree("buttami","-3m","-1",0,"",0);
+
+         printf("%p",tt);
 
 	 }
 	 root_opts[nroot_opts++]=argv[0];
 
 	 stringstream ss(rootopt);
 	 while (ss >> buf){
-		 root_opts[nroot_opts++]=strdup(buf.c_str());
+         root_opts[nroot_opts++]=buf.c_str();
 	 }
 
 
-	TRint *rootapp = new TRint("Rint", &nroot_opts, root_opts);
+    TRint *rootapp = new TRint("Rint", &nroot_opts, (char**)root_opts);
 	rootapp->SetPrompt("chaosRoot[%d]>");
-	  rootapp->Run();
+	rootapp->Run();
+    ChaosMetadataServiceClient::getInstance()->stop();
+    ChaosMetadataServiceClient::getInstance()->deinit();
 
     return 0;
 }

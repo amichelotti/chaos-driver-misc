@@ -199,24 +199,24 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState & stat) {
 	CDataWrapper*tmp=controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth).get();
 	stat=chaos::CUStateKey::UNDEFINED;
 	if(tmp && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)){
-	     std::string state=tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
-	        if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
-	        	stat=chaos::CUStateKey::START;
-	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOPING))
-	        	stat= chaos::CUStateKey::STOP;
-	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INITING))
-	        	stat= chaos::CUStateKey::INIT;
-	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINITING)|| (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD))
-	        	stat= chaos::CUStateKey::DEINIT;
-	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_RERROR))
-	        	stat= chaos::CUStateKey::RECOVERABLE_ERROR;
-	        else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_FERROR))
-	        	stat= chaos::CUStateKey::FATAL_ERROR;
+		std::string state=tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
+		if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
+			stat=chaos::CUStateKey::START;
+		else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOPING))
+			stat= chaos::CUStateKey::STOP;
+		else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INITING))
+			stat= chaos::CUStateKey::INIT;
+		else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT) || (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINITING)|| (state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD))
+			stat= chaos::CUStateKey::DEINIT;
+		else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_RERROR))
+			stat= chaos::CUStateKey::RECOVERABLE_ERROR;
+		else if((state== chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_FERROR))
+			stat= chaos::CUStateKey::FATAL_ERROR;
 
-	        if(tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP)){
-	            ret = tmp->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP);
-	        }
-	        return ret;
+		if(tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP)){
+			ret = tmp->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_TIMESTAMP);
+		}
+		return ret;
 	}
 
 
@@ -244,7 +244,7 @@ int ChaosController::setSchedule(uint64_t us) {
 
 std::string ChaosController::getJsonState() {
 	std::string ret;
-	ret = bundle_state.getData()->getJSONString();
+    ret = bundle_state.getData()->getCompliantJSONString();
 	return ret;
 }
 
@@ -261,8 +261,8 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	}
 
 	DBGET << "init CU NAME:\"" << path << "\"" << " timeo:" << timeo_;
-	/* DBGET<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
-     DBGET<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getJSONString();
+    /* DBGET<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getCompliantJSONString();
+     DBGET<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getCompliantJSONString();
      DBGET<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
      DBGET<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
 	 */
@@ -321,7 +321,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
 	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
 		last_ts[cnt]=0;
-	    last_pckid[cnt]=0;
+		last_pckid[cnt]=0;
 	}
 	delta_update=0;
 	iomutex.unlock();
@@ -349,7 +349,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	}
 
 	if (dataWrapper) {
-		json_dataset = dataWrapper->getJSONString();
+        json_dataset = dataWrapper->getCompliantJSONString();
 	} else {
 		CTRLERR_ << "cannot retrieve system dataset from " << path;
 		return -3;
@@ -400,7 +400,7 @@ int ChaosController::sendCmd(command_t& cmd, bool wait, uint64_t perform_at, uin
 
 
 	}
-	CTRLAPP_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getJSONString();
+    CTRLAPP_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getCompliantJSONString();
 	if ((err=controller->submitSlowControlCommand(cmd->alias, cmd->sub_rule, cmd->priority, cmd->command_id, 0, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, &cmd->param)) != 0) {
 		CTRLERR_ << "["<<getPath()<<"] error submitting: err:"<<err<< " timeout set to:"<<controller->getRequestTimeWaith();
 		return err;
@@ -505,7 +505,7 @@ void ChaosController::deinitializeClient(){
 	 * if(mds_client){
 		mds_client->stop();
 	}sc
-	*/
+	 */
 
 }
 #define CU_INPUT_UPDATE_US 500*1000
@@ -537,14 +537,14 @@ uint64_t ChaosController::sched(uint64_t ts){
 		if(pckid>last_pckid[cnt]){
 			delta_update=std::min(delta_update,(ts-last_ts[cnt])*1000/(2*(pckid-last_pckid[cnt])));
 			//DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(ts-last_ts[cnt]);
-;
+			;
 			last_pckid[cnt]= pckid;
 			last_ts[cnt]=ts;
 		} else{
 			delta_update+=50;
 		}
 
-		cachedJsonChannels[cnt] =channels[cnt]->getJSONString();
+        cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
 		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
 	}
 
@@ -557,18 +557,18 @@ uint64_t ChaosController::sched(uint64_t ts){
 			boost::mutex::scoped_lock(iomutex);
 
 			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,&alrm);
-			cachedJsonChannels[KeyDataStorageDomainDevAlarm]=alrm.getJSONString();
+            cachedJsonChannels[KeyDataStorageDomainDevAlarm]=alrm.getCompliantJSONString();
 		}
 		if(outw.hasKey("cu_alarm")/*&&outw.getInt32Value("cu_alarm")*/){
 			CDataWrapper alrm;
 			boost::mutex::scoped_lock(iomutex);
 
 			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm,&alrm);
-			cachedJsonChannels[KeyDataStorageDomainCUAlarm]=alrm.getJSONString();
+            cachedJsonChannels[KeyDataStorageDomainCUAlarm]=alrm.getCompliantJSONString();
 		}
 		boost::mutex::scoped_lock(iomutex);
 
-		cachedJsonChannels[KeyDataStorageDomainOutput]=outw.getJSONString();
+        cachedJsonChannels[KeyDataStorageDomainOutput]=outw.getCompliantJSONString();
 
 	}
 	//DBGET<<" SCHED pckts: "<<(pckid - last_packid ) << " time: "<<(now_ts - last_ts)<<" Freq:"<<calc_freq;
@@ -582,7 +582,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 		boost::mutex::scoped_lock(iomutex);
 
 		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput,&data);
-		cachedJsonChannels[KeyDataStorageDomainInput]=data.getJSONString();
+        cachedJsonChannels[KeyDataStorageDomainInput]=data.getCompliantJSONString();
 		last_input=ts;
 	}
 
@@ -594,7 +594,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 		boost::mutex::scoped_lock(iomutex);
 
 		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth,&data);
-		cachedJsonChannels[KeyDataStorageDomainHealth]=data.getJSONString();
+        cachedJsonChannels[KeyDataStorageDomainHealth]=data.getCompliantJSONString();
 
 		last_health=ts;
 
@@ -603,10 +603,10 @@ uint64_t ChaosController::sched(uint64_t ts){
 		CDataWrapper data;
 		boost::mutex::scoped_lock(iomutex);
 
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,&data);
-			cachedJsonChannels[KeyDataStorageDomainSystem]=data.getJSONString();
+		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,&data);
+        cachedJsonChannels[KeyDataStorageDomainSystem]=data.getCompliantJSONString();
 
-			last_system=ts;
+		last_system=ts;
 
 	}
 	if((ts-last_system)>CU_CUSTOM_UPDATE_US){
@@ -614,7 +614,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 		boost::mutex::scoped_lock(iomutex);
 
 		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom,&data);
-		cachedJsonChannels[KeyDataStorageDomainCustom]=data.getJSONString();
+        cachedJsonChannels[KeyDataStorageDomainCustom]=data.getCompliantJSONString();
 
 	}
 
@@ -629,7 +629,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 	all.appendAllElement(*bundle_state.getData());
 	boost::mutex::scoped_lock(iomutex);
 
-	cachedJsonChannels[-1]=all.getJSONString();
+    cachedJsonChannels[-1]=all.getCompliantJSONString();
 
 	//DBGET<<"SCHED STOP";
 	return delta_update;
@@ -695,7 +695,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
 	for (i = set.begin(); i != set.end(); i++) {
 		if (i->second) {
 			data = normalizeToJson(i->second, binaryToTranslate);
-			//out<<",\"input\":"<<data->getJSONString();
+            //out<<",\"input\":"<<data->getCompliantJSONString();
 			resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *(data.get()));
 		} else {
 			std::stringstream ss;
@@ -711,8 +711,8 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
 	if(data.get()){
 		data->reset();
 		data->appendAllElement(resdata);
-	//	data->appendAllElement(*bundle_state.getData());
-	//	DBGET<<"channel "<<channel<<" :"<<odata->getJSONString();
+		//	data->appendAllElement(*bundle_state.getData());
+        //	DBGET<<"channel "<<channel<<" :"<<odata->getCompliantJSONString();
 	}
 	return data;
 
@@ -723,9 +723,9 @@ const std::string&  ChaosController::fetchJson(int channel){
 }
 
 boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int channel) {
-//	boost::mutex::scoped_lock(iomutex);
+	//	boost::mutex::scoped_lock(iomutex);
 
-	 boost::shared_ptr<chaos::common::data::CDataWrapper> retdata;
+	boost::shared_ptr<chaos::common::data::CDataWrapper> retdata;
 	try {
 		if (channel == -1) {
 			chaos::common::data::CDataWrapper* idata = NULL, *odata = NULL;
@@ -770,7 +770,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
 
 
 
-		//        DBGET<<"channel "<<channel<<" :"<<data->getJSONString();
+        //        DBGET<<"channel "<<channel<<" :"<<data->getCompliantJSONString();
 
 	} catch (chaos::CException& e) {
 		std::stringstream ss;
@@ -818,11 +818,11 @@ std::string ChaosController::dataset2Var(chaos::common::data::CDataWrapper*data,
 		ChaosUniquePtr<CMultiTypeDataArrayWrapper> dw(data->getVectorValue(var_name));
 		//ChaosUniquePtr<CDataWrapper> dw(data->getCSDataValue(var_name));
 		//SONElement obj(data->getRawValuePtr(var_name));
-		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<<dw->getJSONString() << "}";
+        res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<<dw->getCanonicalJSONString() << "}";
 
 	} else {
-			chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
-			res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<< v.asString() << "}";
+		chaos::common::data::CDataVariant v=data->getVariantValue(var_name);
+		res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<< v.asString() << "}";
 	}
 
 	return res.str();
@@ -855,149 +855,149 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 	}
 }
 #define PARSE_QUERY_PARMS(args,check_name,check_what) \
-	std::string name = "";\
-	std::string what = "";\
-	bool alive = true;\
-	chaos_data::CDataWrapper p;\
-	std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> names;\
-	std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;\
-	chaos::common::data::CDataWrapper *json_value=NULL;\
-	std::stringstream serr;\
-	std::string node_type,parent;\
-	int64_t seq_id=0,start_ts=0,end_ts=chaos::common::utility::TimingUtil::getTimeStamp();\
-	int page=30;\
-	if (args != NULL) {\
-		p.setSerializedJsonData(args);\
-		if (p.hasKey("names")&&  p.isVector("names")) {\
-			names.reset(p.getVectorValue("names"));\
-		}\
-		if (p.hasKey("seq")) {\
-					seq_id=p.getInt64Value("seq");\
-		}\
-		if (p.hasKey("page")) {\
-							page=p.getInt32Value("page");\
-		}\
-		if (p.hasKey("type")) {\
-					node_type=p.getStringValue("type");\
-		}\
-		if (p.hasKey("start")) {\
-			start_ts=p.getInt64Value("start");\
-		}\
-		if (p.hasKey("end")) {\
-			end_ts=p.getInt64Value("end");\
-		}\
-		if (p.hasKey("parent")) {\
-					parent=p.getStringValue("parent");\
-		}\
-		if (p.hasKey("alive")) {\
-			alive = p.getBoolValue("alive");\
-		}\
-		if (p.hasKey("name")) {\
-			name = p.getStringValue("name");\
-		}\
-		if (p.hasKey("what")) {\
-			what = p.getStringValue("what");\
-		}\
-		if (p.hasKey("value")) {\
-			json_value=p.getCSDataValue("value");\
-			if(json_value==NULL){\
-				serr << cmd <<" bad json format" << args;\
+		std::string name = "";\
+		std::string what = "";\
+		bool alive = true;\
+		chaos_data::CDataWrapper p;\
+		std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> names;\
+		std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;\
+		chaos::common::data::CDataWrapper *json_value=NULL;\
+		std::stringstream serr;\
+		std::string node_type,parent;\
+		int64_t seq_id=0,start_ts=0,end_ts=chaos::common::utility::TimingUtil::getTimeStamp();\
+		int page=30;\
+		if (args != NULL) {\
+			p.setSerializedJsonData(args);\
+			if (p.hasKey("names")&&  p.isVector("names")) {\
+				names.reset(p.getVectorValue("names"));\
+			}\
+			if (p.hasKey("seq")) {\
+				seq_id=p.getInt64Value("seq");\
+			}\
+			if (p.hasKey("page")) {\
+				page=p.getInt32Value("page");\
+			}\
+			if (p.hasKey("type")) {\
+				node_type=p.getStringValue("type");\
+			}\
+			if (p.hasKey("start")) {\
+				start_ts=p.getInt64Value("start");\
+			}\
+			if (p.hasKey("end")) {\
+				end_ts=p.getInt64Value("end");\
+			}\
+			if (p.hasKey("parent")) {\
+				parent=p.getStringValue("parent");\
+			}\
+			if (p.hasKey("alive")) {\
+				alive = p.getBoolValue("alive");\
+			}\
+			if (p.hasKey("name")) {\
+				name = p.getStringValue("name");\
+			}\
+			if (p.hasKey("what")) {\
+				what = p.getStringValue("what");\
+			}\
+			if (p.hasKey("value")) {\
+				json_value=p.getCSDataValue("value");\
+				if(json_value==NULL){\
+					serr << cmd <<" bad json format" << args;\
+					bundle_state.append_error(serr.str());\
+                    json_buf = bundle_state.getData()->getCompliantJSONString();\
+					return CHAOS_DEV_CMD;\
+				}\
+			}\
+			if (p.hasKey("node_list") && p.isVector("node_list")) {\
+				node_list.reset(p.getVectorValue("node_list"));\
+			}\
+			if((names.get() == NULL) && name.empty() && check_name){\
+				serr << "missing 'name' or 'names' in command:\"" << cmd<<"\"";\
 				bundle_state.append_error(serr.str());\
-				json_buf = bundle_state.getData()->getJSONString();\
+                json_buf = bundle_state.getData()->getCompliantJSONString();\
 				return CHAOS_DEV_CMD;\
 			}\
-		}\
-		if (p.hasKey("node_list") && p.isVector("node_list")) {\
-			node_list.reset(p.getVectorValue("node_list"));\
-		}\
-		if((names.get() == NULL) && name.empty() && check_name){\
-			serr << "missing 'name' or 'names' in command:\"" << cmd<<"\"";\
-			bundle_state.append_error(serr.str());\
-			json_buf = bundle_state.getData()->getJSONString();\
-					return CHAOS_DEV_CMD;\
-		}\
-		if(check_what && what.empty()){\
-			serr << "missing operation 'what'" << cmd;\
-			bundle_state.append_error(serr.str());\
-			json_buf = bundle_state.getData()->getJSONString();\
-			return CHAOS_DEV_CMD;\
-		}\
-	}
+			if(check_what && what.empty()){\
+				serr << "missing operation 'what'" << cmd;\
+				bundle_state.append_error(serr.str());\
+                json_buf = bundle_state.getData()->getCompliantJSONString();\
+				return CHAOS_DEV_CMD;\
+			}\
+		}
 
 
 #define RETURN_ERROR(msg){\
-	std::stringstream serr;serr<< cmd <<" \""<<args<<"\" "<<msg;\
-	bundle_state.append_error(serr.str());\
-	json_buf = bundle_state.getData()->getJSONString();\
-	return CHAOS_DEV_CMD;\
-	}
+		std::stringstream serr;serr<< cmd <<" \""<<args<<"\" "<<msg;\
+		bundle_state.append_error(serr.str());\
+        json_buf = bundle_state.getData()->getCompliantJSONString();\
+		return CHAOS_DEV_CMD;\
+}
 
 #define CHECK_PARENT \
-if(parent.empty() ){\
-	RETURN_ERROR("must specify 'parent'")};
+		if(parent.empty() ){\
+			RETURN_ERROR("must specify 'parent'")};
 
 #define EXECUTE_CHAOS_API(api_name,time_out,...) \
-	    DBGET<<" " <<" Executing Api:\""<< # api_name<<"\"" ;\
-chaos::metadata_service_client::api_proxy::ApiProxyResult apires=  GET_CHAOS_API_PTR(api_name)->execute( __VA_ARGS__ );\
-apires->setTimeout(time_out);\
-apires->wait();\
-if(apires->getError()){\
-    std::stringstream ss;\
-    ss<<" error in :"<<__FUNCTION__<<"|"<<__LINE__<<"|"<< # api_name <<" " <<apires->getErrorMessage();\
-    bundle_state.append_error(ss.str());\
-    json_buf = bundle_state.getData()->getJSONString();\
-    return CHAOS_DEV_CMD;\
-}
+		DBGET<<" " <<" Executing Api:\""<< # api_name<<"\"" ;\
+		chaos::metadata_service_client::api_proxy::ApiProxyResult apires=  GET_CHAOS_API_PTR(api_name)->execute( __VA_ARGS__ );\
+		apires->setTimeout(time_out);\
+		apires->wait();\
+		if(apires->getError()){\
+			std::stringstream ss;\
+			ss<<" error in :"<<__FUNCTION__<<"|"<<__LINE__<<"|"<< # api_name <<" " <<apires->getErrorMessage();\
+			bundle_state.append_error(ss.str());\
+            json_buf = bundle_state.getData()->getCompliantJSONString();\
+			return CHAOS_DEV_CMD;\
+		}
 uint64_t ChaosController::offsetToTimestamp(const std::string& off){
 	boost::smatch what;
 	boost::regex ts_ms("([0-9]{13})");
 
 	if(boost::regex_match(off,what,ts_ms)){
-    	std::string dd=what[1];
+		std::string dd=what[1];
 
 		return strtoull(dd.c_str(),0,0);
 	}
 
-    boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
+	boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
 
-          //        std::string::const_iterator start = input.begin() ;
-          //std::string::const_iterator end = input.end() ;
-    if(boost::regex_match(off,what,mm)){
-    	int64_t toff=0;
-    	std::string dd=what[2];
-    	std::string h=what[3];
-    	std::string m=what[4];
-    	std::string s=what[5];
-    	std::string ms=what[6];
-    	std::string sign=what[1];
-    	toff+=(strtoull(dd.c_str(),0,0)*(3600*24))+
-    				(strtoull(h.c_str(),0,0)*(3600))+
-						(strtoull(m.c_str(),0,0)*(60))+
-						(strtoull(s.c_str(),0,0));
-    	toff*=1000*((sign=="-")?-1:1);
-    	toff+=(strtoul(s.c_str(),0,0));
-    	uint64_t ret=chaos::common::utility::TimingUtil::getTimeStamp();
-    	ret+=toff;
-    	//DBGET<<"offset "<<off<<" offset epoch: "<<std::dec<<ret;
-    	return ret;
-    }
-    namespace bt = boost::posix_time;
-    const std::locale formats[] = {
-    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d %H:%M:%S")),
-    std::locale(std::locale::classic(),new bt::time_input_facet("%Y/%m/%d %H:%M:%S")),
-    std::locale(std::locale::classic(),new bt::time_input_facet("%d.%m.%Y %H:%M:%S")),
-    std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d"))};
-    const int formats_n = sizeof(formats)/sizeof(formats[0]);
-    bt::ptime pt;
-    for(int i=0; i<formats_n; ++i){
-            std::istringstream is(off);
-            is.imbue(formats[i]);
-            is >> pt;
-            if(pt != bt::ptime()) break;
-    }
-    bt::ptime timet_start(boost::gregorian::date(1970,1,1));
-    bt::time_duration diff = pt - timet_start;
-    return (diff.ticks()/bt::time_duration::rep_type::ticks_per_second)*1000;
+	//        std::string::const_iterator start = input.begin() ;
+	//std::string::const_iterator end = input.end() ;
+	if(boost::regex_match(off,what,mm)){
+		int64_t toff=0;
+		std::string dd=what[2];
+		std::string h=what[3];
+		std::string m=what[4];
+		std::string s=what[5];
+		std::string ms=what[6];
+		std::string sign=what[1];
+		toff+=(strtoull(dd.c_str(),0,0)*(3600*24))+
+				(strtoull(h.c_str(),0,0)*(3600))+
+				(strtoull(m.c_str(),0,0)*(60))+
+				(strtoull(s.c_str(),0,0));
+		toff*=1000*((sign=="-")?-1:1);
+		toff+=(strtoul(s.c_str(),0,0));
+		uint64_t ret=chaos::common::utility::TimingUtil::getTimeStamp();
+		ret+=toff;
+		//DBGET<<"offset "<<off<<" offset epoch: "<<std::dec<<ret;
+		return ret;
+	}
+	namespace bt = boost::posix_time;
+	const std::locale formats[] = {
+			std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d %H:%M:%S")),
+			std::locale(std::locale::classic(),new bt::time_input_facet("%Y/%m/%d %H:%M:%S")),
+			std::locale(std::locale::classic(),new bt::time_input_facet("%d.%m.%Y %H:%M:%S")),
+			std::locale(std::locale::classic(),new bt::time_input_facet("%Y-%m-%d"))};
+	const int formats_n = sizeof(formats)/sizeof(formats[0]);
+	bt::ptime pt;
+	for(int i=0; i<formats_n; ++i){
+		std::istringstream is(off);
+		is.imbue(formats[i]);
+		is >> pt;
+		if(pt != bt::ptime()) break;
+	}
+	bt::ptime timet_start(boost::gregorian::date(1970,1,1));
+	bt::time_duration diff = pt - timet_start;
+	return (diff.ticks()/bt::time_duration::rep_type::ticks_per_second)*1000;
 
 }
 
@@ -1015,8 +1015,8 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 		while ((query_cursor->hasNext())) {
 
 			ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-					boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
-					res.push_back(cd);
+			boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
+			res.push_back(cd);
 		}
 
 	} else {
@@ -1052,11 +1052,11 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 bool ChaosController::queryHasNext(int32_t uid){
 	chaos::common::io::QueryCursor *query_cursor = NULL;
 	if (query_cursor_map.find(uid) != query_cursor_map.end()) {
-			query_cursor = query_cursor_map[uid].qc;
-			query_cursor_map[uid].qt = reqtime/1000;
-			if (query_cursor) {
-				return query_cursor->hasNext();
-			}
+		query_cursor = query_cursor_map[uid].qc;
+		query_cursor_map[uid].qt = reqtime/1000;
+		if (query_cursor) {
+			return query_cursor->hasNext();
+		}
 	}
 	return false;
 }
@@ -1200,7 +1200,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						} else {
 							serr << "searching class:" << domain;
 							bundle_state.append_error(serr.str());
-							json_buf = bundle_state.getData()->getJSONString();
+                            json_buf = bundle_state.getData()->getCompliantJSONString();
 							return CHAOS_DEV_CMD;
 						}
 					}
@@ -1239,7 +1239,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					}
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			} else if (what == "snapshots") {
 				DBGET << "searching SNAPSHOTS";
@@ -1293,7 +1293,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					if (mdsChannel->getFullNodeDescription(name, &out, MDS_TIMEOUT) == 0) {
 						json_buf ="{}";
 						if(out){
-							json_buf = out->getJSONString();
+                            json_buf = out->getCompliantJSONString();
 							CALC_EXEC_TIME;
 							delete out;
 						}
@@ -1308,7 +1308,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				serr << "unknown 'search' arg:" << args;
 			}
 			bundle_state.append_error(serr.str());
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_CMD;
 		} else if (cmd == "snapshot") {
 			std::stringstream res;
@@ -1327,7 +1327,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (what == "create") {
 				if(node_found.empty()){
 					serr << "missing \"node_list\" json vector";
-			} else {
+				} else {
 					if (mdsChannel->createNewSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
 						DBGET << "Created snapshot name:\"" << name << "\"";
 
@@ -1340,7 +1340,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					}
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 
 			} else if (what == "delete") {
@@ -1354,7 +1354,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "error deleting snapshot:" << name;
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			} else if (what == "restore") {
 				if (mdsChannel->restoreSnapshot(name, MDS_TIMEOUT) == 0) {
@@ -1367,7 +1367,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "error restoring snapshot:" << name;
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			} else if (what == "load") {
 				if(node_found.empty()&&(mdsChannel->searchNodeForSnapshot(name, node_found, MDS_TIMEOUT) != 0)){
@@ -1382,9 +1382,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						if (mdsChannel->loadSnapshotNodeDataset(name,*i,res, MDS_TIMEOUT) == 0) {
 							DBGET << "load snapshot name:\"" << name << "\": CU:"<<*i;
 							if((i+1)==node_found.end()){
-								sres<<res.getJSONString();
+                                sres<<res.getCompliantJSONString();
 							} else {
-								sres<<res.getJSONString()<<",";
+                                sres<<res.getCompliantJSONString()<<",";
 							}
 						}
 					}
@@ -1394,7 +1394,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					return CHAOS_DEV_OK;
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			} else if (what == "set") {
 				if(json_value==NULL){
@@ -1404,7 +1404,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					api_proxy::service::VectorDatasetValue datasets;
 					std::string uid;
 					for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
-						DBGET<<"checking for\""<<chaos::datasetTypeToHuman(cnt)<<"\" in:"<<json_value->getJSONString();
+                        DBGET<<"checking for\""<<chaos::datasetTypeToHuman(cnt)<<"\" in:"<<json_value->getCompliantJSONString();
 
 						if(json_value->hasKey(chaos::datasetTypeToHuman(cnt))&&json_value->isCDataWrapperValue(chaos::datasetTypeToHuman(cnt))){
 							DBGET<<"Set Snapshot found \""<<chaos::datasetTypeToHuman(cnt)<<"\"";
@@ -1421,19 +1421,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					if(!datasets.empty()){
 						EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode,MDS_TIMEOUT,name,uid,datasets);
 					}
-					json_buf=json_value->getJSONString();
+                    json_buf=json_value->getCompliantJSONString();
 					CALC_EXEC_TIME
 					return CHAOS_DEV_OK;
 				}
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			} else {
 
 				serr << "unknown 'snapshot' arg:" << args;
 			}
 			bundle_state.append_error(serr.str());
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_CMD;
 		} else if (cmd == "variable") {
 			std::stringstream res;
@@ -1444,14 +1444,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (what == "set") {
 				if (json_value) {
 					if (mdsChannel->setVariable(name, *json_value, MDS_TIMEOUT) == 0) {
-						DBGET << "Save variable name:\"" << name << "\":"<<json_value->getJSONString();
-						json_buf =json_value->getJSONString();
+                        DBGET << "Save variable name:\"" << name << "\":"<<json_value->getCompliantJSONString();
+                        json_buf =json_value->getCompliantJSONString();
 						CALC_EXEC_TIME;
 						return CHAOS_DEV_OK;
 					} else {
-						serr << "error setting variable '" << name<<"' to:"<<json_value->getJSONString();
+                        serr << "error setting variable '" << name<<"' to:"<<json_value->getCompliantJSONString();
 						bundle_state.append_error(serr.str());
-						json_buf = bundle_state.getData()->getJSONString();
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
 						return CHAOS_DEV_CMD;
 					}
 
@@ -1459,7 +1459,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "no parameters given" << cmd;
 
 					bundle_state.append_error(serr.str());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					return CHAOS_DEV_CMD;
 				}
 			} else if(what=="get"){
@@ -1469,7 +1469,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						json_buf="{}";
 						DBGET << "no variable name:\"" << name << "\":";
 					} else {
-						json_buf = res->getJSONString();
+                        json_buf = res->getCompliantJSONString();
 						DBGET << "Retrieved  variable name:\"" << name << "\":"<<json_buf;
 						delete res;
 					}
@@ -1483,7 +1483,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					if(res!=0){
 						delete res;
 					}
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					return CHAOS_DEV_CMD;
 				}
 			} else if(what=="del"){
@@ -1496,7 +1496,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "no variable found with name :\"" << name<<"\"";
 
 					bundle_state.append_error(serr.str());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					return CHAOS_DEV_CMD;
 				}
 			} else if(what=="search"){
@@ -1510,7 +1510,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					serr << "no variable found with name :\"" << name<<"\"";
 
 					bundle_state.append_error(serr.str());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					return CHAOS_DEV_CMD;
 				}
 			}
@@ -1522,15 +1522,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				serr << cmd <<" parameters must specify 'type'";
 
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			}
 			if(node_type == "us"){
 				if(what == "set"){
 					EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,MDS_TIMEOUT,name,0,json_value);
 
-		             json_buf="{}";
-		             return CHAOS_DEV_OK;
+					json_buf="{}";
+					return CHAOS_DEV_OK;
 				} else if(what=="del"){
 					EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS,MDS_TIMEOUT,name);
 					json_buf="{}";
@@ -1546,26 +1546,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					r=apires->getResult();
 					if(r ){
 
-						json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					}
 
 					return CHAOS_DEV_OK;
 				} else if(what=="start"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationOperationLaunch);
 					json_buf="{}";
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				} else if(what=="stop"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationOperationStop);
 					json_buf="{}";
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				} else if(what=="kill"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationOperationKill);
 					json_buf="{}";
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				} else if(what=="restart"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationOperationRestart);
 					json_buf="{}";
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				}
 			} else if(node_type == "cu"){
 
@@ -1581,11 +1581,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							for (int idx = 0; idx < dw->size(); idx++) {
 
 								if(dw->isCDataWrapperElementAtIndex(idx)){
-					                CDataWrapper* prop=dw->getCDataWrapperElementAtIndex(idx);
-					                if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
-					                	ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
-					                	cu_property_group->group_property_list.push_back(bool_value);
-					                }
+									CDataWrapper* prop=dw->getCDataWrapperElementAtIndex(idx);
+									if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
+										ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
+										cu_property_group->group_property_list.push_back(bool_value);
+									}
 
 
 								}
@@ -1601,48 +1601,48 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						return CHAOS_DEV_OK;
 					}
 					CHECK_PARENT;
-	                 {
-	                	 EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType,MDS_TIMEOUT,parent,name,0);
-	                 }
-	                 {
-	                	 EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,MDS_TIMEOUT,name,*json_value);
-	                 }
+					{
+						EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType,MDS_TIMEOUT,parent,name,0);
+					}
+					{
+						EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,MDS_TIMEOUT,name,*json_value);
+					}
 
-					 json_buf="{}";
-					 return CHAOS_DEV_OK;
+					json_buf="{}";
+					return CHAOS_DEV_OK;
 				} else if(what=="del"){
 					CHECK_PARENT;
-	                 EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance,MDS_TIMEOUT,parent,name);
+					EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance,MDS_TIMEOUT,parent,name);
 
 					json_buf="{}";
 					return CHAOS_DEV_OK;
 				} else if(what=="get"){
-	                 EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance,MDS_TIMEOUT,name);
+					EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance,MDS_TIMEOUT,name);
 
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
-						json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					}
 					return CHAOS_DEV_OK;
 				}
 			} else if(node_type == "agent"){
 
 				if(what == "set"){
-						// set an association between a Agent and a Unit Server
-	                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value);
+					// set an association between a Agent and a Unit Server
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value);
 
-					 json_buf="{}";
-					 return CHAOS_DEV_OK;
+					json_buf="{}";
+					return CHAOS_DEV_OK;
 				} else if(what=="del"){
 					/*if(parent.empty()){
 						serr << cmd <<" must specify 'parent'";
 
 						bundle_state.append_error(serr.str());
-						json_buf = bundle_state.getData()->getJSONString();
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
 						return CHAOS_DEV_CMD;
 					}*/
 					CHECK_PARENT;
-	                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation,MDS_TIMEOUT,name,parent);
+					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation,MDS_TIMEOUT,name,parent);
 
 					json_buf="{}";
 					return CHAOS_DEV_OK;
@@ -1650,44 +1650,58 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadNodeAssociation,MDS_TIMEOUT,name,parent);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
-						json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					}
 					return CHAOS_DEV_OK;
 				} else if(what=="list"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::ListNodeForAgent,MDS_TIMEOUT,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
-						json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					}
 					return CHAOS_DEV_OK;
 				} else if(what=="info"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadAgentDescription,MDS_TIMEOUT,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
-							json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					} else {
 						json_buf="{}";
 						return CHAOS_DEV_CMD;
 
 					}
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				} else if(what=="check"){
 					EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::CheckAgentHostedProcess,MDS_TIMEOUT,name);
 					chaos::common::data::CDataWrapper *r=apires->getResult();
 					if(r){
-							json_buf=r->getJSONString();
+                        json_buf=r->getCompliantJSONString();
 					} else {
 						json_buf="{}";
 						return CHAOS_DEV_CMD;
 
 					}
-				   return CHAOS_DEV_OK;
+					return CHAOS_DEV_OK;
 				}
 				serr << cmd <<" bad command format";
 				bundle_state.append_error(serr.str());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
-		}
+			} else if(node_type == "script"){
+				if(what == "save"){
+
+				} else if(what=="del"){
+
+				} else if(what=="search"){
+
+				} else if(what=="update"){
+
+				}
+				serr << cmd <<" bad command format";
+				bundle_state.append_error(serr.str());
+                json_buf = bundle_state.getData()->getCompliantJSONString();
+				return CHAOS_DEV_CMD;
+			}
 		} else if(cmd=="log"){
 			PARSE_QUERY_PARMS(args,true,true);
 			if(what=="search"){
@@ -1698,18 +1712,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
 				chaos::common::data::CDataWrapper *r=apires->getResult();
 				if(r){
-						json_buf=r->getJSONString();
+                    json_buf=r->getCompliantJSONString();
 				} else {
 					json_buf="[]";
 					return CHAOS_DEV_CMD;
 
 				}
-			   return CHAOS_DEV_OK;
+				return CHAOS_DEV_OK;
 
 			}
 			serr << cmd <<" bad command format";
 			bundle_state.append_error(serr.str());
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_CMD;
 		} // log global commands
 
@@ -1725,7 +1739,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		}
 		//Json::Reader rreader;
 		//Json::Value vvalue;
-	/*	if (wostate == 0) {
+		/*	if (wostate == 0) {
 			std::stringstream ss;
 
 			if ((state == chaos::CUStateKey::RECOVERABLE_ERROR) || (state == chaos::CUStateKey::FATAL_ERROR)) {
@@ -1739,7 +1753,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					ll = ll + std::string(" msg:") + data->getCStringValue("nh_lem");
 				}
 				bundle_state.append_error(ll);
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 
 
@@ -1749,7 +1763,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				if (checkHB() == 0) {
 					ss << " [" << path << "] HB expired:" << (reqtime - last_access) << " us greater than " << timeo << " us, removing device";
 					bundle_state.append_error(ss.str());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					//					init(path, timeo);
 
 					CALC_EXEC_TIME;
@@ -1760,13 +1774,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 
 		} else
-		*/
+		 */
 		if (wostate&& (cmd == "status")) {
 			bundle_state.status(chaos::CUStateKey::START);
 			state = chaos::CUStateKey::START;
 			bundle_state.append_log("stateless device");
 			//chaos::common::data::CDataWrapper* data = fetch(KeyDataStorageDomainOutput);
-			//json_buf = data->getJSONString();
+            //json_buf = data->getCompliantJSONString();
 			json_buf=fetchJson(KeyDataStorageDomainOutput);
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_OK;
@@ -1781,7 +1795,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
-				next_state = chaos::CUStateKey::INIT;
+			next_state = chaos::CUStateKey::INIT;
 
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
@@ -1801,14 +1815,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->stopDevice();
 			if (err != 0) {
 				bundle_state.append_error("stopping device:" + path);
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
 			next_state = chaos::CUStateKey::STOP;
 
 			//chaos::common::data::CDataWrapper* data = fetch(-1);
-			//json_buf = data->getJSONString();
+            //json_buf = data->getCompliantJSONString();
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "deinit") {
@@ -1816,7 +1830,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->deinitDevice();
 			if (err != 0) {
 				bundle_state.append_error("deinitializing device:" + path);
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
@@ -1830,14 +1844,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			err = controller->setScheduleDelay(atol((char*) args));
 			if (err != 0) {
 				bundle_state.append_error("error set scheduling:" + path);
-	/*			//				init(path, timeo);
-				json_buf = bundle_state.getData()->getJSONString();
+				/*			//				init(path, timeo);
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
-			*/
+				 */
 			}
 			//chaos::common::data::CDataWrapper* data = fetch(-1);
-			//json_buf = data->getJSONString();
+            //json_buf = data->getCompliantJSONString();
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "desc") {
@@ -1847,7 +1861,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (mdsChannel->getFullNodeDescription(path, &out, MDS_TIMEOUT) == 0) {
 				json_buf="{}";
 				if(out){
-					json_buf = out->getJSONString();
+                    json_buf = out->getCompliantJSONString();
 					CALC_EXEC_TIME;
 					delete out;
 
@@ -1857,13 +1871,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else {
 				bundle_state.append_error("error describing device:" + path);
 				//				init(path, timeo);
-				//json_buf = bundle_state.getData()->getJSONString();
+                //json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				if(out){
 					delete out;
 				}
 				//chaos::common::data::CDataWrapper* data = fetch(-1);
-				//json_buf = data->getJSONString();
+                //json_buf = data->getCompliantJSONString();
 				json_buf = fetchJson(-1);
 				return CHAOS_DEV_OK;
 			}
@@ -1871,7 +1885,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd == "channel" && (args != 0)) {
 			// bundle_state.append_log("return channel :" + parm);
 			//chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
-			//json_buf = data->getJSONString();
+            //json_buf = data->getCompliantJSONString();
 			json_buf = fetchJson(atoi((char*) args));
 			return CHAOS_DEV_OK;
 
@@ -1932,14 +1946,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			}
 
 			if (p.hasKey("channel")) {
-					if(p.isInt32Value("channel")){
-						if((p.getInt32Value("channel")>=0) && (p.getInt32Value("channel") <=DPCK_LAST_DATASET_INDEX)){
-							channel = p.getInt32Value("channel");
-						}
+				if(p.isInt32Value("channel")){
+					if((p.getInt32Value("channel")>=0) && (p.getInt32Value("channel") <=DPCK_LAST_DATASET_INDEX)){
+						channel = p.getInt32Value("channel");
 					}
-					if(p.isStringValue("channel")){
-						channel=chaos::HumanTodatasetType(p.getStringValue("channel"));
-					}
+				}
+				if(p.isStringValue("channel")){
+					channel=chaos::HumanTodatasetType(p.getStringValue("channel"));
+				}
 
 			}
 			if (p.hasKey("limit")) {
@@ -1970,14 +1984,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 						while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
 							ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-						//	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
+							//	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
 							data = normalizeToJson(q_result.get(), binaryToTranslate);
 							if (var_name.size() && data->hasKey(var_name)) {
 								res << dataset2Var(data.get(),var_name);
 							} else {
-								res << data->getJSONString();
+                                res << data->getCompliantJSONString();
 							}
-						//	DBGET << "OBJ  " <<res;
+							//	DBGET << "OBJ  " <<res;
 							cnt++;
 							//	DBGET << "getting query page  " << cnt;
 							if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
@@ -1997,7 +2011,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							if(err=query_cursor->getError()){
 								controller->releaseQuery(query_cursor);
 								bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", %getPath() %err));
-								json_buf = bundle_state.getData()->getJSONString();
+                                json_buf = bundle_state.getData()->getCompliantJSONString();
 								/// TODO : perche' devo rinizializzare il controller?
 								//init(path, timeo);
 
@@ -2012,13 +2026,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 					} else {
 						bundle_state.append_error("cannot perform specified query, no data? " + getPath());
-						json_buf = bundle_state.getData()->getJSONString();
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
 						CALC_EXEC_TIME;
 						return CHAOS_DEV_CMD;
 					}
 				} else {
 					bundle_state.append_error("too many concurrent queries, please try later on " + getPath());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
@@ -2043,7 +2057,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						if (var_name.size() && data->hasKey(var_name)) {
 							res << dataset2Var(data.get(),var_name);
 						} else {
-							res << data->getJSONString();
+                            res << data->getCompliantJSONString();
 						}
 						cnt++;
 						//	DBGET << "getting query page  " << cnt;
@@ -2056,7 +2070,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 				} else {
 					bundle_state.append_error("cannot perform specified query, no data? " + getPath());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
@@ -2112,7 +2126,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				uid = p.getInt32Value("uid");
 			} else {
 				bundle_state.append_error("must specify a valid page uid " + getPath());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
@@ -2139,7 +2153,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 						if (var_name.size() && data->hasKey(var_name)) {
 							res << dataset2Var(data.get(),var_name);
 						} else {
-							res << data->getJSONString();
+                            res << data->getCompliantJSONString();
 						}
 						cnt++;
 						if ((query_cursor->hasNext())&&(cnt < page)) {
@@ -2153,7 +2167,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 							controller->releaseQuery(query_cursor);
 							query_cursor_map.erase(query_cursor_map.find(uid));
 							bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", %getPath() %uid %err));
-							json_buf = bundle_state.getData()->getJSONString();
+                            json_buf = bundle_state.getData()->getCompliantJSONString();
 							CALC_EXEC_TIME;
 							//init(path, timeo);
 
@@ -2173,7 +2187,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					return CHAOS_DEV_OK;
 				}
 				bundle_state.append_error("cannot perform specified query, no data? " + getPath());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 
@@ -2188,7 +2202,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				uint32_t exported = 0;
 				if (query_cursor->hasNext()) {
 					ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-					json_buf = q_result->getJSONString();
+                    json_buf = q_result->getCompliantJSONString();
 					return CHAOS_DEV_OK;
 
 				} else {
@@ -2245,7 +2259,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_OK;
 			}
 			bundle_state.append_error("error deleting snapshot " + getPath() + " key:" + std::string(args));
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_CMD;
 
@@ -2267,12 +2281,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			DBGET << "LOADING snapshot " << snapname;
 			if (mdsChannel->loadSnapshotNodeDataset(snapname,getPath(),res, MDS_TIMEOUT) == 0) {
 				DBGET << "load snapshot name:\"" << snapname << "\": CU:"<<getPath();
-				json_buf = res.getJSONString();
+                json_buf = res.getCompliantJSONString();
 				return CHAOS_DEV_OK;
 
 			}
 			bundle_state.append_error("error making load snapshot " + getPath() + " snap name:" + snapname);
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			CALC_EXEC_TIME;
 			return CHAOS_DEV_CMD;
 
@@ -2300,7 +2314,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				return CHAOS_DEV_OK;
 			} else {
 				bundle_state.append_error("error making listing snapshot for:" + getPath());
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			}
 
@@ -2327,12 +2341,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 				if (err != 0) {
 					bundle_state.append_error("error setting attribute:" + path + "/" + *i + "\"=" + data.getCStringValue(*i));
 					//					init(path, timeo);
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
 			}
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			DBGET << "attribute applied:" << json_buf;
 			return CHAOS_DEV_OK;
 		} else if (cmd == "recover") {
@@ -2341,11 +2355,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (err != 0) {
 				bundle_state.append_error("error recovering from error " + path);
 				//init(path, timeo);
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd == "restore" && (args != 0)) {
 			bundle_state.append_log("send restore on \"" + path + "\" tag:\"" + std::string(args) + "\"");
@@ -2353,11 +2367,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			if (err != 0) {
 				bundle_state.append_error("error setting restoring:\"" + path + "\" with tag:\"" + std::string(args) + "\"");
 				//				init(path, timeo);
-				json_buf = bundle_state.getData()->getJSONString();
+                json_buf = bundle_state.getData()->getCompliantJSONString();
 				CALC_EXEC_TIME;
 				return CHAOS_DEV_CMD;
 			}
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_OK;
 		} else if (cmd != "status") {
 			bundle_state.append_log("send cmd:\"" + cmd + "\" args: \"" + std::string(args) + "\" to device:" + path);
@@ -2367,13 +2381,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			command->sub_rule=(submission_mode==1)?chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL:chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 			err = sendCmd(command, false);
 			if (err != 0) {
-			/*	init(path, timeo);*/
+				/*	init(path, timeo);*/
 				err = sendCmd(command, false);
 				if (err != 0) {
 					std::stringstream ss;
 					ss<<"error sending command:'"<< cmd<< "' args:'" << std::string(args)<< "' to:'"<<path<<"' err:"<< err;
 					bundle_state.append_error(ss.str());
-					json_buf = bundle_state.getData()->getJSONString();
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_CMD;
 				}
@@ -2381,24 +2395,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 			}
 			bundle_state.status(state);
-			json_buf = bundle_state.getData()->getJSONString();
+            json_buf = bundle_state.getData()->getCompliantJSONString();
 			return CHAOS_DEV_OK;
 		}
 
 
 
 
-	//	chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
-		//json_buf = data->getJSONString();
+		//	chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
+        //json_buf = data->getCompliantJSONString();
 		json_buf=fetchJson(atoi((char*) args));
 		return CHAOS_DEV_OK;
 	} catch (chaos::CException e) {
 		bundle_state.append_error("error sending \"" + cmd + "\" args:\"" + std::string(args) + "\" to:" + path + " err:" + e.what());
-		json_buf = bundle_state.getData()->getJSONString();
+        json_buf = bundle_state.getData()->getCompliantJSONString();
 		return CHAOS_DEV_UNX;
 	} catch (std::exception ee) {
 		bundle_state.append_error("unexpected error sending \"" + cmd + "\" args:\"" + std::string(args) + "\" to:" + path + " err:" + ee.what());
-		json_buf = bundle_state.getData()->getJSONString();
+        json_buf = bundle_state.getData()->getCompliantJSONString();
 		return CHAOS_DEV_CMD;
 	}
 
@@ -2443,10 +2457,10 @@ int ChaosController::updateState() {
 boost::shared_ptr<chaos::common::data::CDataWrapper>  ChaosController::normalizeToJson(chaos::common::data::CDataWrapper*src, std::map<std::string, int>& list) {
 	boost::shared_ptr<chaos::common::data::CDataWrapper> data_res(new CDataWrapper());
 
-  if (list.empty()){
-	 data_res->appendAllElement(*src);
-    return data_res;
-  }
+	if (list.empty()){
+		data_res->appendAllElement(*src);
+		return data_res;
+	}
 
 	std::vector<std::string> contained_key;
 	std::map<std::string, int>::iterator rkey;
@@ -2490,12 +2504,12 @@ boost::shared_ptr<chaos::common::data::CDataWrapper>  ChaosController::normalize
 			}/*else if(rkey->second ==chaos::DataType::TYPE_INT64) {
 	      data_res->addDoubleValue(rkey->first,(double)src->getInt64Value(rkey->first));
 	      }*/ else {
-	    	  // LDBG_ << "adding not translated key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
+              // LDBG_ << "adding not translated key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getCompliantJSONString();
 	    	  data_res->appendAllElement(*src->getCSDataValue(*k));
 	    	  src->copyKeyTo(*k,  *data_res.get());
 	      }
 		} else {
-			//LDBG_ << "adding normal key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
+            //LDBG_ << "adding normal key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getCompliantJSONString();
 			src->copyKeyTo(*k, *data_res.get());
 
 		}
