@@ -532,6 +532,8 @@ uint64_t ChaosController::sched(uint64_t ts){
 		boost::mutex::scoped_lock(iomutex);
 		channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
 		uint64_t ts,pckid;
+		if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP))
+		  continue;
 		ts=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
 		if(pckid>last_pckid[cnt]){
@@ -544,7 +546,7 @@ uint64_t ChaosController::sched(uint64_t ts){
 			delta_update+=50;
 		}
 
-        cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
+		cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
 		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
 	}
 
