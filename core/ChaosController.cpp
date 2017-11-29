@@ -2376,7 +2376,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 		} else if (cmd != "status") {
 			bundle_state.append_log("send cmd:\"" + cmd + "\" args: \"" + std::string(args) + "\" to device:" + path);
 			command_t command = prepareCommand(cmd);
-			command->param.setSerializedJsonData(args);
+            if(*args!=0){
+                command->param.setSerializedJsonData(args);
+            }
 			command->priority=prio;
 			command->sub_rule=(submission_mode==1)?chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL:chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 			err = sendCmd(command, false);

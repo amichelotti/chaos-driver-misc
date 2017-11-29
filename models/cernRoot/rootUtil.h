@@ -4,7 +4,7 @@
 #ifndef __ROOT_UTIL__
 #define __ROOT_UTIL__
 #include "TTree.h"
-
+#include <driver/misc/core/ChaosDatasetAttribute.h>
 
 /**
  * Create a new Tree with default name of the chaosNode, it  creates a unique branch for a dataset
