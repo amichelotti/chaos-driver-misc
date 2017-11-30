@@ -516,124 +516,53 @@ void ChaosController::deinitializeClient(){
 #define CU_FREQ_UPDATE_US 5*1000*1000
 
 uint64_t ChaosController::sched(uint64_t ts){
-	//CDataWrapper* res=fetch(-1);
-	//DBGET<<"SCHED START";
-	/*if(ioctrl.try_lock()==false){
-		return 0;
-	}*/
-
-	CDataWrapper outw;
-	uint64_t now_ts=0;
-	uint64_t pckid=0;
 	CDataWrapper all;
 	controller->fetchAllDataset();
 	ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX+1];
+    delta_update=CU_HEALTH_UPDATE_US;
 	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
 		boost::mutex::scoped_lock(iomutex);
 		channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
-		uint64_t ts,pckid;
-		if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP))
+
+        uint64_t tss,pckid;
+        if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
 		  continue;
-		ts=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+		}
+
+        cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
+        all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
+
+        /*
+        *  if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
+            continue;
+        tss=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
 		pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
 		if(pckid>last_pckid[cnt]){
-			delta_update=std::min(delta_update,(ts-last_ts[cnt])*1000/(2*(pckid-last_pckid[cnt])));
-			//DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(ts-last_ts[cnt]);
-			;
-			last_pckid[cnt]= pckid;
-			last_ts[cnt]=ts;
+          delta_update=std::min(delta_update,(tss-last_ts[cnt])*1000/(2*(pckid-last_pckid[cnt])));
+          DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(tss-last_ts[cnt]);
+		  ;
+		  last_pckid[cnt]= pckid;
+		  last_ts[cnt]=ts;
 		} else{
-			delta_update+=50;
+		  delta_update+=50;
 		}
-
-		cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
-		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
+          */
 	}
-
-#if 0
-	if((controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput,&outw)==0)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)&& outw.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
-		now_ts=outw.getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-		pckid= outw.getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-		if(outw.hasKey("device_alarm")/*&&outw.getInt32Value("device_alarm")*/){
-			CDataWrapper alrm;
-			boost::mutex::scoped_lock(iomutex);
-
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm,&alrm);
-            cachedJsonChannels[KeyDataStorageDomainDevAlarm]=alrm.getCompliantJSONString();
-		}
-		if(outw.hasKey("cu_alarm")/*&&outw.getInt32Value("cu_alarm")*/){
-			CDataWrapper alrm;
-			boost::mutex::scoped_lock(iomutex);
-
-			controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm,&alrm);
-            cachedJsonChannels[KeyDataStorageDomainCUAlarm]=alrm.getCompliantJSONString();
-		}
-		boost::mutex::scoped_lock(iomutex);
-
-        cachedJsonChannels[KeyDataStorageDomainOutput]=outw.getCompliantJSONString();
-
-	}
-	//DBGET<<" SCHED pckts: "<<(pckid - last_packid ) << " time: "<<(now_ts - last_ts)<<" Freq:"<<calc_freq;
-	calc_freq = 0;
-
-
-	last_packid = pckid;
-	last_ts = now_ts;
-	if((ts-last_input)>CU_INPUT_UPDATE_US){
-		CDataWrapper data;
-		boost::mutex::scoped_lock(iomutex);
-
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput,&data);
-        cachedJsonChannels[KeyDataStorageDomainInput]=data.getCompliantJSONString();
-		last_input=ts;
-	}
-
-
-	//uint64_t now_ts=outw->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-
-	if((ts-last_health)>CU_HEALTH_UPDATE_US){
-		CDataWrapper data;
-		boost::mutex::scoped_lock(iomutex);
-
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth,&data);
-        cachedJsonChannels[KeyDataStorageDomainHealth]=data.getCompliantJSONString();
-
-		last_health=ts;
-
-	}
-	if((ts-last_system)>CU_SYSTEM_UPDATE_US){
-		CDataWrapper data;
-		boost::mutex::scoped_lock(iomutex);
-
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem,&data);
-        cachedJsonChannels[KeyDataStorageDomainSystem]=data.getCompliantJSONString();
-
-		last_system=ts;
-
-	}
-	if((ts-last_system)>CU_CUSTOM_UPDATE_US){
-		CDataWrapper data;
-		boost::mutex::scoped_lock(iomutex);
-
-		controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom,&data);
-        cachedJsonChannels[KeyDataStorageDomainCustom]=data.getCompliantJSONString();
-
-	}
-
-
-	for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
-		CDataWrapper tmp;
-		controller->getCurrentDatasetForDomain((chaos::metadata_service_client::node_controller::DatasetDomain)cnt,&tmp);
-		all.addCSDataValue(chaos::datasetTypeToHuman(cnt),tmp);
-
-	}
-#endif
-	all.appendAllElement(*bundle_state.getData());
-	boost::mutex::scoped_lock(iomutex);
-
+    all.appendAllElement(*bundle_state.getData());
     cachedJsonChannels[-1]=all.getCompliantJSONString();
 
-	//DBGET<<"SCHED STOP";
+    boost::mutex::scoped_lock(iomutex);
+    float rate;
+    if(channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)&&
+     ((rate=channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)>0))){
+        delta_update=(1000*1000.0)/(2*rate);
+     } else if(channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)){
+        delta_update=channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)/2.0;
+    }
+
+
+
+    //DBGET<<"SCHED STOP delta update:"<<delta_update;
 	return delta_update;
 }
 ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0) {
