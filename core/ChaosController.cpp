@@ -559,7 +559,7 @@ uint64_t ChaosController::sched(uint64_t ts){
      } else if(channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)){
         delta_update=channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)/2.0;
     }
-
+    delta_update=std::min(delta_update,(uint64_t)CU_HEALTH_UPDATE_US);
 
 
     //DBGET<<"SCHED STOP delta update:"<<delta_update;
@@ -1504,9 +1504,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 					if(json_value && json_value->hasKey("properties")){
 						// set properties
 						if(json_value->isVectorValue("properties")){
-							ChaosSharedPtr<chaos::metadata_service_client::api_proxy::node::NodePropertyGroup> cu_property_group(new chaos::metadata_service_client::api_proxy::node::NodePropertyGroup());
-							cu_property_group->group_name = "property_abstract_control_unit";
-							chaos::metadata_service_client::api_proxy::node::NodePropertyGroupList property_list;
+                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+
+//							ChaosSharedPtr<chaos::metadata_service_client::api_proxy::node::NodePropertyGroup> cu_property_group(new chaos::metadata_service_client::api_proxy::node::NodePropertyGroup());
+    //						cu_property_group->group_name = "property_abstract_control_unit";
+        //					chaos::metadata_service_client::api_proxy::node::NodePropertyGroupList property_list;
 
 							ChaosUniquePtr<CMultiTypeDataArrayWrapper> dw(json_value->getVectorValue("properties"));
 							for (int idx = 0; idx < dw->size(); idx++) {
@@ -1514,17 +1516,53 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 								if(dw->isCDataWrapperElementAtIndex(idx)){
 									CDataWrapper* prop=dw->getCDataWrapperElementAtIndex(idx);
 									if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
-										ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
-										cu_property_group->group_property_list.push_back(bool_value);
+                                    //	ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
+                                        bool onoff=prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE);
+                                        //cu_property_group->group_property_list.push_back(bool_value);
+                                        pg.addProperty(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE, CDataVariant(static_cast<bool>(onoff)));
 									}
+                                    if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))));
 
+                                    }
+                                    if(prop && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY, CDataVariant(static_cast<bool>(prop->getBoolValue(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY))));
+                                    }
+                                    if(prop && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION, CDataVariant(static_cast<int32_t>(prop->getInt32Value(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION))));
+
+                                    }
+                                    if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME))));
+
+                                    }
+
+                                    if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME))));
+
+                                    }
+                                    if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE))));
+
+                                    }
+                                    if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING)){
+                                        chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                       pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING))));
+
+                                    }
 
 								}
 							}
-							property_list.push_back(cu_property_group);
+                        //	property_list.push_back(cu_property_group);
 
 							//GET_CHAOS_API_PTR((chaos::metadata_service_client::api_proxy::node::UpdateProperty)->execute(name,property_list)));
-							EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,property_list);
+                            EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,pg);
 						} else {
 							RETURN_ERROR("'properties' should be a vector of properties");
 						}
@@ -1555,7 +1593,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         json_buf=r->getCompliantJSONString();
 					}
 					return CHAOS_DEV_OK;
-				}
+                } else if(what=="load"){
+                    EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,true);
+
+                    chaos::common::data::CDataWrapper *r=apires->getResult();
+                    if(r){
+                        json_buf=r->getCompliantJSONString();
+                    }
+                    return CHAOS_DEV_OK;
+                } else if(what=="unload"){
+                    EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,false);
+
+                    chaos::common::data::CDataWrapper *r=apires->getResult();
+                    if(r){
+                        json_buf=r->getCompliantJSONString();
+                    }
+                    return CHAOS_DEV_OK;
+                }
 			} else if(node_type == "agent"){
 
 				if(what == "set"){
@@ -1771,8 +1825,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			json_buf = fetchJson(-1);
 			return CHAOS_DEV_OK;
 		} else if (cmd == "sched" && (args != 0)) {
-			bundle_state.append_log("sched device:" + path);
-			err = controller->setScheduleDelay(atol((char*) args));
+            bundle_state.append_log("sched device:" + path +" args:" +std::string(args));
+            err = controller->setScheduleDelay(atoll((char*) args));
 			if (err != 0) {
 				bundle_state.append_error("error set scheduling:" + path);
 				/*			//				init(path, timeo);
