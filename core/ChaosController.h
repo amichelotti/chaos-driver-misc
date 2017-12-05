@@ -240,7 +240,7 @@ private:
     bool queryHasNext(int32_t id);
 
 
-
+    uint64_t lastAccess(){return reqtime;}
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);

@@ -20,6 +20,7 @@
 #include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
 #include <chaos_metadata_service_client/api_proxy/agent/agent.h>
 #include <chaos_metadata_service_client/api_proxy/logging/logging.h>
+#include <chaos/common/utility/TimingUtil.h>
 
 #include <chaos/common/exception/CException.h>
 #ifdef __CHAOS_UI__
@@ -261,34 +262,19 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	}
 
 	DBGET << "init CU NAME:\"" << path << "\"" << " timeo:" << timeo_;
-    /* DBGET<<" UI CONF:"<<chaos::ui::ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getCompliantJSONString();
-     DBGET<<" CU CONF:"<<chaos::cu::ChaosCUToolkit::getInstance()->getGlobalConfigurationInstance()->getConfiguration()->getCompliantJSONString();
-     DBGET<<" CU STATE:"<<chaos::cu::ChaosCUToolkit::getInstance()->getServiceState();
-     DBGET<<" UI STATE:"<<chaos::ui::ChaosUIToolkit::getInstance()->getServiceState();
-	 */
-
-	//chaos::common::utility::InizializableService::initImplementation(chaos::common::async_central::AsyncCentralManager::getInstance(), 0, "AsyncCentralManager", __PRETTY_FUNCTION__);
-
-	//    chaos::ui::LLRpcApi::getInstance()->init();
-	//chaos::ui::ChaosUIToolkit::getInstance()->init(NULL);
+    last_access=reqtime=tot_us=naccess=refresh=0;
 
 	if (controller != NULL) {
 
 		DBGET << " removing existing controller";
-#ifdef __CHAOS_UI__
-		chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
-#else
+
 		ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
-#endif
+        controller = NULL;
 	}
 
 	try {
-#ifdef __CHAOS_UI__
 
-		controller = chaos::ui::HLDataApi::getInstance()->getControllerForDeviceID(path, timeo_ / 1000);
-#else
 		ChaosMetadataServiceClient::getInstance()->getNewCUController(path,&controller);
-#endif
 	} catch (chaos::CException &e) {
 		std::stringstream ss;
 		ss << "Exception during get controller for device:\"" << path << "\" ex: \"" << e.what() << "\"";
@@ -305,10 +291,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
 	controller->setupTracking();
 	timeo = timeo_;
 	wostate = 0;
-	heart = 0;
-	tot_us = 0;
-	refresh = 0;
-	naccess = 0;
+
 	setUid(path);
 	iomutex.lock();
 
@@ -565,11 +548,8 @@ uint64_t ChaosController::sched(uint64_t ts){
     //DBGET<<"SCHED STOP delta update:"<<delta_update;
 	return delta_update;
 }
-ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0) {
-	controller = NULL;
-	queryuid = 0;
-	state = chaos::CUStateKey::UNDEFINED;
-	heart=0;
+ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0),controller(NULL),state(chaos::CUStateKey::UNDEFINED),queryuid(0),last_access(0),heart(0),reqtime(0),tot_us(0),naccess(0),refresh(0) {
+
 	mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
 	cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX+1);
 
@@ -1032,8 +1012,8 @@ int32_t ChaosController::queryNext(int32_t uid,std::vector<boost::shared_ptr<CDa
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf) {
 	int err;
 	boost::mutex::scoped_lock(ioctrl);
-	last_access = reqtime;
-	reqtime = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
+    last_access = reqtime;
+    reqtime =chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
 	naccess++;
 	bundle_state.reset();
 	bundle_state.status(state);
