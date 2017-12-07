@@ -238,7 +238,7 @@ private:
     int32_t queryHistory(const std::string& start,const std::string& end,int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page=0);
     int32_t queryNext(int32_t id,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res);
     bool queryHasNext(int32_t id);
-
+    int getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res);
 
     uint64_t lastAccess(){return reqtime;}
 protected:

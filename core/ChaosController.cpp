@@ -46,7 +46,7 @@ using namespace ::driver::misc;
 #define DBGETERR CTRLERR_<<"["<<getPath()<<"]"
 
 #define CALC_EXEC_TIME \
-		tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
+        tot_us +=(reqtime -chaos::common::utility::TimingUtil::getTimeStampInMicroseconds());\
 		if(naccess%500 ==0){\
 			refresh=tot_us/500;\
 			tot_us=0;\
@@ -1184,10 +1184,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 			} else if (what == "snapshotsof") {
 				json_buf = "[]";
 				DBGET << "searching CU within SNAPSHOT:" << name;
-
-				if (mdsChannel->searchSnapshotForNode(name, node_found, MDS_TIMEOUT) == 0) {
-					DBGET << "node found:" << node_found[0];
-					json_buf = vector2Json(node_found);
+                std::map<uint64_t, std::string> snap_l;
+                if (getSnapshotsofCU(name, snap_l) == 0) {
+                    json_buf =  map2Json(snap_l);
 					CALC_EXEC_TIME;
 					return CHAOS_DEV_OK;
 
@@ -2522,6 +2521,24 @@ void ChaosController::dev_info_status::append_error(std::string log) {
 	CTRLERR_ << log;
 	snprintf(error_status, sizeof (error_status), "%s%s;", error_status, log.c_str());
 
+}
+int  ChaosController::getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res){
+   std::vector<std::string>node_found;
+    if (mdsChannel->searchSnapshotForNode(cuname, node_found, MDS_TIMEOUT) == 0) {
+        for(std::vector<std::string>::iterator i=node_found.begin();i!=node_found.end();i++){
+            DBGET << "snapshot for node '"<<cuname<<"' found:" << *i;
+            if(mdsChannel->searchSnapshot(*i, res, MDS_TIMEOUT)!=0){
+                CTRLERR_ << "get internal snapshot "<<*i<<" NOT found";
+
+                return -2;
+            }
+        }
+    } else {
+               CTRLERR_ << " No snapshot for node '"<<cuname;
+        return -1;
+
+    }
+    return 0;
 }
 
 chaos::common::data::CDataWrapper * ChaosController::dev_info_status::getData() {
