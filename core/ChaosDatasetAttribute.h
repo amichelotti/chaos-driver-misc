@@ -9,12 +9,20 @@
 #define	ChaosDatasetAttribute_H
 #include <map>
 #include <string>
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
+#include <chaos/common/exception/CException.h>
+#include <chaos/common/data/CUSchemaDB.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
 
 namespace chaos{
+namespace common{
+namespace data{
+    class CDataWrapper;
+}
+}
 namespace metadata_service_client{
 	class ChaosMetadataServiceClient;
 namespace node_controller{
@@ -105,7 +113,7 @@ public:
     chaos::common::data::RangeValueInfo& getValueInfo(){return attr_type;}
     chaos::DataType::DataType getType(){return attr_type.valueType;}
     chaos::common::data::VectorBinSubtype getBinaryType(){return attr_type.binType;}
-
+    uint64_t getTimestamp();
     chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
     template<typename T>
@@ -116,6 +124,16 @@ public:
     template <typename T> operator T*()  throw (chaos::CException){
             
         return reinterpret_cast<T*>(get(NULL));
+    }
+    template<typename T>
+    operator std::vector<T>()  throw (chaos::CException){
+        std::vector<T> tmp;
+        uint32_t size=0;
+        T* d=(T*)get(&size);
+        for(int cnt=0;cnt<size/sizeof(T);cnt++){
+            tmp.push_back(d[cnt]);
+        }
+        return tmp;
     }
     template<typename T>
     T operator=(T& d) throw (chaos::CException) {

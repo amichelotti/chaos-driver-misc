@@ -6,7 +6,7 @@
  */
 
 #include <vector>
-
+#include <chaos/common/global.h>
 #include "ChaosDatasetAttributeGroup.h"
 using namespace ::driver::misc;
 ChaosDatasetAttributeGroup::ChaosDatasetAttributeGroup() {

@@ -231,7 +231,9 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
     
 }
 
-
+uint64_t ChaosDatasetAttribute::getTimestamp(){
+  return paramToDataset[attr_parent]->tstamp;
+}
   ChaosDatasetAttribute::datinfo& ChaosDatasetAttribute::getInfo(){
 	  ChaosDatasetAttribute::datinfo* ptr=paramToDataset[attr_parent].get();
       return *ptr;

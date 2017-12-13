@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include <driver/misc/core/ChaosDatasetAttribute.h>
 
+using namespace ::driver::misc;
 /**
  * Create a new Tree with default name of the chaosNode, it  creates a unique branch for a dataset
  * performs a time interval search of data

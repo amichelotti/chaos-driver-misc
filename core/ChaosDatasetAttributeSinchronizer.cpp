@@ -6,6 +6,7 @@
  */
 
 #include <vector>
+#include <chaos/common/global.h>
 
 #include "ChaosDatasetAttributeSinchronizer.h"
 using namespace ::driver::misc;
