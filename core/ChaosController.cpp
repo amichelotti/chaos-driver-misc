@@ -1435,6 +1435,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = bundle_state.getData()->getCompliantJSONString();
 				return CHAOS_DEV_CMD;
 			}
+            if(what=="desc"){
+                chaos::common::data::CDataWrapper* r;
+
+                EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription,MDS_TIMEOUT,name);
+                r=apires->getResult();
+                if(r ){
+
+                    json_buf=r->getCompliantJSONString();
+                }
+
+                return CHAOS_DEV_OK;
+            }
 			if(node_type == "us"){
 				if(what == "set"){
 					EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,MDS_TIMEOUT,name,0,json_value);
