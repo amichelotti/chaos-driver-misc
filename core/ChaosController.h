@@ -13,6 +13,7 @@
 #include <string>
 #include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <boost/shared_ptr.hpp>
+#include <chaos/common/chaos_constants.h>
 #include <common/misc/scheduler/SchedTimeElem.h>
 
 #define UI_PREFIX chaos::metadata_service_client::node_controller
@@ -55,7 +56,7 @@ private:
      chaos::common::message::MDSMessageChannel *mdsChannel;
      chaos::metadata_service_client::ChaosMetadataServiceClient*mds_client;
      chaos::metadata_service_client::node_controller::CUController* controller;
-
+     chaos::common::io::IODataDriverShrdPtr live_driver;
      std::vector<std::string> mds_server_l;
      std::string path;
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
@@ -241,6 +242,9 @@ private:
     int getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res);
 
     uint64_t lastAccess(){return reqtime;}
+     ChaosSharedPtr<chaos::common::data::CDataWrapper> getLiveChannel(std::string&key,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
+      chaos::common::data::VectorCDWShrdPtr getLiveChannel(std::vector<std::string>&keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
+      chaos::common::data::VectorCDWShrdPtr getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
