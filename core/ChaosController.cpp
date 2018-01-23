@@ -1667,7 +1667,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                     } else if(what=="del"){
                         CHECK_PARENT;
-                        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance,MDS_TIMEOUT,parent,name);
+                        {
+                            EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance,MDS_TIMEOUT,parent,name);
+                        }
+                        {
+                            EXECUTE_CHAOS_API(api_proxy::control_unit::Delete,MDS_TIMEOUT,name);
+                        }
 
                         json_buf="{}";
                         res<<json_buf;
