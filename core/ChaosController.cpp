@@ -515,13 +515,14 @@ uint64_t ChaosController::sched(uint64_t ts){
     delta_update=CU_HEALTH_UPDATE_US;
     for(int cnt=0;cnt<=DPCK_LAST_DATASET_INDEX;cnt++){
         boost::mutex::scoped_lock(iomutex);
+
         channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
 
         uint64_t tss,pckid;
         if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
             continue;
         }
-
+        //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
         cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
         all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
 
@@ -1695,7 +1696,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     } else if(what=="load"){
                         EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,true);
 
-                        chaos::common::data::CDataWrapper *r=apires->getResult();
+                       /* chaos::common::data::CDataWrapper *r=apires->getResult();
                         if(r){
                             json_buf=r->getCompliantJSONString();
                             res<<json_buf;
@@ -1706,11 +1707,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             json_buf = bundle_state.getData()->getCompliantJSONString();
                             res<<json_buf;
                             ret=CHAOS_DEV_CMD;
-                        }
+                        }*/
                     } else if(what=="unload"){
                         EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,false);
 
-                        chaos::common::data::CDataWrapper *r=apires->getResult();
+                      /*  chaos::common::data::CDataWrapper *r=apires->getResult();
                         if(r){
                             json_buf=r->getCompliantJSONString();
                             res<<json_buf;
@@ -1721,7 +1722,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             json_buf = bundle_state.getData()->getCompliantJSONString();
                             res<<json_buf;
                             ret=CHAOS_DEV_CMD;
-                        }
+                        }*/
+                    } else if(what=="init"){
+                        EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit,MDS_TIMEOUT,name,true);
+
+                    } else if(what=="deinit"){
+                        EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit,MDS_TIMEOUT,name,false);
+
                     }
                 } else if(node_type == "agent"){
 
