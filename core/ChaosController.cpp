@@ -1567,6 +1567,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             ret=CHAOS_DEV_CMD;
                         }
 
+                    } else if(what=="parent"){
+                        chaos::common::data::CDataWrapper* r;
+                        std::vector<std::string> vname;
+                        EXECUTE_CHAOS_API(api_proxy::agent::GetAgentForNode,MDS_TIMEOUT,name);
+                        r=apires->getResult();
+                        if(r ){
+
+                            json_buf=r->getCompliantJSONString();
+                            res<<json_buf;
+                        } else {
+                            json_buf="{}";
+                            serr << cmd <<" API error command format";
+                            bundle_state.append_error(serr.str());
+                            json_buf = bundle_state.getData()->getCompliantJSONString();
+                            res<<json_buf;
+                            ret=CHAOS_DEV_CMD;
+                        }
+
                     } else if(what=="start"){
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationOperationLaunch);
                         json_buf="{}";
