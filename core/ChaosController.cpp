@@ -1766,6 +1766,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             res<<json_buf;
                             ret=CHAOS_DEV_CMD;
                         }
+                    } else if(what == "enablelog"){
+                        // set an association between a Agent and a Unit Server
+                        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::logging::ManageNodeLogging,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationLoggingOperationEnable);
+
+                        json_buf="{}";
+                        res<<json_buf;
+                    } else if(what == "disablelog"){
+                        // set an association between a Agent and a Unit Server
+                        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::logging::ManageNodeLogging,MDS_TIMEOUT,name,chaos::service_common::data::agent::NodeAssociationLoggingOperationDisable);
+
+                        json_buf="{}";
+                        res<<json_buf;
                     } else if(what == "set"){
                         // set an association between a Agent and a Unit Server
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value);
