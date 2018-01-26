@@ -1675,7 +1675,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         } else {
                             CHECK_PARENT;
                             {
-                                EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType,MDS_TIMEOUT,parent,name,0);
+                                if(json_value->hasKey("control_unit_implementation")){
+                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType,MDS_TIMEOUT,parent,json_value->getStringValue("control_unit_implementation"),0);
+                                }
                             }
                             {
                                 EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,MDS_TIMEOUT,name,*json_value);
@@ -1749,8 +1751,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                     }
                 } else if(node_type == "agent"){
+                    if(what =="getlog"){
+                        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::logging::GetProcessLogEntries,MDS_TIMEOUT,name,100,1,0);
+                        chaos::common::data::CDataWrapper *r=apires->getResult();
 
-                    if(what == "set"){
+                        if(r){
+                            json_buf=r->getCompliantJSONString();
+                            res<<json_buf;
+                        } else {
+                            json_buf="{}";
+                            serr << cmd <<" API error command format";
+                            bundle_state.append_error(serr.str());
+                            json_buf = bundle_state.getData()->getCompliantJSONString();
+                            res<<json_buf;
+                            ret=CHAOS_DEV_CMD;
+                        }
+                    } else if(what == "set"){
                         // set an association between a Agent and a Unit Server
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value);
 
