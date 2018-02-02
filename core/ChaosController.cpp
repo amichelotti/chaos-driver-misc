@@ -23,13 +23,7 @@
 #include <chaos/common/utility/TimingUtil.h>
 
 #include <chaos/common/exception/CException.h>
-#ifdef __CHAOS_UI__
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
-#include <chaos/cu_toolkit/ChaosCUToolkit.h>
-#include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
-using namespace chaos::ui;
 
-#endif
 
 #include <common/debug/core/debug.h>
 #include <ctype.h>
