@@ -2514,8 +2514,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 DBGET << "applying \"" << i->c_str() << "\"=" << param;
                 bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(param) + "\" to device:\"" + path + "\"");
                 err = controller->setAttributeToValue(i->c_str(), param, false);
+                if(err!=0){
+                    if (init(path, timeo) == 0) {
+                        DBGET << "error reapplying ...";
+                        err = controller->setAttributeToValue(i->c_str(), param, false);
+                    }
+                }
                 if (err != 0) {
+
                     bundle_state.append_error("error setting attribute:" + path + "/" + *i + "\"=" + data.getCStringValue(*i));
+
                     //					init(path, timeo);
                     json_buf = bundle_state.getData()->getCompliantJSONString();
                     CALC_EXEC_TIME;
