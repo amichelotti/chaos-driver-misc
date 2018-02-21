@@ -1882,7 +1882,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             PARSE_QUERY_PARMS(args,true,true);
             if(what=="search"){
                 std::vector<std::string> domains;
+                if(node_type == "all"){
+                    domains.push_back("error");
+                    domains.push_back("warning");
+                    domains.push_back("Info");
+                    domains.push_back("log");
+                    domains.push_back("command");
 
+                }
                 domains.push_back(node_type);
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry,MDS_TIMEOUT,name,domains,start_ts,end_ts,seq_id,page);
                 //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
@@ -1891,6 +1898,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     json_buf=r->getCompliantJSONString();
                 } else {
                     json_buf="[]";
+                    CTRLERR_ << "an error arise during API:\"" << cmd<<"\"";
+
                     return CHAOS_DEV_CMD;
 
                 }
