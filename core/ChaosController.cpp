@@ -513,9 +513,15 @@ uint64_t ChaosController::sched(uint64_t ts){
         channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
 
         uint64_t tss,pckid;
+        if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getStringValue("ndk_uid")!=path)){
+             DBGETERR<<"live channel name mismatch \""+channels[cnt]->getStringValue("ndk_uid") + "\" should be:\""+path+"\"";
+             init(path,timeo);
+             continue;
+        }
         if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
             continue;
         }
+
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
         cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
         all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
@@ -1976,6 +1982,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             bundle_state.append_log("init device:" + path);
             err = controller->initDevice();
             if (err != 0) {
+                init(path, timeo);
+                err = controller->initDevice();
+            }
+            if (err != 0) {
                 bundle_state.append_error("initializing device:" + path);
                 CALC_EXEC_TIME;
                 return CHAOS_DEV_CMD;
@@ -1988,6 +1998,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             wostate = 0;
             err = controller->startDevice();
             if (err != 0) {
+                init(path, timeo);
+                err = controller->startDevice();
+            }
+            if (err != 0) {
                 bundle_state.append_error("starting device:" + path);
                 CALC_EXEC_TIME;
                 return CHAOS_DEV_CMD;
@@ -1999,6 +2013,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             wostate = 0;
             err = controller->stopDevice();
             if (err != 0) {
+                init(path, timeo);
+                err = controller->stopDevice();
+            }
+            if (err != 0) {
+
                 bundle_state.append_error("stopping device:" + path);
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 CALC_EXEC_TIME;
@@ -2014,6 +2033,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             wostate = 0;
             err = controller->deinitDevice();
             if (err != 0) {
+                init(path, timeo);
+                err = controller->deinitDevice();
+            }
+            if (err != 0) {
                 bundle_state.append_error("deinitializing device:" + path);
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 CALC_EXEC_TIME;
@@ -2027,6 +2050,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (cmd == "sched" && (args != 0)) {
             bundle_state.append_log("sched device:" + path +" args:" +std::string(args));
             err = controller->setScheduleDelay(atoll((char*) args));
+            if (err != 0) {
+                init(path, timeo);
+                err = controller->setScheduleDelay(atoll((char*) args));
+            }
             if (err != 0) {
                 bundle_state.append_error("error set scheduling:" + path);
                 /*			//				init(path, timeo);
