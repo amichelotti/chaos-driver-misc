@@ -2603,7 +2603,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             command->sub_rule=(submission_mode==1)?chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL:chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
             err = sendCmd(command, false);
             if (err != 0) {
-                /*	init(path, timeo);*/
+                init(path, timeo);
                 err = sendCmd(command, false);
                 if (err != 0) {
                     std::stringstream ss;
