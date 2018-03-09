@@ -879,6 +879,12 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     }\
     }
 
+#define CHECK_VALUE_PARAM \
+    if(json_value==NULL){\
+        serr << "missing (json) value" << cmd;\
+    bundle_state.append_error(serr.str());\
+    json_buf = bundle_state.getData()->getCompliantJSONString();\
+    return CHAOS_DEV_CMD;}
 
 #define RETURN_ERROR(msg){\
     std::stringstream serr;serr<< cmd <<" \""<<args<<"\" "<<msg;\
@@ -890,6 +896,19 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 #define CHECK_PARENT \
     if(parent.empty() ){\
     RETURN_ERROR("must specify 'parent'")};
+
+#define CALL_CHAOS_API(api_name,time_out,cdp) \
+    DBGET<<" " <<" Executing CHAOS Api:\""<< # api_name<<"\" parms:"<<cdp->getCompliantJSONString() ;\
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires=  GET_CHAOS_API_PTR(api_name)->callApi(cdp);\
+    apires->setTimeout(time_out);\
+    apires->wait();\
+    if(apires->getError()){\
+    std::stringstream ss;\
+    ss<<" error in :"<<__FUNCTION__<<"|"<<__LINE__<<"|"<< # api_name <<" " <<apires->getErrorMessage();\
+    bundle_state.append_error(ss.str());\
+    json_buf = bundle_state.getData()->getCompliantJSONString();\
+    return CHAOS_DEV_CMD;\
+    }
 
 #define EXECUTE_CHAOS_API(api_name,time_out,...) \
     DBGET<<" " <<" Executing Api:\""<< # api_name<<"\"" ;\
@@ -1858,22 +1877,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         res<<json_buf;
                         ret=CHAOS_DEV_CMD;
                     }
-                } else if(node_type == "script"){
-                    if(what == "save"){
-
-                    } else if(what=="del"){
-
-                    } else if(what=="search"){
-
-                    } else if(what=="update"){
-
-                    } else {
-                        serr << cmd <<" bad 'script' command format";
-                        bundle_state.append_error(serr.str());
-                        json_buf = bundle_state.getData()->getCompliantJSONString();
-                        res<<json_buf;
-                        ret=CHAOS_DEV_CMD;
-                    }
                 }
                 if(names.get()&&((idx+1)<names->size())){
                     res<<",";
@@ -1916,7 +1919,68 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             bundle_state.append_error(serr.str());
             json_buf = bundle_state.getData()->getCompliantJSONString();
             return CHAOS_DEV_CMD;
-        } // log global commands
+        } else if(cmd=="script"){
+
+            PARSE_QUERY_PARMS(args,false,true);
+            if(what == "save"){
+                CHECK_VALUE_PARAM
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+            } else if(what=="del"){
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+
+            } else if(what=="newInstance"){
+                CHECK_VALUE_PARAM
+                if(!json_value->hasKey("create")){
+                    json_value->addBoolValue("create", true);
+                }
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+
+            } else if(what=="rmInstance"){
+                CHECK_VALUE_PARAM
+                if(!json_value->hasKey("create")){
+                    json_value->addBoolValue("create", false);
+                }
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+
+            } else if(what=="search"){
+
+                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript,MDS_TIMEOUT,name);
+                chaos::common::data::CDataWrapper *r=apires->getResult();
+                if(r){
+                    json_buf=r->getCompliantJSONString();
+                } else {
+                    json_buf="{}";
+                    serr << cmd <<" API error command format";
+                    bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    return CHAOS_DEV_CMD;
+
+                }
+                return CHAOS_DEV_OK;
+
+            } else if(what=="bind"){
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+            } else if(what=="update"){
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateScriptOnNode,MDS_TIMEOUT,json_value);
+                json_buf="{}";
+                return CHAOS_DEV_OK;
+            } else {
+                serr << cmd <<" bad 'script' command format";
+                bundle_state.append_error(serr.str());
+                json_buf = bundle_state.getData()->getCompliantJSONString();
+                return CHAOS_DEV_CMD;
+            }
+        }
 
 
 

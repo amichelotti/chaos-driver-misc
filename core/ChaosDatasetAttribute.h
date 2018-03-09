@@ -13,6 +13,8 @@
 #include <chaos/common/data/CUSchemaDB.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
+#include <chaos/common/global.h>
+
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
@@ -51,8 +53,9 @@ class ChaosDatasetAttribute{
        // chaos::common::data::CDataWrapper*  data;
         datinfo(const std::string& _pather,const std::string& _id);
         ~datinfo();
-        void resize(uint32_t newsize);
-        void set(void*buf,int size);
+        void set(void*buf,int size,int off=0);
+        void resize(uint32_t size);
+
         uint64_t getTimeStamp()const {return tstamp;}
         
         uint64_t getLastGet()const {return tget;}
@@ -73,7 +76,7 @@ class ChaosDatasetAttribute{
     static int initialize_framework;
     ChaosDatasetAttribute(std::string path,iomode_t IO=OUTPUT,uint32_t timeo=5000);
 
-    ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
+    explicit ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
     virtual ~ChaosDatasetAttribute();
     
    
@@ -142,25 +145,32 @@ public:
             
         return reinterpret_cast<T*>(get(NULL));
     }
-    template<typename T>
-    operator std::vector<T>()  throw (chaos::CException){
+    template<class T>
+     operator const std::vector<T> () throw (chaos::CException){
         std::vector<T> tmp;
         uint32_t size=0;
         T* d=(T*)get(&size);
+        ATTRDBG_<<attr_path<<": vector byte size:"<<size<<" items:"<<size/sizeof(T) << " size type:"<<sizeof(T);
         for(int cnt=0;cnt<size/sizeof(T);cnt++){
             tmp.push_back(d[cnt]);
         }
         return tmp;
     }
+
     template<typename T>
     ChaosDatasetAttribute& operator=(const T& d) throw (chaos::CException) {
         if(set((void*)&d,sizeof(T))==0)
             return *this;
         throw chaos::CException(-1,"cannot assign to remote variable:"+attr_path,__FUNCTION__);
     }
+
+
+
     
 };
+
     }}
+
 
 #endif	/* ChaosDatasetAttribute_H */
 

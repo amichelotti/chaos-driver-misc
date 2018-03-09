@@ -9,12 +9,9 @@
 #include <chaos/common/exception/CException.h>
 #include <chaos/cu_toolkit/ChaosCUToolkit.h>
 
-#ifdef __CHAOS_UI__
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
-#else
+
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 
-#endif
 using namespace ::driver::misc;
 using namespace chaos::cu::data_manager;
 // parameter to cache
@@ -196,19 +193,33 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         info->tget = tget;
         controller->getTimeStamp(info->tstamp,true);
         controller->getPackSeq(info->pckid);
+        if(tmpw->isVector(attr_name)){
+            attr_size=0;
+            ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> cu_t_arr(tmpw->getVectorValue(attr_name));
+            for(int idx = 0;
+                idx < cu_t_arr->size();
+                idx++) {
+                uint32_t sizev;
+                const char*tmp=cu_t_arr->getRawValueAtIndex(idx,sizev);
+                info->set((void*)tmp,sizev,idx*sizev);
 
-        tmp=(void*)tmpw->getRawValuePtr(attr_name);
-        if(tmp){
-            attr_size=tmpw->getValueSize(attr_name);
-            if(attr_size){
-                info->set(tmp,attr_size);
+                attr_size+=sizev;
             }
         } else {
-            std::stringstream ss;
+            tmp=(void*)tmpw->getRawValuePtr(attr_name);
+            if(tmp){
+                attr_size=tmpw->getValueSize(attr_name);
+                if(attr_size){
+                    info->set(tmp,attr_size);
+                }
 
-            ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path<<" json:"<<tmpw->getJSONString();
-            ATTRERR_<<ss.str();
-            throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
+            } else {
+                std::stringstream ss;
+
+                ss<<"cannot access variable \""<<attr_name <<"\" ("<<((attr_type.dir == chaos::DataType::Input)?"Input": "Output")<<") not found in:"<<attr_path<<" json:"<<tmpw->getJSONString();
+                ATTRERR_<<ss.str();
+                throw chaos::CException(-1000,ss.str().c_str(),__PRETTY_FUNCTION__);
+            }
         }
         cache_updated=tget;
     }
@@ -256,8 +267,9 @@ ChaosDatasetAttribute::datinfo::~datinfo(){
 
     free(ptr_cache);cache_size=0;ptr_cache=NULL;
 }
-void ChaosDatasetAttribute::datinfo::set(void*buf,int size){
-    if(size>cache_size)
-        resize(cache_size);
-    memcpy(ptr_cache,buf,std::min(size,cache_size));
+void ChaosDatasetAttribute::datinfo::set(void*buf,int size,int off){
+    if((off+size)>cache_size)
+        resize((off+size));
+    char *ptr=((char*)ptr_cache)+off;
+    memcpy((void*)ptr,buf,size);
 }
