@@ -1277,12 +1277,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                 }
 
+            }  else if (what =="script"){
+                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript,MDS_TIMEOUT,name);
+                chaos::common::data::CDataWrapper *r=apires->getResult();
+                if(r){
+                    json_buf=r->getCompliantJSONString();
+                } else {
+                    json_buf="{}";
+                    serr << cmd <<" API error command format";
+                    bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    return CHAOS_DEV_CMD;
+
+                }
+                return CHAOS_DEV_OK;
+
             } else {
+
                 serr << "unknown 'search' arg:" << args;
             }
             bundle_state.append_error(serr.str());
             json_buf = bundle_state.getData()->getCompliantJSONString();
             return CHAOS_DEV_CMD;
+
         } else if (cmd == "snapshot") {
             std::stringstream res;
             PARSE_QUERY_PARMS(args,true,true);
@@ -1952,19 +1969,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             } else if(what=="search"){
 
-                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript,MDS_TIMEOUT,name);
-                chaos::common::data::CDataWrapper *r=apires->getResult();
-                if(r){
-                    json_buf=r->getCompliantJSONString();
-                } else {
-                    json_buf="{}";
-                    serr << cmd <<" API error command format";
-                    bundle_state.append_error(serr.str());
-                    json_buf = bundle_state.getData()->getCompliantJSONString();
-                    return CHAOS_DEV_CMD;
 
-                }
-                return CHAOS_DEV_OK;
 
             } else if(what=="bind"){
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType,MDS_TIMEOUT,json_value);
