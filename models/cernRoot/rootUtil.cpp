@@ -205,7 +205,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
 
 static TTree* buildTree(const std::string& name, const std::string& desc) {
     TTree* tr = new TTree(name.c_str(), desc.c_str());
-    ROOTDBG<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\"";
+    ROOTDBG<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\" tree:"<<std::hex<<(void*)tr<<std::dec;
 
     if (tr == NULL) {
         LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree  \""<<name<<"\"";
@@ -409,7 +409,7 @@ bool queryNextChaosTree(TTree*tree) {
         }
         if (uid == 0) {
             ROOTDBG<<"ROOT paged query ended:"<<std::hex<<tree<<std::dec;
-            queryFree(tree);
+           queryFree(tree);
 
             return false;
         } else if(uid>0) {
@@ -418,7 +418,7 @@ bool queryNextChaosTree(TTree*tree) {
             LERR_<<"ROOT paged query error";
           //  delete ctrl;
            // queries.erase(page);
-            queryFree(tree);
+            //queryFree(tree);
             return false;
         }
     }
@@ -429,11 +429,17 @@ bool queryFree(TTree*tree) {
     std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
      ROOTDBG<<" Freeing tree:"<<std::hex<<tree<<std::dec;
     if (page != queries.end()) {
+
+
         ROOTDBG<<" removing "<< page->second.nbranch<<" branches";
         delete [] page->second.branch;
         delete page->second.ctrl;
-
         queries.erase(page);
+
+        return true;
     }
+    ROOTDBG<<" Not found tree:"<<std::hex<<tree<<std::dec;
+
+    return false;
 }
 

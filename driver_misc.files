@@ -14,6 +14,8 @@ core/RTDataSync.cpp
 core/RTDataSync.h
 core/SCDataSync.cpp
 core/SCDataSync.h
+core/chaosculight.cpp
+core/chaosculight.h
 core/remoteGroupAccessDriver.cpp
 core/remoteGroupAccessDriver.h
 core/remoteGroupAccessInterface.cpp
