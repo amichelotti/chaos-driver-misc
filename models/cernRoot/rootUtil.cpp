@@ -13,6 +13,7 @@ using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
 
+#define ROOTDBG LDBG_<<"["<<__PRETTY_FUNCTION__<<"] "
 using namespace chaos::common::data;
 using namespace driver::misc;
 typedef struct branchAlloc{
@@ -21,7 +22,7 @@ typedef struct branchAlloc{
     std::string branchContent;
     std::string brname;
     branchAlloc(){size=0;branchBuffer=NULL;}
-    ~branchAlloc(){if((size>0)&&(branchBuffer)) {        LDBG_<<" removing breanch:'"<<brname<<"' size:"<<size<<" content type:"<<branchContent;free(branchBuffer);}}
+    ~branchAlloc(){if((size>0)&&(branchBuffer)) {        ROOTDBG<<" removing breanch:'"<<brname<<"' size:"<<size<<" content type:"<<branchContent;free(branchBuffer);}}
 } branchAlloc_t;
 
 typedef struct treeQuery{
@@ -60,7 +61,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         q.nbranch=1;
         branch_prefix="";//brname+std::string("__");
     }
-    LDBG_<<" creating "<<q.nbranch<<" branches";
+    ROOTDBG<<" creating "<<q.nbranch<<" branches";
 
     q.branch=query;
     if(query[0].size>0){
@@ -111,7 +112,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
 
                 }
             }
-            //	LDBG_<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
+            //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
         } else {
             if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt32)||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
@@ -125,7 +126,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
                         query[branch_counter].size+=ret;
                     }
                 }*/
-                LDBG_<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
+                ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
             }
         }
         switch (type_size) {
@@ -187,7 +188,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             query[branch_counter].branchBuffer=(char*)malloc(query[branch_counter].size);
             query[branch_counter].brname=ss.str();
             tr->Branch(query[branch_counter].brname.c_str(), (void*)query[branch_counter].branchBuffer,varname.str().c_str());
-            LDBG_<<"create ROOT BRANCH \""<<query[branch_counter].brname<<"\""<< " content:\""<<varname.str()<<"\" size:"<<query[branch_counter].size<<" address 0x"<<std::hex<<(uint64_t)query[branch_counter].branchBuffer<<std::dec;
+            ROOTDBG<<"create ROOT BRANCH \""<<query[branch_counter].brname<<"\""<< " content:\""<<varname.str()<<"\" size:"<<query[branch_counter].size<<" address 0x"<<std::hex<<(uint64_t)query[branch_counter].branchBuffer<<std::dec;
         }
     }
     if(multiple==false){
@@ -195,7 +196,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         query[0].branchContent=varname.str();
         query[0].branchBuffer=(char*)malloc(query[0].size);
         tr->Branch(brname.c_str(), (void*)query[0].branchBuffer,varname.str().c_str());
-        LDBG_<<"create ROOT BRANCH \""<<query[0].brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query[0].size<<" address 0x"<<std::hex<<(uint64_t)query[0].branchBuffer<<std::dec;
+        ROOTDBG<<"create ROOT BRANCH \""<<query[0].brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query[0].size<<" address 0x"<<std::hex<<(uint64_t)query[0].branchBuffer<<std::dec;
 
     }
 
@@ -204,7 +205,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
 
 static TTree* buildTree(const std::string& name, const std::string& desc) {
     TTree* tr = new TTree(name.c_str(), desc.c_str());
-    LDBG_<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\"";
+    ROOTDBG<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\"";
 
     if (tr == NULL) {
         LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree  \""<<name<<"\"";
@@ -255,7 +256,7 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
                 }
             }
         } else {
-            //LDBG_<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
+            //ROOTDBG<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
             switch(cd->getValueType(*it)){
             case CDataWrapperTypeDouble:
             case CDataWrapperTypeInt64:
@@ -301,7 +302,7 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
         int32_t ret = ctrl->queryHistory(start, end, channel, res, pageLen);
         int cnt = 0;
         if (res.size() > 0) {
-            LDBG_<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
+            ROOTDBG<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
 
             if (tree_ret == NULL) {
                 tree_ret = buildTree((treeid=="")?chaosNode:treeid, desc);
@@ -375,29 +376,39 @@ TTree* queryChaosTreeSB(const std::string&chaosNode,
 
 bool queryNextChaosTree(TTree*tree) {
     std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
+    ROOTDBG<<"ROOT check next tree:0x"<<std::hex<<tree<<std::dec;
+
     if (page != queries.end()) {
         ChaosController* ctrl = queries[tree].ctrl;
         int32_t uid = queries[tree].page_uid;
         uint32_t pagelen = queries[tree].page;
+        int totcnt=0,last_size;;
+        ROOTDBG<<"ROOT retriving uid:"<<uid<<" pagelen:"<<pagelen;
         if (ctrl) {
-            std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
             do {
+                std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
+
                 uid = ctrl->queryNext(uid, res);
-                LDBG_<<"ROOT querynext "<<uid<<" returned:"<<res.size();
+                last_size=res.size();
+                totcnt+=last_size;
+                //ROOTDBG<<"ROOT querynext uid:"<<uid<<" returned:"<<last_size<<" tot:"<<totcnt;
 
                 for (std::vector<
                      boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
                      res.begin(); i != res.end(); i++) {
                     addTree(queries[tree],i->get());
                 }
-            } while ((pagelen--) && (uid > 0));
 
+            } while ((--pagelen) && (uid > 0));
+            ROOTDBG<<"ROOT querynext uid:"<<uid<<" last returned:"<<last_size<<" tot:"<<totcnt;
         } else {
+            ROOTDBG<<"NO Controller associated";
+
             queries.erase(page);
             return false;
         }
         if (uid == 0) {
-            LDBG_<<"ROOT paged query ended";
+            ROOTDBG<<"ROOT paged query ended:"<<std::hex<<tree<<std::dec;
             queryFree(tree);
 
             return false;
@@ -416,8 +427,9 @@ bool queryNextChaosTree(TTree*tree) {
 }
 bool queryFree(TTree*tree) {
     std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
+     ROOTDBG<<" Freeing tree:"<<std::hex<<tree<<std::dec;
     if (page != queries.end()) {
-        LDBG_<<" removing "<< page->second.nbranch<<" branches";
+        ROOTDBG<<" removing "<< page->second.nbranch<<" branches";
         delete [] page->second.branch;
         delete page->second.ctrl;
 
