@@ -8,6 +8,8 @@ core/ChaosDatasetAttributeGroup.cpp
 core/ChaosDatasetAttributeGroup.h
 core/ChaosDatasetAttributeSinchronizer.cpp
 core/ChaosDatasetAttributeSinchronizer.h
+core/ChaosDatasetIO.cpp
+core/ChaosDatasetIO.h
 core/CmdSync.cpp
 core/CmdSync.h
 core/RTDataSync.cpp
