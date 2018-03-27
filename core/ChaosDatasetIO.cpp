@@ -175,13 +175,15 @@ int ChaosDatasetIO::getLastDataset(const std::string& producer_key,
 int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper last_dataset,int type) {
     CHAOS_ASSERT(mds_message_channel);
     int ret;
+    CDataWrapper mdsPack;
+    mdsPack.addCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, last_dataset);
 
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-    last_dataset.addStringValue("mds_control_key","none");
-    if((ret=mds_message_channel->sendNodeRegistration(last_dataset, true, 10000)) ==0){
+    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
+    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
+    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
+    mdsPack.addStringValue("mds_control_key","none");
+    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+    if((ret=mds_message_channel->sendNodeRegistration(mdsPack, true, 10000)) ==0){
         CDataWrapper mdsPack;
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
