@@ -51,4 +51,5 @@ models/cernRoot/rootUtil.h
 models/vme/RTVme.cpp
 models/vme/RTVme.h
 test/UnitServerLite.cpp
+test/testDatasetIO.cpp
 test/testSumOperatorUI.cpp
