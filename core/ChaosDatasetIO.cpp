@@ -179,6 +179,7 @@ int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper last_datas
     last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
     last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
     last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
+    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
     last_dataset.addStringValue("mds_control_key","none");
     if((ret=mds_message_channel->sendNodeRegistration(last_dataset, true, 10000)) ==0){
         CDataWrapper mdsPack;
@@ -188,9 +189,9 @@ int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper last_datas
         HealtManager::getInstance()->addNewNode(datasetName);
 
         HealtManager::getInstance()->addNodeMetricValue(datasetName,
-                                                                chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-                                                                chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
-                                                                true);
+							chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+							chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
+							true);
     }
 
     return ret;

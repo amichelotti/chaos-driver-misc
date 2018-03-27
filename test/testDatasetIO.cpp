@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
         }
 
     } else {
-        LERR_<<" cannot register!";
+        LERR_<<" cannot register!:"<<my_dataset.getJSONString();
     }
 
         return 0;
