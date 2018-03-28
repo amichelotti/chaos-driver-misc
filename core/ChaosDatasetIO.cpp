@@ -2,6 +2,7 @@
 #include <chaos/common/healt_system/HealtManager.h>
 #include <chaos/common/direct_io/DirectIOClient.h>
 #include <chaos/common/direct_io/DirectIOClientConnection.h>
+#include <chaos/common/io/SharedManagedDirecIoDataDriver.h>
 
 #define DPD_LOG_HEAD "[ChaosDatasetIO] - "
 
@@ -19,7 +20,7 @@ using namespace chaos::common::healt_system;
 
 namespace driver{
 namespace misc{
-ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("ChaosDatasetIO", this),datasetName(name){
+ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("ChaosDatasetIO", this),datasetName(name),pcktid(0){
     network_broker=NetworkBroker::getInstance();
     mds_message_channel = network_broker->getMetadataserverMessageChannel();
     if(!mds_message_channel)
@@ -46,8 +47,15 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("Chaos
             }
         }
     }
+    StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
+    InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+    runid=time(NULL);
+
 }
 ChaosDatasetIO::~ChaosDatasetIO(){
+    DEBUG_CODE(DPD_LDBG << "Destroy");
+    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+
     connection_feeder.clear();
 
     //if(direct_io_client) {
@@ -56,8 +64,9 @@ ChaosDatasetIO::~ChaosDatasetIO(){
     //														   __PRETTY_FUNCTION__);)
     //delete(direct_io_client);
     //}
+    DEBUG_CODE(DPD_LDBG << "Dispose message channel");
 
-    if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
+   // if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
 }
 
 
@@ -83,6 +92,8 @@ void ChaosDatasetIO::handleEvent(DirectIOClientConnection *client_connection,Dir
 }
 void ChaosDatasetIO::disposeService(void *service_ptr) {
     if(!service_ptr) return;
+    DEBUG_CODE(DPD_LDBG << "Dispose service");
+
     DirectIOChannelsInfo	*info = static_cast<DirectIOChannelsInfo*>(service_ptr);
 
     if(info->device_client_channel) info->connection->releaseChannelInstance(info->device_client_channel);
@@ -129,6 +140,18 @@ void* ChaosDatasetIO::serviceForURL(const chaos::common::network::URL& url, uint
 int ChaosDatasetIO::pushDataset( CDataWrapper* new_dataset,int type,int store_hint) {
     int err = 0;
     //ad producer key
+    if(!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_TIMESTAMP))){
+    // add timestamp of the datapack
+        uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
+        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, ts);
+    }
+
+    if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
+        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,pcktid++ );
+    }
+    if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
+        new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,(int64_t)runid );
+    }
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, datasetName);
 
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, type);
@@ -171,19 +194,88 @@ int ChaosDatasetIO::getLastDataset(const std::string& producer_key,
     return err;
 }
 */
-//! register the dataset of ap roducer
-int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper last_dataset,int type) {
-    CHAOS_ASSERT(mds_message_channel);
-    int ret;
-    CDataWrapper mdsPack;
-    mdsPack.addCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, last_dataset);
 
-    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
-    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
-    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
-    mdsPack.addStringValue("mds_control_key","none");
-    mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-    if((ret=mds_message_channel->sendNodeRegistration(mdsPack, true, 10000)) ==0){
+chaos::common::data::CDataWrapper ChaosDatasetIO::wrapper2dataset(chaos::common::data::CDataWrapper& dataset_pack,int dir){
+    CDataWrapper cu_dataset,mds_registration_pack;
+    ChaosStringVector all_template_key;
+    dataset_pack.getAllKey(all_template_key);
+
+    for(ChaosStringVectorIterator it = all_template_key.begin();
+           it != all_template_key.end();
+           it++) {
+           if(dataset_pack.isNullValue(*it)) {
+               DPD_LERR << "Removed from template null value key:" << *it;
+               continue;
+           }
+           CDataWrapper ds;
+           int32_t dstype=0,subtype=0;
+           int32_t size=0;
+           ds.addStringValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_NAME,*it);
+
+           size =dataset_pack.getValueSize(*it);
+           if(dataset_pack.isDoubleValue(*it)){
+               dstype |= chaos::DataType::TYPE_DOUBLE;
+               subtype= chaos::DataType::SUB_TYPE_DOUBLE;
+           } else if(dataset_pack.isInt64Value(*it)){
+               dstype |=  chaos::DataType::TYPE_INT64;
+               subtype= chaos::DataType::SUB_TYPE_INT64;
+
+           } else if(dataset_pack.isInt32Value(*it)){
+               dstype |=  chaos::DataType::TYPE_INT32;
+               subtype= chaos::DataType::SUB_TYPE_INT32;
+
+           } else if(dataset_pack.isStringValue(*it)){
+               dstype |=  chaos::DataType::TYPE_STRING;
+               subtype= chaos::DataType::SUB_TYPE_STRING;
+
+           } else if(dataset_pack.isBinaryValue(*it)){
+               dstype |=  chaos::DataType::TYPE_BYTEARRAY;
+           } else {
+               dstype |= chaos::DataType::TYPE_DOUBLE;
+               subtype= chaos::DataType::SUB_TYPE_DOUBLE;
+
+           }
+           if(dataset_pack.isVector(*it)){
+               //dstype = chaos::DataType::TYPE_ACCESS_ARRAY;
+               dstype = chaos::DataType::TYPE_BYTEARRAY;
+           }
+           ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_BINARY_SUBTYPE,subtype);
+           ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE,dstype);
+           ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION,dir);
+           ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_VALUE_MAX_SIZE,size);
+
+           DPD_LDBG<<"- ATTRIBUTE \""<<*it<<"\" SIZE:"<<size<<" TYPE:"<<dstype<<" SUBTYPE:"<<subtype;
+           cu_dataset.appendCDataWrapperToArray(ds);
+
+       }
+    cu_dataset.addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_TIMESTAMP,chaos::common::utility::TimingUtil::getTimeStamp());
+
+    //close array for all device description
+    cu_dataset.finalizeArrayForKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
+    cu_dataset.addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,(int64_t)0);
+
+    mds_registration_pack.addCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, cu_dataset);
+    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+    return mds_registration_pack;
+}
+
+//! register the dataset of ap roducer
+int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper dataset_pack,int type) {
+    CHAOS_ASSERT(mds_message_channel);
+    CDataWrapper mds_registration_pack=wrapper2dataset(dataset_pack,type);
+
+    int ret;
+
+    DEBUG_CODE(DPD_LDBG << mds_registration_pack.getJSONString());
+
+
+
+    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
+    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
+    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
+    mds_registration_pack.addStringValue("mds_control_key","none");
+    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+    if((ret=mds_message_channel->sendNodeRegistration(mds_registration_pack, true, 10000)) ==0){
         CDataWrapper mdsPack;
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);

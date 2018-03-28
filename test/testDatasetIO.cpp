@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
             my_dataset.setValue("counter64",(int64_t)2*cnt);
             my_dataset.setValue("counter32",(int32_t)(2*cnt+1));
             my_dataset.setValue("doublevar",(double)cnt);
+            LDBG_<<"int32 value:"<<my_dataset.getInt32Value("counter32");
             if(test.pushDataset(&my_dataset)!=0){
                 LERR_<<" cannot push:"<<my_dataset.getJSONString();
 

@@ -25,13 +25,15 @@ chaos::common::direct_io::DirectIOClientConnectionEventHandler{
     chaos::common::message::MDSMessageChannel	*mds_message_channel;
 
     chaos::common::network::URLServiceFeeder	connection_feeder;
-
+    chaos::common::data::CDataWrapper wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
 protected:
     //!inherited by @common::network::URLServiceFeederHandler
     void  disposeService(void *service_ptr);
 
     //! inherited by @common::network::URLServiceFeederHandler
     void* serviceForURL(const URL& url, uint32_t service_index);
+    uint64_t pcktid;
+    uint64_t runid;
 
     //! inherited by @chaos::common::direct_io::DirectIOClientConnectionEventHandler
     void handleEvent(chaos_direct_io::DirectIOClientConnection *client_connection,chaos_direct_io::DirectIOClientConnectionStateType::DirectIOClientConnectionStateType event);
