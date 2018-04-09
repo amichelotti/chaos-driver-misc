@@ -503,7 +503,7 @@ void ChaosController::deinitializeClient(){
 #define CU_FREQ_UPDATE_US 5*1000*1000
 
 uint64_t ChaosController::sched(uint64_t ts){
-    CDataWrapper all;
+    CDataWrapper all,common;
     controller->fetchAllDataset();
     ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX+1];
     delta_update=CU_HEALTH_UPDATE_US;
@@ -525,6 +525,13 @@ uint64_t ChaosController::sched(uint64_t ts){
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
         cachedJsonChannels[cnt] =channels[cnt]->getCompliantJSONString();
         all.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
+        if((static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt)==KeyDataStorageDomainHealth)||
+                (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt)==KeyDataStorageDomainSystem)||
+                (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt)==KeyDataStorageDomainDevAlarm)||
+                (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt)==KeyDataStorageDomainCUAlarm)){
+            common.addCSDataValue(chaos::datasetTypeToHuman(cnt),*(channels[cnt].get()));
+
+        }
 
         /*
         *  if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
@@ -544,6 +551,7 @@ uint64_t ChaosController::sched(uint64_t ts){
     }
     all.appendAllElement(*bundle_state.getData());
     cachedJsonChannels[-1]=all.getCompliantJSONString();
+    cachedJsonChannels[255]=common.getCompliantJSONString();
 
     boost::mutex::scoped_lock(iomutex);
     float rate;
@@ -708,7 +716,25 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             retdata=combineDataSets(set);
 
 
-        } else {
+        } else if(channel==255) {
+            chaos::common::data::CDataWrapper* idata = NULL, *odata = NULL;
+            chaos::common::data::CDataWrapper resdata;
+            std::stringstream out;
+            uint64_t ts = 0;
+            std::map<int,  chaos::common::data::CDataWrapper* > set;
+            CDataWrapper ch[7];
+            controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth,&ch[0]);
+            controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem,&ch[1]);
+            controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm,&ch[2]);
+            controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm,&ch[3]);
+            set[KeyDataStorageDomainHealth]=&ch[0];
+            set[KeyDataStorageDomainSystem]=&ch[1];
+            set[KeyDataStorageDomainDevAlarm]=&ch[2];
+            set[KeyDataStorageDomainCUAlarm]=&ch[3];
+
+
+            retdata=combineDataSets(set);
+        } else{
             CDataWrapper data;
 
             if (controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel,&data) !=0 ) {

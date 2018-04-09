@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     my_dataset.addInt32Value("counter32",0);
     my_dataset.addStringValue("stringa","hello dataset");
     my_dataset.addDoubleValue("doublevar",0.0);
-    if(test.registerDataset(my_dataset)==0){
+  /*  if(test.registerDataset(my_dataset)==0){
         LDBG_<<" registration OK";
         for(int cnt=0;cnt<10;cnt++){
             my_dataset.setValue("counter64",(int64_t)2*cnt);
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
 
     } else {
         LERR_<<" cannot register!:"<<my_dataset.getJSONString();
-    }
-
+    }*/
+    ChaosMetadataServiceClient::getInstance()->deinit();
         return 0;
 }
 

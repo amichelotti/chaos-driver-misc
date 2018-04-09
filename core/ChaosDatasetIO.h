@@ -13,7 +13,8 @@ namespace driver{
 namespace misc{
 
 class ChaosDatasetIO:protected chaos::common::network::URLServiceFeederHandler,
-chaos::common::direct_io::DirectIOClientConnectionEventHandler{
+chaos::common::direct_io::DirectIOClientConnectionEventHandler,
+chaos::common::utility::InizializableService {
     typedef struct DirectIOChannelsInfo {
         boost::shared_mutex													connection_mutex;
         chaos::common::direct_io::DirectIOClientConnection					*connection;
@@ -46,7 +47,7 @@ protected:
         */
         int registerDataset ( chaos::common::data::CDataWrapper dataset,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         int pushDataset( chaos::common::data::CDataWrapper* dataset,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT,int store_hint=2);
-        int deinit();
+        void deinit() throw (chaos::CException);
 
 };
 }}

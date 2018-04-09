@@ -48,29 +48,38 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("Chaos
         }
     }
     StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
-    InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+ //   InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
     runid=time(NULL);
 
 }
 ChaosDatasetIO::~ChaosDatasetIO(){
     DEBUG_CODE(DPD_LDBG << "Destroy");
-    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
 
-    connection_feeder.clear();
 
-    //if(direct_io_client) {
-    //CHAOS_NOT_THROW(InizializableService::deinitImplementation(direct_io_client,
-    //														   direct_io_client->getName(),
-    //														   __PRETTY_FUNCTION__);)
-    //delete(direct_io_client);
-    //}
     DEBUG_CODE(DPD_LDBG << "Dispose message channel");
 
-   // if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
+
+   // connection_feeder.clear();
+   /* if(direct_io_client) {
+        CHAOS_NOT_THROW(InizializableService::deinitImplementation(direct_io_client,
+                                                                   direct_io_client->getName(),
+                                                                   __PRETTY_FUNCTION__);)
+        delete(direct_io_client);
+    }
+
+   if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
+   */
+
 }
 
 
-int ChaosDatasetIO::deinit(){
+void ChaosDatasetIO::deinit() throw (chaos::CException){
+    CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+
+    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+
+   // InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+
 
 }
 
@@ -91,14 +100,21 @@ void ChaosDatasetIO::handleEvent(DirectIOClientConnection *client_connection,Dir
     }
 }
 void ChaosDatasetIO::disposeService(void *service_ptr) {
-    if(!service_ptr) return;
-    DEBUG_CODE(DPD_LDBG << "Dispose service");
+   /* if(!service_ptr) return;
+    DEBUG_CODE(DPD_LDBG << "Dispose service:"<<std::hex<<(void*)service_ptr);
 
     DirectIOChannelsInfo	*info = static_cast<DirectIOChannelsInfo*>(service_ptr);
 
-    if(info->device_client_channel) info->connection->releaseChannelInstance(info->device_client_channel);
-    direct_io_client->releaseConnection(info->connection);
+    if(info->device_client_channel) {
+        info->connection->releaseChannelInstance(info->device_client_channel);
+        info->device_client_channel=NULL;
+    }
+    if(info->connection){
+        direct_io_client->releaseConnection(info->connection);
+        info->connection=NULL;
+    }
     delete(info);
+    */
 }
 
 /*---------------------------------------------------------------------------------
