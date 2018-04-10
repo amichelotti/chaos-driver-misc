@@ -84,7 +84,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             }
             query[branch_counter].size=0;
         }
-        int type_size = CDataWrapperTypeDouble;
+        chaos::DataType::DataType type_size = chaos::DataType::TYPE_DOUBLE;
         if (cd->isVector(*it)) {
             int size = 0;
             CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
@@ -95,19 +95,19 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             found++;
             if (da->size()) {
                 if (da->isDoubleElementAtIndex(0)) {
-                    type_size = CDataWrapperTypeDouble;
+                    type_size = chaos::DataType::TYPE_DOUBLE;
                     query[branch_counter].size+=da->size()*sizeof(double);
 
                 } else if (da->isInt32ElementAtIndex(0)) {
-                    type_size = CDataWrapperTypeInt32;
+                    type_size = chaos::DataType::TYPE_INT32;
                     query[branch_counter].size+=da->size()*sizeof(int32_t);
 
                 } else if (da->isInt64ElementAtIndex(0)) {
-                    type_size = CDataWrapperTypeInt64;
+                    type_size = chaos::DataType::TYPE_INT64;
                     query[branch_counter].size+=da->size()*sizeof(int64_t);
 
                 } else if (da->isStringElementAtIndex(0)) {
-                    type_size = CDataWrapperTypeString;
+                    type_size = chaos::DataType::TYPE_STRING;
                     query[branch_counter].size+=da->size()*(da->getStringElementAtIndex(0).size());
 
                 }
@@ -115,7 +115,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
         } else {
-            if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt32)||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
+            if((type_size==chaos::DataType::TYPE_DOUBLE )||(type_size==chaos::DataType::TYPE_INT32)||(type_size==chaos::DataType::TYPE_INT64)||(type_size==chaos::DataType::TYPE_BOOLEAN)){
 
                 type_size = cd->getValueType(*it);
                 query[branch_counter].size+=cd->getValueSize(*it);
@@ -130,51 +130,43 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             }
         }
         switch (type_size) {
-        case CDataWrapperTypeNoType:
-            break;
-        case CDataWrapperTypeNULL:
-            break;
-        case CDataWrapperTypeBool:
+
+        case chaos::DataType::TYPE_BOOLEAN:
             found++;
          //   if(!multiple)
                 varname <<*it;
             varname << "/O";
 
             break;
-        case CDataWrapperTypeInt32:
+        case chaos::DataType::TYPE_INT32:
             found++;
        //     if(!multiple)
                 varname <<*it;
             varname << "/I";
 
             break;
-        case CDataWrapperTypeInt64:
+        case chaos::DataType::TYPE_INT64:
             found++;
            // if(!multiple)
                 varname <<*it;
             varname << "/L";
 
             break;
-        case CDataWrapperTypeDouble:
+        case chaos::DataType::TYPE_DOUBLE:
             found++;
             //if(!multiple)
                 varname <<*it;
             varname << "/D";
 
             break;
-        case CDataWrapperTypeString:
+        case chaos::DataType::TYPE_STRING:
             disable_dump=1;
      //               found++;
      //               varname << *it;
      //           varname << "/C";
 
             break;
-        case CDataWrapperTypeBinary:
-            break;
-        case CDataWrapperTypeObject:
-            break;
-        case CDataWrapperTypeVector:
-            break;
+
         default:
             break;
         }
@@ -258,10 +250,10 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
         } else {
             //ROOTDBG<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
             switch(cd->getValueType(*it)){
-            case CDataWrapperTypeDouble:
-            case CDataWrapperTypeInt64:
-            case CDataWrapperTypeBool:
-            case CDataWrapperTypeInt32:{
+            case chaos::DataType::TYPE_DOUBLE:
+            case chaos::DataType::TYPE_INT64:
+            case chaos::DataType::TYPE_BOOLEAN:
+            case chaos::DataType::TYPE_INT32:{
                 memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
                 ptr+=cd->getValueSize(*it);
                 break;
