@@ -10,6 +10,7 @@
 #define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
 #define DPD_LERR LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "
 
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 
 using namespace chaos::common::data;
 using namespace chaos::common::utility;
@@ -20,16 +21,18 @@ using namespace chaos::common::healt_system;
 
 namespace driver{
 namespace misc{
-ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("ChaosDatasetIO", this),datasetName(name),pcktid(0){
+ChaosDatasetIO::ChaosDatasetIO(const std::string &name):datasetName(name),pcktid(0){
+    InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+
+    //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
+    ioLiveDataDriver =chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
     network_broker=NetworkBroker::getInstance();
     mds_message_channel = network_broker->getMetadataserverMessageChannel();
     if(!mds_message_channel)
         throw chaos::CException(-1, "No mds channel found", __PRETTY_FUNCTION__);
 
-    //! get the direct io client
-    direct_io_client = network_broker->getSharedDirectIOClientInstance();
     //checkif someone has passed us the device indetification
-    DPD_LAPP << "Scan the direction address";
+ /*   DPD_LAPP << "Scan the direction address";
 
     chaos::common::data::CDataWrapper *tmp_data_handler = NULL;
 
@@ -42,21 +45,24 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name):connection_feeder("Chaos
                 size_t numerbOfserverAddressConfigured = liveMemAddrConfig->size();
                 for ( int idx = 0; idx < numerbOfserverAddressConfigured; idx++ ){
                     std::string serverDesc = liveMemAddrConfig->getStringElementAtIndex(idx);
-                    connection_feeder.addURL(serverDesc);
+                    //connection_feeder.addURL(serverDesc);
                 }
             }
         }
     }
+*/
     StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
- //   InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
     runid=time(NULL);
 
 }
 ChaosDatasetIO::~ChaosDatasetIO(){
-    DEBUG_CODE(DPD_LDBG << "Destroy");
+    DEBUG_CODE(DPD_LDBG << "Destroy all resources");
 
-
-    DEBUG_CODE(DPD_LDBG << "Dispose message channel");
+    //CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+//sleep(1);
+//InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+//sleep(1);
+    DEBUG_CODE(DPD_LDBG << "End");
 
 
    // connection_feeder.clear();
@@ -74,16 +80,11 @@ ChaosDatasetIO::~ChaosDatasetIO(){
 
 
 void ChaosDatasetIO::deinit() throw (chaos::CException){
-    CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-
-    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-
-   // InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
 
 }
 
-
+/*
 void ChaosDatasetIO::handleEvent(DirectIOClientConnection *client_connection,DirectIOClientConnectionStateType::DirectIOClientConnectionStateType event) {
     //if the channel has bee disconnected turn the relative index offline, if onli reput it online
     boost::unique_lock<boost::shared_mutex>(mutext_feeder);
@@ -100,7 +101,7 @@ void ChaosDatasetIO::handleEvent(DirectIOClientConnection *client_connection,Dir
     }
 }
 void ChaosDatasetIO::disposeService(void *service_ptr) {
-   /* if(!service_ptr) return;
+   if(!service_ptr) return;
     DEBUG_CODE(DPD_LDBG << "Dispose service:"<<std::hex<<(void*)service_ptr);
 
     DirectIOChannelsInfo	*info = static_cast<DirectIOChannelsInfo*>(service_ptr);
@@ -114,12 +115,10 @@ void ChaosDatasetIO::disposeService(void *service_ptr) {
         info->connection=NULL;
     }
     delete(info);
-    */
+
 }
 
-/*---------------------------------------------------------------------------------
 
- ---------------------------------------------------------------------------------*/
 void* ChaosDatasetIO::serviceForURL(const chaos::common::network::URL& url, uint32_t service_index) {
     DPD_LDBG << "Add connection for " << url.getURL();
     DirectIOChannelsInfo * clients_channel = NULL;
@@ -151,6 +150,7 @@ void* ChaosDatasetIO::serviceForURL(const chaos::common::network::URL& url, uint
     return clients_channel;
 }
 
+*/
 
 // push a dataset
 int ChaosDatasetIO::pushDataset( CDataWrapper* new_dataset,int type,int store_hint) {
@@ -168,28 +168,18 @@ int ChaosDatasetIO::pushDataset( CDataWrapper* new_dataset,int type,int store_hi
     if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,(int64_t)runid );
     }
-    new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, datasetName);
-
-    new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, type);
-    ChaosUniquePtr<SerializationBuffer> serialization(new_dataset->getBSONData());
-//	DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
-    DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
-    serialization->disposeOnDelete = !next_client;
-    if(next_client) {
-        boost::shared_lock<boost::shared_mutex>(next_client->connection_mutex);
-
-        //free the packet
-        serialization->disposeOnDelete = false;
-        if((err =(int)next_client->device_client_channel->storeAndCacheDataOutputChannel(datasetName+chaos::datasetTypeToPostfix(type),
-                                                                                         (void*)serialization->getBufferPtr(),
-                                                                                         (uint32_t)serialization->getBufferLen(),
-                                                                                         (chaos::DataServiceNodeDefinitionType::DSStorageType)store_hint))) {
-            DPD_LERR << "Error storing dataset with code:" << err;
-        }
-    } else {
-        DEBUG_CODE(DPD_LDBG << "No available socket->loose packet");
-        err = -1;
+    if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_DEVICE_ID)){
+        new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, datasetName);
     }
+    if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_DATASET_TYPE)){
+        new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, type);
+    }
+    //ChaosUniquePtr<SerializationBuffer> serialization(new_dataset->getBSONData());
+//	DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
+   // DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
+   // serialization->disposeOnDelete = !next_client;
+    ioLiveDataDriver->storeData(datasetName+chaos::datasetTypeToPostfix(type),new_dataset,(chaos::DataServiceNodeDefinitionType::DSStorageType)store_hint,false);
+
 
     return err;
 }

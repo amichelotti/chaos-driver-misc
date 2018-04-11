@@ -22,13 +22,15 @@ int main(int argc, char** argv) {
 
 
 	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
-    ChaosDatasetIO test("IMA/TESTDASETIO");
+ //   ChaosMetadataServiceClient::getInstance()->start();
+    sleep(2);
+   /* ChaosDatasetIO test("IMA/DAQ");
     chaos::common::data::CDataWrapper my_dataset;
     my_dataset.addInt64Value("counter64",(int64_t)0);
     my_dataset.addInt32Value("counter32",0);
     my_dataset.addStringValue("stringa","hello dataset");
     my_dataset.addDoubleValue("doublevar",0.0);
-  /*  if(test.registerDataset(my_dataset)==0){
+    if(test.registerDataset(my_dataset)==0){
         LDBG_<<" registration OK";
         for(int cnt=0;cnt<10;cnt++){
             my_dataset.setValue("counter64",(int64_t)2*cnt);
@@ -45,8 +47,12 @@ int main(int argc, char** argv) {
 
     } else {
         LERR_<<" cannot register!:"<<my_dataset.getJSONString();
-    }*/
-    ChaosMetadataServiceClient::getInstance()->deinit();
+    }
+    */
+//    ChaosMetadataServiceClient::getInstance()->stop();
+    sleep(1);
+     ChaosMetadataServiceClient::getInstance()->deinit();
+     sleep(1);
         return 0;
 }
 
