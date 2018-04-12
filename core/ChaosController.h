@@ -138,7 +138,7 @@ private:
         chaos::common::data::CDataWrapper param;
         template<typename T>
         void addParameter(std::string name,T value){
-            param.addValue(name,value);
+            param.append(name,value);
         }
         uint32_t priority;
         uint64_t scheduler_steps_delay;
@@ -201,7 +201,7 @@ private:
     command_t prepareCommand(std::string alias);
     template <typename T>
     void addParameter(command_t& cmd,std::string name,T value){
-        cmd->param.addValue(name,value);
+        cmd->param.append(name,value);
     }
     
     command_t last_cmd;

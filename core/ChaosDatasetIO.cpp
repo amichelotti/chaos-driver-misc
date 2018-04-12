@@ -3,6 +3,10 @@
 #include <chaos/common/direct_io/DirectIOClient.h>
 #include <chaos/common/direct_io/DirectIOClientConnection.h>
 #include <chaos/common/io/SharedManagedDirecIoDataDriver.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/NewUS.h>
+#include <chaos_metadata_service_client/api_proxy/unit_server/ManageCUType.h>
+#include <chaos_metadata_service_client/api_proxy/control_unit/SetInstanceDescription.h>
+#include <chaos/common/network/NetworkBroker.h>
 
 #define DPD_LOG_HEAD "[ChaosDatasetIO] - "
 
@@ -18,10 +22,22 @@ using namespace chaos::common::network;
 using namespace chaos::common::direct_io;
 using namespace chaos::common::direct_io::channel;
 using namespace chaos::common::healt_system;
+using namespace chaos::metadata_service_client;
 
+#define EXECUTE_CHAOS_API(api_name,time_out,...) \
+    DPD_LDBG<<" " <<" Executing Api:\""<< # api_name<<"\"" ;\
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires=  GET_CHAOS_API_PTR(api_name)->execute( __VA_ARGS__ );\
+    apires->setTimeout(time_out);\
+    apires->wait();\
+    if(apires->getError()){\
+    std::stringstream ss;\
+    ss<<" error in :"<<__FUNCTION__<<"|"<<__LINE__<<"|"<< # api_name <<" " <<apires->getErrorMessage();\
+    DPD_LERR<<ss.str();\
+}
 namespace driver{
 namespace misc{
-ChaosDatasetIO::ChaosDatasetIO(const std::string &name):datasetName(name),pcktid(0){
+ChaosDatasetIO::ChaosDatasetIO(const std::string &name,const std::string &group_name):datasetName(name),groupName(group_name),pcktid(0), ageing(3600),storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageType::DSStorageTypeLiveHistory),timeo(5000),entry_created(false)
+ {
     InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
     //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
@@ -31,30 +47,16 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name):datasetName(name),pcktid
     if(!mds_message_channel)
         throw chaos::CException(-1, "No mds channel found", __PRETTY_FUNCTION__);
 
-    //checkif someone has passed us the device indetification
- /*   DPD_LAPP << "Scan the direction address";
 
-    chaos::common::data::CDataWrapper *tmp_data_handler = NULL;
-
-    if(!mds_message_channel->getDataDriverBestConfiguration(&tmp_data_handler, 5000)){
-        if(tmp_data_handler!=NULL){
-            ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr(tmp_data_handler);
-            DPD_LDBG <<best_available_da_ptr->getJSONString();
-            ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> liveMemAddrConfig(best_available_da_ptr->getVectorValue(chaos::DataServiceNodeDefinitionKey::DS_DIRECT_IO_FULL_ADDRESS_LIST));
-            if(liveMemAddrConfig.get()){
-                size_t numerbOfserverAddressConfigured = liveMemAddrConfig->size();
-                for ( int idx = 0; idx < numerbOfserverAddressConfigured; idx++ ){
-                    std::string serverDesc = liveMemAddrConfig->getStringElementAtIndex(idx);
-                    //connection_feeder.addURL(serverDesc);
-                }
-            }
-        }
-    }
-*/
     StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
     runid=time(NULL);
 
 }
+
+int ChaosDatasetIO::setAgeing(uint64_t secs){ageing=secs;}
+int ChaosDatasetIO::setStorage(int st){storageType=st;}
+int ChaosDatasetIO::setTimeo(uint64_t t){timeo=t;}
+
 ChaosDatasetIO::~ChaosDatasetIO(){
     DEBUG_CODE(DPD_LDBG << "Destroy all resources");
 
@@ -75,87 +77,36 @@ ChaosDatasetIO::~ChaosDatasetIO(){
 
    if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
    */
-
-}
-
-
-void ChaosDatasetIO::deinit() throw (chaos::CException){
-
-
-}
-
-/*
-void ChaosDatasetIO::handleEvent(DirectIOClientConnection *client_connection,DirectIOClientConnectionStateType::DirectIOClientConnectionStateType event) {
-    //if the channel has bee disconnected turn the relative index offline, if onli reput it online
-    boost::unique_lock<boost::shared_mutex>(mutext_feeder);
-    uint32_t service_index = boost::lexical_cast<uint32_t>(client_connection->getCustomStringIdentification());
-    DEBUG_CODE(DPD_LDBG << "Manage event for service with index " << service_index << " and url " << client_connection->getURL();)
-    switch(event) {
-        case chaos_direct_io::DirectIOClientConnectionStateType::DirectIOClientConnectionEventConnected:
-            connection_feeder.setURLOnline(service_index);
-            break;
-
-        case chaos_direct_io::DirectIOClientConnectionStateType::DirectIOClientConnectionEventDisconnected:
-            connection_feeder.setURLOffline(service_index);
-            break;
+    std::map<int,ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i;
+    for(i=datasets.begin();i!=datasets.end();i++){
+        DPD_LDBG<<" removing dataset:"<<i->first;
+        (i->second).reset();
     }
-}
-void ChaosDatasetIO::disposeService(void *service_ptr) {
-   if(!service_ptr) return;
-    DEBUG_CODE(DPD_LDBG << "Dispose service:"<<std::hex<<(void*)service_ptr);
 
-    DirectIOChannelsInfo	*info = static_cast<DirectIOChannelsInfo*>(service_ptr);
-
-    if(info->device_client_channel) {
-        info->connection->releaseChannelInstance(info->device_client_channel);
-        info->device_client_channel=NULL;
-    }
-    if(info->connection){
-        direct_io_client->releaseConnection(info->connection);
-        info->connection=NULL;
-    }
-    delete(info);
 
 }
 
 
-void* ChaosDatasetIO::serviceForURL(const chaos::common::network::URL& url, uint32_t service_index) {
-    DPD_LDBG << "Add connection for " << url.getURL();
-    DirectIOChannelsInfo * clients_channel = NULL;
-    chaos_direct_io::DirectIOClientConnection *tmp_connection = direct_io_client->getNewConnection(url.getURL());
-    if(tmp_connection) {
-        clients_channel = new DirectIOChannelsInfo();
-        clients_channel->connection = tmp_connection;
 
-        //allocate the client channel
-        clients_channel->device_client_channel = (DirectIODeviceClientChannel*)tmp_connection->getNewChannelInstance("DirectIODeviceClientChannel");
-        if(!clients_channel->device_client_channel) {
-            DPD_LDBG << "Error creating client device channel for " << url.getURL();
+ChaosDataSet ChaosDatasetIO::allocateDataset(int type){
+    std::map<int,ChaosDataSet >::iterator i =datasets.find(type);
+    if(i == datasets.end()){
+        ChaosDataSet tmp(new chaos::common::data::CDataWrapper );
+        datasets[type]=tmp;
+        DPD_LDBG<<" allocated dataset:"<<type;
 
-            //release conenction
-            direct_io_client->releaseConnection(tmp_connection);
-
-            //relase struct
-            delete(clients_channel);
-            return NULL;
-        }
-
-        //set this driver instance as event handler for connection
-        clients_channel->connection->setEventHandler(this);
-        //!put the index in the conenction so we can found it wen we receive event from it
-        clients_channel->connection->setCustomStringIdentification(boost::lexical_cast<std::string>(service_index));
-    } else {
-        DPD_LERR << "Error creating client connection for " << url.getURL();
+        return tmp;
     }
-    return clients_channel;
-}
+    DPD_LDBG<<" returning already allocated dataset:"<<type;
 
-*/
+    return i->second;
+}
 
 // push a dataset
-int ChaosDatasetIO::pushDataset( CDataWrapper* new_dataset,int type,int store_hint) {
+int ChaosDatasetIO::pushDataset(int type) {
     int err = 0;
     //ad producer key
+    CDataWrapper*new_dataset=datasets[type].get();
     if(!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_TIMESTAMP))){
     // add timestamp of the datapack
         uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
@@ -178,28 +129,35 @@ int ChaosDatasetIO::pushDataset( CDataWrapper* new_dataset,int type,int store_hi
 //	DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
    // DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
    // serialization->disposeOnDelete = !next_client;
-    ioLiveDataDriver->storeData(datasetName+chaos::datasetTypeToPostfix(type),new_dataset,(chaos::DataServiceNodeDefinitionType::DSStorageType)store_hint,false);
+    ioLiveDataDriver->storeData(datasetName+chaos::datasetTypeToPostfix(type),new_dataset,(chaos::DataServiceNodeDefinitionType::DSStorageType)storageType,false);
 
 
     return err;
 }
-/*
-// get a dataset
-int ChaosDatasetIO::getLastDataset(const std::string& producer_key,
-                                             chaos::common::data::CDataWrapper **last_dataset) {
-    int err = 0;
-    uint32_t size = 0;
-    char* result = NULL;
-    DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
-    if(!next_client) return err;
 
-    boost::shared_lock<boost::shared_mutex>(next_client->connection_mutex);
+ChaosDataSet ChaosDatasetIO::getDataset(const std::string &dsname,int type){
+    size_t dim;
+    ChaosDataSet tmp;
+    char*ptr=ioLiveDataDriver->retriveRawData(dsname+chaos::datasetTypeToPostfix(type),&dim);
+    if(ptr){
+        tmp.reset(new chaos::common::data::CDataWrapper(ptr));
 
-    next_client->device_client_channel->requestLastOutputData(producer_key, (void**)&result, size);
-    *last_dataset = new CDataWrapper(result);
-    return err;
+    }
+
+    return tmp;
 }
-*/
+
+ChaosDataSet ChaosDatasetIO::getDataset(int type){
+    size_t dim;
+    ChaosDataSet tmp;
+    char*ptr=ioLiveDataDriver->retriveRawData(datasetName+chaos::datasetTypeToPostfix(type),&dim);
+    if(ptr){
+        tmp.reset(new chaos::common::data::CDataWrapper(ptr));
+
+    }
+
+    return tmp;
+}
 
 chaos::common::data::CDataWrapper ChaosDatasetIO::wrapper2dataset(chaos::common::data::CDataWrapper& dataset_pack,int dir){
     CDataWrapper cu_dataset,mds_registration_pack;
@@ -264,39 +222,92 @@ chaos::common::data::CDataWrapper ChaosDatasetIO::wrapper2dataset(chaos::common:
     mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
     return mds_registration_pack;
 }
+void ChaosDatasetIO::createMDSEntry(){
+    api_proxy::control_unit::SetInstanceDescriptionHelper cud;
+
+    {
+        EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS,timeo,groupName);
+    }
+
+    {
+        EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType,timeo,groupName,"datasetIO",0);
+    }
+
+    cud.auto_load=1;
+    cud.auto_init=1;
+    cud.auto_start=1;
+    cud.load_parameter = "";
+    cud.control_unit_uid=datasetName;
+    cud.default_schedule_delay=1;
+    cud.unit_server_uid=groupName;
+    cud.control_unit_implementation="datasetIO";
+    cud.history_ageing=ageing;
+    cud.storage_type=(chaos::DataServiceNodeDefinitionType::DSStorageType)storageType;
+    {
+        EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,timeo,cud);
+    }
+    HealtManager::getInstance()->addNewNode(datasetName);
+
+    HealtManager::getInstance()->addNodeMetricValue(datasetName,
+                        chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+                        chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
+                        true);
+
+}
 
 //! register the dataset of ap roducer
-int ChaosDatasetIO::registerDataset(chaos::common::data::CDataWrapper dataset_pack,int type) {
+int ChaosDatasetIO::registerDataset() {
     CHAOS_ASSERT(mds_message_channel);
-    CDataWrapper mds_registration_pack=wrapper2dataset(dataset_pack,type);
+    if(datasets.empty()){
+        DPD_LERR<<" NO DATASET ALLOCATED";
 
-    int ret;
+        return -3;
+    }
+    if(entry_created==false){
+        createMDSEntry();
+        entry_created=true;
+    }
+    std::map<int,ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i;
 
+    for(i=datasets.begin();i!=datasets.end();i++){
+
+
+    CDataWrapper mds_registration_pack=wrapper2dataset(*((i->second).get()),i->first);
     DEBUG_CODE(DPD_LDBG << mds_registration_pack.getJSONString());
 
-
+    int ret;
 
     mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
     mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
     mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
     mds_registration_pack.addStringValue("mds_control_key","none");
     mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+    DPD_LDBG<<"registering "<<i->first<<" registration pack:"<<mds_registration_pack.getCompliantJSONString();
+
     if((ret=mds_message_channel->sendNodeRegistration(mds_registration_pack, true, 10000)) ==0){
         CDataWrapper mdsPack;
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, datasetName);
         mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
         ret = mds_message_channel->sendNodeLoadCompletion(mdsPack, true, 10000);
-        HealtManager::getInstance()->addNewNode(datasetName);
 
-        HealtManager::getInstance()->addNodeMetricValue(datasetName,
-							chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-							chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
-							true);
+    } else {
+        DPD_LERR<<" cannot register dataset "<<i->first<<" registration pack:"<<mds_registration_pack.getCompliantJSONString();
+        return -1;
     }
-
-    return ret;
+    }
+    return 0;
 }
 
+uint64_t ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname,int type, uint64_t ms_start,uint64_t ms_end,int page){
+    return 0;
+}
+bool ChaosDatasetIO::hasNextPage(uint64_t uid){
+    return false;
+}
+std::vector<ChaosDataSet> ChaosDatasetIO::getNextPage(uint64_t uid){
+    std::vector<ChaosDataSet> ret;
+    return ret;
+}
 
 }
 }

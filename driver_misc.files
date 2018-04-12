@@ -32,6 +32,7 @@ generators/drivers/remote/SinGeneratorRemoteDriver.cpp
 generators/drivers/remote/SinGeneratorRemoteDriver.h
 generators/drivers/simulator/SinGeneratorDriver.cpp
 generators/drivers/simulator/SinGeneratorDriver.h
+models/CMakeLists.txt
 models/benchmark/ChaosMESS.cpp
 models/benchmark/ChaosMESS.h
 models/benchmark/CmdCalcBandwidth.cpp
@@ -45,6 +46,7 @@ models/benchmark/DummyDriver.h
 models/benchmark/MessProfilePacketInfo.h
 models/benchmark/test/messClient.cpp
 models/benchmark/test/messMonitor.cpp
+models/cernRoot/CMakeLists.txt
 models/cernRoot/chaosRoot.cpp
 models/cernRoot/rootUtil.cpp
 models/cernRoot/rootUtil.h
