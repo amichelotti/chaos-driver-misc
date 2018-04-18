@@ -33,6 +33,7 @@ ChaosDatasetAttributeSinchronizer::syncInfo::syncInfo(){
 }
 
 void ChaosDatasetAttributeSinchronizer::add(ChaosDatasetAttribute* d){
+
     int found=0;
     ChaosDatasetAttributeGroup::add(d);
     // do not include in synchonization data that depends on the same channel
@@ -40,6 +41,9 @@ void ChaosDatasetAttributeSinchronizer::add(ChaosDatasetAttribute* d){
         if(i->first->getParent()==d->getParent())
                 found++;
     }
+    
+    
+    
     
     if(found==0){
             //include in the set only the independent variables.

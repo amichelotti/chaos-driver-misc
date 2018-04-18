@@ -21,6 +21,10 @@ int main(int argc, char** argv) {
     int reterr=0;
     uint32_t loops;
     uint32_t waitloops,wait_retrive;
+    std::string name,group;
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),"name of the dataset (CU)");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"),"name of the group (US)");
+    
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),"number of push/loop");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),"seconds to wait to retrive data after pushing");
@@ -30,7 +34,7 @@ int main(int argc, char** argv) {
     ChaosMetadataServiceClient::getInstance()->init(argc,argv);
     ChaosMetadataServiceClient::getInstance()->start();
 
-   ChaosDatasetIO test("PERFORMANCE_MESURE");
+   ChaosDatasetIO test(name);
    ChaosDataSet my_ouput=test.allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
    ChaosDataSet my_input=test.allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
 
@@ -140,6 +144,9 @@ int main(int argc, char** argv) {
             }
             cnt++;
         }
+        
+        
+        
         if(pcktmalformed || pcktreplicated ||pcktmissing ||badid){
              std::cout<<"## missing packets:"<<pcktmissing<<" replicated:"<<pcktreplicated<<" pcktmalformed:"<<pcktmalformed<<" badrunid:"<<badid<<std::endl;
         } else {
