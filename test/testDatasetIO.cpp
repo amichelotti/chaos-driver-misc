@@ -120,13 +120,15 @@ int main(int argc, char** argv) {
                 if(p> pckt){
                     uint64_t missing=(p-pckt);
                     std::cout<<"\t ##["<<cnt<<"] error missing #pckts:"<<missing<<" starting from :"<<pckt<<" to:"<<p<<std::endl;
+                    LERR_<<"["<<cnt<<"] MISSING START:"<<(*(i-1))->getCompliantJSONString()<<" END:"<<(*(i))->getCompliantJSONString();
+
                     reterr++;
                     pckt=p;
                     pcktmissing+=missing;
                 } else if(p<pckt){
                     pcktreplicated++;
-                    std::cout<<"\t ##["<<cnt<<"] error replicated #pckts:"<<p<<" expected instead:"<<pckt<<std::endl;
-
+                    std::cout<<"\t ##["<<cnt<<"] error replicated packet id:"<<p<<" expected:"<<pckt<<std::endl;
+                    LERR_<<"["<<cnt<<"] REPLICATED:"<<(*i)->getCompliantJSONString();
                     reterr++;
                 } else {
                     pckt++;

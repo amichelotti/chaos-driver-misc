@@ -134,6 +134,7 @@ int ChaosDatasetIO::pushDataset(int type) {
     //ad producer key
     CDataWrapper*new_dataset=datasets[type].get();
     uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
+    uint64_t tsh = chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
 
     if(!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_TIMESTAMP))){
     // add timestamp of the datapack
@@ -142,7 +143,13 @@ int ChaosDatasetIO::pushDataset(int type) {
         new_dataset->setValue(chaos::DataPackCommonKey::DPCK_TIMESTAMP, ts);
 
     }
+    if(!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP))){
+    // add timestamp of the datapack
+        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP, tsh);
+    } else {
+        new_dataset->setValue(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP, tsh);
 
+    }
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,pkids[type]++ );
     } else {
