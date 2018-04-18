@@ -20,9 +20,10 @@ using namespace driver::misc;
 int main(int argc, char** argv) {
     int reterr=0;
     uint32_t loops;
-    uint32_t waitloops;
+    uint32_t waitloops,wait_retrive;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),"number of push/loop");
-    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wait", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),"seconds to wait to retrive data after pushing");
 
 
 
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
                 int cntt=cnt+1;
                 end_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
                 avg=cntt*1000000.0/(end_time-start_time);
-                std::cout<<"Average time for:"<<cntt<<" loops is:"<<avg<<" push/s, tot us: "<<(end_time-start_time)<<std::endl;
+                std::cout<<"\t Average time for:"<<cntt<<" loops is:"<<avg<<" push/s, tot us: "<<(end_time-start_time)<<std::endl;
 
             }
         }
@@ -83,8 +84,11 @@ int main(int argc, char** argv) {
 
         avg=loops*1000000.0/(end_time-start_time);
         std::cout<<test.getUid()<<": Average time for:"<<loops<<" is:"<<avg<<" push/s, tot us: "<<(end_time-start_time)<<std::endl;
-        sleep(1);
-        std::cout<<"Recovering data... from:"<<query_time_start<<" to:"<<query_time_end;
+        if(wait_retrive){
+            std::cout<<"* waiting "<<wait_retrive<<" s before retrive data"<<std::endl;
+            sleep(wait_retrive);
+        }
+        std::cout<<"* "<<test.getUid()<<" recovering data... from:"<<query_time_start<<" to:"<<query_time_end<<" runID:"<<test.getRunID()<<std::endl;
         start_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
         std::vector<ChaosDataSet> res=test.queryHistoryDatasets(query_time_start,query_time_end);
         end_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
@@ -92,11 +96,54 @@ int main(int argc, char** argv) {
 
         std::cout<<"Retrived:"<<res.size()<<" item/s:"<<avg<<" tot us: "<<(end_time-start_time)<<std::endl;
         if(res.size()!=loops){
-            std::cout<<"# number of data retrived "<<res.size()<<" different from expected:"<<loops;
+            std::cout<<"# number of data retrived "<<res.size()<<" different from expected:"<<loops<<std::endl;
             reterr++;
         }
+        std::cout<<"* checking consecutive '"<<chaos::DataPackCommonKey::DPCK_SEQ_ID<<"'"<< std::endl;
+        std::cout<<"* checking same '"<<chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID<<"':"<<test.getRunID()<< std::endl;
 
+        uint64_t pckt=0,cnt=0,pcktmissing=0,pcktreplicated=0,pcktmalformed=0,badid=0;
+        for(std::vector<ChaosDataSet>::iterator i=res.begin();i!=res.end();i++){
+            if((*i)->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
+                 uint64_t p=(*i)->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+                 if(p !=test.getRunID()){
+                     std::cout<<"\t ##["<<cnt<<"] error different runid found:"<<p<<" expected:"<<std::endl;
+                     reterr++;
+                     badid++;
+                     continue;
+                 }
+            }  else {
+               pcktmalformed++;
+            }
+            if((*i)->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
+                uint64_t p=(*i)->getUInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+                if(p> pckt){
+                    uint64_t missing=(p-pckt);
+                    std::cout<<"\t ##["<<cnt<<"] error missing #pckts:"<<missing<<" starting from :"<<pckt<<" to:"<<p<<std::endl;
+                    reterr++;
+                    pckt=p;
+                    pcktmissing+=missing;
+                } else if(p<pckt){
+                    pcktreplicated++;
+                    std::cout<<"\t ##["<<cnt<<"] error replicated #pckts:"<<p<<" expected instead:"<<pckt<<std::endl;
 
+                    reterr++;
+                } else {
+                    pckt++;
+                }
+
+            } else {
+                std::cout<<"\t ##["<<cnt<<"] missing "<<chaos::DataPackCommonKey::DPCK_SEQ_ID;
+                reterr++;
+            }
+            cnt++;
+        }
+        if(pcktmalformed || pcktreplicated ||pcktmissing ||badid){
+             std::cout<<"## missing packets:"<<pcktmissing<<" replicated:"<<pcktreplicated<<" pcktmalformed:"<<pcktmalformed<<" badrunid:"<<badid<<std::endl;
+        } else {
+            std::cout<<"check ok"<<std::endl;
+
+        }
     } else {
         LERR_<<" cannot register!:";
     }
@@ -105,6 +152,6 @@ int main(int argc, char** argv) {
     sleep(1);
      ChaosMetadataServiceClient::getInstance()->deinit();
      sleep(1);
-     return 0;
+     return reterr;
 }
 

@@ -55,7 +55,7 @@ protected:
     void timeout();
 public:
 
-    ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DASETIO");
+    ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
     ~ChaosDatasetIO();
     int setAgeing(uint64_t secs);
     int setStorage(int st);
@@ -96,6 +96,7 @@ public:
     bool queryHasNext(uint64_t uid);
     std::string getUid(){return uid;}
     uint64_t getRunID(){return runid;}
+    void setRunID(uint64_t ru){runid=ru;}
     std::vector<ChaosDataSet> getNextPage(uint64_t uid);
 
 };
