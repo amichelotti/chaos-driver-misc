@@ -187,9 +187,9 @@ int main(int argc, char** argv) {
         LERR_<<" cannot register!:";
         reterr++;
     }
-
-    //ChaosMetadataServiceClient::getInstance()->stop();
-    //ChaosMetadataServiceClient::getInstance()->deinit();
+    test.deinit();
+    ChaosMetadataServiceClient::getInstance()->stop();
+   ChaosMetadataServiceClient::getInstance()->deinit();
     return reterr;
 }
 

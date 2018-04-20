@@ -47,7 +47,7 @@ namespace driver{
         query_index(0),
         defaultPage(30),
         last_seq(0),
-        last_push_rate_grap_ts(0) {
+        last_push_rate_grap_ts(0),deinitialized(false) {
             InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
             
             //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
@@ -71,41 +71,7 @@ namespace driver{
         int ChaosDatasetIO::setTimeo(uint64_t t){timeo=t;return 0;}
         
         ChaosDatasetIO::~ChaosDatasetIO(){
-            DEBUG_CODE(DPD_LDBG << "Destroy all resources");
-            CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-            CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-            //sleep(1);
-            CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
-            //sleep(1);
-            DEBUG_CODE(DPD_LDBG << "End");
-            
-            
-            // connection_feeder.clear();
-            /* if(direct_io_client) {
-             CHAOS_NOT_THROW(InizializableService::deinitImplementation(direct_io_client,
-             direct_io_client->getName(),
-             __PRETTY_FUNCTION__);)
-             delete(direct_io_client);
-             }
-             
-             if(mds_message_channel) network_broker->disposeMessageChannel(mds_message_channel);
-             */
-            
-            chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
-            
-            std::map<int,ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i;
-            for(i=datasets.begin();i!=datasets.end();i++){
-                DPD_LDBG<<" removing dataset:"<<i->first;
-                (i->second).reset();
-            }
-            
-            for(query_cursor_map_t::iterator i=query_cursor_map.begin();i!=query_cursor_map.end();){
-                DPD_LDBG<<" removing query ID:"<<i->first;
-                
-                ioLiveDataDriver->releaseQuery( (i->second).qc);
-                
-                query_cursor_map.erase(i++);
-            }
+           deinit();
             
         }
         
@@ -426,6 +392,44 @@ namespace driver{
         void ChaosDatasetIO::timeout() {
             //update push metric
             updateHealth();
+        }
+        void ChaosDatasetIO::deinit(){
+            if(deinitialized){
+                DEBUG_CODE(DPD_LDBG << "Already deinitialized");
+                return;
+            }
+            DEBUG_CODE(DPD_LDBG << "Destroy all resources");
+            chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
+            DEBUG_CODE(DPD_LDBG << "Timer removed");
+
+            CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Health stopped");
+
+            CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Health deinitialized");
+
+            //RIMANE APPESO SU UN LOCK
+            CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
+
+
+
+            for( std::map<int,ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i=datasets.begin();i!=datasets.end();i++){
+                DPD_LDBG<<" removing dataset:"<<i->first;
+                (i->second).reset();
+            }
+
+            for(query_cursor_map_t::iterator i=query_cursor_map.begin();i!=query_cursor_map.end();){
+                DPD_LDBG<<" removing query ID:"<<i->first;
+
+                ioLiveDataDriver->releaseQuery( (i->second).qc);
+
+                query_cursor_map.erase(i++);
+            }
+            DEBUG_CODE(DPD_LDBG << "Deinitialized");
+
+            deinitialized=true;
+
         }
     }
 }
