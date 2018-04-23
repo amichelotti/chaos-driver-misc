@@ -39,7 +39,7 @@ static int checkData(ChaosDatasetIO& test, std::vector<ChaosDataSet> & res,uint6
             uint64_t p=(*i)->getUInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
             if(p> pckt){
                 uint64_t missing=(p-pckt);
-                std::cout<<"\t ##["<<cnt<<"] error missing #pckts:"<<missing<<" starting from :"<<pckt<<" to:"<<p<<std::endl;
+                std::cout<<"\t ##["<<cnt<<"] error missing #pckts:"<<missing<<" starting from "<<chaos::DataPackCommonKey::DPCK_SEQ_ID<<"  :"<<pckt<<" to:"<<p<<std::endl;
                 if(i!=res.begin()){
                     LERR_<<"["<<cnt<<"] MISSING START:"<<(*(i-1))->getCompliantJSONString()<<" END:"<<(*(i))->getCompliantJSONString();
                 } else {
@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
     uint32_t loops;
     uint32_t waitloops,wait_retrive;
     std::string name,group;
-    uint32_t pagelen;
+    uint32_t pagelen=0;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),"name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"),"name of the group (US)");
-    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<uint32_t>(&pagelen)->default_value(0),"Page len to recover data");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),"Page len to recover data");
 
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),"number of push/loop");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
             std::cout<<"* waiting "<<wait_retrive<<" s before retrive data"<<std::endl;
             sleep(wait_retrive);
         }
-        std::cout<<"* "<<test.getUid()<<" recovering data... from:"<<query_time_start<<" to:"<<query_time_end<<" runID:"<<test.getRunID()<<std::endl;
+        std::cout<<"* "<<test.getUid()<<" recovering data... from:"<<query_time_start<<" to:"<<query_time_end<<" runID:"<<test.getRunID()<<" pagelen:"<<pagelen<<std::endl;
         start_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
         uint32_t uid=test.queryHistoryDatasets(query_time_start,query_time_end,pagelen);
         uint32_t total=0;
@@ -165,11 +165,12 @@ int main(int argc, char** argv) {
                 total+=res.size();
                 end_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
                 avg=total*1000000.0/(end_time-start_time);
-                printf("Retrived %.8lu items, total items %.8ull items/s:%.4f tot us:%.10llu\r",res.size(),total,avg,(end_time-start_time));
+                printf("Retrived %.8lu items, total items %.8llu items/s:%.4f tot us:%.10llu\r",res.size(),total,avg,(end_time-start_time));
                 reterr+=checkData(test,res,pckmissing,pckt,pcktreplicated,pckmalformed,badid);
 
             }
         }
+        printf("\n");
 
         if(total!=loops){
             std::cout<<"# number of data retrived "<<total<<" different from expected:"<<loops<<std::endl;

@@ -319,8 +319,14 @@ namespace driver{
         }
         
         uint64_t ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,uint32_t page,int type){
-            chaos::common::io::QueryCursor *pnt=ioLiveDataDriver->performQuery(dsname+chaos::datasetTypeToPostfix(type),ms_start,ms_end,page);
+            std::string dst=dsname+chaos::datasetTypeToPostfix(type);
+
+            DPD_LDBG<<"Query To:"<<dst<<" start:"<< ms_start<<" end_ms:"<<ms_end<<" page:"<<page;
+
+            chaos::common::io::QueryCursor *pnt=ioLiveDataDriver->performQuery(dst,ms_start,ms_end,page);
             if(pnt==NULL){
+                DPD_LERR<<"NO CURSOR";
+
                 return 0;
             }
             query_index++;
@@ -329,7 +335,7 @@ namespace driver{
             q.qc=pnt;
             q.qt=query_index;
             query_cursor_map[query_index]=q;
-            return 0;
+            return query_index;
         }
         bool ChaosDatasetIO::queryHasNext(uint64_t uid){
             bool ret;
@@ -373,8 +379,12 @@ namespace driver{
         }
         std::vector<ChaosDataSet> ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,int type){
             std::vector<ChaosDataSet> ret;
-            chaos::common::io::QueryCursor *pnt=ioLiveDataDriver->performQuery(dsname+chaos::datasetTypeToPostfix(type),ms_start,ms_end,defaultPage);
+            std::string dst=dsname+chaos::datasetTypeToPostfix(type);
+            DPD_LDBG<<"Query To:"<<dst<<" start:"<< ms_start<<" end_ms:"<<ms_end<<"default page:"<<defaultPage;
+
+            chaos::common::io::QueryCursor *pnt=ioLiveDataDriver->performQuery(dst,ms_start,ms_end,defaultPage);
             if(pnt==NULL){
+                DPD_LERR<<"NO CURSOR";
                 return ret;
             }
             while(pnt->hasNext() ){
@@ -408,9 +418,6 @@ namespace driver{
             CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
             DEBUG_CODE(DPD_LDBG << "Health deinitialized");
 
-            //RIMANE APPESO SU UN LOCK
-            CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
-            DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
 
 
 
@@ -422,10 +429,14 @@ namespace driver{
             for(query_cursor_map_t::iterator i=query_cursor_map.begin();i!=query_cursor_map.end();){
                 DPD_LDBG<<" removing query ID:"<<i->first;
 
-                ioLiveDataDriver->releaseQuery( (i->second).qc);
+               ioLiveDataDriver->releaseQuery( (i->second).qc);
 
                 query_cursor_map.erase(i++);
             }
+            //RIMANE APPESO SU UN LOCK
+            CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
+
             DEBUG_CODE(DPD_LDBG << "Deinitialized");
 
             deinitialized=true;
