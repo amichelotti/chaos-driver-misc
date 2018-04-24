@@ -15,6 +15,7 @@
 #include <boost/thread/mutex.hpp>
 #include <chaos/common/global.h>
 
+
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
@@ -24,6 +25,9 @@ namespace common{
 namespace data{
     class CDataWrapper;
 }
+/*namespace io{
+    class QueryCursor;
+}*/
 }
 namespace metadata_service_client{
 	class ChaosMetadataServiceClient;
@@ -156,6 +160,12 @@ public:
         }
         return tmp;
     }
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<double>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<int32_t>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<int64_t>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<char>&);
+    int query(uint64_t ms_start,uint64_t ms_end,char*);
+
 
     template<typename T>
     ChaosDatasetAttribute& operator=(const T& d) throw (chaos::CException) {
