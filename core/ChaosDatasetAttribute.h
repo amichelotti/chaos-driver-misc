@@ -149,23 +149,36 @@ public:
             
         return reinterpret_cast<T*>(get(NULL));
     }
+
     template<class T>
-     operator const std::vector<T> () throw (chaos::CException){
-        std::vector<T> tmp;
+    int get(std::vector<T>& var){
         uint32_t size=0;
         T* d=(T*)get(&size);
         ATTRDBG_<<attr_path<<": vector byte size:"<<size<<" items:"<<size/sizeof(T) << " size type:"<<sizeof(T);
         for(int cnt=0;cnt<size/sizeof(T);cnt++){
-            tmp.push_back(d[cnt]);
+            var.push_back(d[cnt]);
         }
+        return size/sizeof(T);
+    }
+    template<class T>
+     operator const std::vector<T> () throw (chaos::CException){
+        std::vector<T> tmp;
+        get(tmp);
+
         return tmp;
     }
+
     int query(uint64_t ms_start,uint64_t ms_end,std::vector<double>&);
     int query(uint64_t ms_start,uint64_t ms_end,std::vector<int32_t>&);
     int query(uint64_t ms_start,uint64_t ms_end,std::vector<int64_t>&);
     int query(uint64_t ms_start,uint64_t ms_end,std::vector<char>&);
-    int query(uint64_t ms_start,uint64_t ms_end,char*);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<bool>&);
 
+    int query(uint64_t ms_start,uint64_t ms_end,char*);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<double> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int32_t> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int64_t> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<bool> > &v);
 
     template<typename T>
     ChaosDatasetAttribute& operator=(const T& d) throw (chaos::CException) {

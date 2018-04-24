@@ -23,39 +23,70 @@ std::map< std::string,ChaosDatasetAttribute::ctrl_t > ChaosDatasetAttribute::con
 template<class T>
 int query_int( chaos::metadata_service_client::node_controller::CUController* controller, const std::string& attr_name, uint64_t ms_start,uint64_t ms_end,std::vector<T>&res){
 
-     chaos::common::io::QueryCursor *query_cursor=NULL;
+    chaos::common::io::QueryCursor *query_cursor=NULL;
 
-        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT,
-                                                ms_start,
-                                                ms_end,
-                                                &query_cursor);
-        if(query_cursor==NULL){
-            ATTRERR_<<"NO CURSOR";
-            return 0;
-        }
-        int nelem=0;
-        while(query_cursor->hasNext() ){
-            ChaosSharedPtr<chaos::common::data::CDataWrapper> q_result(query_cursor->next());
-            if(q_result->hasKey(attr_name)){
-                if(q_result->getValueType(attr_name) == chaos::DataType::TYPE_BYTEARRAY){
-                    uint32_t size;
-                    const char* tmp=q_result->getBinaryValue(attr_name,size);
-                    ATTRDBG_<<attr_name<<" type binary, subtype:"<<q_result->getBinarySubtype(attr_name)<<" elements:"<<size/sizeof(T);
-                    for(int cnt=0;cnt<size/sizeof(T);cnt++){
-                        res.push_back(*((reinterpret_cast<const T*>(tmp)) + cnt));
-                        nelem++;
-                    }
-                } else {
-                    res.push_back(q_result->getValue<T>(attr_name));
+    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT,
+                                          ms_start,
+                                          ms_end,
+                                          &query_cursor);
+    if(query_cursor==NULL){
+        ATTRERR_<<"NO CURSOR";
+        return 0;
+    }
+    int nelem=0;
+    while(query_cursor->hasNext() ){
+        ChaosSharedPtr<chaos::common::data::CDataWrapper> q_result(query_cursor->next());
+        if(q_result->hasKey(attr_name)){
+            if(q_result->getValueType(attr_name) == chaos::DataType::TYPE_BYTEARRAY){
+                uint32_t size;
+                const char* tmp=q_result->getBinaryValue(attr_name,size);
+                ATTRDBG_<<attr_name<<" type binary, subtype:"<<q_result->getBinarySubtype(attr_name)<<" elements:"<<size/sizeof(T);
+                for(int cnt=0;cnt<size/sizeof(T);cnt++){
+                    res.push_back(*((reinterpret_cast<const T*>(tmp)) + cnt));
                     nelem++;
-
                 }
+            } else {
+                res.push_back(q_result->getValue<T>(attr_name));
+                nelem++;
 
             }
 
         }
-        controller->releaseQuery(query_cursor);
-        return nelem;
+
+    }
+    controller->releaseQuery(query_cursor);
+    return nelem;
+}
+
+template<class T>
+int query_vec_int( chaos::metadata_service_client::node_controller::CUController* controller, const std::string& attr_name, uint64_t ms_start,uint64_t ms_end,std::vector< std::vector<T> >&res){
+
+    chaos::common::io::QueryCursor *query_cursor=NULL;
+
+    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT,
+                                          ms_start,
+                                          ms_end,
+                                          &query_cursor);
+    if(query_cursor==NULL){
+        ATTRERR_<<"NO CURSOR";
+        return 0;
+    }
+    int nelem=0;
+    while(query_cursor->hasNext() ){
+        ChaosSharedPtr<chaos::common::data::CDataWrapper> q_result(query_cursor->next());
+        if(q_result->hasKey(attr_name) && q_result->isVector(attr_name)){
+            ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> vect(q_result->getVectorValue(attr_name));
+            std::vector<T> tt;
+            for (int idx = 0; idx < vect->size(); idx++) {
+                tt.push_back(vect->getElementAtIndex<T>(idx));
+            }
+            res.push_back(tt);
+            nelem++;
+        }
+    }
+
+    controller->releaseQuery(query_cursor);
+    return nelem;
 }
 
 std::string ChaosDatasetAttribute::getGroup(){
@@ -328,6 +359,27 @@ int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<c
     return query_int(controller,attr_name,ms_start,ms_end,v);
 
 }
-int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,char*){
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,char*v){
     return 0;
+}
+
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<double> > &v){
+    return query_vec_int(controller,attr_name,ms_start,ms_end,v);
+}
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<bool>& v){
+    return query_int(controller,attr_name,ms_start,ms_end,v);
+
+}
+
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int32_t> > &v){
+    return query_vec_int(controller,attr_name,ms_start,ms_end,v);
+
+}
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int64_t> > &v){
+    return query_vec_int(controller,attr_name,ms_start,ms_end,v);
+
+}
+int ChaosDatasetAttribute::query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<bool> > &v){
+    return query_vec_int(controller,attr_name,ms_start,ms_end,v);
+
 }
