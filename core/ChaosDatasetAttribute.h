@@ -162,6 +162,14 @@ public:
         return size/sizeof(T);
     }
     template<class T>
+    int get(T& var){
+        uint32_t size=0;
+        T* d=(T*)get(&size);
+        var=*d;
+        return sizeof(T);
+
+    }
+    template<class T>
      operator const std::vector<T> () throw (chaos::CException){
         std::vector<T> tmp;
         get(tmp);
