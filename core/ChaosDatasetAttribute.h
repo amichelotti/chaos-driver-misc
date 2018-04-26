@@ -154,6 +154,7 @@ public:
     int get(std::vector<T>& var){
         uint32_t size=0;
         T* d=(T*)get(&size);
+        var.clear();
         ATTRDBG_<<attr_path<<": vector byte size:"<<size<<" items:"<<size/sizeof(T) << " size type:"<<sizeof(T);
         for(int cnt=0;cnt<size/sizeof(T);cnt++){
             var.push_back(d[cnt]);
