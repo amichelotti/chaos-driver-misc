@@ -514,9 +514,18 @@ uint64_t ChaosController::sched(uint64_t ts){
 
         uint64_t tss,pckid;
         if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getStringValue("ndk_uid")!=path)){
-             DBGETERR<<"live channel name mismatch \""+channels[cnt]->getStringValue("ndk_uid") + "\" should be:\""+path+"\"";
-             init(path,timeo);
-             continue;
+            DBGETERR<<"REALLIGN with CU RESTART because name mismatch \""+channels[cnt]->getStringValue("ndk_uid") + "\" should be:\""+path+"\"";
+            init(path,timeo);
+            continue;
+        }
+        if(channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
+            pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+            if(pckid<last_pckid[cnt]){
+                DBGETERR<<"REALLIGN with CU RESTART because pckid:"<<pckid<<" less than last:"<<last_pckid[cnt];
+                init(path,timeo);
+                continue;
+            }
+            last_pckid[cnt]=pckid;
         }
         if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
             continue;
@@ -581,24 +590,24 @@ ChaosSharedPtr<chaos::common::data::CDataWrapper>  ChaosController::getLiveChann
     }
     return ret;
 }
- chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(std::vector<string>&keys,int domain){
-     chaos::common::data::VectorCDWShrdPtr results;
-     std::vector<std::string> channels;
-     for(std::vector<std::string>::iterator i=keys.begin();i!=keys.end();i++){
-         channels.push_back(*i + chaos::datasetTypeToPostfix(domain));
-     }
-     live_driver->retriveMultipleData(channels,results);
-     return results;
- }
- chaos::common::data::VectorCDWShrdPtr  ChaosController::getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain){
-     chaos::common::data::VectorCDWShrdPtr results;
-     std::vector<std::string> channels;
-     for(int cnt=0;cnt<keys->size();cnt++){
-         channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
-     }
-     live_driver->retriveMultipleData(channels,results);
-     return results;
- }
+chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(std::vector<string>&keys,int domain){
+    chaos::common::data::VectorCDWShrdPtr results;
+    std::vector<std::string> channels;
+    for(std::vector<std::string>::iterator i=keys.begin();i!=keys.end();i++){
+        channels.push_back(*i + chaos::datasetTypeToPostfix(domain));
+    }
+    live_driver->retriveMultipleData(channels,results);
+    return results;
+}
+chaos::common::data::VectorCDWShrdPtr  ChaosController::getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain){
+    chaos::common::data::VectorCDWShrdPtr results;
+    std::vector<std::string> channels;
+    for(int cnt=0;cnt<keys->size();cnt++){
+        channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
+    }
+    live_driver->retriveMultipleData(channels,results);
+    return results;
+}
 
 ChaosController::ChaosController():common::misc::scheduler::SchedTimeElem("none",0),controller(NULL),state(chaos::CUStateKey::UNDEFINED),queryuid(0),last_access(0),heart(0),reqtime(0),tot_us(0),naccess(0),refresh(0),timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER) {
 
@@ -907,7 +916,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
 
 #define CHECK_VALUE_PARAM \
     if(json_value==NULL){\
-        serr << "missing (json) value" << cmd;\
+    serr << "missing (json) value" << cmd;\
     bundle_state.append_error(serr.str());\
     json_buf = bundle_state.getData()->getCompliantJSONString();\
     return CHAOS_DEV_CMD;}
@@ -1544,21 +1553,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 return CHAOS_DEV_CMD;
             }
-           if(((names.get())&&((names->size())>0))&& (what == "health")){
+            if(((names.get())&&((names->size())>0))&& (what == "health")){
 
-               // multi get!
-               res<<"[";
-               chaos::common::data::VectorCDWShrdPtr dat=getLiveChannel(names.get());
-               for(chaos::common::data::VectorCDWShrdPtr::iterator i=dat.begin();i!=dat.end();i++){
-                   res<<"{\"health\":"<<(*i)->getCompliantJSONString()<<"}";
-                   if((i+1)!=dat.end() ){
-                       res<<",";
-                   }
-               }
-               res<<"]";
-               json_buf=res.str();
-               return CHAOS_DEV_OK;
-           }
+                // multi get!
+                res<<"[";
+                chaos::common::data::VectorCDWShrdPtr dat=getLiveChannel(names.get());
+                for(chaos::common::data::VectorCDWShrdPtr::iterator i=dat.begin();i!=dat.end();i++){
+                    res<<"{\"health\":"<<(*i)->getCompliantJSONString()<<"}";
+                    if((i+1)!=dat.end() ){
+                        res<<",";
+                    }
+                }
+                res<<"]";
+                json_buf=res.str();
+                return CHAOS_DEV_OK;
+            }
             idx=0;
             if((names.get())&&((names->size())>0)){
                 res<<"[";
@@ -1778,7 +1787,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     } else if(what=="load"){
                         EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,true);
 
-                       /* chaos::common::data::CDataWrapper *r=apires->getResult();
+                        /* chaos::common::data::CDataWrapper *r=apires->getResult();
                         if(r){
                             json_buf=r->getCompliantJSONString();
                             res<<json_buf;
@@ -1793,7 +1802,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     } else if(what=="unload"){
                         EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit,MDS_TIMEOUT,name,false);
 
-                      /*  chaos::common::data::CDataWrapper *r=apires->getResult();
+                        /*  chaos::common::data::CDataWrapper *r=apires->getResult();
                         if(r){
                             json_buf=r->getCompliantJSONString();
                             res<<json_buf;
@@ -1967,7 +1976,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             PARSE_QUERY_PARMS(args,false,true);
             if(what == "save"){
                 CHECK_VALUE_PARAM
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript,MDS_TIMEOUT,json_value);
+                        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript,MDS_TIMEOUT,json_value);
                 json_buf="{}";
                 return CHAOS_DEV_OK;
             } else if(what=="del"){
@@ -1977,7 +1986,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             } else if(what=="newInstance"){
                 CHECK_VALUE_PARAM
-                if(!json_value->hasKey("create")){
+                        if(!json_value->hasKey("create")){
                     json_value->addBoolValue("create", true);
                 }
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
@@ -1986,7 +1995,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             } else if(what=="rmInstance"){
                 CHECK_VALUE_PARAM
-                if(!json_value->hasKey("create")){
+                        if(!json_value->hasKey("create")){
                     json_value->addBoolValue("create", false);
                 }
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
