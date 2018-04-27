@@ -262,7 +262,11 @@ namespace driver{
                 EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,timeo,cud);
             }
             HealtManager::getInstance()->addNewNode(uid);
-            
+            //add push rate metric
+            HealtManager::getInstance()->addNodeMetric(uid,
+                                                          chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
+                                                       chaos::DataType::TYPE_DOUBLE);
+
             HealtManager::getInstance()->addNodeMetricValue(uid,
                                                             chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                             chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
@@ -404,10 +408,15 @@ namespace driver{
             updateHealth();
         }
         void ChaosDatasetIO::deinit(){
+
             if(deinitialized){
                 DEBUG_CODE(DPD_LDBG << "Already deinitialized");
                 return;
             }
+            HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                            chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+                                                            chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT,
+                                                            true);
             DEBUG_CODE(DPD_LDBG << "Destroy all resources");
             chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
             DEBUG_CODE(DPD_LDBG << "Timer removed");
