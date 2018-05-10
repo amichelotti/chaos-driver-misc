@@ -125,7 +125,6 @@ private:
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);
-
     std::string getParent(){return attr_parent;}
     std::string getGroup();
     std::string getPath(){return attr_path;}

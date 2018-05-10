@@ -265,15 +265,43 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
         controller->getPackSeq(info->pckid);
         if(tmpw->isVector(attr_name)){
             attr_size=0;
+            uint32_t sizev,sizexp;
+
             ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> cu_t_arr(tmpw->getVectorValue(attr_name));
+            ATTRDBG_<<"fetching Vector of size:"<<cu_t_arr->size();
+            bool isInt32=false,isDouble=false,isInt64=false;
+            isDouble=cu_t_arr->isDoubleElementAtIndex(0);
+            isInt32=cu_t_arr->isInt32ElementAtIndex(0);
+            isInt64=cu_t_arr->isInt64ElementAtIndex(0);
+            cu_t_arr->getRawValueAtIndex(0,sizexp);
+
             for(int idx = 0;
                 idx < cu_t_arr->size();
                 idx++) {
-                uint32_t sizev;
                 const char*tmp=cu_t_arr->getRawValueAtIndex(idx,sizev);
-                info->set((void*)tmp,sizev,idx*sizev);
 
-                attr_size+=sizev;
+                if(sizev<sizexp){
+                    //probabilmente intero dentro double
+                    int32_t*pi=(int32_t*)tmp;
+                    double ftmp=*pi;
+                    info->set((void*)&ftmp,sizexp,idx*sizexp);
+                } else {
+                    info->set((void*)tmp,sizexp,idx*sizexp);
+
+                }
+
+               /*
+                if((old_size!=0) && (old_size!=sizev)){
+                    ATTRDBG_<<"type vector size mismatch at ["<<idx<<"] old:"<<old_size<<" size:"<<sizev<<" totsize:"<<attr_size<<" is int:"<<cu_t_arr->isInt32ElementAtIndex(idx)<<" is double:"<<cu_t_arr->isDoubleElementAtIndex(idx);
+                    double*pd=(double*)tmp;
+                    int32_t*pi=(int32_t*)tmp;
+                    float*pf=(float*)tmp;
+                    ATTRDBG_<<"double val:"<<*pd<<" int val:"<<*pi<<" float val:"<<*pf;
+
+                }
+                old_size=sizev;
+    */
+                attr_size+=sizexp;
             }
         } else {
             tmp=(void*)tmpw->getRawValuePtr(attr_name);

@@ -12,7 +12,7 @@
 using namespace std;
 using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
-
+#include <math.h>
 /*
  *
  */
@@ -70,9 +70,14 @@ static int checkData(ChaosDatasetIO& test, std::vector<ChaosDataSet> & res,uint6
 int main(int argc, char** argv) {
     int reterr=0;
     uint32_t loops;
+    const double PI  =3.141592653589793238463;
     uint32_t waitloops,wait_retrive;
     std::string name,group;
     uint32_t pagelen=0;
+    uint32_t npoints=15000;
+    double freqshift=0.5;
+    double freq=1,phase=0,amp=1,afreq;
+    double delta;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),"name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"),"name of the group (US)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),"Page len to recover data");
@@ -80,8 +85,8 @@ int main(int argc, char** argv) {
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),"number of push/loop");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),"seconds to wait to retrive data after pushing");
-
-
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("points", po::value<uint32_t>(&npoints)->default_value(15000),"Number of sin points, 0 = no wave");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("freqshift", po::value<double>(&freqshift)->default_value(0.5),"Modify freq Hz every loop, 0= no modify");
 
     ChaosMetadataServiceClient::getInstance()->init(argc,argv);
     ChaosMetadataServiceClient::getInstance()->start();
@@ -89,12 +94,21 @@ int main(int argc, char** argv) {
     ChaosDatasetIO test(name);
     ChaosDataSet my_ouput=test.allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
     ChaosDataSet my_input=test.allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
-
+    delta=1.0/npoints;
+    std::vector<double> val;
+    afreq=freq;
     my_ouput->addInt64Value("counter64",(int64_t)0);
     my_ouput->addInt32Value("counttoper32",0);
     my_ouput->addStringValue("stringa","hello dataset");
     my_ouput->addDoubleValue("doublevar",0.0);
-
+    if(npoints){
+        for(int cnt=0;cnt<npoints;cnt++){
+            double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
+            my_ouput->appendDoubleToArray(data);
+            val.push_back(data);
+        }
+        my_ouput->finalizeArrayForKey("wave");
+    }
     my_input->addInt64Value("icounter64",(int64_t)0);
     my_input->addInt32Value("icounter32",0);
     my_input->addStringValue("istringa","hello input dataset");
@@ -118,7 +132,14 @@ int main(int argc, char** argv) {
             my_ouput->setValue("counter64",(int64_t)2*cnt);
             my_ouput->setValue("counter32",(int32_t)(2*cnt+1));
             my_ouput->setValue("doublevar",(double)cnt);
-
+            if(freqshift!=0){
+                afreq+=freqshift;
+                for(int cntt=0;cntt<npoints;cntt++){
+                    double data=sin(2*PI*afreq*(delta*cntt)+phase)*amp;
+                    val[cntt]=data;
+                }
+                my_ouput->setValue("wave",val);
+            }
             // LDBG_<<"int32 value:"<<my_ouput->getInt32Value("counter32");
             if(test.pushDataset()!=0){
                 LERR_<<" cannot push:"<<my_ouput->getJSONString();
@@ -190,7 +211,7 @@ int main(int argc, char** argv) {
     }
     test.deinit();
     ChaosMetadataServiceClient::getInstance()->stop();
-   ChaosMetadataServiceClient::getInstance()->deinit();
+    ChaosMetadataServiceClient::getInstance()->deinit();
     return reterr;
 }
 
