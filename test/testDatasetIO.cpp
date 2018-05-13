@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
     std::string name,group;
     uint32_t pagelen=0;
     uint32_t npoints=15000;
-    double freqshift=0.5;
-    double freq=1,phase=0,amp=1,afreq;
+    double freqshift=0.001,ampshift=0.9999;
+    double freq=1,phase=0,amp=1,afreq,aamp;
     double delta;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),"name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"),"name of the group (US)");
@@ -86,7 +86,8 @@ int main(int argc, char** argv) {
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),"us waits bewteen loops");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),"seconds to wait to retrive data after pushing");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("points", po::value<uint32_t>(&npoints)->default_value(15000),"Number of sin points, 0 = no wave");
-    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("freqshift", po::value<double>(&freqshift)->default_value(0.5),"Modify freq Hz every loop, 0= no modify");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("freqshift", po::value<double>(&freqshift)->default_value(0.001),"Modify freq Hz every loop, 0= no modify");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("ampshift", po::value<double>(&ampshift)->default_value(0.9999),"Modify amplitude every loop, 0= no modify");
 
     ChaosMetadataServiceClient::getInstance()->init(argc,argv);
     ChaosMetadataServiceClient::getInstance()->start();
@@ -97,6 +98,7 @@ int main(int argc, char** argv) {
     delta=1.0/npoints;
     std::vector<double> val;
     afreq=freq;
+    aamp=amp;
     my_ouput->addInt64Value("counter64",(int64_t)0);
     my_ouput->addInt32Value("counttoper32",0);
     my_ouput->addStringValue("stringa","hello dataset");
@@ -134,8 +136,16 @@ int main(int argc, char** argv) {
             my_ouput->setValue("doublevar",(double)cnt);
             if(freqshift!=0){
                 afreq+=freqshift;
+
+            }
+
+            if(ampshift> 0 || freqshift>0){
+                aamp=amp;
                 for(int cntt=0;cntt<npoints;cntt++){
-                    double data=sin(2*PI*afreq*(delta*cntt)+phase)*amp;
+                    if(ampshift>0){
+                        aamp=aamp*ampshift;
+                    }
+                    double data=sin(2*PI*afreq*(delta*cntt)+phase)*aamp;
                     val[cntt]=data;
                 }
                 my_ouput->setValue("wave",val);
