@@ -27,7 +27,7 @@ static int checkData(ChaosDatasetIO& test, std::vector<ChaosDataSet> & res,uint6
         if((*i)->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
             uint64_t p=(*i)->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
             if(p !=test.getRunID()){
-                std::cout<<"\t ##["<<cnt<<"] error different runid found:"<<p<<" expected:"<<std::endl;
+                std::cout<<"\t ##["<<cnt<<"] error different runid found:"<<p<<" expected:"<<test.getRunID()<<std::endl;
                 reterr++;
                 badid++;
                 continue;
