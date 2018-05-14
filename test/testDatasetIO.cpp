@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
     double freqshift=0.001,ampshift=0.9999;
     double freq=1,phase=0,amp=1,afreq,aamp;
     double delta;
+    bool binary;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),"name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"),"name of the group (US)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),"Page len to recover data");
@@ -88,6 +89,7 @@ int main(int argc, char** argv) {
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("points", po::value<uint32_t>(&npoints)->default_value(15000),"Number of sin points, 0 = no wave");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("freqshift", po::value<double>(&freqshift)->default_value(0.001),"Modify freq Hz every loop, 0= no modify");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("ampshift", po::value<double>(&ampshift)->default_value(0.9999),"Modify amplitude every loop, 0= no modify");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("binary", po::value<bool>(&binary)->default_value(false),"The wave is in binary");
 
     ChaosMetadataServiceClient::getInstance()->init(argc,argv);
     ChaosMetadataServiceClient::getInstance()->start();
@@ -104,12 +106,22 @@ int main(int argc, char** argv) {
     my_ouput->addStringValue("stringa","hello dataset");
     my_ouput->addDoubleValue("doublevar",0.0);
     if(npoints){
-        for(int cnt=0;cnt<npoints;cnt++){
-            double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
-            my_ouput->appendDoubleToArray(data);
-            val.push_back(data);
-        }
-        my_ouput->finalizeArrayForKey("wave");
+        if(binary){
+            double buf[npoints];
+            for(int cnt=0;cnt<npoints;cnt++){
+                double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
+                buf[cnt]=data;
+            }
+            my_ouput->addBinaryValue("wave",chaos::DataType::BinarySubtype::SUB_TYPE_DOUBLE,(const char*)buf,npoints*sizeof(double));
+
+        } else {
+            for(int cnt=0;cnt<npoints;cnt++){
+                double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
+                my_ouput->appendDoubleToArray(data);
+                val.push_back(data);
+            }
+            my_ouput->finalizeArrayForKey("wave");
+       }
     }
     my_input->addInt64Value("icounter64",(int64_t)0);
     my_input->addInt32Value("icounter32",0);
