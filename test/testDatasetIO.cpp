@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
     ChaosDataSet my_input=test.allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
     delta=1.0/npoints;
     std::vector<double> val;
+    double buf[npoints];
     afreq=freq;
     aamp=amp;
     my_ouput->addInt64Value("counter64",(int64_t)0);
@@ -107,7 +108,6 @@ int main(int argc, char** argv) {
     my_ouput->addDoubleValue("doublevar",0.0);
     if(npoints){
         if(binary){
-            double buf[npoints];
             for(int cnt=0;cnt<npoints;cnt++){
                 double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
                 buf[cnt]=data;
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
                 val.push_back(data);
             }
             my_ouput->finalizeArrayForKey("wave");
-       }
+        }
     }
     my_input->addInt64Value("icounter64",(int64_t)0);
     my_input->addInt32Value("icounter32",0);
@@ -158,10 +158,19 @@ int main(int argc, char** argv) {
                         aamp=aamp*ampshift;
                     }
                     double data=sin(2*PI*afreq*(delta*cntt)+phase)*aamp;
-                    val[cntt]=data;
+                    if(binary){
+                        buf[cntt]=data;
+                    } else {
+                        val[cntt]=data;
+                    }
                 }
-                my_ouput->setValue("wave",val);
+                if(binary){
+                    my_ouput->setValue("wave",(const void*)buf);
+                } else {
+                    my_ouput->setValue("wave",val);
+                }
             }
+
             // LDBG_<<"int32 value:"<<my_ouput->getInt32Value("counter32");
             if(test.pushDataset()!=0){
                 LERR_<<" cannot push:"<<my_ouput->getJSONString();
