@@ -417,18 +417,6 @@ namespace driver{
                                                             chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                             chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT,
                                                             true);
-            DEBUG_CODE(DPD_LDBG << "Destroy all resources");
-            chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
-            DEBUG_CODE(DPD_LDBG << "Timer removed");
-
-            CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-            DEBUG_CODE(DPD_LDBG << "Health stopped");
-
-            CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-            DEBUG_CODE(DPD_LDBG << "Health deinitialized");
-
-
-
 
             for( std::map<int,ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i=datasets.begin();i!=datasets.end();i++){
                 DPD_LDBG<<" removing dataset:"<<i->first;
@@ -443,12 +431,21 @@ namespace driver{
                 query_cursor_map.erase(i++);
             }
             //RIMANE APPESO SU UN LOCK
-            CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+        //    CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
             DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
 
             DEBUG_CODE(DPD_LDBG << "Deinitialized");
 
             deinitialized=true;
+            DEBUG_CODE(DPD_LDBG << "Destroy all resources");
+            chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
+            DEBUG_CODE(DPD_LDBG << "Timer removed");
+
+            CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Health stopped");
+
+            CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+            DEBUG_CODE(DPD_LDBG << "Health deinitialized");
 
         }
     }
