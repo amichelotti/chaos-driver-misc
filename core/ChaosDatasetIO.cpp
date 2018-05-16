@@ -47,7 +47,7 @@ namespace driver{
         query_index(0),
         defaultPage(30),
         last_seq(0),
-        last_push_rate_grap_ts(0),deinitialized(false) {
+        last_push_rate_grap_ts(0),deinitialized(false),implementation("datasetIO") {
             InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
             
             //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
@@ -255,7 +255,7 @@ namespace driver{
             cud.control_unit_uid=uid;
             cud.default_schedule_delay=1;
             cud.unit_server_uid=groupName;
-            cud.control_unit_implementation="datasetIO";
+            cud.control_unit_implementation=implementation;
             cud.history_ageing=ageing;
             cud.storage_type=(chaos::DataServiceNodeDefinitionType::DSStorageType)storageType;
             {
@@ -381,6 +381,8 @@ namespace driver{
             }
             return ret;
         }
+        void ChaosDatasetIO::setImplementation(const std::string &impl){implementation=impl;}
+
         std::vector<ChaosDataSet> ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,int type){
             std::vector<ChaosDataSet> ret;
             std::string dst=dsname+chaos::datasetTypeToPostfix(type);

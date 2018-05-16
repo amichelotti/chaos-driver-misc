@@ -53,6 +53,7 @@ namespace driver{
             void updateHealth();
             void timeout();
             bool deinitialized;
+            std::string implementation;
         public:
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
@@ -96,6 +97,7 @@ namespace driver{
             bool queryHasNext(uint64_t uid);
             std::string getUid(){return uid;}
             uint64_t getRunID(){return runid;}
+            void setImplementation(const std::string &impl);
             void setRunID(uint64_t ru){runid=ru;}
             std::vector<ChaosDataSet> getNextPage(uint64_t uid);
             void deinit();
