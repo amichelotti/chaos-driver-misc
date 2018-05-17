@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
                 double data=sin(2*PI*freq*(delta*cnt)+phase)*amp;
                 buf[cnt]=data;
             }
-            my_ouput->addBinaryValue("wave",chaos::DataType::BinarySubtype::SUB_TYPE_DOUBLE,(const char*)buf,npoints*sizeof(double));
+            my_ouput->addBinaryValue("wave",chaos::DataType::SUB_TYPE_DOUBLE,(const char*)buf,npoints*sizeof(double));
 
         } else {
             for(int cnt=0;cnt<npoints;cnt++){
