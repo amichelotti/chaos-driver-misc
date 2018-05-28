@@ -34,7 +34,7 @@ public:
     }
 };
 static ChaosRoot *rootapp;
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
 	std::string rootopt;
     const char* root_opts[120];
 	int nroot_opts=0;

@@ -6,7 +6,6 @@
  */
 
 #include "ChaosController.h"
-
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <chaos_metadata_service_client/api_proxy/unit_server/NewUS.h>
 #include <chaos_metadata_service_client/api_proxy/unit_server/DeleteUS.h>
@@ -2002,8 +2001,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf="{}";
                 return CHAOS_DEV_OK;
 
-            } else if(what=="search"){
+            } else if(what=="load"){
+                CHECK_VALUE_PARAM;
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript,MDS_TIMEOUT,json_value);
+                chaos::common::data::CDataWrapper *r=apires->getResult();
+                if(r){
+                    json_buf=r->getCompliantJSONString();
+                } else {
+                    json_buf="{}";
+                    serr << cmd <<" API error command format";
+                    bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    return CHAOS_DEV_CMD;
 
+                }
+                return CHAOS_DEV_OK;
 
 
             } else if(what=="bind"){

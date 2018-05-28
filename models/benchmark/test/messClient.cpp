@@ -522,7 +522,7 @@ public:
 };
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
   try {
     int err = 0;
     uint32_t timeout = 0;
