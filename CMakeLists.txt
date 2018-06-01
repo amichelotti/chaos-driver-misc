@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(chaos_driver_misc)
 option(CERN_ROOT "Enable Cern Root" OFF)
+find_package(chaos MODULE REQUIRED)
+include_directories(../../ ${chaos_INCLUDE_DIRS})
 
 SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/ChaosDatasetIO.cpp ${optional_src})
 
