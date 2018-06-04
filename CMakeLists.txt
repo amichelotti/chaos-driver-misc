@@ -27,7 +27,7 @@ ADD_EXECUTABLE(UnitServerLite test/UnitServerLite.cpp)
 
 TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
-TARGET_LINK_LIBRARIES(UnitServerLite chaos_common  chaos_cutoolkit ${FrameworkLib})
+TARGET_LINK_LIBRARIES(UnitServerLite chaos_common  chaos_cutoolkit pthread)
 
 INSTALL_TARGETS(/bin/misc testSumOperatorUI)
 INSTALL_TARGETS(/bin/misc testDataSetIO)

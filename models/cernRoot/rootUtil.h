@@ -71,4 +71,17 @@ bool queryHasNextChaosTree(TTree*tree);
  */
 bool queryFree(TTree*tree);
 
+
+void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const TTree* val);
+
+void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string& key,const TTree* val);
+/**
+                 export current CDataWrapper to Tree with the given name
+                 \param name name of the tree
+                 \param branch_name branch name
+                 \param multiple creates a branch for each key, otherwise creates just on branch with all keys
+                 \return NULL if error, an allocated and initialized Tree otherwise
+                 */
+TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name,bool multiple=true);
+
 #endif
