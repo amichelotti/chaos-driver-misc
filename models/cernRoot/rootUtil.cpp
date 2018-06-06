@@ -668,3 +668,6 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
     return tr;
 
 }
+void initChaosRoot(){
+    ROOTDBG<<"initializing ChaosRoot";
+}

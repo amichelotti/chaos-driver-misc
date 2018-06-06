@@ -9,7 +9,6 @@
 #include <chaos/common/network/NetworkBroker.h>
 
 #define DPD_LOG_HEAD "[ChaosDatasetIO] - "
-
 #define DPD_LAPP LAPP_ << DPD_LOG_HEAD
 #define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
 #define DPD_LERR LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "

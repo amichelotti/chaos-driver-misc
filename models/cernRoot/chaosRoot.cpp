@@ -42,12 +42,7 @@ int main(int argc, const char** argv) {
 	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
 	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
 	ChaosMetadataServiceClient::getInstance()->start();
-	 if (0) {
-         TTree* tt= queryChaosTree("buttami","-3m","-1",0,"",0);
-
-         printf("%p",tt);
-
-	 }
+    initChaosRoot();
 	 root_opts[nroot_opts++]=argv[0];
 
 	 stringstream ss(rootopt);

@@ -83,5 +83,5 @@ void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string
                  \return NULL if error, an allocated and initialized Tree otherwise
                  */
 TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name,bool multiple=true);
-
+void initChaosRoot();
 #endif

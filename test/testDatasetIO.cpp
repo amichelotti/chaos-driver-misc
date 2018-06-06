@@ -202,6 +202,7 @@ int main(int argc, const char** argv) {
         uint32_t total=0;
 
         uint64_t pckmissing=0,pcktreplicated=0,pckmalformed=0,badid=0,pckt=0;
+        query_time_end+=1000; //consider time errors
 
         if(pagelen==0){
             std::vector<ChaosDataSet> res=test.queryHistoryDatasets(query_time_start,query_time_end);
