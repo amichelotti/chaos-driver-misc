@@ -203,7 +203,7 @@ int main(int argc, const char** argv) {
 
         uint64_t pckmissing=0,pcktreplicated=0,pckmalformed=0,badid=0,pckt=0;
         query_time_end+=5000; //consider time errors
-
+        query_time_start-=2000;
         if(pagelen==0){
             std::vector<ChaosDataSet> res=test.queryHistoryDatasets(query_time_start,query_time_end);
             end_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
