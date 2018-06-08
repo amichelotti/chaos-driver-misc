@@ -36,5 +36,7 @@ INSTALL_TARGETS(/bin UnitServerLite)
 
 
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
-installHeaders(core)
+
+FILE(GLOB files "core/*.h")
+INSTALL(FILES ${files} DESTINATION include/driver/misc/core)
 
