@@ -26,5 +26,8 @@ SET(DRIVERS_LIB ${DRIVERS_LIB} ${PROJECT_NAME} PARENT_SCOPE)
 INSTALL_TARGETS(/bin MessMonitor)
 INSTALL_TARGETS(/bin MessClient)
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
-installHeaders(.)
+FILE(GLOB files "*.h")
+INSTALL(FILES ${files} DESTINATION include/driver/misc/models/benchmark)
+
+
 
