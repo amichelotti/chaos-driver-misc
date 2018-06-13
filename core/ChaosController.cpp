@@ -2312,6 +2312,54 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (p.hasKey("var")) {
                 var_name = p.getStringValue("var");
             }
+            if(p.hasKey("seq")){
+                // perform a query without cursor.
+                uint64_t seqid=p.getInt64Value("seq");
+                uint64_t runid=0;
+                if(p.hasKey(("runid"))){
+                    runid = p.getInt64Value("runid");
+                }
+                DBGET << "START SEQ QUERY :" <<std::dec<< start_ts << " end:" << end_ts << "seq id " <<seqid<< " run id:"<<runid<<" page:"<< page;
+
+                controller->executeTimeIntervalQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts,seqid,runid, &query_cursor, page);
+                if (query_cursor) {
+                    cnt = 0;
+                    res << "{\"data\":[";
+                    boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+
+                while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
+                    ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
+                    //	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
+                    data = normalizeToJson(q_result.get(), binaryToTranslate);
+                    if (var_name.size() && data->hasKey(var_name)) {
+                        res << dataset2Var(data.get(),var_name);
+                    } else {
+                        res << data->getCompliantJSONString();
+                    }
+                    //	DBGET << "OBJ  " <<res;
+                    cnt++;
+                    //	DBGET << "getting query page  " << cnt;
+                    if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
+                        res << ",";
+                    }
+                }
+                res << "]";
+                query_cursor->getIndexes(runid,seqid);
+                res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"end\":"<<((query_cursor->hasNext())?0:1)<<"}";
+
+
+
+                controller->releaseQuery(query_cursor);
+                json_buf = res.str();
+                return CHAOS_DEV_OK;
+                } else {
+                    bundle_state.append_error("cannot perform specified query, no data? " + getPath());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    CALC_EXEC_TIME;
+                    return CHAOS_DEV_CMD;
+                }
+            }
+
 
             if (paging) {
                 if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
