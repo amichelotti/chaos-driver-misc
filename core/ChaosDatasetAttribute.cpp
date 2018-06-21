@@ -75,7 +75,7 @@ int query_vec_int( chaos::metadata_service_client::node_controller::CUController
     while(query_cursor->hasNext() ){
         ChaosSharedPtr<chaos::common::data::CDataWrapper> q_result(query_cursor->next());
         if(q_result->hasKey(attr_name) && q_result->isVector(attr_name)){
-            ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> vect(q_result->getVectorValue(attr_name));
+            ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> vect=q_result->getVectorValue(attr_name);
             std::vector<T> tt;
             for (int idx = 0; idx < vect->size(); idx++) {
                 tt.push_back(vect->getElementAtIndex<T>(idx));
@@ -267,7 +267,7 @@ void* ChaosDatasetAttribute::get(uint32_t*size){
             attr_size=0;
             uint32_t sizev,sizexp;
 
-            ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> cu_t_arr(tmpw->getVectorValue(attr_name));
+            ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> cu_t_arr=tmpw->getVectorValue(attr_name);
             ATTRDBG_<<"fetching Vector of size:"<<cu_t_arr->size();
             bool isInt32=false,isDouble=false,isInt64=false;
             isDouble=cu_t_arr->isDoubleElementAtIndex(0);

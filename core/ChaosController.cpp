@@ -804,7 +804,7 @@ std::string ChaosController::dataset2Var(chaos::common::data::CDataWrapper*data,
         return res.str();
     }
     if(data->isVectorValue(var_name)){
-        ChaosUniquePtr<CMultiTypeDataArrayWrapper> dw(data->getVectorValue(var_name));
+        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw=data->getVectorValue(var_name);
         //ChaosUniquePtr<CDataWrapper> dw(data->getCSDataValue(var_name));
         //SONElement obj(data->getRawValuePtr(var_name));
         res << "{\"ts\":" << ts << "," << "\"seq\":" << seq << ",\"val\":"<<dw->getCanonicalJSONString() << "}";
@@ -848,8 +848,8 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     std::string what = "";\
     bool alive = true;\
     chaos_data::CDataWrapper p;\
-    std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> names;\
-    std::auto_ptr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;\
+    ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> names;\
+    ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;\
     chaos::common::data::CDataWrapper *json_value=NULL;\
     std::stringstream serr;\
     std::string node_type,parent;\
@@ -858,7 +858,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     if (args != NULL) {\
     p.setSerializedJsonData(args);\
     if (p.hasKey("names")&&  p.isVector("names")) {\
-    names.reset(p.getVectorValue("names"));\
+    names=p.getVectorValue("names");\
     }\
     if (p.hasKey("seq")) {\
     seq_id=p.getInt64Value("seq");\
@@ -897,7 +897,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     }\
     }\
     if (p.hasKey("node_list") && p.isVector("node_list")) {\
-    node_list.reset(p.getVectorValue("node_list"));\
+    node_list=p.getVectorValue("node_list");\
     }\
     if((names.get() == NULL) && name.empty() && check_name){\
     serr << "missing 'name' or 'names' in command:\"" << cmd<<"\"";\
@@ -1684,7 +1684,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                 //						cu_property_group->group_name = "property_abstract_control_unit";
                                 //					chaos::metadata_service_client::api_proxy::node::NodePropertyGroupList property_list;
 
-                                ChaosUniquePtr<CMultiTypeDataArrayWrapper> dw(json_value->getVectorValue("properties"));
+                                ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw=json_value->getVectorValue("properties");
                                 for (int idx = 0; idx < dw->size(); idx++) {
 
                                     if(dw->isCDataWrapperElementAtIndex(idx)){
