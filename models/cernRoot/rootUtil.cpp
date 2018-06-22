@@ -87,7 +87,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
         chaos::DataType::DataType type_size = chaos::DataType::TYPE_DOUBLE;
         if (cd->isVector(*it)) {
             int size = 0;
-            CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
             //if(!multiple)
                 varname <<*it;
 
@@ -224,7 +224,7 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
          it != contained_key.end(); it++) {
         if (cd->isVector(*it)) {
             int size = 0;
-            CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
 
             for(int cnt=0;cnt<da->size();cnt++){
                 if (da->isDoubleElementAtIndex(cnt)) {
@@ -505,7 +505,7 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
         chaos::DataType::DataType type_size = chaos::DataType::TYPE_DOUBLE;
         if (cd->isVector(*it)) {
             int size = 0;
-            CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
             //if(!multiple)
                 varname <<*it;
 
@@ -617,7 +617,7 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
          it != contained_key.end(); it++) {
         if (cd->isVector(*it)) {
             int size = 0;
-            CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
 
             for(int cnt=0;cnt<da->size();cnt++){
                 if (da->isDoubleElementAtIndex(cnt)) {
