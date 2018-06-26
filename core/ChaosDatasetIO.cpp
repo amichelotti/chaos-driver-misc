@@ -47,8 +47,11 @@ namespace driver{
         defaultPage(30),
         last_seq(0),
         last_push_rate_grap_ts(0),deinitialized(false),implementation("datasetIO") {
-            InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
-            
+            try{
+                InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+            } catch(...){
+
+            }
             //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
             ioLiveDataDriver =chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
             network_broker=NetworkBroker::getInstance();
