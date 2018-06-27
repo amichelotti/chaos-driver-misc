@@ -70,11 +70,16 @@ namespace driver{
             /**
              Retrieve its own datasets from live
              */
-            ChaosDataSet getDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            ChaosDataSet getLiveDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
             /**
-             Retrieve whatever dataset
+             Retrieve  own datasets from live
              */
-            ChaosDataSet getDataset(const std::string &dsname,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+           ChaosDataSet getDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            /**
+             Retrieve whatever dataset from live
+             */
+            ChaosDataSet getLiveDataset(const std::string &dsname,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
             /**
              Perform the query and return uid for pages
              \param dsname dataset name

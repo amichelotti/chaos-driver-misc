@@ -151,8 +151,11 @@ namespace driver{
             
             return err;
         }
-        
-        ChaosDataSet ChaosDatasetIO::getDataset(const std::string &dsname,int type){
+        ChaosDataSet ChaosDatasetIO::getDataset(int type){
+            return datasets[type];
+        }
+
+        ChaosDataSet ChaosDatasetIO::getLiveDataset(const std::string &dsname,int type){
             size_t dim;
             ChaosDataSet tmp;
             char*ptr=ioLiveDataDriver->retriveRawData(dsname+chaos::datasetTypeToPostfix(type),&dim);
@@ -165,7 +168,7 @@ namespace driver{
             return tmp;
         }
         
-        ChaosDataSet ChaosDatasetIO::getDataset(int type){
+        ChaosDataSet ChaosDatasetIO::getLiveDataset(int type){
             size_t dim;
             ChaosDataSet tmp;
             char*ptr=ioLiveDataDriver->retriveRawData(uid+chaos::datasetTypeToPostfix(type),&dim);
