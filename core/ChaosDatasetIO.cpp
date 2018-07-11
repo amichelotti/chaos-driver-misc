@@ -146,7 +146,7 @@ namespace driver{
             //    DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
             // DirectIOChannelsInfo    *next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
             // serialization->disposeOnDelete = !next_client;
-            ioLiveDataDriver->storeData(uid+chaos::datasetTypeToPostfix(type),new_dataset,(chaos::DataServiceNodeDefinitionType::DSStorageType)storageType,false);
+            ioLiveDataDriver->storeData(uid+chaos::datasetTypeToPostfix(type),chaos::common::data::CDWShrdPtr(new_dataset),(chaos::DataServiceNodeDefinitionType::DSStorageType)storageType);
             
             
             return err;
