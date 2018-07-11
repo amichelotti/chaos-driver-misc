@@ -1034,13 +1034,16 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
             CTRLERR_<<" error during intervall query, no cursor available";
             return -1;
         }
-
-        while ((query_cursor->hasNext())&&(cnt < page)) {
-            ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-            boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
-            res.push_back(cd);
-            cnt++;
+        if(query_cursor->hasNext()){
+            uint32_t elems=query_cursor->size();
+            while(cnt<elems){
+                ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
+                boost::shared_ptr<CDataWrapper> cd=normalizeToJson(q_result.get(),binaryToTranslate);
+                res.push_back(cd);
+                cnt++;
+            }
         }
+
         if ((query_cursor->hasNext())) {
             qc_t q_nfo;
             q_nfo.qt = reqtime/1000;
@@ -2326,24 +2329,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     cnt = 0;
                     res << "{\"data\":[";
                     boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+                    if(query_cursor->hasNext()){
+                        uint32_t elems=query_cursor->size();
+                        while(cnt<elems){
+                            ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
+                            data = normalizeToJson(q_result.get(), binaryToTranslate);
+                            if (var_name.size() && data->hasKey(var_name)) {
+                                res << dataset2Var(data.get(),var_name);
+                            } else {
+                                res << data->getCompliantJSONString();
+                            }
+                            cnt++;
+                            if(cnt<elems){
+                                 res << ",";
+                            }
 
-                while ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
-                    ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-                    //	DBGET << " query uid: " <<queryuid << " page:"<<cnt;
-                    data = normalizeToJson(q_result.get(), binaryToTranslate);
-                    if (var_name.size() && data->hasKey(var_name)) {
-                        res << dataset2Var(data.get(),var_name);
-                    } else {
-                        res << data->getCompliantJSONString();
+                        }
                     }
-                    //	DBGET << "OBJ  " <<res;
-                    cnt++;
-                    //	DBGET << "getting query page  " << cnt;
-                    if ((query_cursor->hasNext())&&(cnt < page)&&(cnt < limit)) {
-                        res << ",";
-                    }
-                }
-                res << "]";
+                    res << "]";
+
                 query_cursor->getIndexes(runid,seqid);
                 res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"end\":"<<((query_cursor->hasNext())?0:1)<<"}";
 
@@ -2362,6 +2366,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
             if (paging) {
+                bundle_state.append_error("OLD STYLE PAGED QUERIES NOT ANYMORE SUPPORTED");
+                json_buf = bundle_state.getData()->getCompliantJSONString();
+                CALC_EXEC_TIME;
+                return CHAOS_DEV_CMD;
+
                 if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
                     DBGET << "START PAGED QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
 
@@ -2515,6 +2524,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             std::string var_name;
             int cnt = 0;
             uint32_t uid = 0;
+            bundle_state.append_error("OLD STYLE NEXT PAGED QUERIES NOT ANYMORE SUPPORTED");
+            json_buf = bundle_state.getData()->getCompliantJSONString();
+            CALC_EXEC_TIME;
+            return CHAOS_DEV_CMD;
             if (p.hasKey("uid")) {
                 uid = p.getInt32Value("uid");
             } else {
