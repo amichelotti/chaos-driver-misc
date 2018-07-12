@@ -11,15 +11,11 @@
 
 #include <map>
 #include <string>
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
 #include <boost/shared_ptr.hpp>
 #include <chaos/common/chaos_constants.h>
 #include <common/misc/scheduler/SchedTimeElem.h>
-
-#define UI_PREFIX chaos::metadata_service_client::node_controller
-
-
-
+#include <chaos/common/data/CDataWrapper.h>
+#include <chaos/common/io/IODataDriver.h>
 #define CTRLAPP_ LAPP_ << "[ "<<__FUNCTION__<<"]"
 #define CTRLDBG_ LDBG_<< "[ "<<__FUNCTION__<<"]"
 #define CTRLERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]"
@@ -43,7 +39,11 @@ namespace metadata_service_client{
 namespace node_controller{
 	class CUController;
 
-}
+}}
+namespace common{
+    namespace message{
+        class MDSMessageChannel;
+    };
 }
 }
 namespace driver{

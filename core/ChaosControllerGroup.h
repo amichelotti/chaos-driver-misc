@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include "ChaosController.h"
+#include <chaos/common/global.h>
 
 #define CTRLAPPG_ LAPP_ << "[ "<<__FUNCTION__<<" ] "
 #define CTRLDBGG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"

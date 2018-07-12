@@ -35,6 +35,7 @@ using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
 
 using namespace ::driver::misc;
+
 #define DBGET CTRLDBG_<<"["<<getPath()<<"]"
 #define DBGETERR CTRLERR_<<"["<<getPath()<<"]"
 
@@ -745,7 +746,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
         } else{
             CDataWrapper data;
 
-            if (controller->getCurrentDatasetForDomain((UI_PREFIX::DatasetDomain)channel,&data) !=0 ) {
+            if (controller->getCurrentDatasetForDomain((chaos::metadata_service_client::node_controller::DatasetDomain)channel,&data) !=0 ) {
                 std::stringstream ss;
                 retdata.reset(new CDataWrapper());
                 ss << "error fetching data from channel " << channel;
@@ -1015,7 +1016,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     int32_t ret=0,err=0;
     chaos::common::io::QueryCursor *query_cursor = NULL;
     if(page==0){
-        controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
         if(query_cursor==NULL){
             CTRLERR_<<" error during intervall query, no cursor available";
             return -1;
@@ -1029,7 +1030,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
 
     } else {
         int cnt=0;
-        controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor,page);
+        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor,page);
         if(query_cursor==NULL){
             CTRLERR_<<" error during intervall query, no cursor available";
             return -1;
@@ -2324,7 +2325,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 DBGET << "START SEQ QUERY :" <<std::dec<< start_ts << " end:" << end_ts << "seq id " <<seqid<< " run id:"<<runid<<" page:"<< page;
 
-                controller->executeTimeIntervalQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts,seqid,runid, &query_cursor, page);
+                controller->executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid, &query_cursor, page);
                 if (query_cursor) {
                     cnt = 0;
                     res << "{\"data\":[";
@@ -2374,7 +2375,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 if (query_cursor_map.size() < MAX_CONCURRENT_QUERY) {
                     DBGET << "START PAGED QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
 
-                    controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
+                    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
                     if (query_cursor) {
                         cnt = 0;
                         bool n = query_cursor->hasNext();
@@ -2445,7 +2446,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 boost::shared_ptr<chaos::common::data::CDataWrapper> data;
                 DBGET << "START QUERY :" <<std::dec<< start_ts << " end:" << end_ts << " page size " << page;
 
-                controller->executeTimeIntervallQuery((UI_PREFIX::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+                controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
                 bool n = query_cursor->hasNext();
                 if (query_cursor) {
                     DBGET << "not paged query start:" << start_ts << " end:" << end_ts << " has next: " << (query_cursor->hasNext());
@@ -2818,7 +2819,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
 
-        //	chaos::common::data::CDataWrapper*data = fetch((UI_PREFIX::DatasetDomain)atoi((char*) args));
+        //	chaos::common::data::CDataWrapper*data = fetch((chaos::metadata_service_client::node_controller::DatasetDomain)atoi((char*) args));
         //json_buf = data->getCompliantJSONString();
         json_buf=fetchJson(atoi((char*) args));
         return CHAOS_DEV_OK;
