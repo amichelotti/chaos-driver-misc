@@ -844,6 +844,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
         }
     }
 }
+
 #define PARSE_QUERY_PARMS(args,check_name,check_what) \
     std::string name = "";\
     std::string what = "";\
@@ -851,7 +852,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     chaos_data::CDataWrapper p;\
     ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> names;\
     ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;\
-    chaos::common::data::CDataWrapper *json_value=NULL;\
+    ChaosUniquePtr<chaos::common::data::CDataWrapper>json_value;\
     std::stringstream serr;\
     std::string node_type,parent;\
     int64_t seq_id=0,start_ts=0,end_ts=chaos::common::utility::TimingUtil::getTimeStamp();\
@@ -1340,10 +1341,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
         } else if (cmd == "snapshot") {
             std::stringstream res;
-            PARSE_QUERY_PARMS(args,true,true);
-            DBGET << "snapshot what " << what;
-
             ChaosStringVector node_found;
+            PARSE_QUERY_PARMS(args,false,true);
+
+            DBGET << "snapshot what " << what;
+            if(what=="burst" ){
+                if(json_value!=NULL){
+                    CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst,MDS_TIMEOUT,json_value.get());
+                      
+                    json_buf="{}";
+                    res<<json_buf;
+                    CALC_EXEC_TIME;
+                    return CHAOS_DEV_OK;
+                } 
+                serr << "error performing snapshot burst query" << name;
+                bundle_state.append_error(serr.str());
+                json_buf = bundle_state.getData()->getCompliantJSONString();
+                return CHAOS_DEV_CMD;
+            }
 
             if (node_list.get() && node_list->size()) {
                 for (int idx = 0; idx < node_list->size(); idx++) {
@@ -1436,7 +1451,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                         if(json_value->hasKey(chaos::datasetTypeToHuman(cnt))&&json_value->isCDataWrapperValue(chaos::datasetTypeToHuman(cnt))){
                             DBGET<<"Set Snapshot found \""<<chaos::datasetTypeToHuman(cnt)<<"\"";
-                            CDataWrapper *ds=json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
+                            ChaosUniquePtr<CDataWrapper> ds=json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
                             if(ds->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)&& ds->isStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
                                 uid=ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
                                 DBGET << "set snapshot name:\"" << name << "\": dataset:"<<chaos::datasetTypeToHuman(cnt);
@@ -1611,7 +1626,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                 } else if(node_type == "us"){
                     if(what == "set"){
-                        EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,MDS_TIMEOUT,name,0,json_value);
+                        EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer,MDS_TIMEOUT,name,0,json_value.get());
 
                         json_buf="{}";
                         res<<json_buf;
@@ -1692,7 +1707,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                 for (int idx = 0; idx < dw->size(); idx++) {
 
                                     if(dw->isCDataWrapperElementAtIndex(idx)){
-                                        CDataWrapper* prop=dw->getCDataWrapperElementAtIndex(idx);
+                                        ChaosUniquePtr<CDataWrapper> prop=dw->getCDataWrapperElementAtIndex(idx);
                                         if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
                                             //	ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
                                             bool onoff=prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE);
@@ -1979,11 +1994,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             PARSE_QUERY_PARMS(args,false,true);
             if(what == "save"){
                 CHECK_VALUE_PARAM
-                        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript,MDS_TIMEOUT,json_value);
+                        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
             } else if(what=="del"){
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
 
@@ -1992,7 +2007,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         if(!json_value->hasKey("create")){
                     json_value->addBoolValue("create", true);
                 }
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
 
@@ -2001,13 +2016,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         if(!json_value->hasKey("create")){
                     json_value->addBoolValue("create", false);
                 }
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
 
             } else if(what=="load"){
                 CHECK_VALUE_PARAM;
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript,MDS_TIMEOUT,json_value.get());
                 chaos::common::data::CDataWrapper *r=apires->getResult();
                 if(r){
                     json_buf=r->getCompliantJSONString();
@@ -2024,7 +2039,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             } else if(what=="searchInstance"){
                 CHECK_VALUE_PARAM;
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchInstancesForScript,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchInstancesForScript,MDS_TIMEOUT,json_value.get());
                 chaos::common::data::CDataWrapper *r=apires->getResult();
                 if(r){
                     json_buf=r->getCompliantJSONString();
@@ -2040,11 +2055,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
 
             } else if(what=="bind"){
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
             } else if(what=="update"){
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateScriptOnNode,MDS_TIMEOUT,json_value);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateScriptOnNode,MDS_TIMEOUT,json_value.get());
                 json_buf="{}";
                 return CHAOS_DEV_OK;
             } else {
