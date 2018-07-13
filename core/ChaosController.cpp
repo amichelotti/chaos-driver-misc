@@ -891,7 +891,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     }\
     if (p.hasKey("value")) {\
     json_value=p.getCSDataValue("value");\
-    if(json_value==NULL){\
+    if(json_value.get()==NULL){\
     serr << cmd <<" bad json format" << args;\
     bundle_state.append_error(serr.str());\
     json_buf = bundle_state.getData()->getCompliantJSONString();\
@@ -916,7 +916,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     }
 
 #define CHECK_VALUE_PARAM \
-    if(json_value==NULL){\
+    if(json_value.get()==NULL){\
     serr << "missing (json) value" << cmd;\
     bundle_state.append_error(serr.str());\
     json_buf = bundle_state.getData()->getCompliantJSONString();\
@@ -1346,7 +1346,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             DBGET << "snapshot what " << what;
             if(what=="burst" ){
-                if(json_value!=NULL){
+                if(json_value.get()!=NULL){
                     CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst,MDS_TIMEOUT,json_value.get());
                       
                     json_buf="{}";
@@ -1440,7 +1440,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 return CHAOS_DEV_CMD;
             } else if (what == "set") {
-                if(json_value==NULL){
+                if(json_value.get()==NULL){
 
                     serr << "missing \"value\"JSON_CU_DATASET dataset";
                 } else {
@@ -1485,8 +1485,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             ChaosStringVector node_found;
             if (what == "set") {
-                if (json_value) {
-                    if (mdsChannel->setVariable(name, *json_value, MDS_TIMEOUT) == 0) {
+                if (json_value.get()) {
+                    if (mdsChannel->setVariable(name, *json_value.get(), MDS_TIMEOUT) == 0) {
                         DBGET << "Save variable name:\"" << name << "\":"<<json_value->getCompliantJSONString();
                         json_buf =json_value->getCompliantJSONString();
                         CALC_EXEC_TIME;
@@ -1694,7 +1694,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else if(node_type == "cu"){
 
                     if(what == "set"){
-                        if(json_value && json_value->hasKey("properties")){
+                        if(json_value.get() && json_value->hasKey("properties")){
                             // set properties
                             if(json_value->isVectorValue("properties")){
                                 chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
@@ -1869,7 +1869,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         res<<json_buf;
                     } else if(what == "set"){
                         // set an association between a Agent and a Unit Server
-                        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value);
+                        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::SaveNodeAssociation,MDS_TIMEOUT,name,*json_value.get());
 
                         json_buf="{}";
                         res<<json_buf;
