@@ -21,8 +21,8 @@ limitations under the License.
 #include "GibControlConstants.h"
 #include "common/misc/GibControl/core/AbstractGibControl.h"
 #include <driver/misc/models/GibControl/core/ChaosGibControlInterface.h>
-#include "/home/duffizi/chaos_bundleNotCross/chaosframework/config/../chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h"
-//#include <chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h>
+//#include "/home/duffizi/chaos_bundleNotCross/chaosframework/config/../chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h"
+#include <chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h>
 
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
