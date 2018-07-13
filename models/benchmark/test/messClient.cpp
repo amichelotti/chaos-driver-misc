@@ -24,9 +24,8 @@
 #include <chaos/common/global.h>
 #include <chaos/common/chaos_constants.h>
 #include <chaos/common/network/CNodeNetworkAddress.h>
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
-#include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
-#include <chaos/ui_toolkit/HighLevelApi/HLDataApi.h>
+#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
+
 #include <stdio.h>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -42,11 +41,12 @@
 
 using namespace std;
 using namespace chaos;
-using namespace chaos::ui;
 using namespace chaos::common::data;
 using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::date_time;
+using namespace chaos::metadata_service_client;
+
 namespace chaos_batch = chaos::common::batch_command;
 
 #define OPT_MESS_DID                        "mess_device_id"
@@ -87,13 +87,13 @@ protected:
   boost::shared_ptr<ofstream> fs;
   string test_name;
   string fradix_name;
-  DeviceController* controller;
+  chaos::metadata_service_client::node_controller::CUController* controller;
   string filename;
 
 
 public:
 
-  perform_test(string _test_name, string _fradix_name, DeviceController*ctrl) : test_name(_test_name), fradix_name(_fradix_name), controller(ctrl) {
+  perform_test(string _test_name, string _fradix_name, chaos::metadata_service_client::node_controller::CUController*ctrl) : test_name(_test_name), fradix_name(_fradix_name), controller(ctrl) {
     filename = _fradix_name + "_" + _test_name + ".csv";
     fs.reset(new ofstream(filename.c_str(), ios::out));
     LAPP_ << "opening "<<filename<<" for write";
@@ -144,7 +144,7 @@ public:
 
 class perform_bandwidth_test : public perform_test {
 public:
-  perform_bandwidth_test(string _fradix_name, DeviceController*ctrl) : perform_test(string("bandwidth_test"), _fradix_name, ctrl) {
+  perform_bandwidth_test(string _fradix_name, chaos::metadata_service_client::node_controller::CUController*ctrl) : perform_test(string("bandwidth_test"), _fradix_name, ctrl) {
     *fs << "Bytes,UI Acquire (us),UI Acquire min (us), UI Acquire max (us), CU cycle (us),CU cycle sampled (us), CU sigma (us), CU bandwidth (KB/s), ui packets lost,time shift(us),time shift sigma (us), Cmd Latency (us), Cycles/s,UsrTime(%),SysTime(%)"<<endl;
   }
 
@@ -392,7 +392,7 @@ public:
 
 class perform_rt_test : public perform_test {
 public:
-  perform_rt_test(string _fradix_name, DeviceController*ctrl) : perform_test(string("rt_test"), _fradix_name, ctrl) {
+  perform_rt_test(string _fradix_name, chaos::metadata_service_client::node_controller::CUController*ctrl) : perform_test(string("rt_test"), _fradix_name, ctrl) {
     *fs << "Cycle delay,mean rt(us), sigma rt (us), mean set(us),sigma set (us),#errors"<<endl;
   }
 
@@ -541,62 +541,62 @@ int main(int argc, const char* argv[]) {
     CDeviceNetworkAddress deviceNetworkAddress;
     int repetition;
     uint32_t ui_delay=0;
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_DID, po::value<string>(&mess_device_id), "The host of the mess monitor");
-    //ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_INIT, "Initialize the monitor");
-    //ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_START, "Start the monitor");
-    //ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_STOP, "Stop the monitor");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_PERFORM_TEST, po::value<string>(&report_name)->default_value("./test_"), "Test prefix for CSV <report> files");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_DEINIT, "Deinitilize the monitor");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAKE_ROUND_TRIP_TEST, "Execute the round trip delay test");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAKE_ROUND_TRIP_TEST_ITERATION, po::value<uint32_t>(&iteration)->default_value(1), "Number of iteration of the roundtrip test");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_GET_TRX_TEST, "Execute the bandwidth test");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TIMEOUT, po::value<uint32_t>(&timeout)->default_value(10000), "Timeout rpc in milliseconds");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_SCHED_DELAY, po::value<uint64_t>(&schedule_delay)->default_value(0), "Scheduler delay (us)");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_DID, po::value<string>(&mess_device_id), "The host of the mess monitor");
+    //ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_INIT, "Initialize the monitor");
+    //ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_START, "Start the monitor");
+    //ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_STOP, "Stop the monitor");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_PERFORM_TEST, po::value<string>(&report_name)->default_value("./test_"), "Test prefix for CSV <report> files");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MESS_PHASES_DEINIT, "Deinitilize the monitor");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAKE_ROUND_TRIP_TEST, "Execute the round trip delay test");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAKE_ROUND_TRIP_TEST_ITERATION, po::value<uint32_t>(&iteration)->default_value(1), "Number of iteration of the roundtrip test");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_GET_TRX_TEST, "Execute the bandwidth test");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TIMEOUT, po::value<uint32_t>(&timeout)->default_value(10000), "Timeout rpc in milliseconds");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_SCHED_DELAY, po::value<uint64_t>(&schedule_delay)->default_value(0), "Scheduler delay (us)");
 
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX, po::value<uint32_t>(&max)->default_value(MAX_BUFFER), "Max buffer (bandwidth test)/Max ui cyle (rt test)");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_READ_DELAY, po::value<uint32_t>(&read_delay)->default_value(0), "Read Cycle delay (us)");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_DYN_PROF, po::value<uint32_t>(&dyn_prof_rate)->default_value(0), "Read Profiling CU information rate (may delay ui cycle)");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX, po::value<uint32_t>(&max)->default_value(MAX_BUFFER), "Max buffer (bandwidth test)/Max ui cyle (rt test)");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_READ_DELAY, po::value<uint32_t>(&read_delay)->default_value(0), "Read Cycle delay (us)");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_DYN_PROF, po::value<uint32_t>(&dyn_prof_rate)->default_value(0), "Read Profiling CU information rate (may delay ui cycle)");
 
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_INCREMENT, po::value<std::string>(&increment)->default_value("power2"), "Increment to be used in test: power2|<constant value>");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_START, po::value<int32_t>(&start)->default_value(1), "start quantity in test ");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_INCREMENT, po::value<std::string>(&increment)->default_value("power2"), "Increment to be used in test: power2|<constant value>");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_START, po::value<int32_t>(&start)->default_value(1), "start quantity in test ");
 
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_REPETITION, po::value<int>(&repetition)->default_value(BAND_REPETITION), "number of test repetions for better average results");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX_RETRY, po::value<uint32_t>(&max_retry)->default_value(RETRY_LOOP), "number of retry to match the key");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_UI_FREQ, po::value<bool>(&test_ui_freq)->default_value(false), "test ui frequency by packet size");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_REPETITION, po::value<int>(&repetition)->default_value(BAND_REPETITION), "number of test repetions for better average results");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_MAX_RETRY, po::value<uint32_t>(&max_retry)->default_value(RETRY_LOOP), "number of retry to match the key");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption(OPT_TEST_UI_FREQ, po::value<bool>(&test_ui_freq)->default_value(false), "test ui frequency by packet size");
 
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("readonly", po::value<bool>(&readonly)->default_value(false), "just read");
-    ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("wronly", po::value<bool>(&wronly)->default_value(false), "just lunch command to CU");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("readonly", po::value<bool>(&readonly)->default_value(false), "just read");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("wronly", po::value<bool>(&wronly)->default_value(false), "just lunch command to CU");
 
 
-    ChaosUIToolkit::getInstance()->init(argc, argv);
+    ChaosMetadataServiceClient::getInstance()->init(argc, argv);
 
-    if(ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_INCREMENT)){
+    if(ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_INCREMENT)){
       if(increment != "power2"){
 	increment_v = strtoul(increment.c_str(),0,0);
       }
     }
-    if (!ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_DID)) throw CException(1, "invalid device identification string", "check param");
+    if (!ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_DID)) throw CException(1, "invalid device identification string", "check param");
     if (mess_device_id.size() == 0) throw CException(1, "invalid device identification string", "check param");
 
-    if (ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_PHASES_INIT)) {
+    if (ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_PHASES_INIT)) {
       opcodes_sequence.push_back(1);
     }
-    if (ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_PHASES_START)) {
+    if (ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MESS_PHASES_START)) {
       opcodes_sequence.push_back(2);
     }
-    if (ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_SCHED_DELAY)) {
+    if (ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_SCHED_DELAY)) {
       opcodes_sequence.push_back(5);
     }
 
+  chaos::metadata_service_client::node_controller::CUController*controller;
+    ChaosMetadataServiceClient::getInstance()->getNewCUController(mess_device_id,&controller);
 
-
-    DeviceController *controller = HLDataApi::getInstance()->getControllerForDeviceID(mess_device_id, timeout);
 
     if (!controller) throw CException(4, "Error allocating device controller", "device controller creation");
     controller->setRequestTimeWaith(timeout);
     if (report_name.length()) {
       int cnt;
-      if(ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_GET_TRX_TEST)){
+      if(ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_GET_TRX_TEST)){
 	perform_bandwidth_test bd_test(report_name,controller);
 	if(max == increment_v){
 	  bd_test.test(max,schedule_delay,repetition);
@@ -607,7 +607,7 @@ int main(int argc, const char* argv[]) {
 	  }
 	}
       }
-      if(ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MAKE_ROUND_TRIP_TEST)){
+      if(ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->hasOption(OPT_MAKE_ROUND_TRIP_TEST)){
 	perform_rt_test rt_test(report_name,controller);
 	if(max == increment_v){
 	  rt_test.test(max,schedule_delay,repetition);
@@ -621,8 +621,8 @@ int main(int argc, const char* argv[]) {
       return 0;
     }
 
-    HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
-    ChaosUIToolkit::getInstance()->deinit();
+    ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
+    ChaosMetadataServiceClient::getInstance()->deinit();
 
   } catch (CException& e) {
     LERR_ << e.errorCode << " - " << e.errorDomain << " - " << e.errorMessage;

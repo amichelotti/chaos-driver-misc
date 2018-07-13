@@ -19,7 +19,7 @@ ELSE()
 ENDIF()
 
 TARGET_LINK_LIBRARIES(MessMonitor ${PROJECT_NAME} chaos_cutoolkit boost_random ${FrameworkLib})
-TARGET_LINK_LIBRARIES(MessClient ${PROJECT_NAME} chaos_uitoolkit chaos_common boost_random ${FrameworkLib})
+TARGET_LINK_LIBRARIES(MessClient ${PROJECT_NAME} chaos_metadata_service_client chaos_common boost_random ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread chaos_cutoolkit chaos_common boost_random ${FrameworkLib})
 SET(DRIVERS_LIB ${DRIVERS_LIB} ${PROJECT_NAME} PARENT_SCOPE)
