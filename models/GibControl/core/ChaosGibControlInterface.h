@@ -56,8 +56,8 @@ namespace chaos {
 				public: 
 				ChaosGibControlInterface(chaos_driver::DriverAccessor*_accessor):accessor(_accessor){};
 				chaos_driver::DriverAccessor* accessor;
-				int init(void*);
-				int deinit();
+				int init(void*){return 0;};
+				int deinit(){return 0;};
 				uint64_t getFeatures();
 				int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
 				int setChannelVoltage(int32_t channel,double Voltage);
