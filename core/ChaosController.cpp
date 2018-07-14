@@ -1708,43 +1708,43 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                                     if(dw->isCDataWrapperElementAtIndex(idx)){
                                         ChaosUniquePtr<CDataWrapper> prop=dw->getCDataWrapperElementAtIndex(idx);
-                                        if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
+                                        if(prop.get() && prop->hasKey(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)){
                                             //	ChaosSharedPtr<chaos::common::data::CDataWrapperKeyValueSetter> bool_value(new chaos::common::data::CDataWrapperBoolKeyValueSetter(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE)));
                                             bool onoff=prop->getBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE);
                                             //cu_property_group->group_property_list.push_back(bool_value);
                                             pg.addProperty(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE, CDataVariant(static_cast<bool>(onoff)));
                                         }
-                                        if(prop && prop->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)){
+                                        if(prop.get() && prop->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))));
 
                                         }
-                                        if(prop && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY)){
+                                        if(prop.get() && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY, CDataVariant(static_cast<bool>(prop->getBoolValue(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY))));
                                         }
-                                        if(prop && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION)){
+                                        if(prop.get() && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION, CDataVariant(static_cast<int32_t>(prop->getInt32Value(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION))));
 
                                         }
-                                        if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME)){
+                                        if(prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME))));
 
                                         }
 
-                                        if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME)){
+                                        if(prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME))));
 
                                         }
-                                        if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)){
+                                        if(prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE))));
 
                                         }
-                                        if(prop && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING)){
+                                        if(prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING)){
                                             chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING))));
 
