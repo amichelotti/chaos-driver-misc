@@ -15,7 +15,7 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${core_src})
 ELSE()
 ADD_LIBRARY(${PROJECT_NAME}  SHARED ${core_src})
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_cutoolkit chaos_uitoolkit ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_cutoolkit ${FrameworkLib})
 
 FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/models/GibControl/core)
