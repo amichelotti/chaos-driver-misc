@@ -19,6 +19,7 @@ limitations under the License.
 #ifndef __AbstractGibControlCommand__
 #define __AbstractGibControlCommand__
 #include "GibControlConstants.h"
+#include "common/misc/GibControl/core/AbstractGibControl.h"
 #include <driver/misc/models/GibControl/core/ChaosGibControlInterface.h>
 #include <chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h>
 
@@ -41,6 +42,7 @@ namespace driver {
 			uint8_t implementedHandler();
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
+			void getState(int& current_state, std::string& current_state_str);
 			void setWorkState(bool working);
 		};// AbstractGibControlCommand
 	}// gibcontrol

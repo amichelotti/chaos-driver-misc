@@ -28,6 +28,14 @@ message.inputDataLength=sizeof(gibcontrol_iparams_t);\
 message.resultDataLength=sizeof(gibcontrol_oparams_t);\
 message.resultData = (void*)&ret;\
 
+#define WRITE_OP_STRING_TIM(op,pstring,timeout) \
+PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
+strncpy(idata.str,(char*)pstring,MAX_STR_SIZE); \
+accessor->send(&message);\
+return ret.result;
+
+
+
 #define WRITE_OP_TIM(op,timeout) \
 PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
 accessor->send(&message);\
@@ -49,10 +57,6 @@ idata.int32_t1=VAR_int32_t1;\
 idata.double1=VAR_double1;\
 return ret.result;
 
-int ChaosGibControlInterface::init(void *d){return 0;};
-int ChaosGibControlInterface::deinit() {
-	WRITE_OP_TIM(OP_DEINIT,0);
-};
 int ChaosGibControlInterface::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	WRITE_OP_INT32_T_INT32_T_INT32_T_INT32_T_TIM(OP_SETPULSE,channel,amplitude,width,state,0);
 } 
@@ -62,3 +66,10 @@ int ChaosGibControlInterface::setChannelVoltage(int32_t channel,double Voltage) 
 int ChaosGibControlInterface::setThrVoltage(int32_t channel,double thrVoltage) {
 	WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETTHRVOLTAGE,channel,thrVoltage,0);
 } 
+
+int ChaosGibControlInterface::init(void*d) {
+    WRITE_OP_STRING_TIM(OP_INIT,(char*)d,0);
+}
+int ChaosGibControlInterface::deinit() {
+    WRITE_OP_TIM(OP_DEINIT,0);
+}
