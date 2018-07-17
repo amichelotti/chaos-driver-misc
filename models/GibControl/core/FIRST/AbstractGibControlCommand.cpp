@@ -52,6 +52,17 @@ uint8_t AbstractGibControlCommand::implementedHandler() {
 void AbstractGibControlCommand::ccHandler() {
 
 }
+void AbstractGibControlCommand::getState(int& current_state, std::string& current_state_str) {
+	CHAOS_ASSERT(gibcontrol_drv)
+	int err = 0;
+	std::string state_str;
+	int32_t i_driver_timeout = getAttributeCache()->getValue<int32_t>(DOMAIN_INPUT, "driver_timeout");
+	/*if((err=gibcontrol_drv->getState(current_state, state_str)) != 0) {
+		setWorkState(false);
+		CMDCUERR_ << boost::str( boost::format("Error getting the GibControl state = %1% ") % err); 
+	}*/
+}
+
 void AbstractGibControlCommand::setWorkState(bool working_flag) {
 	int64_t *o_dev_state = getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT, "dev_state");
 	*o_dev_state = working_flag;

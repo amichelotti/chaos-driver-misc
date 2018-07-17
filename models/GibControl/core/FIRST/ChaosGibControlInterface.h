@@ -44,6 +44,8 @@ namespace chaos {
 				int32_t int32_t3;
 				int32_t int32_t4;
 				double double1;
+ 				char str[MAX_STR_SIZE];
+
 			} gibcontrol_iparams_t;
 			typedef struct {
 				int64_t int64_t1;

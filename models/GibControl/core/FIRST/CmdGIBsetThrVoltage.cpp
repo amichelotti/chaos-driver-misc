@@ -30,7 +30,7 @@ namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetThrVoltage,CMD_GIB_SETTHRVOLTAGE_ALIAS,
 			"the threshold voltage ti be set (mv)",
-			"73a83047-17dd-4c1e-9a28-3c7e29394aab")
+			"56496013-17d6-4af7-bc57-aca38329f2cd")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETTHRVOLTAGE_CHANNEL,"the channel to be set",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_DOUBLE_PARAM(CMD_GIB_SETTHRVOLTAGE_THRVOLTAGE,"the threshold voltage ti be set (mv)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
