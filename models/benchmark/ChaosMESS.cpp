@@ -74,9 +74,7 @@ void ChaosMESS::unitDefineActionAndDataset() throw(CException) {
                           "trial buffer to calculate perfomance",
                           DataType::TYPE_BYTEARRAY,
                           DataType::Output,
-                          4*1024*1024);
-    
-	
+                          1024);
 }
 
 void ChaosMESS::defineSharedVariable() {
