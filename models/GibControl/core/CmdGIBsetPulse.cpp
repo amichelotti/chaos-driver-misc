@@ -30,7 +30,7 @@ namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetPulse,CMD_GIB_SETPULSE_ALIAS,
 			"pulse state (0:off, 1:on)",
-			"fca2da88-8bdd-4f09-b020-11ec9c3195cd")
+			"055a00fc-de7c-4ed4-a5bb-a095ff86161a")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_CHANNEL,"channel to pulse",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_AMPLITUDE,"amplitude of pulse (V)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_WIDTH,"pulse width (ns)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)

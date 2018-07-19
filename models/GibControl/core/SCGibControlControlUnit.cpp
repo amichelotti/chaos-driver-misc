@@ -22,7 +22,7 @@ limitations under the License.
 #include <common/debug/core/debug.h>
 #include "CmdGIBsetPulse.h"
 #include "CmdGIBsetChannelVoltage.h"
-#include "CmdGIBsetThrVoltage.h"
+#include "CmdGIBDefault.h"
 using namespace chaos;
 using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
@@ -53,19 +53,11 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::gibcontrol::SCGibControlContro
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset() throw(chaos::CException) {
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetPulse));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetChannelVoltage));
-	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetThrVoltage));
+	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBDefault),true);
 	addAttributeToDataSet("gastoneLV",
 							"Low Voltage status",
 							DataType::TYPE_INT32,
 							DataType::Output);
-	addAttributeToDataSet("HV_FE1",
-							"High Voltage Front End 1",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("HV_FE2",
-							"High Voltage Front End 1",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
 	addAttributeToDataSet("pulsing",
 							"pulse status",
 							DataType::TYPE_BOOLEAN,
@@ -94,9 +86,17 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"Driver timeout in milliseconds",
 							DataType::TYPE_INT32,
 							DataType::Input);
-	addAttributeToDataSet("dev_state",
-							"Bit field device state",
-							DataType::TYPE_INT64,
+	addAttributeToDataSet("HVMain",
+							"HV Main Voltage",
+							DataType::TYPE_DOUBLE,
+							DataType::Output);
+	addAttributeToDataSet("Supply5V",
+							"Readout +5V Supply",
+							DataType::TYPE_DOUBLE,
+							DataType::Output);
+	addAttributeToDataSet("SupplyN5V",
+							"Readout -5V Supply",
+							DataType::TYPE_DOUBLE,
 							DataType::Output);
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
@@ -104,19 +104,24 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() 
 // Abstract method for the initialization of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitInit() throw(CException) {
 	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = getAccessoInstanceByIndex(0);
+	
+	/*
 	if (gibcontrol_accessor == NULL ) {
 		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
 	}
 	gibcontrol_drv = new chaos::driver::gibcontrol::ChaosGibControlInterface(gibcontrol_accessor);
 	if (gibcontrol_drv == NULL) {
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
-	}
+	}*/
+	SCCUAPP << "ALEDEBUG INIT DONE";
 }
 // Abstract method for the start of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStart() throw(CException) {
+	SCCUAPP << "ALEDEBUG START DONE";
 }
 // Abstract method for the stop of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStop() throw(CException) {
+	SCCUAPP << "ALEDEBUG STOP DONE";
 }
 // Abstract method for deinit the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDeinit() throw(CException) {
