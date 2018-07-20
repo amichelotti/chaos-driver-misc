@@ -265,6 +265,7 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
         ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
         controller = NULL;
     }
+    iomutex.lock();
 
     try {
 
@@ -287,7 +288,6 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
     wostate = 0;
 
     setUid(path);
-    iomutex.lock();
 
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
@@ -301,7 +301,6 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
         last_pckid[cnt]=0;
     }
     delta_update=0;
-    iomutex.unlock();
     if (getState(state) == 0) {
         DBGET << "Uknown state for device assuming wostate";
         wostate = 1;
@@ -334,6 +333,8 @@ int ChaosController::init(std::string p, uint64_t timeo_) {
     DBGET << "initalization ok handle:" << (void*) controller;
 
     last_access = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
+    iomutex.unlock();
+
     return 0;
 }
 
