@@ -137,7 +137,7 @@ int main(int argc, const char** argv) {
             LERR_<<" cannot push:"<<my_input->getJSONString();
             reterr++;
         } else {
-            LDBG_<<"pushing:"<<my_input->getJSONString();
+          //  LDBG_<<"pushing:"<<my_input->getJSONString();
         }
         uint64_t query_time_start=chaos::common::utility::TimingUtil::getTimeStamp();
         uint64_t end_time,start_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
