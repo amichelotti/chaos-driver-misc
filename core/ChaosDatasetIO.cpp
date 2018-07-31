@@ -342,7 +342,7 @@ int ChaosDatasetIO::registerDataset()
         createMDSEntry();
         entry_created = true;
     }
-    std::map<int, ChaosSharedPtr<chaos::common::data::CDataWrapper>>::iterator i;
+    std::map<int, ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i;
 
     for (i = datasets.begin(); i != datasets.end(); i++)
     {
@@ -492,7 +492,7 @@ void ChaosDatasetIO::deinit()
                                                     chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT,
                                                     true);
 
-    for (std::map<int, ChaosSharedPtr<chaos::common::data::CDataWrapper>>::iterator i = datasets.begin(); i != datasets.end(); i++)
+    for (std::map<int, ChaosSharedPtr<chaos::common::data::CDataWrapper> >::iterator i = datasets.begin(); i != datasets.end(); i++)
     {
         DPD_LDBG << " removing dataset:" << i->first;
         (i->second).reset();
