@@ -132,7 +132,7 @@ int ChaosDatasetIO::pushDataset(int type)
 {
     int err = 0;
     //ad producer key
-    CDataWrapper *new_dataset = datasets[type].get();
+    ChaosDataSet new_dataset = datasets[type];
     uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
     uint64_t tsh = chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
 
@@ -178,7 +178,7 @@ int ChaosDatasetIO::pushDataset(int type)
     //    DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
     // DirectIOChannelsInfo    *next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
     // serialization->disposeOnDelete = !next_client;
-    ioLiveDataDriver->storeData(uid + chaos::datasetTypeToPostfix(type), chaos::common::data::CDWShrdPtr(new_dataset), (chaos::DataServiceNodeDefinitionType::DSStorageType)storageType);
+    ioLiveDataDriver->storeData(uid + chaos::datasetTypeToPostfix(type),new_dataset, (chaos::DataServiceNodeDefinitionType::DSStorageType)storageType);
 
     return err;
 }
