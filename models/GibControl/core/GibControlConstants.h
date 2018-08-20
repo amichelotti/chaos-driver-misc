@@ -30,9 +30,7 @@ namespace driver {
 		const char* const CMD_GIB_SETCHANNELVOLTAGE_ALIAS = "setChannelVoltage";
 		const char* const CMD_GIB_SETCHANNELVOLTAGE_CHANNEL = "channel";
 		const char* const CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE = "Voltage";
-		const char* const CMD_GIB_SETTHRVOLTAGE_ALIAS = "setThrVoltage";
-		const char* const CMD_GIB_SETTHRVOLTAGE_CHANNEL = "channel";
-		const char* const CMD_GIB_SETTHRVOLTAGE_THRVOLTAGE = "thrVoltage";
+		const char* const CMD_GIB_DEFAULT_ALIAS = "Default";
 		#define DEFAULT_COMMAND_TIMEOUT_MS   10000
 	}
 }

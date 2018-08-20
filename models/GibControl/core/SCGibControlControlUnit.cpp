@@ -22,7 +22,7 @@ limitations under the License.
 #include <common/debug/core/debug.h>
 #include "CmdGIBsetPulse.h"
 #include "CmdGIBsetChannelVoltage.h"
-#include "CmdGIBsetThrVoltage.h"
+#include "CmdGIBDefault.h"
 using namespace chaos;
 using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
@@ -53,19 +53,11 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::gibcontrol::SCGibControlContro
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset() throw(chaos::CException) {
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetPulse));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetChannelVoltage));
-	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetThrVoltage));
+	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBDefault),true);
 	addAttributeToDataSet("gastoneLV",
 							"Low Voltage status",
 							DataType::TYPE_INT32,
 							DataType::Output);
-	addAttributeToDataSet("HV_FE1",
-							"High Voltage Front End 1",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("HV_FE2",
-							"High Voltage Front End 1",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
 	addAttributeToDataSet("pulsing",
 							"pulse status",
 							DataType::TYPE_BOOLEAN,
@@ -94,9 +86,17 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"Driver timeout in milliseconds",
 							DataType::TYPE_INT32,
 							DataType::Input);
-	addAttributeToDataSet("dev_state",
-							"Bit field device state",
-							DataType::TYPE_INT64,
+	addAttributeToDataSet("HVMain",
+							"HV Main Voltage",
+							DataType::TYPE_DOUBLE,
+							DataType::Output);
+	addAttributeToDataSet("Supply5V",
+							"Readout +5V Supply",
+							DataType::TYPE_DOUBLE,
+							DataType::Output);
+	addAttributeToDataSet("SupplyN5V",
+							"Readout -5V Supply",
+							DataType::TYPE_DOUBLE,
 							DataType::Output);
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
@@ -130,39 +130,38 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos:
 	return false;
 }
 bool ::driver::gibcontrol::SCGibControlControlUnit::waitOnCommandID(uint64_t cmd_id) {
-ChaosUniquePtr<chaos::common::batch_command::CommandState> cmd_state;
-  do {
-    cmd_state = getStateForCommandID(cmd_id);
-    if (!cmd_state.get()) break;
+ ChaosUniquePtr<chaos::common::batch_command::CommandState> cmd_state;
+do { 
+cmd_state = getStateForCommandID(cmd_id);
+if (!cmd_state.get()) break;
+switch (cmd_state->last_event) {
+case BatchCommandEventType::EVT_QUEUED:
+SCCUAPP << cmd_id << " -> QUEUED";
+break;
+case BatchCommandEventType::EVT_RUNNING:
+SCCUAPP << cmd_id << " -> RUNNING"; 
+break;
+case BatchCommandEventType::EVT_WAITING:
+SCCUAPP << cmd_id << " -> WAITING";
+break;
+case BatchCommandEventType::EVT_PAUSED:
+SCCUAPP << cmd_id << " -> PAUSED";
+break;
+case BatchCommandEventType::EVT_KILLED:
+SCCUAPP << cmd_id << " -> KILLED";
+break;
+case BatchCommandEventType::EVT_COMPLETED:
+SCCUAPP << cmd_id << " -> COMPLETED";
+break;
+case BatchCommandEventType::EVT_FAULT:
+    SCCUAPP << cmd_id << " -> FAULT";
+break;
+}
+usleep(500000);
+} while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&
+        cmd_state->last_event != BatchCommandEventType::EVT_FAULT &&
+    cmd_state->last_event != BatchCommandEventType::EVT_KILLED);
+return (cmd_state.get() &&
+cmd_state->last_event == BatchCommandEventType::EVT_COMPLETED);
 
-    switch (cmd_state->last_event) {
-      case BatchCommandEventType::EVT_QUEUED:
-        SCCUAPP << cmd_id << " -> QUEUED";
-        break;
-      case BatchCommandEventType::EVT_RUNNING:
-        SCCUAPP << cmd_id << " -> RUNNING";
-        break;
-      case BatchCommandEventType::EVT_WAITING:
-        SCCUAPP << cmd_id << " -> WAITING";
-        break;
-      case BatchCommandEventType::EVT_PAUSED:
-        SCCUAPP << cmd_id << " -> PAUSED";
-        break;
-      case BatchCommandEventType::EVT_KILLED:
-        SCCUAPP << cmd_id << " -> KILLED";
-        break;
-      case BatchCommandEventType::EVT_COMPLETED:
-        SCCUAPP << cmd_id << " -> COMPLETED";
-        break;
-      case BatchCommandEventType::EVT_FAULT:
-        SCCUAPP << cmd_id << " -> FALUT";
-        break;
-    }
-    //wait some times
-    usleep(500000);
-  } while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&
-      cmd_state->last_event != BatchCommandEventType::EVT_FAULT &&
-      cmd_state->last_event != BatchCommandEventType::EVT_KILLED);
-  return (cmd_state.get() &&
-      cmd_state->last_event == BatchCommandEventType::EVT_COMPLETED);
 }

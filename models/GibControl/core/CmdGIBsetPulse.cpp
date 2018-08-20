@@ -30,7 +30,7 @@ namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetPulse,CMD_GIB_SETPULSE_ALIAS,
 			"pulse state (0:off, 1:on)",
-			"fca2da88-8bdd-4f09-b020-11ec9c3195cd")
+			"62344adc-89a9-4506-be63-a669b3dc48fc")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_CHANNEL,"channel to pulse",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_AMPLITUDE,"amplitude of pulse (V)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_WIDTH,"pulse width (ns)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
@@ -45,13 +45,13 @@ uint8_t own::CmdGIBsetPulse::implementedHandler(){
 // empty set handler
 void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
+	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
 void own::CmdGIBsetPulse::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdGIBsetPulse::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
 }
 // empty timeout handler
 bool own::CmdGIBsetPulse::timeoutHandler() {

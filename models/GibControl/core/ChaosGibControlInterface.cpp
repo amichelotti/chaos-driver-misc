@@ -53,12 +53,10 @@ int ChaosGibControlInterface::init(void *d){return 0;};
 int ChaosGibControlInterface::deinit() {
 	WRITE_OP_TIM(OP_DEINIT,0);
 };
+uint64_t ChaosGibControlInterface::getFeatures() {return 0;};
 int ChaosGibControlInterface::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
 	WRITE_OP_INT32_T_INT32_T_INT32_T_INT32_T_TIM(OP_SETPULSE,channel,amplitude,width,state,0);
 } 
 int ChaosGibControlInterface::setChannelVoltage(int32_t channel,double Voltage) {
 	WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETCHANNELVOLTAGE,channel,Voltage,0);
-} 
-int ChaosGibControlInterface::setThrVoltage(int32_t channel,double thrVoltage) {
-	WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETTHRVOLTAGE,channel,thrVoltage,0);
 } 

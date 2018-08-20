@@ -1,5 +1,5 @@
 /*
-CmdGIBsetThrVoltage.h
+CmdGIBDefault.h
 !CHAOS
 Created by CUGenerator
 
@@ -16,15 +16,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef __GibControl__CmdGIBsetThrVoltage_h__
-#define __GibControl__CmdGIBsetThrVoltage_h__
+#ifndef __GibControl__CmdGIBDefault_h__
+#define __GibControl__CmdGIBDefault_h__
 #include "AbstractGibControlCommand.h"
 #include <bitset>
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
 namespace driver {
 	namespace gibcontrol {
-		DEFINE_BATCH_COMMAND_CLASS(CmdGIBsetThrVoltage,AbstractGibControlCommand) {
+		DEFINE_BATCH_COMMAND_CLASS(CmdGIBDefault,AbstractGibControlCommand) {
 			//implemented handler
 			uint8_t implementedHandler();
 			//initial set handler
