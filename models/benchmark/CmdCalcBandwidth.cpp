@@ -26,7 +26,7 @@ BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(,CmdCalcBandwidth,CmdCalcBandwidth_CMD_ALIA
 
     BATCH_COMMAND_ADD_INT32_PARAM(CmdCalcBandwidth_REPEAT_PARAM_KEY, "repetitions", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 
-    BATCH_COMMAND_ADD_INT64_PARAM(CmdCalcBandwidth_REPEAT_PARAM_KEY, "timing tag", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
+    BATCH_COMMAND_ADD_INT64_PARAM(CmdCalcBandwidth_TSTAG_KEY, "timing tag", chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
@@ -71,7 +71,7 @@ void CmdCalcBandwidth::setHandler(CDataWrapper *data) {
 
   boost::posix_time::ptime time = boost::posix_time::microsec_clock::local_time();
   hdr->tprof.cmd_arrival_time_us = time.time_of_day().total_microseconds();
-  ts_tag = data->getUInt64Value("ts_tag");
+  ts_tag = data->getUInt64Value(CmdCalcBandwidth_TSTAG_KEY);
   size = data->getUInt32Value(CmdCalcBandwidth_BYTES_PARAM_KEY);
   //enalrge cache
   getAttributeCache()->setOutputAttributeNewSize("buffer", size);

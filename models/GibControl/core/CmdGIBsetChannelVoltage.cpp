@@ -30,7 +30,11 @@ namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
 			"the voltage setPoint",
+<<<<<<< HEAD
 			"9bd58949-8857-46b5-81ec-a4f0f2df3376")
+=======
+			"466a8021-d2d8-418d-805d-a0962c3d2d20")
+>>>>>>> 343de0cb8b58c57dcb21771470d9b86892d59627
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL,"the channel to set",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_DOUBLE_PARAM(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE,"the voltage setPoint",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
