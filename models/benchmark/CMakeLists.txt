@@ -28,6 +28,7 @@ INSTALL_TARGETS(/bin MessClient)
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
 FILE(GLOB files "*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/models/benchmark)
-
+FILE(GLOB files "conf/*.gnuplot")
+INSTALL(FILES ${files} DESTINATION etc/)
 
 
