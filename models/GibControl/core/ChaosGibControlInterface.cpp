@@ -49,6 +49,12 @@ idata.int32_t1=VAR_int32_t1;\
 idata.double1=VAR_double1;\
 return ret.result;
 
+#define WRITE_OP_INT32_T_TIM(op,VAR_int32_t1,timeout)\
+PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
+accessor->send(&message);\
+idata.int32_t1=VAR_int32_t1;\
+return ret.result;
+
 int ChaosGibControlInterface::init(void *d){return 0;};
 int ChaosGibControlInterface::deinit() {
 	WRITE_OP_TIM(OP_DEINIT,0);
@@ -59,4 +65,7 @@ int ChaosGibControlInterface::setPulse(int32_t channel,int32_t amplitude,int32_t
 } 
 int ChaosGibControlInterface::setChannelVoltage(int32_t channel,double Voltage) {
 	WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETCHANNELVOLTAGE,channel,Voltage,0);
+} 
+int ChaosGibControlInterface::PowerOn(int32_t on_state) {
+	WRITE_OP_INT32_T_TIM(OP_POWERON,on_state,0);
 } 

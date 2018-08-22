@@ -34,6 +34,7 @@ namespace chaos {
 				OP_DEINIT, // deinit low level driver
 				OP_SETPULSE,
 				OP_SETCHANNELVOLTAGE,
+				OP_POWERON,
 				OP_GET_FEATURE
 			} ChaosGibControlOpcode;
 			typedef struct {
@@ -60,6 +61,7 @@ namespace chaos {
 				uint64_t getFeatures();
 				int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
 				int setChannelVoltage(int32_t channel,double Voltage);
+				int PowerOn(int32_t on_state);
 			};
 		}
 	}//driver

@@ -1,5 +1,5 @@
 /*
-CmdGIBsetChannelVoltage.cpp
+CmdGIBPowerOn.cpp
 !CHAOS
 Created by CUGenerator
 
@@ -16,45 +16,44 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "CmdGIBsetChannelVoltage.h"
+#include "CmdGIBPowerOn.h"
 
 #include <cmath>
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
-#define SCLAPP_ INFO_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
-#define SCLDBG_ DBG_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
-#define SCLERR_ ERR_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
+#define SCLAPP_ INFO_LOG(CmdGIBPowerOn) << "[" << getDeviceID() << "] "
+#define SCLDBG_ DBG_LOG(CmdGIBPowerOn) << "[" << getDeviceID() << "] "
+#define SCLERR_ ERR_LOG(CmdGIBPowerOn) << "[" << getDeviceID() << "] "
 namespace own = driver::gibcontrol;
 namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
-BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
-			"set the voltage to a Channel",
-			"99056071-f4e5-4065-84f5-43b8db3d6d0e")
-BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL,"the channel to set",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
-BATCH_COMMAND_ADD_DOUBLE_PARAM(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE,"the voltage setPoint",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
+BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBPowerOn,CMD_GIB_POWERON_ALIAS,
+			"Switch on off the GIB main power",
+			"c1493e98-8528-4784-93f1-869d6e76137d")
+BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_POWERON_ON_STATE,"0= OFF , 1 = ON",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
 // return the implemented handler
-uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
+uint8_t own::CmdGIBPowerOn::implementedHandler(){
 	return      AbstractGibControlCommand::implementedHandler()|chaos_batch::HandlerType::HT_Acquisition;
 }
 // empty set handler
-void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
+void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
-	SCLAPP_ << "Set Handler setChannelVoltage "; 
+	SCLAPP_ << "Set Handler PowerOn "; 
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
-void own::CmdGIBsetChannelVoltage::acquireHandler() {
-	SCLAPP_ << "Acquire Handler setChannelVoltage "; 
+void own::CmdGIBPowerOn::acquireHandler() {
+	SCLAPP_ << "Acquire Handler PowerOn "; 
 }
 // empty correlation handler
-void own::CmdGIBsetChannelVoltage::ccHandler() {
+void own::CmdGIBPowerOn::ccHandler() {
 }
 // empty timeout handler
-bool own::CmdGIBsetChannelVoltage::timeoutHandler() {
+bool own::CmdGIBPowerOn::timeoutHandler() {
 	return false;
 }
