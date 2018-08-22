@@ -60,6 +60,10 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			out->result=devicedriver->setChannelVoltage(in->int32_t1,in->double1);
 			ACDBG << "Sent to driver command setChannelVoltage result is" << out->result;
 			} break;
+		case OP_POWERON: {
+			out->result=devicedriver->PowerOn(in->int32_t1);
+			ACDBG << "Sent to driver command PowerOn result is" << out->result;
+			} break;
 	}
 	return result;
 }

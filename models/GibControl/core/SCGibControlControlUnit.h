@@ -49,6 +49,7 @@ namespace driver {
 			/*Base Destructor*/
 			~SCGibControlControlUnit();
 			/*handlers*/
+			bool PowerOn(const std::string &name,int32_t,uint32_t size);
 		};
 	}
 }
