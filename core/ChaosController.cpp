@@ -898,7 +898,7 @@ void ChaosController::parseClassZone(ChaosStringVector&v) {
     what = p.getStringValue("what");\
     }\
     if (p.hasKey("value")) {\
-    json_value=std::move(p.getCSDataValue("value"));\
+    json_value=p.getCSDataValue("value");\
     if(json_value.get()==NULL){\
     serr << cmd <<" bad json format" << args;\
     bundle_state.append_error(serr.str());\
