@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION(driver::gibcontrol::,CmdGIBDefault,
 			"Default Command",
-			"a13f8850-8ee9-464a-ad0d-c0d2947bfa2c")
+			"9f8af41b-7fd8-455b-b55b-38b848f6a3ac")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 

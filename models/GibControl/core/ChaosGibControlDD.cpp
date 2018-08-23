@@ -64,6 +64,10 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			out->result=devicedriver->PowerOn(in->int32_t1);
 			ACDBG << "Sent to driver command PowerOn result is" << out->result;
 			} break;
+		case OP_GETSTATE: {
+			out->result=devicedriver->getState(out->int32_tP1,out->stringE1);
+			ACDBG << "Sent to driver command getState result is" << out->result;
+			} break;
 	}
 	return result;
 }
