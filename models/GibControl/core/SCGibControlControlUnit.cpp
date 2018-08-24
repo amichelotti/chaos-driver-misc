@@ -110,7 +110,6 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() 
 }
 // Abstract method for the initialization of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitInit() throw(CException) {
-	/* //Uncomment when you want to connect the driver
 	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = getAccessoInstanceByIndex(0);
 	if (gibcontrol_accessor == NULL ) {
 		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
@@ -119,7 +118,6 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitInit() throw(CException)
 	if (gibcontrol_drv == NULL) {
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
-	*/ //Uncomment when you want to connect the driver
 }
 // Abstract method for the start of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStart() throw(CException) {

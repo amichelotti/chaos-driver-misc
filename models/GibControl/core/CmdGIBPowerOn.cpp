@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBPowerOn,CMD_GIB_POWERON_ALIAS,
 			"Switch on off the GIB main power",
-			"c1493e98-8528-4784-93f1-869d6e76137d")
+			"ed6080d1-95ad-42da-90cb-a665ccffbe40")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_POWERON_ON_STATE,"0= OFF , 1 = ON",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
@@ -52,6 +52,7 @@ void own::CmdGIBPowerOn::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdGIBPowerOn::ccHandler() {
+	BC_END_RUNNING_PROPERTY;
 }
 // empty timeout handler
 bool own::CmdGIBPowerOn::timeoutHandler() {

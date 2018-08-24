@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetPulse,CMD_GIB_SETPULSE_ALIAS,
 			"set Pulse on Channel",
-			"522aafcf-4828-4d1c-8ed4-d3130ae7ee05")
+			"8b8abf01-8748-4741-8853-9d7ea424c6ec")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_CHANNEL,"channel to pulse",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_AMPLITUDE,"amplitude of pulse (V)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_WIDTH,"pulse width (ns)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
@@ -55,6 +55,7 @@ void own::CmdGIBsetPulse::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdGIBsetPulse::ccHandler() {
+	BC_END_RUNNING_PROPERTY;
 }
 // empty timeout handler
 bool own::CmdGIBsetPulse::timeoutHandler() {

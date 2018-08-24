@@ -35,6 +35,7 @@ namespace chaos {
 				OP_SETPULSE,
 				OP_SETCHANNELVOLTAGE,
 				OP_POWERON,
+				OP_GETSTATE,
 				OP_GET_FEATURE
 			} ChaosGibControlOpcode;
 			typedef struct {
@@ -48,6 +49,8 @@ namespace chaos {
 			typedef struct {
 				int64_t int64_t1;
 				int32_t result;
+				int32_t* int32_tP1;
+				std::string  stringE1;
 			} gibcontrol_oparams_t;
 			//wrapper interface
 			class ChaosGibControlInterface:public ::common::gibcontrol::AbstractGibControl {
@@ -62,6 +65,7 @@ namespace chaos {
 				int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
 				int setChannelVoltage(int32_t channel,double Voltage);
 				int PowerOn(int32_t on_state);
+				int getState(int32_t* state,std::string& desc);
 			};
 		}
 	}//driver
