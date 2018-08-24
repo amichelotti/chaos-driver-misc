@@ -227,7 +227,7 @@ private:
     int updateState();
     uint64_t checkHB();
     boost::shared_ptr<chaos::common::data::CDataWrapper> fetch(int channel);
-    const std::string& fetchJson(int channel);
+    const std::string fetchJson(int channel);
     /*
      * perform a history query from start to end, return a vector of result
      * @param[in] start epoch timestamp in ms or string offset start search
