@@ -1140,7 +1140,7 @@ uint64_t ChaosController::offsetToTimestamp(const std::string &off)
     return (diff.ticks() / bt::time_duration::rep_type::ticks_per_second) * 1000;
 }
 
-int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper>> &res, int page)
+int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page)
 {
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
@@ -1218,7 +1218,7 @@ bool ChaosController::queryHasNext(int32_t uid)
     return false;
 }
 
-int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CDataWrapper>> &res)
+int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CDataWrapper> >  &res)
 {
     chaos::common::io::QueryCursor *query_cursor = NULL;
     int cnt, err;
