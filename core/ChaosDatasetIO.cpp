@@ -6,6 +6,8 @@
 #include <chaos_metadata_service_client/api_proxy/unit_server/NewUS.h>
 #include <chaos_metadata_service_client/api_proxy/unit_server/ManageCUType.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/SetInstanceDescription.h>
+#include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
+
 #include <chaos/common/network/NetworkBroker.h>
 
 #define DPD_LOG_HEAD "[ChaosDatasetIO] - "
@@ -93,6 +95,10 @@ int ChaosDatasetIO::setTimeo(uint64_t t)
 
 ChaosDatasetIO::~ChaosDatasetIO()
 {
+
+    {
+        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
+    }
     deinit();
 }
 
