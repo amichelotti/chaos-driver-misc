@@ -2787,13 +2787,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 // perform a query without cursor.
                 uint64_t seqid = p.getInt64Value("seq");
                 uint64_t runid = 0;
-                if (p.hasKey(("runid")))
-                {
+                std::set<std::string> tags;
+                if (p.hasKey("runid")){
                     runid = p.getInt64Value("runid");
+                }
+                if (p.hasKey("tags")){
+                    if(p.isVector("tags")){
+                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("tags");
+                        for(int cnt=0;cnt<dw->size();cnt++){
+                            tags.insert(dw->getStringElementAtIndex(cnt));
+                        }
+                    } else if(p.isStringValue("tags")){
+                        tags.insert(p.getStringValue("tags"));
+                    }
                 }
                 DBGET << "START SEQ QUERY :" << std::dec << start_ts << " end:" << end_ts << "seq id " << seqid << " run id:" << runid << " page:" << page;
 
-                controller->executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, &query_cursor, page);
+                controller->executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, page);
                 if (query_cursor)
                 {
                     cnt = 0;
