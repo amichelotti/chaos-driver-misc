@@ -768,7 +768,8 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
 const std::string ChaosController::fetchJson(int channel)
 {
     boost::mutex::scoped_lock(iomutex);
-    return cachedJsonChannels[channel];
+    std::string ret=cachedJsonChannels[channel];
+    return ret;
 }
 
 boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int channel)
