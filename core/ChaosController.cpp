@@ -533,12 +533,10 @@ void ChaosController::initializeClient()
     {
         throw chaos::CException(-1, "No LIVE Channel created", "ChaosController()");
     }
-    CDataWrapper *tmp_data_handler = NULL;
+    CDWUniquePtr best_available_da_ptr;
 
-    if (!mdsChannel->getDataDriverBestConfiguration(&tmp_data_handler, timeo))
-    {
-        ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr(tmp_data_handler);
-        live_driver->updateConfiguration(best_available_da_ptr.get());
+    if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)){
+        live_driver->updateConfiguration(best_available_da_ptr);
     }
 }
 void ChaosController::deinitializeClient()
@@ -1051,7 +1049,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 #define CHECK_PARENT                          \
     if (parent.empty())                       \
     {                                         \
-        RETURN_ERROR("must specify 'parent'") \
+        RETURN_ERROR("must specify 'parent'") \CALL_CHAOS_API
     };
 
 #define CALL_CHAOS_API(api_name, time_out, cdp)                                                                         \
@@ -1557,8 +1555,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             {
                 if (json_value.get() != NULL)
                 {
-                    CDataWrapper *v = json_value.release();
-                    CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst, MDS_TIMEOUT, v);
+                    CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst, MDS_TIMEOUT, json_value);
 
                     json_buf = "{}";
                     res << json_buf;
@@ -2370,17 +2367,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (what == "save")
             {
                 CHECK_VALUE_PARAM
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
             else if (what == "del")
             {
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
@@ -2391,9 +2386,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     json_value->addBoolValue("create", true);
                 }
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
@@ -2404,18 +2398,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     json_value->addBoolValue("create", false);
                 }
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
             else if (what == "load")
             {
                 CHECK_VALUE_PARAM;
-                CDataWrapper *v = json_value.release();
-
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript, MDS_TIMEOUT, json_value);
                 chaos::common::data::CDataWrapper *r = apires->getResult();
                 if (r)
                 {
@@ -2434,9 +2425,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             else if (what == "searchInstance")
             {
                 CHECK_VALUE_PARAM;
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchInstancesForScript, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchInstancesForScript, MDS_TIMEOUT, json_value);
                 chaos::common::data::CDataWrapper *r = apires->getResult();
                 if (r)
                 {
@@ -2454,17 +2444,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             else if (what == "bind")
             {
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateBindType, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
             else if (what == "update")
             {
-                CDataWrapper *v = json_value.release();
 
-                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateScriptOnNode, MDS_TIMEOUT, v);
+                CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::UpdateScriptOnNode, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
                 return CHAOS_DEV_OK;
             }
@@ -2645,15 +2633,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         {
             bundle_state.append_log("desc device:" + path);
 
-            CDataWrapper *out = 0;
-            if (mdsChannel->getFullNodeDescription(path, &out, MDS_TIMEOUT) == 0)
+            CDWUniquePtr out ;
+            if (mdsChannel->getFullNodeDescription(path, out, MDS_TIMEOUT) == 0)
             {
                 json_buf = "{}";
-                if (out)
-                {
+                if (out.get()){
                     json_buf = out->getCompliantJSONString();
                     CALC_EXEC_TIME;
-                    delete out;
                 }
 
                 return CHAOS_DEV_OK;
@@ -2664,10 +2650,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 //				init(path, timeo);
                 //json_buf = bundle_state.getData()->getCompliantJSONString();
                 CALC_EXEC_TIME;
-                if (out)
-                {
-                    delete out;
-                }
+                
                 //chaos::common::data::CDataWrapper* data = fetch(-1);
                 //json_buf = data->getCompliantJSONString();
                 json_buf = fetchJson(-1);
