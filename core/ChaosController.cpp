@@ -707,7 +707,6 @@ ChaosController::~ChaosController()
      db->disconnect();
      }
      */
-    boost::mutex::scoped_lock(iomutex);
 
     if (mdsChannel)
     {
