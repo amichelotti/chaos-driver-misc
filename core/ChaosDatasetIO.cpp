@@ -96,9 +96,7 @@ int ChaosDatasetIO::setTimeo(uint64_t t)
 ChaosDatasetIO::~ChaosDatasetIO()
 {
 
-    {
-        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
-    }
+  
     deinit();
 }
 
@@ -493,6 +491,10 @@ void ChaosDatasetIO::deinit()
         DEBUG_CODE(DPD_LDBG << "Already deinitialized");
         return;
     }
+    {
+        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
+    }
+    sleep(2);
     HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT,
