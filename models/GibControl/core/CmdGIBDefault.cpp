@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION(driver::gibcontrol::,CmdGIBDefault,
 			"Default Command",
-			"012b1826-4f67-46c5-8c92-e0df9f4e3313")
+			"ffd0de27-8339-448a-90c4-dc1fdfeb0ea9")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
@@ -47,7 +47,15 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdGIBDefault::acquireHandler() {
-	SCLAPP_ << "Acquire Handler Default "; 
+	int state;
+	std::string descr;
+	gibcontrol_drv->getState(&state,descr);
+	*o_status_id=state;
+	o_status=strncpy(o_status,descr.c_str(),256);
+	
+	SCLAPP_ << "o_status: " << o_status;
+	SCLAPP_ << "o_status_id: " << *o_status_id;
+	SCLAPP_ << "o_alarms: " << *o_alarms;
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler

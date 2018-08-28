@@ -22,9 +22,9 @@ limitations under the License.
 #include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>
 // including interface
 #include "driver/misc/models/GibControl/core/ChaosGibControlInterface.h"
-#define ACLAPP	LAPP_ << "[GibControlDD] "
-#define ACDBG		LDBG_ << "[GibControlDD] "
-#define ACERR		LERR_ << "[GibControlDD] "
+#define ACLAPP	LAPP_ << "[ChaosGibControlDD] "
+#define ACDBG		LDBG_ << "[ChaosGibControlDD] "
+#define ACERR		LERR_ << "[ChaosGibControlDD] "
 using namespace chaos::driver::gibcontrol;
 //default constructor definition
 DEFAULT_CU_DRIVER_PLUGIN_CONSTRUCTOR_WITH_NS(chaos::driver::gibcontrol, ChaosGibControlDD) {
@@ -54,19 +54,19 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			}break;
 		case OP_SETPULSE: {
 			out->result=devicedriver->setPulse(in->int32_t1,in->int32_t2,in->int32_t3,in->int32_t4);
-			ACDBG << "Sent to driver command setPulse result is" << out->result;
+			ACDBG << "Sent to driver command setPulse result is " << out->result;
 			} break;
 		case OP_SETCHANNELVOLTAGE: {
 			out->result=devicedriver->setChannelVoltage(in->int32_t1,in->double1);
-			ACDBG << "Sent to driver command setChannelVoltage result is" << out->result;
+			ACDBG << "Sent to driver command setChannelVoltage result is " << out->result;
 			} break;
 		case OP_POWERON: {
 			out->result=devicedriver->PowerOn(in->int32_t1);
-			ACDBG << "Sent to driver command PowerOn result is" << out->result;
+			ACDBG << "Sent to driver command PowerOn result is " << out->result;
 			} break;
 		case OP_GETSTATE: {
-			out->result=devicedriver->getState(out->int32_tP1,out->stringE1);
-			ACDBG << "Sent to driver command getState result is" << out->result;
+			out->result=devicedriver->getState(&out->int32_tP1,out->stringE1);
+			ACDBG << "Sent to driver command getState result is " << out->result;
 			} break;
 	}
 	return result;

@@ -49,7 +49,7 @@ namespace chaos {
 			typedef struct {
 				int64_t int64_t1;
 				int32_t result;
-				int32_t* int32_tP1;
+				int32_t  int32_tP1;
 				std::string  stringE1;
 			} gibcontrol_oparams_t;
 			//wrapper interface

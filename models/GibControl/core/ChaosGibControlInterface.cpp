@@ -58,7 +58,7 @@ return ret.result;
 #define READ_OP_INT32_T_STRING_TIM(op,VAR_int32_tP1,VAR_stringE1,timeout)\
 PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
 accessor->send(&message);\
-VAR_int32_tP1=ret.int32_tP1;\
+*VAR_int32_tP1=ret.int32_tP1;\
 VAR_stringE1=ret.stringE1;\
 return ret.result;
 
