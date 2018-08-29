@@ -96,9 +96,7 @@ int ChaosDatasetIO::setTimeo(uint64_t t)
 ChaosDatasetIO::~ChaosDatasetIO()
 {
 
-    {
-        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
-    }
+  
     deinit();
 }
 
@@ -221,9 +219,10 @@ ChaosDataSet ChaosDatasetIO::getLiveDataset(int type)
     return tmp;
 }
 
-chaos::common::data::CDataWrapper ChaosDatasetIO::wrapper2dataset(chaos::common::data::CDataWrapper &dataset_pack, int dir)
+chaos::common::data::CDWUniquePtr ChaosDatasetIO::wrapper2dataset(chaos::common::data::CDataWrapper &dataset_pack, int dir)
 {
-    CDataWrapper cu_dataset, mds_registration_pack;
+    chaos::common::data::CDWUniquePtr mds_registration_pack(new CDataWrapper);
+    CDataWrapper cu_dataset;
     ChaosStringVector all_template_key;
     dataset_pack.getAllKey(all_template_key);
 
@@ -290,8 +289,8 @@ chaos::common::data::CDataWrapper ChaosDatasetIO::wrapper2dataset(chaos::common:
     cu_dataset.finalizeArrayForKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
     cu_dataset.addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID, (int64_t)0);
 
-    mds_registration_pack.addCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, cu_dataset);
-    mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+    mds_registration_pack->addCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, cu_dataset);
+    mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
     return mds_registration_pack;
 }
 void ChaosDatasetIO::createMDSEntry()
@@ -353,30 +352,30 @@ int ChaosDatasetIO::registerDataset()
     for (i = datasets.begin(); i != datasets.end(); i++)
     {
 
-        CDataWrapper mds_registration_pack = wrapper2dataset(*((i->second).get()), i->first);
-        DEBUG_CODE(DPD_LDBG << mds_registration_pack.getJSONString());
+        CDWUniquePtr mds_registration_pack=wrapper2dataset(*((i->second).get()), i->first);
+        DEBUG_CODE(DPD_LDBG << mds_registration_pack->getJSONString());
 
         int ret;
 
-        mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, uid);
-        mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
-        mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
-        mds_registration_pack.addStringValue("mds_control_key", "none");
-        mds_registration_pack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-        DPD_LDBG << "registering " << i->first << " registration pack:" << mds_registration_pack.getCompliantJSONString();
+        mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, uid);
+        mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
+        mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
+        mds_registration_pack->addStringValue("mds_control_key", "none");
+        mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+        DPD_LDBG << "registering " << i->first << " registration pack:" << mds_registration_pack->getCompliantJSONString();
 
-        if ((ret = mds_message_channel->sendNodeRegistration(mds_registration_pack, true, 10000)) == 0)
+        if ((ret = mds_message_channel->sendNodeRegistration(MOVE(mds_registration_pack), true, 10000)) == 0)
         {
-            CDataWrapper mdsPack;
-            mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, uid);
-            mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-            ret = mds_message_channel->sendNodeLoadCompletion(mdsPack, true, 10000);
+            CDWUniquePtr mdsPack(new CDataWrapper());
+            mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, uid);
+            mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+            ret = mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
 
             chaos::common::async_central::AsyncCentralManager::getInstance()->addTimer(this, chaos::common::constants::CUTimersTimeoutinMSec, chaos::common::constants::CUTimersTimeoutinMSec);
         }
         else
         {
-            DPD_LERR << " cannot register dataset " << i->first << " registration pack:" << mds_registration_pack.getCompliantJSONString();
+            DPD_LERR << " cannot register dataset " << i->first << " registration pack:" << mds_registration_pack->getCompliantJSONString();
             return -1;
         }
     }
@@ -493,6 +492,10 @@ void ChaosDatasetIO::deinit()
         DEBUG_CODE(DPD_LDBG << "Already deinitialized");
         return;
     }
+    {
+        EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
+    }
+    sleep(2);
     HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT,
