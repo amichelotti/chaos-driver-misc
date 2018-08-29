@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION(driver::gibcontrol::,CmdGIBDefault,
 			"Default Command",
-			"ffd0de27-8339-448a-90c4-dc1fdfeb0ea9")
+			"041d71fe-4f08-4e74-a364-94c873ca2791")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
@@ -42,20 +42,21 @@ uint8_t own::CmdGIBDefault::implementedHandler(){
 // empty set handler
 void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
+	setBusyFlag(false);
 	SCLAPP_ << "Set Handler Default "; 
+
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
 void own::CmdGIBDefault::acquireHandler() {
-	int state;
-	std::string descr;
-	gibcontrol_drv->getState(&state,descr);
-	*o_status_id=state;
-	o_status=strncpy(o_status,descr.c_str(),256);
-	
-	SCLAPP_ << "o_status: " << o_status;
-	SCLAPP_ << "o_status_id: " << *o_status_id;
-	SCLAPP_ << "o_alarms: " << *o_alarms;
+ 	int state;
+        std::string descr;
+        gibcontrol_drv->getState(&state,descr);
+        *o_status_id=state;
+        o_status=strncpy(o_status,descr.c_str(),256);
+	SCLDBG_ << "o_status: " << o_status;
+	SCLDBG_ << "o_status_id: " << *o_status_id;
+	SCLDBG_ << "o_alarms: " << *o_alarms;
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler

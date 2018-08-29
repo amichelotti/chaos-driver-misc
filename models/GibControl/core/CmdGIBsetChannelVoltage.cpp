@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
 			"set the voltage to a Channel",
-			"efd1eaff-f3d3-4a77-a995-5b644a5fc85c")
+			"89b9a224-77cd-4e52-8099-fa64d50308cb")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL,"the channel to set",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_DOUBLE_PARAM(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE,"the voltage setPoint",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
@@ -45,15 +45,28 @@ uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
 void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setChannelVoltage "; 
+	int32_t tmp_channel=data->getInt32Value(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL);
+	double tmp_Voltage=data->getDoubleValue(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE);
+	int err=0;
+	if (err=gibcontrol_drv->setChannelVoltage(tmp_channel,tmp_Voltage) != 0)
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelVoltage not acknowledged");
+	}
+	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
 void own::CmdGIBsetChannelVoltage::acquireHandler() {
-	SCLAPP_ << "Acquire Handler setChannelVoltage "; 
+	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
 }
 // empty correlation handler
 void own::CmdGIBsetChannelVoltage::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	int i=rand() % 30;
+	SCLDBG_ << "cc Handler setChannelVoltage i= " << i; 
+	if (i > 24)
+	{
+		BC_END_RUNNING_PROPERTY;
+	}
 }
 // empty timeout handler
 bool own::CmdGIBsetChannelVoltage::timeoutHandler() {

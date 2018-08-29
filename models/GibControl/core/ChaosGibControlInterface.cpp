@@ -35,24 +35,24 @@ return ret.result;
 
 #define WRITE_OP_INT32_T_INT32_T_INT32_T_INT32_T_TIM(op,VAR_int32_t1,VAR_int32_t2,VAR_int32_t3,VAR_int32_t4,timeout)\
 PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
-accessor->send(&message);\
 idata.int32_t1=VAR_int32_t1;\
 idata.int32_t2=VAR_int32_t2;\
 idata.int32_t3=VAR_int32_t3;\
 idata.int32_t4=VAR_int32_t4;\
+accessor->send(&message);\
 return ret.result;
 
 #define WRITE_OP_INT32_T_DOUBLE_TIM(op,VAR_int32_t1,VAR_double1,timeout)\
 PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
-accessor->send(&message);\
 idata.int32_t1=VAR_int32_t1;\
 idata.double1=VAR_double1;\
+accessor->send(&message);\
 return ret.result;
 
 #define WRITE_OP_INT32_T_TIM(op,VAR_int32_t1,timeout)\
 PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
-accessor->send(&message);\
 idata.int32_t1=VAR_int32_t1;\
+accessor->send(&message);\
 return ret.result;
 
 #define READ_OP_INT32_T_STRING_TIM(op,VAR_int32_tP1,VAR_stringE1,timeout)\
