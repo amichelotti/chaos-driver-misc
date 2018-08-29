@@ -78,8 +78,8 @@ private:
 
 
     uint32_t queryuid;
-    boost::mutex iomutex;
-    boost::mutex ioctrl;
+    ChaosSharedMutex iomutex;
+    ChaosSharedMutex ioctrl;
 
     typedef struct {uint64_t qt;chaos::common::io::QueryCursor * qc;} qc_t;
     uint64_t offsetToTimestamp(const std::string&);
