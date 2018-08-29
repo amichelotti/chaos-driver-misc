@@ -33,7 +33,7 @@ namespace driver{
             typedef std::map<uint64_t,qc_t> query_cursor_map_t;
             query_cursor_map_t query_cursor_map;
             uint64_t query_index;
-            chaos::common::data::CDataWrapper wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         protected:
             
             uint64_t runid;

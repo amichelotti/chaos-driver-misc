@@ -536,7 +536,7 @@ void ChaosController::initializeClient()
     CDWUniquePtr best_available_da_ptr;
 
     if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)){
-        live_driver->updateConfiguration(best_available_da_ptr);
+        live_driver->updateConfiguration(best_available_da_ptr.get());
     }
 }
 void ChaosController::deinitializeClient()
@@ -1049,7 +1049,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 #define CHECK_PARENT                          \
     if (parent.empty())                       \
     {                                         \
-        RETURN_ERROR("must specify 'parent'") \CALL_CHAOS_API
+        RETURN_ERROR("must specify 'parent'") \
     };
 
 #define CALL_CHAOS_API(api_name, time_out, cdp)                                                                         \
@@ -1499,15 +1499,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = "[]";
                 if (name.size() > 0)
                 {
-                    CDataWrapper *out = 0;
-                    if (mdsChannel->getFullNodeDescription(name, &out, MDS_TIMEOUT) == 0)
+                    CDWUniquePtr out;
+                    if (mdsChannel->getFullNodeDescription(name, out, MDS_TIMEOUT) == 0)
                     {
                         json_buf = "{}";
-                        if (out)
+                        if (out.get())
                         {
                             json_buf = out->getCompliantJSONString();
                             CALC_EXEC_TIME;
-                            delete out;
                         }
                         return CHAOS_DEV_OK;
                     }
@@ -1759,10 +1758,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             else if (what == "get")
             {
-                CDataWrapper *res = 0;
-                if ((mdsChannel->getVariable(name, &res, MDS_TIMEOUT) == 0))
+                CDWUniquePtr res;
+                if ((mdsChannel->getVariable(name, res, MDS_TIMEOUT) == 0))
                 {
-                    if (res == NULL)
+                    if (res.get() == NULL)
                     {
                         json_buf = "{}";
                         DBGET << "no variable name:\"" << name << "\":";
@@ -1771,10 +1770,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         json_buf = res->getCompliantJSONString();
                         DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
-                        delete res;
                     }
                     return CHAOS_DEV_OK;
-                    ;
+                    
                 }
                 else
                 {
@@ -1782,10 +1780,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                     bundle_state.append_error(serr.str());
 
-                    if (res != 0)
-                    {
-                        delete res;
-                    }
+                    
                     json_buf = bundle_state.getData()->getCompliantJSONString();
                     return CHAOS_DEV_CMD;
                 }
