@@ -268,7 +268,7 @@ int ChaosController::init(std::string p, uint64_t timeo_)
 
     bundle_state.reset();
     bundle_state.status(state);
-    ChaosWriteLock(ioctrl);
+    ChaosWriteLock ll(ioctrl);
     DBGET << "init CU NAME:\"" << path << "\""
           << " timeo:" << timeo_;
     last_access = reqtime = tot_us = naccess = refresh = 0;
@@ -586,17 +586,22 @@ uint64_t ChaosController::sched(uint64_t ts)
         {
             continue;
         }
-        ChaosWriteLock(iomutex);
+        ChaosWriteLock l(iomutex);
 
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
-        cachedJsonChannels[cnt] = channels[cnt]->getCompliantJSONString();
-        all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+        if(channels[cnt].get()){
+            cachedJsonChannels[cnt] = channels[cnt]->getCompliantJSONString();
+            all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+        }
         if ((static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainHealth) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainSystem) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainDevAlarm) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainCUAlarm))
         {
-            common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+            if(channels[cnt].get()){
+
+                common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+            }
         }
 
         /*
@@ -617,7 +622,7 @@ uint64_t ChaosController::sched(uint64_t ts)
     }
     all.appendAllElement(*bundle_state.getData());
     {
-        ChaosWriteLock(iomutex);
+        ChaosWriteLock l(iomutex);
         cachedJsonChannels[-1] = all.getCompliantJSONString();
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
@@ -759,7 +764,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
 }
 const std::string ChaosController::fetchJson(int channel)
 {
-    ChaosReadLock(iomutex);
+    ChaosReadLock ll(iomutex);
     std::string ret=cachedJsonChannels[channel];
     return ret;
 }
