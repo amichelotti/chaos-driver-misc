@@ -557,7 +557,6 @@ uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
     {
-        ChaosReadLock(ioctrl);
         controller->fetchAllDataset();
     }
     ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX + 1];
