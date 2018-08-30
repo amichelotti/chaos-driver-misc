@@ -706,25 +706,17 @@ ChaosController::~ChaosController()
      db->disconnect();
      }
      */
+     ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
 
     if (mdsChannel)
     {
         NetworkBroker::getInstance()->disposeMessageChannel(mdsChannel);
         mdsChannel = NULL;
     }
-    if (controller)
-    {
-#ifdef __CHAOS_UI__
-        chaos::ui::HLDataApi::getInstance()->disposeDeviceControllerPtr(controller);
-#else
-        ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
-
-#endif
-    }
+   
+    
     controller = NULL;
     deinitializeClient();
-    ioctrl.unlock();
-    iomutex.unlock();
     DBGET<<"deleted ChaosController:"<<getPath();
 }
 
@@ -2031,38 +2023,38 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                         }
                                         if (prop.get() && prop->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                          //  chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))));
                                         }
                                         if (prop.get() && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                            //chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY, CDataVariant(static_cast<bool>(prop->getBoolValue(chaos::ControlUnitPropertyKey::INIT_RESTORE_APPLY))));
                                         }
                                         if (prop.get() && prop->hasKey(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                            //chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION, CDataVariant(static_cast<int32_t>(prop->getInt32Value(chaos::ControlUnitPropertyKey::INIT_RESTORE_OPTION))));
                                         }
                                         if (prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                            //chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME))));
                                         }
 
                                         if (prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                           // chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME, CDataVariant(static_cast<uint64_t>(prop->getInt64Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME))));
                                         }
                                         if (prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                            //chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE))));
                                         }
                                         if (prop.get() && prop->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING))
                                         {
-                                            chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+                                           // chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
                                             pg.addProperty(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING, CDataVariant(static_cast<uint32_t>(prop->getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_AGEING))));
                                         }
                                     }
