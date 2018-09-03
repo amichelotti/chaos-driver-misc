@@ -50,13 +50,33 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdGIBDefault::acquireHandler() {
  	int state;
+	int err=0;
         std::string descr;
-        gibcontrol_drv->getState(&state,descr);
-        *o_status_id=state;
-        o_status=strncpy(o_status,descr.c_str(),256);
+	double *channels=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVCHANNELS");
+        if (err=gibcontrol_drv->getState(&state,descr) != 0)
+	{
+		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
+	}
+       	*o_status_id=state;
+       	o_status=strncpy(o_status,descr.c_str(),256);
 	SCLDBG_ << "o_status: " << o_status;
 	SCLDBG_ << "o_status_id: " << *o_status_id;
 	SCLDBG_ << "o_alarms: " << *o_alarms;
+	std::vector<double> Voltaggi;
+	if (err=gibcontrol_drv->getVoltages(Voltaggi) != 0 )
+	{
+		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve channel voltages");
+	}
+	else
+	{
+		for (int i=0; i < Voltaggi.size(); i++)
+		{
+			std::string attrname=(std::string)"CH"+ std::to_string(i);
+			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
+			*tmp=Voltaggi[i];
+	   		channels[i]=Voltaggi[i];
+		}
+	}
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler

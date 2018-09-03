@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBPowerOn,CMD_GIB_POWERON_ALIAS,
 			"Switch on off the GIB main power",
-			"ccd76544-fe33-494b-9403-6afa504c7239")
+			"1a87ebcf-fbf9-4970-8fd5-4e7fcc7ae066")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_POWERON_ON_STATE,"0= OFF , 1 = ON",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
@@ -44,11 +44,13 @@ uint8_t own::CmdGIBPowerOn::implementedHandler(){
 void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler PowerOn "; 
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	int32_t tmp_on_state=data->getInt32Value(CMD_GIB_POWERON_ON_STATE);
 	int err=0;
 	if (err=gibcontrol_drv->PowerOn(tmp_on_state) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command PowerOn not acknowledged");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY

@@ -62,6 +62,12 @@ accessor->send(&message);\
 VAR_stringE1=ret.stringE1;\
 return ret.result;
 
+#define READ_OP_VECTOR_DOUBLE__TIM(op,VAR_vector_double_E1,timeout)\
+PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
+accessor->send(&message);\
+VAR_vector_double_E1=ret.vector_double_E1;\
+return ret.result;
+
 int ChaosGibControlInterface::init(void *d){return 0;};
 int ChaosGibControlInterface::deinit() {
 	WRITE_OP_TIM(OP_DEINIT,0);
@@ -78,4 +84,7 @@ int ChaosGibControlInterface::PowerOn(int32_t on_state) {
 } 
 int ChaosGibControlInterface::getState(int32_t* state,std::string& desc) {
 	READ_OP_INT32_T_STRING_TIM(OP_GETSTATE,state,desc,0);
+} 
+int ChaosGibControlInterface::getVoltages(std::vector<double>& voltages) {
+	READ_OP_VECTOR_DOUBLE__TIM(OP_GETVOLTAGES,voltages,0);
 } 

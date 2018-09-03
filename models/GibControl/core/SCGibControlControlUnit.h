@@ -43,6 +43,9 @@ namespace driver {
 			void unitDeinit() throw(chaos::CException);
 			//!restore method
 			bool unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache * const snapshot_cache) throw(CException);
+			// handler declaration
+			bool myFunc(const std::string &name,double value,uint32_t size);
+			//end handler declaration
 		public:
 			/*Construct a new CU with an identifier*/
 			SCGibControlControlUnit(const std::string& _control_unit_id,const std::string& _control_unit_param,const ControlUnitDriverList& _control_unit_drivers);

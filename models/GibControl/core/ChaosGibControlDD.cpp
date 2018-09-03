@@ -68,6 +68,10 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			out->result=devicedriver->getState(&out->int32_tP1,out->stringE1);
 			ACDBG << "Sent to driver command getState result is " << out->result;
 			} break;
+		case OP_GETVOLTAGES: {
+			out->result=devicedriver->getVoltages(out->vector_double_E1);
+			ACDBG << "Sent to driver command getVoltages result is " << out->result;
+			} break;
 	}
 	return result;
 }

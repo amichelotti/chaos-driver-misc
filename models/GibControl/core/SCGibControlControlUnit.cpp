@@ -29,6 +29,7 @@ using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
 using namespace chaos::cu::control_manager::slow_command;
 using namespace chaos::cu::driver_manager::driver;
+using namespace chaos::cu::control_manager;
 #define SCCUAPP INFO_LOG(SCGibControlControlUnit)
 #define SCCUDBG DBG_LOG(SCGibControlControlUnit)
 #define SCCUERR ERR_LOG(SCGibControlControlUnit)
@@ -50,12 +51,128 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::gibcontrol::SCGibControlContro
 	}
 }
 //handlers
+bool ::driver::gibcontrol::SCGibControlControlUnit::myFunc(const std::string &name, double value, uint32_t size)
+{
+	std::string chanName=name.substr(2) ;
+	int chan= atoi(chanName.c_str());
+        SCCUAPP << "myFunc:"<< " VALUE: "<<value << "channel: " << chan;
+        int ret;
+	uint64_t cmd_id;
+        std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
+	cmd_pack->addInt32Value(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL,chan);
+	cmd_pack->addDoubleValue(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE,value);
+	submitBatchCommand(CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
+        cmd_pack.release(),
+        cmd_id,
+        0,
+        50,
+        SubmissionRuleType::SUBMIT_NORMAL);
+        return (ret==chaos::ErrorCode::EC_NO_ERROR);
+
+        return true;
+}
 //end handlers
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset() throw(chaos::CException) {
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetPulse));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetChannelVoltage));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBPowerOn));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBDefault),true);
+	addAttributeToDataSet("CH0",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH1",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH2",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH3",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH4",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH5",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH6",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH7",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH8",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH9",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH10",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH11",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH12",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH13",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH14",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH15",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH16",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH17",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH18",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH19",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH20",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH21",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH22",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+	addAttributeToDataSet("CH23",
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
 	addAttributeToDataSet("gastoneLV",
 							"Low Voltage status",
 							DataType::TYPE_INT32,
@@ -105,6 +222,16 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"bitmask of pulsing state for each of 24 channels",
 							DataType::TYPE_INT32,
 							DataType::Output);
+	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
+		"notified when driver answers not zero");
+
+	for (int i=0; i < 24; ++i)
+	{
+	   std::string chanName="CH"+ std::to_string(i);
+	   addHandlerOnInputAttributeName<::driver::gibcontrol::SCGibControlControlUnit,double>(this,
+		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
+	}
+
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
 }

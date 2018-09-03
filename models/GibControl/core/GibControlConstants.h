@@ -35,6 +35,8 @@ namespace driver {
 		const char* const CMD_GIB_GETSTATE_ALIAS = "getState";
 		const char* const CMD_GIB_GETSTATE_STATE = "state";
 		const char* const CMD_GIB_GETSTATE_DESC = "desc";
+		const char* const CMD_GIB_GETVOLTAGES_ALIAS = "getVoltages";
+		const char* const CMD_GIB_GETVOLTAGES_VOLTAGES = "voltages";
 		const char* const CMD_GIB_DEFAULT_ALIAS = "Default";
 		#define DEFAULT_COMMAND_TIMEOUT_MS   10000
 	}

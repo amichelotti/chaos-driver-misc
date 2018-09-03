@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetPulse,CMD_GIB_SETPULSE_ALIAS,
 			"set Pulse on Channel",
-			"450208a3-7250-44ff-bce7-ad64d4b73e1a")
+			"33feeaf0-b113-4a43-a0e5-82299e04a697")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_CHANNEL,"channel to pulse",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_AMPLITUDE,"amplitude of pulse (V)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_GIB_SETPULSE_WIDTH,"pulse width (ns)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
@@ -47,6 +47,7 @@ uint8_t own::CmdGIBsetPulse::implementedHandler(){
 void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setPulse "; 
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	int32_t tmp_channel=data->getInt32Value(CMD_GIB_SETPULSE_CHANNEL);
 	int32_t tmp_amplitude=data->getInt32Value(CMD_GIB_SETPULSE_AMPLITUDE);
 	int32_t tmp_width=data->getInt32Value(CMD_GIB_SETPULSE_WIDTH);
@@ -55,6 +56,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	if (err=gibcontrol_drv->setPulse(tmp_channel,tmp_amplitude,tmp_width,tmp_state) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setPulse not acknowledged");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY
