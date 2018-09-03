@@ -240,7 +240,7 @@ private:
     int32_t queryNext(int32_t id,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res);
     bool queryHasNext(int32_t id);
     int getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res);
-
+    /*void dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname);*/
     uint64_t lastAccess(){return reqtime;}
      ChaosSharedPtr<chaos::common::data::CDataWrapper> getLiveChannel(std::string&key,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
       chaos::common::data::VectorCDWShrdPtr getLiveChannel(std::vector<std::string>&keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);

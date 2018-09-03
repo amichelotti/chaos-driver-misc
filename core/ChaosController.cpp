@@ -1137,7 +1137,27 @@ uint64_t ChaosController::offsetToTimestamp(const std::string &off)
     bt::time_duration diff = pt - timet_start;
     return (diff.ticks() / bt::time_duration::rep_type::ticks_per_second) * 1000;
 }
+/*
+void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname){
+    std::ofstream f(fname);
+    std::string mpath=path;
+    mpath.replace(mpath.begin(),mpath.end(),"/","_");
+    uint64_t start_ts = offsetToTimestamp(start);
+    uint64_t end_ts = offsetToTimestamp(end);
+    chaos::common::io::QueryCursor *query_cursor = NULL;
+    ChaosStringSet tagv;
+    if(tagname.size()>0){
+        tagv.insert(tagname);
+    }
+    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagv, &query_cursor);
+    while ((query_cursor->hasNext())){
+            ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
+            boost::shared_ptr<CDataWrapper> cd = normalizeToJson(q_result.get(), binaryToTranslate);
+            
+    }
 
+}
+*/
 int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page)
 {
     uint64_t start_ts = offsetToTimestamp(start);
@@ -2687,6 +2707,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             std::stringstream res;
             std::string var_name;
             int channel = 0;
+            std::string fmtType;
             chaos::common::io::QueryCursor *query_cursor = NULL;
             p.setSerializedJsonData(args);
             cleanUpQuery();
@@ -2704,6 +2725,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         start_ts = chaos::common::utility::TimingUtil::getLocalTimeStamp();
                     }
                 }
+            }
+            if(p.hasKey("fmtType")){
+                fmtType=p.getStringValue("fmtType");
             }
 
             if (p.hasKey("end"))
@@ -2784,6 +2808,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 if (query_cursor)
                 {
                     cnt = 0;
+                    if(fmtType=="tgz"){
+                        // all the elements into a tgz.
+                    }
                     res << "{\"data\":[";
                     boost::shared_ptr<chaos::common::data::CDataWrapper> data;
                     if (query_cursor->hasNext())
