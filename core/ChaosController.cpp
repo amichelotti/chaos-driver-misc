@@ -273,14 +273,14 @@ int ChaosController::init(std::string p, uint64_t timeo_)
           << " timeo:" << timeo_;
     last_access = reqtime = tot_us = naccess = refresh = 0;
 
-    /* if (controller != NULL) {
+     if (controller != NULL) {
 
         DBGET << " removing existing controller";
 
         ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
         controller = NULL;
     }
-*/
+
     try
     {
         if (controller == NULL)
