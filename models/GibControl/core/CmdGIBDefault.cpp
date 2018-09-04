@@ -71,7 +71,9 @@ void own::CmdGIBDefault::acquireHandler() {
 	{
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
-			std::string attrname=(std::string)"CH"+ std::to_string(i);
+			char nums[8];
+			sprintf(nums,"%d",i);
+			std::string attrname=(std::string)"CH"+ nums;
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
 	   		channels[i]=Voltaggi[i];
