@@ -227,8 +227,10 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 
 	for (int i=0; i < 24; ++i)
 	{
-	   std::string chanName="CH"+ std::to_string(i);
-	   addHandlerOnInputAttributeName<::driver::gibcontrol::SCGibControlControlUnit,double>(this,
+	   char nums[8];
+           sprintf(nums,"%d",i);
+	   std::string chanName=(std::string)"CH"+ nums;
+	   addHandlerOnInputAttributeName< ::driver::gibcontrol::SCGibControlControlUnit,double>(this,
 		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
 	}
 
