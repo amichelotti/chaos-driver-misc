@@ -287,8 +287,8 @@ int ChaosController::init(std::string p, uint64_t timeo_)
         {
             ChaosMetadataServiceClient::getInstance()->getNewCUController(path, &controller);
         }
-        else
-        {
+        else {
+            controller->updateChannel();
         }
     }
     catch (chaos::CException &e)
@@ -557,13 +557,14 @@ uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
     {
+        ChaosReadLock ll(ioctrl);
         controller->fetchAllDataset();
     }
     ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX + 1];
     delta_update = CU_HEALTH_UPDATE_US;
     for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
-
+        ChaosReadLock ll(ioctrl);
         channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
 
         uint64_t tss, pckid;
