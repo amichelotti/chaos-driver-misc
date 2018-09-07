@@ -68,7 +68,7 @@ protected:
 	/*!
 	 return last transmision delay appende
 	 */
-	chaos::common::data::CDataWrapper *getLastTrxDelay(chaos::common::data::CDataWrapper *actionParam, bool& detachParam);
+	chaos::common::data::CDWUniquePtr getLastTrxDelay(chaos::common::data::CDWUniquePtr actionParam);
 public:
 
 
