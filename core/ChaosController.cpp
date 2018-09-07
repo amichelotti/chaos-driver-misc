@@ -2184,6 +2184,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
                         json_buf = "{}";
                         res << json_buf;
+                    } else if(what=="clrcmdq"){
+                        EXECUTE_CHAOS_API(api_proxy::node::ClearCommandQueue, MDS_TIMEOUT, name);
+                        json_buf = "{}";
+                        res << json_buf;
+
+                    } else if(what=="killcmd"){
+                        EXECUTE_CHAOS_API(api_proxy::node::KillCurrentCommand, MDS_TIMEOUT, name);
+                        json_buf = "{}";
+                        res << json_buf;
+
                     }
                 }
                 else if (node_type == "agent")
