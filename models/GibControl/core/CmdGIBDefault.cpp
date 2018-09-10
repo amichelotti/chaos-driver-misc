@@ -50,7 +50,7 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdGIBDefault::acquireHandler() {
  	int state;
-	int err=0;
+	int err= 0;
         std::string descr;
 	double *channels=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVCHANNELS");
         if (err=gibcontrol_drv->getState(&state,descr) != 0)

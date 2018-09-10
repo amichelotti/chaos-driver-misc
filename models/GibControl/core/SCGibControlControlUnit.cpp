@@ -56,7 +56,7 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::myFunc(const std::string &na
 	std::string chanName=name.substr(2) ;
 	int chan= atoi(chanName.c_str());
         SCCUAPP << "myFunc:"<< " VALUE: "<<value << "channel: " << chan;
-        int ret;
+        int  ret;
 	uint64_t cmd_id;
         std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
 	cmd_pack->addInt32Value(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL,chan);
@@ -77,6 +77,7 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetChannelVoltage));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBPowerOn));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBDefault),true);
+	
 	addAttributeToDataSet("CH0",
 							"voltage channel",
 							DataType::TYPE_DOUBLE,
@@ -173,18 +174,6 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"voltage channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Bidirectional);
-	addAttributeToDataSet("gastoneLV",
-							"Low Voltage status",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	addAttributeToDataSet("pulse_width",
-							"pulse width (ns)",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	addAttributeToDataSet("pulse_amplitude",
-							"pulse amplitude (V)",
-							DataType::TYPE_INT32,
-							DataType::Output);
 	addAttributeToDataSet("status",
 							"status",
 							DataType::TYPE_STRING,
