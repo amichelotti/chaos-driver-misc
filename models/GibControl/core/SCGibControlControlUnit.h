@@ -29,6 +29,8 @@ namespace driver {
 			 std::string device_hw;
 			chaos::driver::gibcontrol::ChaosGibControlInterface *gibcontrol_drv;
 			bool waitOnCommandID(uint64_t command_id);
+		private:
+		    int32_t numofchannels;
 		protected:
 			/* Define the Control Unit Dataset and Actions */
 			void unitDefineActionAndDataset()throw(chaos::CException);

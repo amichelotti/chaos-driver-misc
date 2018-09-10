@@ -52,13 +52,15 @@ void own::CmdGIBDefault::acquireHandler() {
  	int state;
 	int err= 0;
         std::string descr;
-	double *channels=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVCHANNELS");
-        if (err=gibcontrol_drv->getState(&state,descr) != 0)
+	
+
+	//double *channels=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVCHANNELS");
+    if (err=gibcontrol_drv->getState(&state,descr) != 0)
 	{
 		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
 	}
-       	*o_status_id=state;
-       	o_status=strncpy(o_status,descr.c_str(),256);
+    *o_status_id=state;
+    o_status=strncpy(o_status,descr.c_str(),256);
 	SCLDBG_ << "o_status: " << o_status;
 	SCLDBG_ << "o_status_id: " << *o_status_id;
 	SCLDBG_ << "o_alarms: " << *o_alarms;
@@ -76,7 +78,7 @@ void own::CmdGIBDefault::acquireHandler() {
 			std::string attrname=(std::string)"CH"+ nums;
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
-	   		channels[i]=Voltaggi[i];
+	   		
 		}
 	}
 	getAttributeCache()->setOutputDomainAsChanged();

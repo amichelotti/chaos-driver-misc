@@ -72,6 +72,14 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			out->result=devicedriver->getVoltages(out->vector_double_E1);
 			ACDBG << "Sent to driver command getVoltages result is " << out->result;
 			} break;
+		case OP_GETNUMOFCHANNELS: {
+			out->result=devicedriver->getNumOfChannels(&out->int32_tP1);
+			ACDBG << "Sent to driver command getNumOfChannels result is " << out->result;
+			} break;
+		case OP_GETPULSINGSTATE: {
+			out->result=devicedriver->getPulsingState(out->vector_int32_t_E1,out->vector_int32_t_E2);
+			ACDBG << "Sent to driver command getPulsingState result is " << out->result;
+			} break;
 	}
 	return result;
 }

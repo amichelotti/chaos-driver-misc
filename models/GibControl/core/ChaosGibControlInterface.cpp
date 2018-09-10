@@ -68,6 +68,19 @@ accessor->send(&message);\
 VAR_vector_double_E1=ret.vector_double_E1;\
 return ret.result;
 
+#define READ_OP_INT32_T_TIM(op,VAR_int32_tP1,timeout)\
+PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
+accessor->send(&message);\
+*VAR_int32_tP1=ret.int32_tP1;\
+return ret.result;
+
+#define READ_OP_VECTOR_INT32_T__VECTOR_INT32_T__TIM(op,VAR_vector_int32_t_E1,VAR_vector_int32_t_E2,timeout)\
+PREPARE_OP_RET_INT_TIMEOUT(op,timeout); \
+accessor->send(&message);\
+VAR_vector_int32_t_E1=ret.vector_int32_t_E1;\
+VAR_vector_int32_t_E2=ret.vector_int32_t_E2;\
+return ret.result;
+
 int ChaosGibControlInterface::init(void *d){return 0;};
 int ChaosGibControlInterface::deinit() {
 	WRITE_OP_TIM(OP_DEINIT,0);
@@ -87,4 +100,10 @@ int ChaosGibControlInterface::getState(int32_t* state,std::string& desc) {
 } 
 int ChaosGibControlInterface::getVoltages(std::vector<double>& voltages) {
 	READ_OP_VECTOR_DOUBLE__TIM(OP_GETVOLTAGES,voltages,0);
+} 
+int ChaosGibControlInterface::getNumOfChannels(int32_t* numOfChannels) {
+	READ_OP_INT32_T_TIM(OP_GETNUMOFCHANNELS,numOfChannels,0);
+} 
+int ChaosGibControlInterface::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
+	READ_OP_VECTOR_INT32_T__VECTOR_INT32_T__TIM(OP_GETPULSINGSTATE,amplitudes,widthChannels,0);
 } 

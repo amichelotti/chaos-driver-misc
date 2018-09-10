@@ -49,6 +49,7 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::gibcontrol::SCGibControlContro
 	if (gibcontrol_drv) {
 		delete (gibcontrol_drv);
 	}
+	
 }
 //handlers
 bool ::driver::gibcontrol::SCGibControlControlUnit::myFunc(const std::string &name, double value, uint32_t size)
@@ -78,102 +79,29 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBPowerOn));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBDefault),true);
 	
-	addAttributeToDataSet("CH0",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH1",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH2",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH3",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH4",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH5",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH6",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH7",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH8",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH9",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH10",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH11",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH12",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH13",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH14",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH15",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH16",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH17",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH18",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH19",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH20",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH21",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH22",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
-	addAttributeToDataSet("CH23",
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Bidirectional);
+
+	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = getAccessoInstanceByIndex(0);
+	if (gibcontrol_accessor == NULL ) {
+		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
+	}
+	gibcontrol_drv = new chaos::driver::gibcontrol::ChaosGibControlInterface(gibcontrol_accessor);
+	if (gibcontrol_drv == NULL) {
+		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
+	}
+	this->numofchannels=0;
+	int32_t err;
+	err=gibcontrol_drv->getNumOfChannels(&numofchannels);
+	if (err != 0)
+	{
+		throw chaos::CException(-2, "Driver doesn't answered to getNumOfChannels", __FUNCTION__);
+	}
+	SCCUAPP << "Obtained number of channels " << numofchannels;
+
+	addAttributeToDataSet("numberOfChannels",
+							"number of channel of current GIB",
+							DataType::TYPE_INT32,
+							DataType::Output);
+
 	addAttributeToDataSet("status",
 							"status",
 							DataType::TYPE_STRING,
@@ -202,40 +130,49 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"Readout -5V Supply",
 							DataType::TYPE_DOUBLE,
 							DataType::Output);
-	addBinaryAttributeAsSubtypeToDataSet("HVCHANNELS",
-							"channels of ADC voltages",
-							chaos::DataType::SUB_TYPE_DOUBLE,
-							24*sizeof(double),
+	addBinaryAttributeAsSubtypeToDataSet("PulsingAmplitudes",
+							"The Amplitudes of Pulsing channels",
+							chaos::DataType::SUB_TYPE_INT32,
+							numofchannels*sizeof(int32_t),
+							chaos::DataType::Output);
+	addBinaryAttributeAsSubtypeToDataSet("PulsingWidth",
+							"The Width of Pulsing channels",
+							chaos::DataType::SUB_TYPE_INT32,
+							numofchannels*sizeof(int32_t),
 							chaos::DataType::Output);
 	addAttributeToDataSet("pulse_state",
 							"bitmask of pulsing state for each of 24 channels",
 							DataType::TYPE_INT32,
 							DataType::Output);
-	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
-		"notified when driver answers not zero");
-
-	for (int i=0; i < 24; ++i)
+	
+	for (int i=0; i < numofchannels; ++i)
 	{
 	   char nums[8];
            sprintf(nums,"%d",i);
 	   std::string chanName=(std::string)"CH"+ nums;
+	   addAttributeToDataSet(chanName,
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Bidirectional);
+
 	   addHandlerOnInputAttributeName< ::driver::gibcontrol::SCGibControlControlUnit,double>(this,
 		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
 	}
+	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
+		"notified when driver answers not zero");
+	addStateVariable(StateVariableTypeAlarmCU,"gib_unreachable",
+		"notified when gib is not reachable");	
 
+	
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
 }
 // Abstract method for the initialization of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitInit() throw(CException) {
-	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = getAccessoInstanceByIndex(0);
-	if (gibcontrol_accessor == NULL ) {
-		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
-	}
-	gibcontrol_drv = new chaos::driver::gibcontrol::ChaosGibControlInterface(gibcontrol_accessor);
-	if (gibcontrol_drv == NULL) {
-		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
-	}
+	int32_t* chanNum;
+	chanNum = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "numberOfChannels"); 
+	*chanNum=numofchannels;
+	
 }
 // Abstract method for the start of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStart() throw(CException) {
