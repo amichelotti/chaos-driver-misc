@@ -273,14 +273,14 @@ int ChaosController::init(std::string p, uint64_t timeo_)
           << " timeo:" << timeo_;
     last_access = reqtime = tot_us = naccess = refresh = 0;
 
-     if (controller != NULL) {
+    /* if (controller != NULL) {
 
         DBGET << " removing existing controller";
 
         ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
         controller = NULL;
     }
-
+*/
     try
     {
         if (controller == NULL)
@@ -290,6 +290,7 @@ int ChaosController::init(std::string p, uint64_t timeo_)
         else {
             controller->updateChannel();
         }
+        
     }
     catch (chaos::CException &e)
     {
@@ -2183,6 +2184,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
                         json_buf = "{}";
                         res << json_buf;
+                    } else if(what=="clrcmdq"){
+                        EXECUTE_CHAOS_API(api_proxy::node::ClearCommandQueue, MDS_TIMEOUT, name);
+                        json_buf = "{}";
+                        res << json_buf;
+
+                    } else if(what=="killcmd"){
+                        EXECUTE_CHAOS_API(api_proxy::node::KillCurrentCommand, MDS_TIMEOUT, name);
+                        json_buf = "{}";
+                        res << json_buf;
+
                     }
                 }
                 else if (node_type == "agent")
@@ -2554,7 +2565,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             next_state = chaos::CUStateKey::INIT;
 
-            json_buf = fetchJson(-1);
+            json_buf = fetchJson(255);
             return CHAOS_DEV_OK;
         }
         else if (cmd == "start")
@@ -2573,7 +2584,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 return CHAOS_DEV_CMD;
             }
             next_state = chaos::CUStateKey::START;
-            json_buf = fetchJson(-1);
+            json_buf = fetchJson(255);
             return CHAOS_DEV_OK;
         }
         else if (cmd == "stop")
@@ -2597,7 +2608,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             //chaos::common::data::CDataWrapper* data = fetch(-1);
             //json_buf = data->getCompliantJSONString();
-            json_buf = fetchJson(-1);
+            json_buf = fetchJson(255);
             return CHAOS_DEV_OK;
         }
         else if (cmd == "deinit")
@@ -2618,7 +2629,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             next_state = chaos::CUStateKey::DEINIT;
 
-            json_buf = fetchJson(-1);
+            json_buf = fetchJson(255);
             return CHAOS_DEV_OK;
         }
         else if (cmd == "sched" && (args != 0))
@@ -2641,7 +2652,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             //chaos::common::data::CDataWrapper* data = fetch(-1);
             //json_buf = data->getCompliantJSONString();
-            json_buf = fetchJson(-1);
+            json_buf = fetchJson(255);
             return CHAOS_DEV_OK;
         }
         else if (cmd == "desc")
@@ -2668,7 +2679,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 
                 //chaos::common::data::CDataWrapper* data = fetch(-1);
                 //json_buf = data->getCompliantJSONString();
-                json_buf = fetchJson(-1);
+                json_buf = fetchJson(255);
                 return CHAOS_DEV_OK;
             }
         }
