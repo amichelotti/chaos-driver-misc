@@ -54,8 +54,10 @@ void own::CmdGIBDefault::acquireHandler() {
         std::string descr;
 	
 
-	//double *channels=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVCHANNELS");
-    if (err=gibcontrol_drv->getState(&state,descr) != 0)
+	int32_t *ptAmpls=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"PulsingAmplitudes");
+	int32_t *ptWidth=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"PulsingWidth");
+    
+	if (err=gibcontrol_drv->getState(&state,descr) != 0)
 	{
 		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
 	}
@@ -63,7 +65,7 @@ void own::CmdGIBDefault::acquireHandler() {
     o_status=strncpy(o_status,descr.c_str(),256);
 	SCLDBG_ << "o_status: " << o_status;
 	SCLDBG_ << "o_status_id: " << *o_status_id;
-	SCLDBG_ << "o_alarms: " << *o_alarms;
+	//SCLDBG_ << "o_alarms: " << *o_alarms;
 	std::vector<double> Voltaggi;
 	if (err=gibcontrol_drv->getVoltages(Voltaggi) != 0 )
 	{
@@ -79,6 +81,20 @@ void own::CmdGIBDefault::acquireHandler() {
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
 	   		
+		}
+	}
+	std::vector<int32_t> Amp;
+	std::vector<int32_t> Wid;
+	if (err=gibcontrol_drv->getPulsingState(Amp,Wid) != 0 )
+	{
+		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
+	}
+	else
+	{
+		for (int i=0; i < Amp.size(); i++)
+		{
+			ptAmpls[i]=Amp[i];
+			ptWidth[i]=Wid[i];
 		}
 	}
 	getAttributeCache()->setOutputDomainAsChanged();

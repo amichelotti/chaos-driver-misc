@@ -37,6 +37,7 @@ void AbstractGibControlCommand::setHandler(c_data::CDataWrapper *data) {
 	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "status_id"); 
 	o_status = getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT, "status");
 	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
+	numOfchannels = getAttributeCache()->getROPtr<int32_t>(DOMAIN_OUTPUT,"numberOfChannels");
 	//get pointer to the output dataset variable
 	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(gibcontrol_accessor != NULL) {

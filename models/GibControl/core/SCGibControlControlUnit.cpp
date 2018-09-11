@@ -140,15 +140,11 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							chaos::DataType::SUB_TYPE_INT32,
 							numofchannels*sizeof(int32_t),
 							chaos::DataType::Output);
-	addAttributeToDataSet("pulse_state",
-							"bitmask of pulsing state for each of 24 channels",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	
+		
 	for (int i=0; i < numofchannels; ++i)
 	{
 	   char nums[8];
-           sprintf(nums,"%d",i);
+       sprintf(nums,"%d",i);
 	   std::string chanName=(std::string)"CH"+ nums;
 	   addAttributeToDataSet(chanName,
 							"voltage channel",

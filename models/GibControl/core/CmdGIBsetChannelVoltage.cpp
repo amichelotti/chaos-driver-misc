@@ -29,6 +29,7 @@ namespace own = driver::gibcontrol;
 namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
+using namespace ::common::gibcontrol ;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
 			"set the voltage to a Channel",
 			"28ab2b93-2c92-455c-b18f-ec91b05bf4ce")
@@ -48,7 +49,18 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	int32_t tmp_channel=data->getInt32Value(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL);
 	double tmp_Voltage=data->getDoubleValue(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE);
+	this->chanNum=tmp_channel;
+	this->setValue=tmp_Voltage;
 	int err=0;
+	if ( CHECKMASK(*o_status_id,::common::gibcontrol::GIBCONTROL_SUPPLIED) == false )
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning,"cannot set HV channels when device is off");
+		BC_END_RUNNING_PROPERTY
+	}
+	//if ()
+
+
+
 	if (err=gibcontrol_drv->setChannelVoltage(tmp_channel,tmp_Voltage) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelVoltage not acknowledged");

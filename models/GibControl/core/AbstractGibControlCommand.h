@@ -35,6 +35,7 @@ namespace driver {
 			char		*o_status;
 			int32_t	*o_status_id;
 			uint64_t	*o_alarms;
+			const int32_t *numOfchannels;
 			//reference of the chaos abstraction of driver
 			chaos::driver::gibcontrol::ChaosGibControlInterface *gibcontrol_drv;
 			//implemented handler
