@@ -39,6 +39,7 @@ void AbstractGibControlCommand::setHandler(c_data::CDataWrapper *data) {
 	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
 	numOfchannels = getAttributeCache()->getROPtr<int32_t>(DOMAIN_OUTPUT,"numberOfChannels");
 	//get pointer to the output dataset variable
+	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) DEFAULT_COMMAND_TIMEOUT_MS);
 	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(gibcontrol_accessor != NULL) {
 		if(gibcontrol_drv == NULL) {
@@ -57,3 +58,7 @@ void AbstractGibControlCommand::setWorkState(bool working_flag) {
 	setBusyFlag(working_flag);
 }
 
+void AbstractGibControlCommand::clearCUAlarms() {
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+}

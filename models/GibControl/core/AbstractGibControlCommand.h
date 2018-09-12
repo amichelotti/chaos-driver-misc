@@ -43,6 +43,7 @@ namespace driver {
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
 			void setWorkState(bool working);
+			void clearCUAlarms();
 		};// AbstractGibControlCommand
 	}// gibcontrol
 }

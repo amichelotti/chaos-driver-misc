@@ -118,6 +118,12 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"Driver timeout in milliseconds",
 							DataType::TYPE_INT32,
 							DataType::Input);
+
+	addAttributeToDataSet("max_channel_voltage",
+							"The max value of voltage to be set on each channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+
 	addAttributeToDataSet("HVMain",
 							"HV Main Voltage",
 							DataType::TYPE_DOUBLE,
@@ -158,7 +164,8 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 		"notified when driver answers not zero");
 	addStateVariable(StateVariableTypeAlarmCU,"gib_unreachable",
 		"notified when gib is not reachable");	
-
+	addStateVariable(StateVariableTypeAlarmCU,"bad_command_parameter",
+		"notified when a command is issued with wrong parameters");
 	
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
