@@ -46,7 +46,7 @@ uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
 void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setChannelVoltage "; 
-	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 50000);
+	
 	this->clearCUAlarms();
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelClear);

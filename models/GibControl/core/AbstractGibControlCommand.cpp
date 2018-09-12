@@ -33,13 +33,23 @@ AbstractGibControlCommand::~AbstractGibControlCommand() {
 	gibcontrol_drv = NULL;
 }
 void AbstractGibControlCommand::setHandler(c_data::CDataWrapper *data) {
-	CMDCUDBG_ << "loading pointer for output channel"; 
+	CMDCUDBG_ << "loading pointer for output channel";
+	//get pointer to the output dataset variables 
 	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "status_id"); 
 	o_status = getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT, "status");
 	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
 	numOfchannels = getAttributeCache()->getROPtr<int32_t>(DOMAIN_OUTPUT,"numberOfChannels");
-	//get pointer to the output dataset variable
-	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) DEFAULT_COMMAND_TIMEOUT_MS);
+	
+	//POTREBBERO ESSERE MICROSECONDI
+	
+	const int32_t* reg_command_timeout= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
+	int32_t commandTimeout;
+	if ((reg_command_timeout!= NULL) && ((*reg_command_timeout) != 0) )
+	    commandTimeout=(*reg_command_timeout)*1000;
+	else
+	    commandTimeout=10000000;
+	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) commandTimeout);
+
 	chaos::cu::driver_manager::driver::DriverAccessor *gibcontrol_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(gibcontrol_accessor != NULL) {
 		if(gibcontrol_drv == NULL) {
