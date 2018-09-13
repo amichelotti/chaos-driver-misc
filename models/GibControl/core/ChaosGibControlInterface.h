@@ -39,6 +39,7 @@ namespace chaos {
 				OP_GETVOLTAGES,
 				OP_GETNUMOFCHANNELS,
 				OP_GETPULSINGSTATE,
+				OP_GETSUPPLYVOLTAGES,
 				OP_GET_FEATURE
 			} ChaosGibControlOpcode;
 			typedef struct {
@@ -57,6 +58,9 @@ namespace chaos {
 				std::vector<double>  vector_double_E1;
 				std::vector<int32_t>  vector_int32_t_E1;
 				std::vector<int32_t>  vector_int32_t_E2;
+				double  doubleP1;
+				double  doubleP2;
+				double  doubleP3;
 			} gibcontrol_oparams_t;
 			//wrapper interface
 			class ChaosGibControlInterface:public ::common::gibcontrol::AbstractGibControl {
@@ -75,6 +79,7 @@ namespace chaos {
 				int getVoltages(std::vector<double>& voltages);
 				int getNumOfChannels(int32_t* numOfChannels);
 				int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels);
+				int getSupplyVoltages(double* HVSupply,double* P5V,double* N5V);
 			};
 		}
 	}//driver

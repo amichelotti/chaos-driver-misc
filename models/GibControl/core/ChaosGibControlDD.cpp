@@ -80,6 +80,10 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			out->result=devicedriver->getPulsingState(out->vector_int32_t_E1,out->vector_int32_t_E2);
 			ACDBG << "Sent to driver command getPulsingState result is " << out->result;
 			} break;
+		case OP_GETSUPPLYVOLTAGES: {
+			out->result=devicedriver->getSupplyVoltages(&out->doubleP1,&out->doubleP2,&out->doubleP3);
+			ACDBG << "Sent to driver command getSupplyVoltages result is " << out->result;
+			} break;
 	}
 	return result;
 }

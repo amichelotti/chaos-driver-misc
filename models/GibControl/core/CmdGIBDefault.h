@@ -35,6 +35,10 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			private:
+			double* hvsupply;
+			double* Supply5V;
+			double* SupplyN5V;
 		};
 	}
 }

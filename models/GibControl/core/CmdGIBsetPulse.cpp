@@ -48,7 +48,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setPulse "; 
 	this->clearCUAlarms();
-	
+
 	
 	if(!data || !data->hasKey(CMD_GIB_SETPULSE_CHANNEL)) 
 	{
@@ -78,16 +78,19 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Pulse set state parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY ; return;
 	}
 	int32_t tmp_state=data->getInt32Value(CMD_GIB_SETPULSE_STATE);
 
-
+	this->chanToPulse=tmp_channel;
+	this->stateToSet=tmp_state;
 	int err=0;
 	if (err=gibcontrol_drv->setPulse(tmp_channel,tmp_amplitude,tmp_width,tmp_state) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setPulse not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		BC_FAULT_RUNNING_PROPERTY
+		return;
 	}
 	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY
@@ -98,9 +101,33 @@ void own::CmdGIBsetPulse::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdGIBsetPulse::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	std::vector<int32_t> ampls, widths;
+	int err=0;
+	if (err=gibcontrol_drv->getPulsingState(ampls,widths) != 0)
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot read pulsing state");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		BC_FAULT_RUNNING_PROPERTY
+		return;
+	}
+	else
+	{
+		int stateOfTheChannel=ampls[this->chanToPulse];
+		if ((this->stateToSet == 0) && (stateOfTheChannel==0))
+		{
+			BC_END_RUNNING_PROPERTY;
+		}
+		if ((this->stateToSet > 0) && (stateOfTheChannel>0) )
+		{
+			BC_END_RUNNING_PROPERTY;
+		}
+	}
 }
 // empty timeout handler
 bool own::CmdGIBsetPulse::timeoutHandler() {
+	SCLDBG_ << "Timeout Handler setPulse ";
+	metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Pulsing state not reached");
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	BC_FAULT_RUNNING_PROPERTY;
 	return false;
 }

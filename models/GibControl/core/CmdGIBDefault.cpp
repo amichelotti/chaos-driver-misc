@@ -43,11 +43,14 @@ uint8_t own::CmdGIBDefault::implementedHandler(){
 void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	setBusyFlag(false);
-	SCLAPP_ << "Set Handler Default "; 
+	SCLAPP_ << "Set Handler Default ";
+	this->Supply5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"Supply5V");
+	this->SupplyN5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"SupplyN5V");
+	this->hvsupply= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVMain");
 
 	BC_NORMAL_RUNNING_PROPERTY
 }
-// empty acquire handler
+//acquire handler
 void own::CmdGIBDefault::acquireHandler() {
  	int state;
 	int err= 0;
@@ -97,6 +100,11 @@ void own::CmdGIBDefault::acquireHandler() {
 			ptWidth[i]=Wid[i];
 		}
 	}
+
+	err=gibcontrol_drv->getSupplyVoltages(this->hvsupply,this->Supply5V,this->SupplyN5V);
+
+
+
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler

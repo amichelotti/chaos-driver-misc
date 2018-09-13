@@ -35,6 +35,9 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			private:
+			int32_t chanToPulse;
+			int32_t stateToSet;
 		};
 	}
 }
