@@ -37,6 +37,7 @@ namespace driver {
 			bool timeoutHandler();
 			int32_t chanNum;
 			double setValue;
+			const double* inputVoltageResolution;
 		};
 	}
 }

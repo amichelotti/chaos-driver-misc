@@ -71,4 +71,5 @@ void AbstractGibControlCommand::setWorkState(bool working_flag) {
 void AbstractGibControlCommand::clearCUAlarms() {
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 }

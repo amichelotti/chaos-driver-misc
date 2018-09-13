@@ -33,18 +33,18 @@ namespace driver {
 		    int32_t numofchannels;
 		protected:
 			/* Define the Control Unit Dataset and Actions */
-			void unitDefineActionAndDataset()throw(chaos::CException);
+			void unitDefineActionAndDataset();
 			void unitDefineCustomAttribute();
 			/*(Optional) Initialize the Control Unit and all driver, with received param from MetadataServer*/
-			void unitInit() throw(chaos::CException);
+			void unitInit() ;
 			/*(Optional) Execute the work, this is called with a determined delay, it must be as fast as possible*/
-			void unitStart() throw(chaos::CException);
+			void unitStart();
 			/*(Optional) The Control Unit will be stopped*/
-			void unitStop() throw(chaos::CException);
+			void unitStop() ;
 			/*(Optional) The Control Unit will be deinitialized and disposed*/
-			void unitDeinit() throw(chaos::CException);
+			void unitDeinit() ;
 			//!restore method
-			bool unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache * const snapshot_cache) throw(CException);
+			bool unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache * const snapshot_cache);
 			// handler declaration
 			bool myFunc(const std::string &name,double value,uint32_t size);
 			//end handler declaration

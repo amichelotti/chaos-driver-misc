@@ -47,11 +47,42 @@ uint8_t own::CmdGIBsetPulse::implementedHandler(){
 void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setPulse "; 
-	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	this->clearCUAlarms();
+	
+	
+	if(!data || !data->hasKey(CMD_GIB_SETPULSE_CHANNEL)) 
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter  not present" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+	}
 	int32_t tmp_channel=data->getInt32Value(CMD_GIB_SETPULSE_CHANNEL);
+	
+	if(!data || !data->hasKey(CMD_GIB_SETPULSE_AMPLITUDE)) 
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Amplitude parameter  not present" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+	}
 	int32_t tmp_amplitude=data->getInt32Value(CMD_GIB_SETPULSE_AMPLITUDE);
+	
+	if(!data || !data->hasKey(CMD_GIB_SETPULSE_WIDTH)) 
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Pulse Width parameter  not present" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+	}
 	int32_t tmp_width=data->getInt32Value(CMD_GIB_SETPULSE_WIDTH);
+
+	if(!data || !data->hasKey(CMD_GIB_SETPULSE_STATE)) 
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Pulse set state parameter  not present" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+	}
 	int32_t tmp_state=data->getInt32Value(CMD_GIB_SETPULSE_STATE);
+
+
 	int err=0;
 	if (err=gibcontrol_drv->setPulse(tmp_channel,tmp_amplitude,tmp_width,tmp_state) != 0)
 	{

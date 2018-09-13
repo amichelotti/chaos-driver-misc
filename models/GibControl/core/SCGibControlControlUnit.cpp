@@ -73,7 +73,7 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::myFunc(const std::string &na
         return true;
 }
 //end handlers
-void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset() throw(chaos::CException) {
+void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()  {
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetPulse));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBsetChannelVoltage));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdGIBPowerOn));
@@ -123,6 +123,11 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"The max value of voltage to be set on each channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Input);
+	addAttributeToDataSet("voltage_channel_resolution",
+							"The resolution on setting voltage channel and the tolerated drift from the setpoint",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+
 
 	addAttributeToDataSet("HVMain",
 							"HV Main Voltage",
@@ -166,32 +171,34 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 		"notified when gib is not reachable");	
 	addStateVariable(StateVariableTypeAlarmCU,"bad_command_parameter",
 		"notified when a command is issued with wrong parameters");
-	
+	addStateVariable(StateVariableTypeAlarmCU,"setPoint_not_reached",
+		"notified when a channel voltage setPoint is not reached after a set Voltage command");
+
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
 }
 // Abstract method for the initialization of the control unit
-void ::driver::gibcontrol::SCGibControlControlUnit::unitInit() throw(CException) {
+void ::driver::gibcontrol::SCGibControlControlUnit::unitInit()  {
 	int32_t* chanNum;
 	chanNum = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "numberOfChannels"); 
 	*chanNum=numofchannels;
 	
 }
 // Abstract method for the start of the control unit
-void ::driver::gibcontrol::SCGibControlControlUnit::unitStart() throw(CException) {
+void ::driver::gibcontrol::SCGibControlControlUnit::unitStart()  {
 }
 // Abstract method for the stop of the control unit
-void ::driver::gibcontrol::SCGibControlControlUnit::unitStop() throw(CException) {
+void ::driver::gibcontrol::SCGibControlControlUnit::unitStop()  {
 }
 // Abstract method for deinit the control unit
-void ::driver::gibcontrol::SCGibControlControlUnit::unitDeinit() throw(CException) {
+void ::driver::gibcontrol::SCGibControlControlUnit::unitDeinit() {
 	SCCUAPP << "deinitializing ";
 	gibcontrol_drv->deinit();
 }
 	//! restore the control unit to snapshot
 #define RESTORE_LAPP SCCUAPP << "[RESTORE-" <<getCUID() << "] "
 #define RESTORE_LERR SCCUERR << "[RESTORE-" <<getCUID() << "] "
-bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache) throw(chaos::CException) {
+bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache)  {
 	return false;
 }
 bool ::driver::gibcontrol::SCGibControlControlUnit::waitOnCommandID(uint64_t cmd_id) {

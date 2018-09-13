@@ -46,7 +46,7 @@ uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
 void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setChannelVoltage "; 
-	
+	inputVoltageResolution= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
 	this->clearCUAlarms();
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelClear);
@@ -137,10 +137,14 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
-	int32_t channelVoltageResolution=-1;
+	
+	int32_t channelVoltageResolution=0;
+	if ((inputVoltageResolution!= NULL) && ((*inputVoltageResolution) != 0) )
+	    channelVoltageResolution=(*inputVoltageResolution);
+	
 	if (this->chanNum != -1)
 	{
-		if ( std::abs(readChannels[chanNum] - this->setValue) < channelVoltageResolution) 
+		if ( std::abs(readChannels[chanNum] - this->setValue) <= channelVoltageResolution) 
 		{
 			BC_END_RUNNING_PROPERTY;
 		}
@@ -166,6 +170,9 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 // empty timeout handler
 bool own::CmdGIBsetChannelVoltage::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelVoltage ";
-	BC_END_RUNNING_PROPERTY
+	
+	metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," setPoint not reached");
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	BC_FAULT_RUNNING_PROPERTY;
 	return false;
 }
