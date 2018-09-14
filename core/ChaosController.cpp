@@ -1253,7 +1253,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
             if (query_cursor->hasNext())
             {
                 ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-                if (err = query_cursor->getError())
+                if ((err = query_cursor->getError()))
                 {
                     query_cursor_map.erase(query_cursor_map.find(uid));
                     controller->releaseQuery(query_cursor);
@@ -2920,7 +2920,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         else
                         {
                             int32_t err;
-                            if (err = query_cursor->getError())
+                            if ((err = query_cursor->getError()))
                             {
                                 controller->releaseQuery(query_cursor);
                                 bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", % getPath() % err));
@@ -3116,7 +3116,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     if ((!query_cursor->hasNext()) || clear_req)
                     {
                         int32_t err;
-                        if (err = query_cursor->getError())
+                        if ((err = query_cursor->getError()))
                         {
                             controller->releaseQuery(query_cursor);
                             query_cursor_map.erase(query_cursor_map.find(uid));
