@@ -60,7 +60,7 @@ void own::CmdGIBDefault::acquireHandler() {
 	int32_t *ptAmpls=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"PulsingAmplitudes");
 	int32_t *ptWidth=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"PulsingWidth");
     
-	if (err=gibcontrol_drv->getState(&state,descr) != 0)
+	if ((err=gibcontrol_drv->getState(&state,descr)) != 0)
 	{
 		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
 	}
@@ -88,7 +88,7 @@ void own::CmdGIBDefault::acquireHandler() {
 	}
 	std::vector<int32_t> Amp;
 	std::vector<int32_t> Wid;
-	if (err=gibcontrol_drv->getPulsingState(Amp,Wid) != 0 )
+	if ((err=gibcontrol_drv->getPulsingState(Amp,Wid)) != 0 )
 	{
 		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
 	}
