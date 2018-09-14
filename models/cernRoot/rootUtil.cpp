@@ -273,7 +273,7 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
 
 static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
                         const std::string& start, const std::string&end, const int channel,
-                        const std::string treeid, const std::string desc,int pageLen,bool multi) {
+                        const std::string treeid, const std::string desc,int pageLen,bool multi,const std::vector<std::string> tags=std::vector<std::string>()) {
     std::string brname;
     try {
         treeQuery_t q;
@@ -291,7 +291,7 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
 */
         ctrl = new ChaosController(chaosNode);
 
-        int32_t ret = ctrl->queryHistory(start, end, channel, res, pageLen);
+        int32_t ret = ctrl->queryHistory(start, end, tags,channel, res, pageLen);
         int cnt = 0;
         if (res.size() > 0) {
             ROOTDBG<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
@@ -349,6 +349,10 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
         LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]" << " Unexpected Exception on \""<<chaosNode;
         return NULL;
     }
+}
+TTree* queryChaosTree(const std::string&chaosNode,const std::string& start,const std::string&end,const std::vector<std::string>& tags,const int channel,const std::string& treeid,const std::string& desc,int pageLen){
+    return query_int(NULL, chaosNode,start,end, channel,treeid, desc,pageLen,true,tags);
+
 }
 
 TTree* queryChaosTree(const std::string&chaosNode,const std::string& start, const std::string&end, const int channel,const std::string& treeid, const std::string& desc,int pageLen) {

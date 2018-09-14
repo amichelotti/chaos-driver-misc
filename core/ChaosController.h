@@ -237,6 +237,8 @@ private:
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
     int32_t queryHistory(const std::string& start,const std::string& end,int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page=0);
+    int32_t queryHistory(const std::string& start,const std::string& end,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page=0);
+
     int32_t queryNext(int32_t id,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res);
     bool queryHasNext(int32_t id);
     int getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res);

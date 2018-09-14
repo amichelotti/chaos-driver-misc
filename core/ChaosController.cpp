@@ -1160,15 +1160,19 @@ void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::strin
 
 }
 */
-int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page)
-{
+int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
+    std::vector<std::string> tags;
+    return queryHistory(start,end,tags, channel,res, page);
+}
+int32_t ChaosController::queryHistory(const std::string& start,const std::string& end,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page){
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
     int32_t ret = 0, err = 0;
     chaos::common::io::QueryCursor *query_cursor = NULL;
     if (page == 0)
     {
-        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+        std::set<std::string> tagsv(tags.begin(),tags.end());
+        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagsv, &query_cursor);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
