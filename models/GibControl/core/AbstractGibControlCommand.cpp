@@ -65,7 +65,6 @@ void AbstractGibControlCommand::ccHandler() {
 
 }
 void AbstractGibControlCommand::setWorkState(bool working_flag) {
-	setBusyFlag(working_flag);
 }
 
 void AbstractGibControlCommand::clearCUAlarms() {

@@ -42,7 +42,6 @@ uint8_t own::CmdGIBDefault::implementedHandler(){
 // empty set handler
 void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
-	setBusyFlag(false);
 	SCLAPP_ << "Set Handler Default ";
 	this->Supply5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"Supply5V");
 	this->SupplyN5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"SupplyN5V");
