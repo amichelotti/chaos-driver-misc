@@ -103,7 +103,7 @@ void own::CmdGIBsetPulse::acquireHandler() {
 void own::CmdGIBsetPulse::ccHandler() {
 	std::vector<int32_t> ampls, widths;
 	int err=0;
-	if (err=gibcontrol_drv->getPulsingState(ampls,widths) != 0)
+	if ((err=gibcontrol_drv->getPulsingState(ampls,widths)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot read pulsing state");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);

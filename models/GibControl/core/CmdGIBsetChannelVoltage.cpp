@@ -130,7 +130,7 @@ void own::CmdGIBsetChannelVoltage::acquireHandler() {
 void own::CmdGIBsetChannelVoltage::ccHandler() {
 	int err=0;
 	std::vector<double> readChannels;
-	if (err=gibcontrol_drv->getVoltages(readChannels) != 0)
+	if ((err=gibcontrol_drv->getVoltages(readChannels)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot read voltages from GIB");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
