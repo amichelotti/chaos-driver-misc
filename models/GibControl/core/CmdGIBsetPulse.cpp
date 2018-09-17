@@ -54,7 +54,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+     BC_FAULT_RUNNING_PROPERTY; return;
 	}
 	int32_t tmp_channel=data->getInt32Value(CMD_GIB_SETPULSE_CHANNEL);
 	
@@ -62,7 +62,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Amplitude parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+    	 BC_FAULT_RUNNING_PROPERTY; return;
 	}
 	int32_t tmp_amplitude=data->getInt32Value(CMD_GIB_SETPULSE_AMPLITUDE);
 	
@@ -70,7 +70,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Pulse Width parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY; return;
+    	 BC_FAULT_RUNNING_PROPERTY; return;
 	}
 	int32_t tmp_width=data->getInt32Value(CMD_GIB_SETPULSE_WIDTH);
 
@@ -78,7 +78,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Pulse set state parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false); BC_FAULT_RUNNING_PROPERTY ; return;
+    	 BC_FAULT_RUNNING_PROPERTY ; return;
 	}
 	int32_t tmp_state=data->getInt32Value(CMD_GIB_SETPULSE_STATE);
 
@@ -92,7 +92,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	setWorkState(true);
+
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler

@@ -55,7 +55,6 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		SCLERR_ << "Channel parameter not present";
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false);
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
@@ -64,7 +63,6 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		SCLERR_ << "Voltage parameter value not present";
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Voltage parameter  not present" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false);
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
@@ -78,7 +76,6 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter out of bounds" );
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    	setWorkState(false);
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
@@ -95,7 +92,6 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 			SCLERR_ << "Voltage parameter over the max (" << *maxVol << ")";
 			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Voltage parameter too high" );
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-    		setWorkState(false);
 			BC_FAULT_RUNNING_PROPERTY;
 			return;
 		}
@@ -119,7 +115,6 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
-	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler

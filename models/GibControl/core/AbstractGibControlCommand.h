@@ -42,7 +42,6 @@ namespace driver {
 			uint8_t implementedHandler();
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
-			void setWorkState(bool working);
 			void clearCUAlarms();
 		};// AbstractGibControlCommand
 	}// gibcontrol

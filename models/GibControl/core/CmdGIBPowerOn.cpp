@@ -52,7 +52,6 @@ void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command PowerOn not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
-	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler

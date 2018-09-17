@@ -64,8 +64,7 @@ uint8_t AbstractGibControlCommand::implementedHandler() {
 void AbstractGibControlCommand::ccHandler() {
 
 }
-void AbstractGibControlCommand::setWorkState(bool working_flag) {
-}
+
 
 void AbstractGibControlCommand::clearCUAlarms() {
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
