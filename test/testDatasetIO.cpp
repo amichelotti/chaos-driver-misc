@@ -218,7 +218,7 @@ int main(int argc, const char** argv) {
                 total+=res.size();
                 end_time=chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
                 avg=total*1000000.0/(end_time-start_time);
-                printf("Retrived %.8lu items, total items %.8llu items/s:%.4f tot us:%.10llu\r",res.size(),total,avg,(end_time-start_time));
+                printf("Retrived %.8lu items, total items %.8u items/s:%.4f tot us:%.10llu\r",res.size(),total,avg,(end_time-start_time));
                 reterr+=checkData(test,res,pckmissing,pckt,pcktreplicated,pckmalformed,badid);
 
             }

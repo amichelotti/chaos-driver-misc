@@ -122,6 +122,7 @@ for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++) delete (*i);}
             return -1;
            }
     }
+    return 0;
     }
 uint64_t getState( chaos::CUStateKey::ControlUnitState &state){
 	 chaos::CUStateKey::ControlUnitState ret,prev;

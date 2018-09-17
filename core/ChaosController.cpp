@@ -1160,15 +1160,19 @@ void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::strin
 
 }
 */
-int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page)
-{
+int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
+    std::vector<std::string> tags;
+    return queryHistory(start,end,tags, channel,res, page);
+}
+int32_t ChaosController::queryHistory(const std::string& start,const std::string& end,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page){
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
     int32_t ret = 0, err = 0;
     chaos::common::io::QueryCursor *query_cursor = NULL;
     if (page == 0)
     {
-        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+        std::set<std::string> tagsv(tags.begin(),tags.end());
+        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagsv, &query_cursor);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1253,7 +1257,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
             if (query_cursor->hasNext())
             {
                 ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-                if (err = query_cursor->getError())
+                if ((err = query_cursor->getError()))
                 {
                     query_cursor_map.erase(query_cursor_map.find(uid));
                     controller->releaseQuery(query_cursor);
@@ -2920,7 +2924,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         else
                         {
                             int32_t err;
-                            if (err = query_cursor->getError())
+                            if ((err = query_cursor->getError()))
                             {
                                 controller->releaseQuery(query_cursor);
                                 bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", % getPath() % err));
@@ -3116,7 +3120,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     if ((!query_cursor->hasNext()) || clear_req)
                     {
                         int32_t err;
-                        if (err = query_cursor->getError())
+                        if ((err = query_cursor->getError()))
                         {
                             controller->releaseQuery(query_cursor);
                             query_cursor_map.erase(query_cursor_map.find(uid));
