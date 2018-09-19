@@ -245,7 +245,7 @@ int main(int argc, const char **argv)
             push_time=(end_time - start_time)-overhead_tot;
 
             push_avg = loops * 1000000.0 / push_time;
-            std::cout << test.getUid() << ": Average time bson raw size:" << my_ouput->getBSONRawSize() << " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << std::endl;
+            std::cout << test.getUid() << ": Average time bson raw size:" << my_ouput->getBSONRawSize() << " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << " overhead:"<<overhead_tot<<std::endl;
             if (wait_retrive)
             {
                 std::cout << "* waiting " << wait_retrive << " s before retrive data" << std::endl;
@@ -263,8 +263,10 @@ int main(int argc, const char **argv)
             {
                 std::vector<ChaosDataSet> res = test.queryHistoryDatasets(query_time_start, query_time_end);
                 end_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-                pull_avg = res.size() * 1000000.0 / (end_time - start_time);
-                printf("Retrived %.8lu items items/s:%.4f tot us:%.10llu\r", res.size(), pull_avg, (end_time - start_time));
+                pull_time=(end_time - start_time);
+
+                pull_avg = res.size() * 1000000.0 / pull_time;
+                printf("Retrived %.8lu items items/s:%.4f tot us:%.10llu\r", res.size(), pull_avg, pull_time);
                 total = res.size();
                 reterr += checkData(test, res, pckmissing, pckt, pcktreplicated, pckmalformed, badid);
             }
