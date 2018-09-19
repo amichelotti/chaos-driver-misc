@@ -516,7 +516,7 @@ void ChaosDatasetIO::deinit()
         query_cursor_map.erase(i++);
     }
     //RIMANE APPESO SU UN LOCK
-    //    CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+    CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
     DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
 
     DEBUG_CODE(DPD_LDBG << "Deinitialized");

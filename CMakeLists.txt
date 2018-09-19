@@ -40,3 +40,5 @@ INSTALL_TARGETS(/lib ${PROJECT_NAME})
 FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/core)
 
+FILE(GLOB files "test/etc/*.gnuplot")
+INSTALL(FILES ${files} DESTINATION etc/)

@@ -97,7 +97,7 @@ int main(int argc, const char **argv)
     double delta;
     bool binary;
     std::string rfilename;
-    uint32_t pointincr = 0, pointmax = npoints;
+    uint32_t pointincr = 0, pointmax = 0;
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"), "name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"), "name of the group (US)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0), "Page len to recover data");
@@ -110,15 +110,17 @@ int main(int argc, const char **argv)
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("ampshift", po::value<double>(&ampshift)->default_value(0.9999), "Modify amplitude every loop, 0= no modify");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("binary", po::value<bool>(&binary)->default_value(false), "The wave is in binary");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("report", po::value<std::string>(&rfilename)->default_value("report.csv"), "The report file name");
-    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("pointincr", po::value<uint32_t>(&pointincr)->default_value(0), "Increment points by number, from points to pointmaz");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("pointincr", po::value<uint32_t>(&pointincr)->default_value(pointincr), "Increment points by 2^number, from points to pointmaz");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("pointmax", po::value<uint32_t>(&pointmax)->default_value(pointmax), "Max point");
 
     ChaosMetadataServiceClient::getInstance()->init(argc, argv);
     ChaosMetadataServiceClient::getInstance()->start();
-
-    fstream fs(rfilename);
-    fs<<"size,push/s,pull/s,loop,push time(us),pull time(us)"<<std::endl;
-    for (uint32_t point_cnt = npoints; point_cnt <= pointmax; point_cnt+=pointincr)
+    if(pointmax==0){
+        pointmax=npoints;
+    }
+    ofstream fs(rfilename);
+    fs<<"points,payload size(KB),push/s,pull/s,loop,push time(us),pull time(us),bandwith(MB/s),overhead(us)"<<std::endl;
+    for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(point_cnt+=pointincr):(point_cnt=(pow(pointincr,incr))),incr++)
     {
         std::vector<double> val;
         ChaosDatasetIO test(name);
@@ -243,9 +245,10 @@ int main(int argc, const char **argv)
             end_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
             uint64_t query_time_end = chaos::common::utility::TimingUtil::getTimeStamp();
             push_time=(end_time - start_time)-overhead_tot;
-
+            float payloadKB= my_ouput->getBSONRawSize()/1024.0;
             push_avg = loops * 1000000.0 / push_time;
-            std::cout << test.getUid() << ": Average time bson raw size:" << my_ouput->getBSONRawSize() << " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << " overhead:"<<overhead_tot<<std::endl;
+            float bandwithMB=(payloadKB/1024.0)*push_avg;
+            std::cout << test.getUid() << ": Average time payload size(KB):" <<payloadKB<< " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << " points:"<<point_cnt<<" bandwith (MB/s):"<<bandwithMB<<" overhead:"<<overhead_tot<<std::endl;
             if (wait_retrive)
             {
                 std::cout << "* waiting " << wait_retrive << " s before retrive data" << std::endl;
@@ -298,7 +301,7 @@ int main(int argc, const char **argv)
             else
             {
                 std::cout << "check ok" << std::endl;
-                fs<<my_ouput->getBSONRawSize()<<","<<push_avg<<","<<pull_avg<<","<<loops<<","<<push_time<<","<<pull_time<<std::endl;
+                fs<<point_cnt<<","<<payloadKB<<","<<push_avg<<","<<pull_avg<<","<<loops<<","<<push_time<<","<<pull_time<<","<<bandwithMB<<","<<overhead_tot<<std::endl;
 
             }
         }
