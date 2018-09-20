@@ -96,8 +96,9 @@ int main(int argc, const char **argv)
     double freq = 1, phase = 0, amp = 1, afreq, aamp;
     double delta;
     bool binary;
-    std::string rfilename;
     uint32_t pointincr = 0, pointmax = 0;
+    std::string reportName(argv[0]);
+    reportName=reportName+".csv";
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsname", po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"), "name of the dataset (CU)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("dsgroup", po::value<std::string>(&group)->default_value("DATASETIO"), "name of the group (US)");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0), "Page len to recover data");
@@ -109,7 +110,7 @@ int main(int argc, const char **argv)
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("freqshift", po::value<double>(&freqshift)->default_value(0.001), "Modify freq Hz every loop, 0= no modify");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("ampshift", po::value<double>(&ampshift)->default_value(0.9999), "Modify amplitude every loop, 0= no modify");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("binary", po::value<bool>(&binary)->default_value(false), "The wave is in binary");
-    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("report", po::value<std::string>(&rfilename)->default_value("report.csv"), "The report file name");
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("report", po::value<std::string>(&reportName)->default_value(reportName), "The report file name");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("pointincr", po::value<uint32_t>(&pointincr)->default_value(pointincr), "Increment points by 2^number, from points to pointmaz");
     ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("pointmax", po::value<uint32_t>(&pointmax)->default_value(pointmax), "Max point");
 
@@ -118,7 +119,7 @@ int main(int argc, const char **argv)
     if(pointmax==0){
         pointmax=npoints;
     }
-    ofstream fs(rfilename);
+    ofstream fs(reportName);
     fs<<"points,payload size(KB),push/s,pull/s,loop,push time(us),pull time(us),bandwith(MB/s),overhead(us)"<<std::endl;
     for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(point_cnt+=pointincr):(point_cnt=(pow(pointincr,incr))),incr++)
     {
