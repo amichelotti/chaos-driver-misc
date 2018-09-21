@@ -5,7 +5,6 @@ SET(messlib ChaosMESS.cpp DefaultCommand.cpp DummyDriver.cpp CmdCalcTrxDelay.cpp
 SET(MessMonitor_src test/messMonitor.cpp)
 SET(MessClient_src test/messClient.cpp)
 INCLUDE_DIRECTORIES(. ..)
-ADD_DEFINITIONS(-O3)
 ADD_EXECUTABLE(MessMonitor ${MessMonitor_src})
 ADD_EXECUTABLE(MessClient ${MessClient_src})
 MESSAGE(info "libraries:${FrameworkLib}")
