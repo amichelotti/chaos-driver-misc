@@ -56,23 +56,33 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     try
     {
         InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
-
+    }
+    catch (...)
+    {
+    }
         //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
         ioLiveDataDriver = chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
         network_broker = NetworkBroker::getInstance();
+     
         mds_message_channel = network_broker->getMetadataserverMessageChannel();
-        if (!mds_message_channel)
-            throw chaos::CException(-1, "No mds channel found", __PRETTY_FUNCTION__);
+        
       //  ioLiveDataDriver->init(NULL);
+      try{
         StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
+      } catch(...){
+          
+      }
         runid = time(NULL);
         for (int cnt = 0; cnt < sizeof(pkids) / sizeof(uint64_t); cnt++)
         {
             pkids[cnt] = 0;
         }
+   
+    if (!network_broker){
+        throw chaos::CException(-1, "No network broker found for:"+name, __PRETTY_FUNCTION__);
     }
-    catch (...)
-    {
+    if (!mds_message_channel){
+        throw chaos::CException(-1, "No mds channel found for:"+name, __PRETTY_FUNCTION__);
     }
     uid = groupName + "/" + datasetName;
 }
