@@ -60,13 +60,19 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     catch (...)
     {
     }
-        //ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
-        ioLiveDataDriver = chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
+
+    // pool
+        ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
+        ioLiveShDataDriver = chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
         network_broker = NetworkBroker::getInstance();
      
         mds_message_channel = network_broker->getMetadataserverMessageChannel();
         
-      //  ioLiveDataDriver->init(NULL);
+        ioLiveDataDriver->init(NULL);
+        CDWUniquePtr tmp_data_handler;
+         if(!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler, 5000)){
+         ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
+        }
       try{
         StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
       } catch(...){
@@ -84,7 +90,12 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     if (!mds_message_channel){
         throw chaos::CException(-1, "No mds channel found for:"+name, __PRETTY_FUNCTION__);
     }
-    uid = groupName + "/" + datasetName;
+    if(groupName==""){
+        uid=datasetName;
+        
+    } else{
+        uid = groupName + "/" + datasetName;
+    }
 }
 
 int ChaosDatasetIO::setAgeing(uint64_t secs)
@@ -314,7 +325,13 @@ void ChaosDatasetIO::createMDSEntry()
     {
         EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, timeo, groupName, "datasetIO", 0);
     }
-    uid = groupName + "/" + datasetName;
+    if(groupName==""){
+        uid =  datasetName;
+
+    } else {
+        uid = groupName + "/" + datasetName;
+    }
+    
     cud.auto_load = 1;
     cud.auto_init = 1;
     cud.auto_start = 1;
@@ -526,7 +543,9 @@ void ChaosDatasetIO::deinit()
         query_cursor_map.erase(i++);
     }
     //RIMANE APPESO SU UN LOCK
-    CHAOS_NOT_THROW(InizializableService::deinitImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+    if(ioLiveShDataDriver.use_count()==1){
+        CHAOS_NOT_THROW(InizializableService::deinitImplementation(ioLiveShDataDriver.get(), "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__););
+    }
     DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
 
     DEBUG_CODE(DPD_LDBG << "Deinitialized");

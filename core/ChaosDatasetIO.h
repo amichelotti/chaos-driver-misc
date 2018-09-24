@@ -21,8 +21,9 @@ namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO             :protected chaos::common::async_central::TimerHandler{
-            // chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
-            ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveDataDriver;
+             chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+
+            ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
             

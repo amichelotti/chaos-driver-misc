@@ -123,7 +123,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
     {
         std::vector<double> val;
         mutex_sync.lock();
-        ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name));
+        ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name,""));
         mutex_sync.unlock();
         ChaosDataSet my_input = test->allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
         ChaosDataSet my_ouput = test->allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
@@ -166,6 +166,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
         my_input->addInt32Value("icounter32", 0);
         my_input->addStringValue("istringa", "hello input dataset");
         my_input->addDoubleValue("idoublevar", 0.0);
+
         int tenpercent = loops / 10;
         if (test->registerDataset() == 0)
         {
