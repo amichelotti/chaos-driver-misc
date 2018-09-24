@@ -237,14 +237,14 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
                 {
                     usleep(waitloops);
                 }
-                if ((cnt % tenpercent) == 0)
+		/*                if ((cnt % tenpercent) == 0)
                 {
                     int cntt = cnt + 1;
                     end_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
                     push_time=(end_time - start_time);
                     push_avg = cntt * 1000000.0 / push_time;
                     std::cout << "["<<name<<"]\t Average time for:" << cntt << " loops is:" << push_avg << " push/s, tot us: " << push_time << std::endl;
-                }
+		    }*/
             }
             end_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
             uint64_t query_time_end = chaos::common::utility::TimingUtil::getTimeStamp();
