@@ -34,14 +34,16 @@ static int checkData(ChaosUniquePtr<ChaosDatasetIO>& test, std::vector<ChaosData
             if (p != test->getRunID())
             {
                 std::cout << "\t ##[" << cnt << "] error different runid found:" << p << " expected:" << test->getRunID() << std::endl;
-                reterr++;
+         
                 badid++;
+		reterr++;
                 continue;
             }
         }
         else
         {
-            pcktmalformed++;
+	  reterr++;
+	  pcktmalformed++;
         }
         if ((*i)->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
         {
@@ -95,6 +97,7 @@ typedef struct _testParams{
     uint32_t pull_time;
     float bandwith;
     float overhead;
+    uint32_t errors;
 } testparam_t;
 static testparam_t* params;
 static testparam_t params_common;
@@ -249,10 +252,10 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
             end_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
             uint64_t query_time_end = chaos::common::utility::TimingUtil::getTimeStamp();
             push_time=(end_time - start_time)-overhead_tot;
-            payloadKB= my_ouput->getBSONRawSize()/1024.0;
+            payloadKB= my_ouput->getBSONRawSize();
             push_avg = loops * 1000000.0 / push_time;
-             bandwithMB=(payloadKB/1024.0)*push_avg;
-            std::cout << "["<<name<<"] : Average time payload size(KB):" <<payloadKB<< " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << " points:"<<point_cnt<<" bandwith (MB/s):"<<bandwithMB<<" overhead:"<<overhead_tot<<std::endl;
+            bandwithMB=(payloadKB/(1024.0*1024))*push_avg;
+            std::cout << "["<<name<<"] : Average time payload size(Bytes):" <<payloadKB<< " loops:" << loops << " is:" << push_avg << " push/s, tot us: " << push_time << " points:"<<point_cnt<<" bandwith (MB/s):"<<bandwithMB<<" overhead:"<<overhead_tot<<std::endl;
             if (wait_retrive)
             {
                 std::cout << "["<<name<<"] waiting " << wait_retrive << " s before retrive data" << std::endl;
@@ -305,6 +308,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
             else
             { 
                 std::cout <<"["<<name<<"] check ok" << std::endl;
+            }
                 tparam.points=point_cnt;
                 tparam.payload=payloadKB;
                 tparam.push_sec=push_avg;
@@ -313,7 +317,8 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
                 tparam.pull_time=pull_time;
                 tparam.bandwith=bandwithMB;
                 tparam.overhead=overhead_tot;
-            }
+                tparam.errors=err;
+
         }
         else
         {
@@ -333,7 +338,8 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
             params_common.push_time=0;
             params_common.pull_time=0;
             params_common.bandwith=0;
-            params_common.overhead+=0;
+            params_common.overhead=0;
+            params_common.errors=0;
             for(int cnt=0;cnt<nthreads;cnt++){
                 
                 params_common.push_sec+=params[cnt].push_sec;
@@ -342,12 +348,13 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
                 params_common.pull_time+=params[cnt].pull_time;
                 params_common.bandwith+=params[cnt].bandwith;
                 params_common.overhead+=params[cnt].overhead;
+                params_common.errors+=params[cnt].errors;
             }
                 params_common.push_time/=nthreads;
                 params_common.pull_time/=nthreads;
                 params_common.overhead/=nthreads;
-                fs<<point_cnt<<","<<payloadKB<<","<<params_common.push_sec<<","<<params_common.pull_sec<<","<<loops<<","<<params_common.push_time<<","<<params_common.pull_time<<","<<params_common.bandwith<<","<<params_common.overhead<<std::endl;
-                std::cout<<point_cnt<<","<<payloadKB<<","<<params_common.push_sec<<","<<params_common.pull_sec<<","<<loops<<","<<params_common.push_time<<","<<params_common.pull_time<<","<<params_common.bandwith<<","<<params_common.overhead<<std::endl;
+                fs<<point_cnt<<","<<payloadKB<<","<<params_common.push_sec<<","<<params_common.pull_sec<<","<<loops<<","<<params_common.push_time<<","<<params_common.pull_time<<","<<params_common.bandwith<<","<<params_common.overhead<<","<<params_common.errors<<","<<nthreads<<std::endl;
+                std::cout<<point_cnt<<","<<payloadKB<<","<<params_common.push_sec<<","<<params_common.pull_sec<<","<<loops<<","<<params_common.push_time<<","<<params_common.pull_time<<","<<params_common.bandwith<<","<<params_common.overhead<<","<<params_common.errors<<","<<nthreads<<std::endl;
 
             mutex_sync.unlock();            
             cond.notify_all();
@@ -399,7 +406,7 @@ int main(int argc, const char **argv)
     fs.open(reportName);
     boost::thread* workers[nthreads];
     params=new testparam_t[nthreads];
-    fs<<"points,payload size(KB),push/s,pull/s,loop,push time(us),pull time(us),bandwith(MB/s),overhead(us)"<<std::endl;
+    fs<<"points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull time(us),bandwith(MB/s),overhead(us),errors,threads"<<std::endl;
 
     for(int cnt=0;cnt<nthreads;cnt++){
         std::stringstream ss;

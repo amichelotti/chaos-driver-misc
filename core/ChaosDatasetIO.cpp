@@ -68,7 +68,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
      
         mds_message_channel = network_broker->getMetadataserverMessageChannel();
         
-        ioLiveDataDriver->init(NULL);
+	//        ioLiveDataDriver->init(NULL);
         CDWUniquePtr tmp_data_handler;
          if(!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler, 5000)){
          ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
