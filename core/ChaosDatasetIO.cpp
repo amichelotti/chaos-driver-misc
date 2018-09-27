@@ -523,6 +523,10 @@ void ChaosDatasetIO::deinit()
     {
         EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
     }
+    DEBUG_CODE(DPD_LDBG << "Timer removed");
+
+    chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
+
     sleep(2);
     HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
@@ -553,8 +557,6 @@ void ChaosDatasetIO::deinit()
 
     deinitialized = true;
     DEBUG_CODE(DPD_LDBG << "Destroy all resources");
-    chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
-    DEBUG_CODE(DPD_LDBG << "Timer removed");
 
     CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
     DEBUG_CODE(DPD_LDBG << "Health stopped");

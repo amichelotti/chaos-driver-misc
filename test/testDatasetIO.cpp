@@ -42,8 +42,8 @@ static int checkData(ChaosUniquePtr<ChaosDatasetIO>& test, std::vector<ChaosData
         }
         else
         {
-	  reterr++;
-	  pcktmalformed++;
+	    reterr++;
+	    pcktmalformed++;
         }
         if ((*i)->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
         {
@@ -329,7 +329,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
      {
         mutex_sync.lock();
         if(++thread_done==nthreads){
-            std::cout <<"["<<name<<"] restart all:" << thread_done<<" points:"<<point_cnt<<std::endl;
+            //std::cout <<"["<<name<<"] restart all:" << thread_done<<" points:"<<point_cnt<<std::endl;
             thread_done=0;
             params_common.points=point_cnt;
             params_common.payload=payloadKB*nthreads;
