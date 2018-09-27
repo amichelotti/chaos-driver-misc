@@ -30,7 +30,7 @@ TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_clien
 TARGET_LINK_LIBRARIES(UnitServerLite chaos_common  chaos_cutoolkit pthread)
 
 INSTALL_TARGETS(/bin/misc testSumOperatorUI)
-INSTALL_TARGETS(/bin/misc testDataSetIO)
+INSTALL_TARGETS(/bin testDataSetIO)
 INSTALL_TARGETS(/bin UnitServerLite)
 
 

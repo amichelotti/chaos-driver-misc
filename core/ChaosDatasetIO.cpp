@@ -56,6 +56,8 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     try
     {
         InizializableService::initImplementation(chaos::common::io::SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+        ioLiveShDataDriver = chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
+
     }
     catch (...)
     {
@@ -63,7 +65,6 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
 
     // pool
         ioLiveDataDriver =  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
-        ioLiveShDataDriver = chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()->getSharedDriver();
         network_broker = NetworkBroker::getInstance();
      
         mds_message_channel = network_broker->getMetadataserverMessageChannel();
@@ -345,16 +346,16 @@ void ChaosDatasetIO::createMDSEntry()
     {
         EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription, timeo, cud);
     }
-    HealtManager::getInstance()->addNewNode(uid);
+    CHAOS_NOT_THROW(HealtManager::getInstance()->addNewNode(uid););
     //add push rate metric
-    HealtManager::getInstance()->addNodeMetric(uid,
+    CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(uid,
                                                chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
-                                               chaos::DataType::TYPE_DOUBLE);
+                                               chaos::DataType::TYPE_DOUBLE););
 
-    HealtManager::getInstance()->addNodeMetricValue(uid,
+    CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
-                                                    true);
+                                                    true);)
     CHAOS_NOT_THROW(StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
 
 }
