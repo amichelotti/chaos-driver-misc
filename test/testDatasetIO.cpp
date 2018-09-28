@@ -325,9 +325,11 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
             LERR_ << "["<<name<<"] cannot register!:";
             err++;
         }
-     test->deinit();
+
+
      {
         mutex_sync.lock();
+	test->deinit();
         if(++thread_done==nthreads){
             //std::cout <<"["<<name<<"] restart all:" << thread_done<<" points:"<<point_cnt<<std::endl;
             thread_done=0;
@@ -421,6 +423,6 @@ int main(int argc, const char **argv)
     }
     delete [] params;
     ChaosMetadataServiceClient::getInstance()->stop();
-    ChaosMetadataServiceClient::getInstance()->deinit();
+    //    ChaosMetadataServiceClient::getInstance()->deinit();
     return 0;
 }
