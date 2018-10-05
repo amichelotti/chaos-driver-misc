@@ -261,7 +261,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
                 std::cout << "["<<name<<"] waiting " << wait_retrive << " s before retrive data" << std::endl;
                 sleep(wait_retrive);
             }
-            std::cout << "["<<name<<"] recovering data... from:" << query_time_start << " to:" << query_time_end << " runID:" << test->getRunID() << " pagelen:" << pagelen << std::endl;
+            std::cout << "["<<name<<"] retriving data... from:" << query_time_start << " to:" << query_time_end << " runID:" << test->getRunID() << " pagelen:" << pagelen << std::endl;
             start_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
             uint32_t uid = test->queryHistoryDatasets(query_time_start, query_time_end, pagelen);
             uint32_t total = 0;
