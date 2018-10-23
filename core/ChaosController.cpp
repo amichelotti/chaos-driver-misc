@@ -592,8 +592,15 @@ uint64_t ChaosController::sched(uint64_t ts)
 
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
         if(channels[cnt].get()){
-            cachedJsonChannels[cnt] = channels[cnt]->getCompliantJSONString();
-            all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+            std::string tmp= channels[cnt]->getCompliantJSONString();
+            if(tmp.size()<2){
+                cachedJsonChannels[cnt] ="{}";
+            } else {
+                cachedJsonChannels[cnt] =tmp;
+                all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+
+            }
+            
         }
         if ((static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainHealth) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainSystem) ||
@@ -3580,7 +3587,7 @@ void ChaosController::dev_info_status::status(chaos::CUStateKey::ControlUnitStat
     }
 }
 
-void ChaosController::dev_info_status::append_log(std::string log)
+void ChaosController::dev_info_status::append_log(const std::string& log)
 {
     CTRLDBG_ << log;
     snprintf(log_status, sizeof(log_status), "%s%s;", log_status, log.c_str());
@@ -3593,7 +3600,7 @@ void ChaosController::dev_info_status::reset()
     *log_status = 0;
 }
 
-void ChaosController::dev_info_status::append_error(std::string log)
+void ChaosController::dev_info_status::append_error(const std::string& log)
 {
     CTRLERR_ << log;
     snprintf(error_status, sizeof(error_status), "%s%s;", error_status, log.c_str());
