@@ -14,7 +14,7 @@ using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
 #include <math.h>
 #include <boost/thread.hpp>
-static tot_error=0;
+static int tot_error=0;
 /*
  *
  */
