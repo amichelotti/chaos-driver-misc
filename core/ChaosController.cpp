@@ -997,10 +997,14 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         if (p.hasKey("alive"))                                                                     \
         {                                                                                          \
             alive = p.getBoolValue("alive");                                                       \
-        }                                                                                          \
-        if (p.hasKey("name"))                                                                      \
-        {                                                                                          \
-            name = p.getStringValue("name");                                                       \
+        }
+        if (p.hasKey("name"))  \                                                                    
+        {        \
+            if(p.isVector("name")){                                                                 \
+                names=p.getVectorValue("name");   
+            } else {                                                                                 \
+                name = p.getStringValue("name");                                                       \
+            } /
         }                                                                                          \
         if (p.hasKey("what"))                                                                      \
         {                                                                                          \
