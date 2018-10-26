@@ -2361,6 +2361,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (names.get() && (names->size() > 0))
             {
                 res << "]";
+                ret = CHAOS_DEV_OK;
+
             }
             json_buf = res.str();
             return ret;
