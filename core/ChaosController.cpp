@@ -1713,6 +1713,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         {
                             DBGET << "Set Snapshot found \"" << chaos::datasetTypeToHuman(cnt) << "\"";
                             ChaosUniquePtr<CDataWrapper> ds = json_value->getCSDataValue(chaos::datasetTypeToHuman(cnt));
+                            ds->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE,cnt);
                             if (ds->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) && ds->isStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID))
                             {
                                 uid = ds->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
@@ -1726,7 +1727,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode, MDS_TIMEOUT, name, uid, datasets);
                     }
-                    json_buf = json_value->getCompliantJSONString();
                     CALC_EXEC_TIME
                     return CHAOS_DEV_OK;
                 }
