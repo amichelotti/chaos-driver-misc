@@ -268,11 +268,11 @@ int ChaosController::init(std::string p, uint64_t timeo_)
 
     bundle_state.reset();
     bundle_state.status(state);
-    ChaosWriteLock ll(ioctrl);
     DBGET << "init CU NAME:\"" << path << "\""
           << " timeo:" << timeo_;
     last_access = reqtime = tot_us = naccess = refresh = 0;
 
+    /*
      if (controller != NULL) {
 
         DBGET << " removing existing controller";
@@ -280,6 +280,8 @@ int ChaosController::init(std::string p, uint64_t timeo_)
         ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
         controller = NULL;
     }
+    */
+    ChaosWriteLock ll(ioctrl);
 
     try
     {
