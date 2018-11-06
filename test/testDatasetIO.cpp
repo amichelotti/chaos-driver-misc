@@ -14,7 +14,7 @@ using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
 #include <math.h>
 #include <boost/thread.hpp>
-
+static int tot_error=0;
 /*
  *
  */
@@ -375,6 +375,7 @@ for (uint32_t point_cnt = npoints,incr=2; point_cnt <= pointmax; (incr==0)?(poin
      }
     cond.notify_all();
     }
+    tot_error+=err;
     return err;
 }
 int main(int argc, const char **argv)
@@ -424,5 +425,5 @@ int main(int argc, const char **argv)
     delete [] params;
     ChaosMetadataServiceClient::getInstance()->stop();
     //    ChaosMetadataServiceClient::getInstance()->deinit();
-    return 0;
+    return tot_error;
 }

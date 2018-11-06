@@ -127,8 +127,8 @@ private:
          chaos::common::data::CDataWrapper data_wrapper;
          dev_info_status();
          void status(chaos::CUStateKey::ControlUnitState deviceState);
-         void append_log(std::string log);
-         void append_error(std::string log);
+         void append_log(const std::string& log);
+         void append_error(const std::string& log);
          void reset();
          chaos::common::data::CDataWrapper * getData();
      };
