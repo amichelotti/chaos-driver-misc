@@ -249,6 +249,7 @@ private:
       chaos::common::data::VectorCDWShrdPtr getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
+      int sendMDSCmd(command_t& cmd);
       boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper*src,std::map<std::string,int>& list);
 
 

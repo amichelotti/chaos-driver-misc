@@ -18,6 +18,8 @@
 #include <chaos_metadata_service_client/api_proxy/control_unit/Delete.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
 #include <chaos_metadata_service_client/api_proxy/agent/agent.h>
+#include <chaos_metadata_service_client/api_proxy/node/CommandTemplateSubmit.h>
+
 #include <chaos_metadata_service_client/api_proxy/logging/logging.h>
 #include <chaos/common/utility/TimingUtil.h>
 
@@ -401,7 +403,31 @@ int ChaosController::waitCmd(command_t &cmd)
 
     return -100;
 }
-
+int ChaosController::sendMDSCmd(command_t& cmd){
+    CDWUniquePtr local_command_pack(new CDataWrapper());
+    CDWUniquePtr result_data;
+    
+    local_command_pack->appendAllElement(cmd->param);
+    
+    
+    // set the default slow command information
+    local_command_pack->addStringValue(chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_ALIAS, cmd->alias);
+    local_command_pack->addInt32Value(chaos::common::batch_command::BatchCommandSubmissionKey::SUBMISSION_RULE_UI32, (uint32_t) cmd->sub_rule);
+    local_command_pack->addInt32Value(chaos::common::batch_command::BatchCommandSubmissionKey::SUBMISSION_PRIORITY_UI32, (uint32_t) cmd->priority);
+    
+    local_command_pack->addInt64Value(chaos::common::batch_command::BatchCommandSubmissionKey::SCHEDULER_STEP_TIME_INTERVALL_UI64, cmd->scheduler_steps_delay);
+    local_command_pack->addInt32Value(chaos::common::batch_command::BatchCommandSubmissionKey::SUBMISSION_RETRY_DELAY_UI32,  cmd->submission_checker_steps_delay);
+    
+    //err = deviceChannel->setAttributeValue(local_command_pack, false, millisecToWait);
+    local_command_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, path);
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(local_command_pack); 
+    apires->setTimeout(5000);                                                                                         
+    apires->wait();                                                                                                   
+    if (apires->getError() ){  
+        return -1;                            
+    }
+    return 0;
+}
 int ChaosController::sendCmd(command_t &cmd, bool wait, uint64_t perform_at, uint64_t wait_for)
 {
     int err = 0;
@@ -3225,11 +3251,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             command->priority = prio;
             command->sub_rule = (submission_mode == 1) ? chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL : chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
+#ifndef CMD_BY_MDS           
             err = sendCmd(command, false);
+#else
+            err = sendMDSCmd(command);
+#endif  
             if (err != 0)
             {
                 init(path, timeo);
+#ifndef CMD_BY_MDS           
                 err = sendCmd(command, false);
+#else                
+                err = sendMDSCmd(command);
+#endif
                 if (err != 0)
                 {
                     std::stringstream ss;
