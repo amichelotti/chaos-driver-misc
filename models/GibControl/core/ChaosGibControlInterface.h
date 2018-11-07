@@ -30,7 +30,7 @@ namespace chaos {
 #define MAX_STR_SIZE 256
 		namespace gibcontrol {
 			typedef enum {
-				OP_INIT = chaos_driver::OpcodeType::OP_USER, // init low level driver
+				
 				OP_DEINIT, // deinit low level driver
 				OP_SETPULSE,
 				OP_SETCHANNELVOLTAGE,
@@ -39,8 +39,8 @@ namespace chaos {
 				OP_GETVOLTAGES,
 				OP_GETNUMOFCHANNELS,
 				OP_GETPULSINGSTATE,
-				OP_GETSUPPLYVOLTAGES,
-				OP_GET_FEATURE
+				OP_GETSUPPLYVOLTAGES
+				
 			} ChaosGibControlOpcode;
 			typedef struct {
 				uint32_t timeout;

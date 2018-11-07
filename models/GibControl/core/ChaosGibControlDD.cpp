@@ -43,15 +43,7 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 	gibcontrol_iparams_t *in = (gibcontrol_iparams_t *)cmd->inputData;
 	gibcontrol_oparams_t *out = (gibcontrol_oparams_t *)cmd->resultData;
 	 switch(cmd->opcode){
-		case OP_INIT:
-			ACDBG<< "Initializing";
-			out->result = devicedriver->init(NULL);
-			break;
-		case OP_GET_FEATURE:
-			{uint64_t feat=devicedriver->getFeatures();
-			out->int64_t1=feat;
-			ACDBG<<"Got Features:"<<feat;
-			}break;
+		
 		case OP_SETPULSE: {
 			out->result=devicedriver->setPulse(in->int32_t1,in->int32_t2,in->int32_t3,in->int32_t4);
 			ACDBG << "Sent to driver command setPulse result is " << out->result;
