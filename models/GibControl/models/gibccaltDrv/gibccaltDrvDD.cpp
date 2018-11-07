@@ -32,7 +32,7 @@ chaos::driver::gibcontrol::gibccaltDrvDD::gibccaltDrvDD() {
 chaos::driver::gibcontrol::gibccaltDrvDD::~gibccaltDrvDD() {
 }
 #ifdef CHAOS
-void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const chaos::common::data::CDataWrapper& json) throw(chaos::CException) {
+void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const chaos::common::data::CDataWrapper& json) {
 	DRLAPP<< "Initializing gibccaltDrvDD HL Driver with CDataWrapper "<<std::endl;
 	if (devicedriver) {
 		throw chaos::CException(1,"Already Initialized ","gibccaltDrvDD::driverInit");
@@ -44,7 +44,7 @@ void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const chaos::common::d
 	}
 }
 #endif
-void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const char* initParameter) throw(chaos::CException) {
+void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const char* initParameter) {
 	DRLAPP<< "Initializing gibccaltDrvDD HL Driver with string "<< initParameter <<std::endl;
 	if (devicedriver) {
 		throw chaos::CException(1,"Already Initialized ","gibccaltDrvDD::driverInit");
