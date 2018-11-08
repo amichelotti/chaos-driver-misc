@@ -4,7 +4,7 @@
  *
  * Created on September 2, 2015, 5:29 PM
  */
-
+#define CMD_BY_MDS
 #include "ChaosController.h"
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <chaos_metadata_service_client/api_proxy/unit_server/NewUS.h>
@@ -409,7 +409,7 @@ int ChaosController::sendMDSCmd(command_t& cmd){
     
     local_command_pack->appendAllElement(cmd->param);
     
-    
+    /*
     // set the default slow command information
     local_command_pack->addStringValue(chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_ALIAS, cmd->alias);
     local_command_pack->addInt32Value(chaos::common::batch_command::BatchCommandSubmissionKey::SUBMISSION_RULE_UI32, (uint32_t) cmd->sub_rule);
@@ -417,10 +417,13 @@ int ChaosController::sendMDSCmd(command_t& cmd){
     
     local_command_pack->addInt64Value(chaos::common::batch_command::BatchCommandSubmissionKey::SCHEDULER_STEP_TIME_INTERVALL_UI64, cmd->scheduler_steps_delay);
     local_command_pack->addInt32Value(chaos::common::batch_command::BatchCommandSubmissionKey::SUBMISSION_RETRY_DELAY_UI32,  cmd->submission_checker_steps_delay);
-    
+    */    
     //err = deviceChannel->setAttributeValue(local_command_pack, false, millisecToWait);
     local_command_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, path);
-    chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(local_command_pack); 
+
+    //chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(local_command_pack); 
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(
+    path,cmd->alias,cmd->sub_rule,cmd->priority,cmd->scheduler_steps_delay,cmd->submission_checker_steps_delay,local_command_pack);
     apires->setTimeout(5000);                                                                                         
     apires->wait();                                                                                                   
     if (apires->getError() ){  
