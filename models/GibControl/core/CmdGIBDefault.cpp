@@ -62,19 +62,33 @@ void own::CmdGIBDefault::acquireHandler() {
 	if ((err=gibcontrol_drv->getState(&state,descr)) != 0)
 	{
 		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
+		 if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		
 	}
-    *o_status_id=state;
-    o_status=strncpy(o_status,descr.c_str(),256);
-	SCLDBG_ << "o_status: " << o_status;
-	SCLDBG_ << "o_status_id: " << *o_status_id;
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+    	*o_status_id=state;
+    	o_status=strncpy(o_status,descr.c_str(),256);
+		SCLDBG_ << "o_status: " << o_status;
+		SCLDBG_ << "o_status_id: " << *o_status_id;
+	}
 	//SCLDBG_ << "o_alarms: " << *o_alarms;
 	std::vector<double> Voltaggi;
 	if ((err=gibcontrol_drv->getVoltages(Voltaggi)) != 0 )
 	{
-		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve channel voltages");
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve channel voltages");
+		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
 	}
 	else
 	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
 			char nums[8];
@@ -82,17 +96,22 @@ void own::CmdGIBDefault::acquireHandler() {
 			std::string attrname=(std::string)"CH"+ nums;
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
-	   		
 		}
 	}
 	std::vector<int32_t> Amp;
 	std::vector<int32_t> Wid;
 	if ((err=gibcontrol_drv->getPulsingState(Amp,Wid)) != 0 )
 	{
-		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
+		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+
 	}
 	else
 	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Amp.size(); i++)
 		{
 			ptAmpls[i]=Amp[i];
@@ -100,7 +119,20 @@ void own::CmdGIBDefault::acquireHandler() {
 		}
 	}
 
-	err=gibcontrol_drv->getSupplyVoltages(this->hvsupply,this->Supply5V,this->SupplyN5V);
+	if ((err=gibcontrol_drv->getSupplyVoltages(this->hvsupply,this->Supply5V,this->SupplyN5V)) != 0 )
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve supply voltages");
+		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+
+	}
+	else
+	{
+		DPRINT("ALEDEBUG 4");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
 
 
 

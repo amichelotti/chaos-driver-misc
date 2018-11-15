@@ -48,6 +48,7 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	SCLAPP_ << "Set Handler setChannelVoltage "; 
 	inputVoltageResolution= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
 	this->clearCUAlarms();
+	
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_GIB_SETCHANNELVOLTAGE_CHANNEL)) 
@@ -104,7 +105,8 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	if ( CHECKMASK(*o_status_id,::common::gibcontrol::GIBCONTROL_SUPPLIED) == false )
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning,"cannot set HV channels when device is off");
-		BC_END_RUNNING_PROPERTY
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
 	
