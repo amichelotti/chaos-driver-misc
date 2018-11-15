@@ -45,8 +45,9 @@ uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
 // empty set handler
 void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
-	SCLAPP_ << "Set Handler setChannelVoltage "; 
+	
 	inputVoltageResolution= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
+	SCLAPP_ << "Set Handler setChannelVoltage "; 
 	this->clearCUAlarms();
 	
 	//setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
@@ -96,6 +97,23 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 			BC_FAULT_RUNNING_PROPERTY;
 			return;
 		}
+	}
+	const double* minVol = getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "min_channel_voltage"); 
+	if ((minVol==NULL) || (*minVol==0) )
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning,"min channel voltage value not set in configuration. No Control of data from CU");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+	}
+	else
+	{
+		if (*maxVol < tmp_Voltage)
+		{
+			SCLERR_ << "Voltage parameter below the min (" << *minVol << ")";
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Voltage parameter too low" );
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"bad_command_parameter",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			BC_FAULT_RUNNING_PROPERTY;
+			return;
+		}
 
 	}
 
@@ -135,14 +153,23 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		return;
 	}
 	
-	int32_t channelVoltageResolution=0;
+	double channelVoltageResolution=0;
 	if ((inputVoltageResolution!= NULL) && ((*inputVoltageResolution) != 0) )
 	    channelVoltageResolution=(*inputVoltageResolution);
 	
 	if (this->chanNum != -1)
 	{
-		if ( std::abs(readChannels[chanNum] - this->setValue) <= channelVoltageResolution) 
+		//DPRINT( "checkTimeout now %f SET=%f, resolution=%f",readChannels[chanNum],this->setValue,channelVoltageResolution);
+		if ( std::fabs(readChannels[chanNum] - this->setValue) <= channelVoltageResolution) 
 		{
+			char Num[8];
+			sprintf(Num,"%d",chanNum);
+			std::string chanName=(std::string)"CH"+Num;
+			double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
+			
+			*chan=this->setValue;
+			getAttributeCache()->setInputDomainAsChanged();
+			//SCLDBG_ << "chan is" << chan << "value " <<*chan; 
 			BC_END_RUNNING_PROPERTY;
 		}
 	}
@@ -153,6 +180,12 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		{
 			if ( std::abs(readChannels[i] - this->setValue) > channelVoltageResolution) 
 			{
+				char Num[8];
+				sprintf(Num,"%d",i);
+				std::string chanName=(std::string)"CH"+Num;
+				double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
+				*chan=this->setValue;
+				getAttributeCache()->setInputDomainAsChanged();
 				allOk=false;
 			}
 		}

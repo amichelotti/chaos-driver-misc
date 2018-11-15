@@ -53,8 +53,8 @@ namespace driver {
 			SCGibControlControlUnit(const std::string& _control_unit_id,const std::string& _control_unit_param,const ControlUnitDriverList& _control_unit_drivers);
 			/*Base Destructor*/
 			~SCGibControlControlUnit();
-			/*handlers*/
-			bool PowerOn(const std::string &name,int32_t,uint32_t size);
+			
+			bool setPowerOn(int32_t value,bool sync = true);
 		};
 	}
 }

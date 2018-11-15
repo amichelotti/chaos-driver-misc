@@ -123,6 +123,12 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"The max value of voltage to be set on each channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Input);
+
+	addAttributeToDataSet("min_channel_voltage",
+							"The min value of voltage to be set on each channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+
 	addAttributeToDataSet("voltage_channel_resolution",
 							"The resolution on setting voltage channel and the tolerated drift from the setpoint",
 							DataType::TYPE_DOUBLE,
@@ -198,42 +204,142 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDeinit() {
 	//! restore the control unit to snapshot
 #define RESTORE_LAPP SCCUAPP << "[RESTORE-" <<getCUID() << "] "
 #define RESTORE_LERR SCCUERR << "[RESTORE-" <<getCUID() << "] "
+#define RESTORE_LDBG SCCUDBG << "[RESTORE-" << getCUID() << "] "
 bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache)  {
+	uint64_t start_restore_time= chaos::common::utility::TimingUtil::getTimeStamp();
+	try
+	{
+		if (snapshot_cache == NULL)
+		{
+			RESTORE_LERR << "cache nulla";
+			return false;
+		}
+		//check if in the restore cache we have all information we need
+		if (snapshot_cache->getSharedDomain(DOMAIN_INPUT).hasAttribute("voltage_channel_resolution"))
+		{
+			double restore_channel_resolution = *snapshot_cache->getAttributeValue(DOMAIN_INPUT, "voltage_channel_resolution")->getValuePtr<double>();
+			double* chanRes = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "voltage_channel_resolution");
+			if (chanRes != NULL)
+			{
+				RESTORE_LDBG << "Restoring channel resolution";
+			    *chanRes=restore_channel_resolution;
+				getAttributeCache()->setInputDomainAsChanged();
+			}
+			{
+				RESTORE_LDBG << "NOT Restoring channel resolution because of null";
+			}
+		}
+		RESTORE_LDBG << "Restore Check if  cache for status_id";
+		if (!snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("status_id"))
+		{
+			RESTORE_LERR << " missing status_id to restore";
+			return false;
+		}
+		int32_t restore_power_sp = *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "status_id")->getValuePtr<int32_t>();
+		RESTORE_LDBG << "Restore in cache status is " << restore_power_sp;
+		restore_power_sp=(int32_t)((restore_power_sp & ::common::gibcontrol::GIBCONTROL_SUPPLIED) != 0);
+    	RESTORE_LDBG << "Restore Trying to set power at " << restore_power_sp;
+		if (!setPowerOn(restore_power_sp))
+		{
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError, CHAOS_FORMAT("Error applying power on during restore \"%1%\"  to power %2% ", % getDeviceID()  % restore_power_sp));
+			return false;
+		}
+    	sleep(1);
+		int nums;
+		gibcontrol_drv->getNumOfChannels(&nums);
+		if (restore_power_sp==1)
+		{
+			for (int i=0;i < nums; ++i)
+			{
+				char chVal[8];
+       			sprintf(chVal,"%d",i);
+				std::string chanToRestore=(std::string)"CH"+ chVal ;
+				if (!snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute(chanToRestore))
+				{
+					RESTORE_LERR << " missing "<<chanToRestore <<" to restore";
+					return false;
+				}
+				else
+				{
+					double restore_channel_value= *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, chanToRestore)->getValuePtr<double>();
+					int ok=myFunc(chanToRestore,restore_channel_value,5);
+					if (!ok)
+					{
+						RESTORE_LERR << " Failed to restore channel "<<chanToRestore << "restore Abort";
+						return false;
+					}
+				}
+				//sleep(1);//
+
+			}
+		}
+		return true;
+	}
+	 catch (CException &ex)
+	{
+		uint64_t restore_duration_in_ms = chaos::common::utility::TimingUtil::getTimeStamp() - start_restore_time;
+		RESTORE_LERR << "[metric] Restore has fault in " << restore_duration_in_ms << " milliseconds";
+		throw ex;
+	}
+
+
+
 	return false;
 }
-bool ::driver::gibcontrol::SCGibControlControlUnit::waitOnCommandID(uint64_t cmd_id) {
+bool ::driver::gibcontrol::SCGibControlControlUnit::waitOnCommandID(uint64_t cmd_id) 
+{
  ChaosUniquePtr<chaos::common::batch_command::CommandState> cmd_state;
-do { 
-cmd_state = getStateForCommandID(cmd_id);
-if (!cmd_state.get()) break;
-switch (cmd_state->last_event) {
-case BatchCommandEventType::EVT_QUEUED:
-SCCUAPP << cmd_id << " -> QUEUED";
-break;
-case BatchCommandEventType::EVT_RUNNING:
-SCCUAPP << cmd_id << " -> RUNNING"; 
-break;
-case BatchCommandEventType::EVT_WAITING:
-SCCUAPP << cmd_id << " -> WAITING";
-break;
-case BatchCommandEventType::EVT_PAUSED:
-SCCUAPP << cmd_id << " -> PAUSED";
-break;
-case BatchCommandEventType::EVT_KILLED:
-SCCUAPP << cmd_id << " -> KILLED";
-break;
-case BatchCommandEventType::EVT_COMPLETED:
-SCCUAPP << cmd_id << " -> COMPLETED";
-break;
-case BatchCommandEventType::EVT_FAULT:
-    SCCUAPP << cmd_id << " -> FAULT";
-break;
+do 
+{ 
+	cmd_state = getStateForCommandID(cmd_id);
+	if (!cmd_state.get()) break;
+	switch (cmd_state->last_event) 
+	{
+		case BatchCommandEventType::EVT_QUEUED:
+		SCCUAPP << cmd_id << " -> QUEUED";
+		break;
+		case BatchCommandEventType::EVT_RUNNING:
+		SCCUAPP << cmd_id << " -> RUNNING"; 
+		break;
+		case BatchCommandEventType::EVT_WAITING:
+		SCCUAPP << cmd_id << " -> WAITING";
+		break;
+		case BatchCommandEventType::EVT_PAUSED:
+		SCCUAPP << cmd_id << " -> PAUSED";
+		break;
+		case BatchCommandEventType::EVT_KILLED:
+		SCCUAPP << cmd_id << " -> KILLED";
+		break;
+		case BatchCommandEventType::EVT_COMPLETED:
+		SCCUAPP << cmd_id << " -> COMPLETED";
+		break;
+		case BatchCommandEventType::EVT_FAULT:
+			SCCUAPP << cmd_id << " -> FAULT";
+		break;
+	}
+	usleep(500000);
+} 
+while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&  cmd_state->last_event != BatchCommandEventType::EVT_FAULT &&     cmd_state->last_event != BatchCommandEventType::EVT_KILLED);
+return (cmd_state.get() && cmd_state->last_event == BatchCommandEventType::EVT_COMPLETED);
 }
-usleep(500000);
-} while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&
-        cmd_state->last_event != BatchCommandEventType::EVT_FAULT &&
-    cmd_state->last_event != BatchCommandEventType::EVT_KILLED);
-return (cmd_state.get() &&
-cmd_state->last_event == BatchCommandEventType::EVT_COMPLETED);
+bool ::driver::gibcontrol::SCGibControlControlUnit::setPowerOn(int32_t value, bool sync)
+{
+  uint64_t cmd_id;
+  bool result = true;
 
+  SCCUAPP << "LAUNCHING BATCH COMMAND cmdGIBPowerOn " << value;
+  ChaosUniquePtr<CDataWrapper> cmd_pack(new CDataWrapper());
+  cmd_pack->addInt32Value(CMD_GIB_POWERON_ON_STATE, value);
+  //send command
+  submitBatchCommand(CMD_GIB_POWERON_ALIAS,
+                     cmd_pack.release(),
+                     cmd_id,
+                     0,
+                     50,
+                     SubmissionRuleType::SUBMIT_AND_STACK);
+  if (sync)
+  {
+    result = waitOnCommandID(cmd_id);
+  }
+  return result;
 }

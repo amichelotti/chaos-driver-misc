@@ -32,7 +32,7 @@ DEFAULT_CU_DRIVER_PLUGIN_CONSTRUCTOR_WITH_NS(chaos::driver::gibcontrol, ChaosGib
 }
 ChaosGibControlDD::~ChaosGibControlDD() {
 }
-void ChaosGibControlDD::driverDeinit() throw(chaos::CException) {
+void ChaosGibControlDD::driverDeinit()  {
 	 if(devicedriver) {
 		delete devicedriver;
 	}
@@ -58,23 +58,23 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosGibControlDD::execOpc
 			} break;
 		case OP_GETSTATE: {
 			out->result=devicedriver->getState(&out->int32_tP1,out->stringE1);
-			ACDBG << "Sent to driver command getState result is " << out->result;
+			//ACDBG << "Sent to driver command getState result is " << out->result;
 			} break;
 		case OP_GETVOLTAGES: {
 			out->result=devicedriver->getVoltages(out->vector_double_E1);
-			ACDBG << "Sent to driver command getVoltages result is " << out->result;
+			//ACDBG << "Sent to driver command getVoltages result is " << out->result;
 			} break;
 		case OP_GETNUMOFCHANNELS: {
 			out->result=devicedriver->getNumOfChannels(&out->int32_tP1);
-			ACDBG << "Sent to driver command getNumOfChannels result is " << out->result;
+			//ACDBG << "Sent to driver command getNumOfChannels result is " << out->result;
 			} break;
 		case OP_GETPULSINGSTATE: {
 			out->result=devicedriver->getPulsingState(out->vector_int32_t_E1,out->vector_int32_t_E2);
-			ACDBG << "Sent to driver command getPulsingState result is " << out->result;
+			//ACDBG << "Sent to driver command getPulsingState result is " << out->result;
 			} break;
 		case OP_GETSUPPLYVOLTAGES: {
 			out->result=devicedriver->getSupplyVoltages(&out->doubleP1,&out->doubleP2,&out->doubleP3);
-			ACDBG << "Sent to driver command getSupplyVoltages result is " << out->result;
+			//ACDBG << "Sent to driver command getSupplyVoltages result is " << out->result;
 			} break;
 	}
 	return result;
