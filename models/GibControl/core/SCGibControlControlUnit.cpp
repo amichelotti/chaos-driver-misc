@@ -192,6 +192,32 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitInit()  {
 }
 // Abstract method for the start of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStart()  {
+	std::vector<double> Voltaggi;
+	int err;
+	if ((err=gibcontrol_drv->getVoltages(Voltaggi)) != 0 )
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve channel voltages");
+		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		for (int i=0; i < Voltaggi.size(); i++)
+		{
+			char nums[8];
+			sprintf(nums,"%d",i);
+			std::string attrname=(std::string)"CH"+ nums;
+			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
+			double *tmpI=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,attrname);
+			*tmp=Voltaggi[i];
+			*tmpI=Voltaggi[i];
+			getAttributeCache()->setInputDomainAsChanged();
+			getAttributeCache()->setOutputDomainAsChanged();
+		}
+	}
 }
 // Abstract method for the stop of the control unit
 void ::driver::gibcontrol::SCGibControlControlUnit::unitStop()  {
@@ -249,19 +275,20 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos:
 		gibcontrol_drv->getNumOfChannels(&nums);
 		if (restore_power_sp==1)
 		{
+			chaos::common::data::cache::SharedCacheDomain restoreDomain=DOMAIN_INPUT;
 			for (int i=0;i < nums; ++i)
 			{
 				char chVal[8];
        			sprintf(chVal,"%d",i);
 				std::string chanToRestore=(std::string)"CH"+ chVal ;
-				if (!snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute(chanToRestore))
+				if (!snapshot_cache->getSharedDomain(restoreDomain).hasAttribute(chanToRestore))
 				{
 					RESTORE_LERR << " missing "<<chanToRestore <<" to restore";
 					return false;
 				}
 				else
 				{
-					double restore_channel_value= *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, chanToRestore)->getValuePtr<double>();
+					double restore_channel_value= *snapshot_cache->getAttributeValue(restoreDomain, chanToRestore)->getValuePtr<double>();
 					int ok=myFunc(chanToRestore,restore_channel_value,5);
 					if (!ok)
 					{

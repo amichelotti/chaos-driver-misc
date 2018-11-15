@@ -180,17 +180,21 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		{
 			if ( std::abs(readChannels[i] - this->setValue) > channelVoltageResolution) 
 			{
-				char Num[8];
-				sprintf(Num,"%d",i);
-				std::string chanName=(std::string)"CH"+Num;
-				double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
-				*chan=this->setValue;
-				getAttributeCache()->setInputDomainAsChanged();
+				
 				allOk=false;
 			}
 		}
 		if (allOk==true)
 		{
+			for (int i=0;i < (*this->numOfchannels);++i)
+			{
+				char Num[8];
+				sprintf(Num,"%d",i);
+				std::string chanName=(std::string)"CH"+Num;
+				double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
+				*chan=this->setValue;
+			}
+			getAttributeCache()->setInputDomainAsChanged();
 			BC_END_RUNNING_PROPERTY;
 		}
 	}
