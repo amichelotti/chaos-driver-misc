@@ -130,7 +130,6 @@ void own::CmdGIBDefault::acquireHandler() {
 	}
 	else
 	{
-		DPRINT("ALEDEBUG 4");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	}
 
