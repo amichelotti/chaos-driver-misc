@@ -85,7 +85,7 @@ void own::CmdGIBsetPulse::setHandler(c_data::CDataWrapper *data) {
 	this->chanToPulse=tmp_channel;
 	this->stateToSet=tmp_state;
 	int err=0;
-	if (err=gibcontrol_drv->setPulse(tmp_channel,tmp_amplitude,tmp_width,tmp_state) != 0)
+	if ((err=gibcontrol_drv->setPulse(tmp_channel,tmp_amplitude,tmp_width,tmp_state)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setPulse not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
