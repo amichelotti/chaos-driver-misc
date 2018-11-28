@@ -12,6 +12,8 @@
 #include <map>
 #include <string>
 #include <chaos/common/chaos_constants.h>
+#include <chaos/common/data/DatasetDB.h>
+
 #include <common/misc/scheduler/SchedTimeElem.h>
 #include <chaos/common/data/CDataWrapper.h>
 #include <chaos/common/io/IODataDriver.h>
@@ -59,6 +61,8 @@ private:
      chaos::common::io::IODataDriverShrdPtr live_driver;
      std::vector<std::string> mds_server_l;
      std::string path;
+     chaos::common::data::DatasetDB datasetDB;
+
      chaos::CUStateKey::ControlUnitState state,last_state,next_state;
      uint64_t timeo,schedule;
      std::map<std::string,int> binaryToTranslate;
@@ -100,7 +104,7 @@ private:
      void deinitializeClient();
      uint64_t  last_ts[DPCK_LAST_DATASET_INDEX+1],delta_update;
      uint64_t  last_pckid[DPCK_LAST_DATASET_INDEX+1];
-
+    void update();
   public:  
 
      typedef enum {
@@ -158,18 +162,25 @@ private:
     virtual ~ChaosController();
     
    
-    int init(std::string path, uint64_t timeo);
-    
+    int initDevice(const std::string& dev="");
+    int stopDevice(const std::string& dev="");
+    int startDevice(const std::string& dev="");
+    int deinitDevice(const std::string& dev="");
+    int loadDevice(const std::string& dev="");
+    int unloadDevice(const std::string& dev="");
+    int setAttributeToValue(const char *attributeName, const char *attributeValue, const std::string& cuname="");
+
+    int init(const std::string&p,uint64_t timeo);
     virtual int init(int force=0);
     virtual int stop(int force=0);
     virtual int start(int force=0);
     virtual int deinit(int force=0);
-    virtual int setSchedule(uint64_t us);
+    virtual int setSchedule(uint64_t us, const std::string& cuname="");
     /**
      * @return the state or negative if error
      *  
      */
-    virtual uint64_t getState( chaos::CUStateKey::ControlUnitState & state);
+    virtual uint64_t getState( chaos::CUStateKey::ControlUnitState & state,const std::string& dev="");
     virtual uint64_t getTimeStamp();
     /**
      * send a command
@@ -244,9 +255,25 @@ private:
     int getSnapshotsofCU(const std::string&cuname,std::map<uint64_t, std::string>&res);
     /*void dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname);*/
     uint64_t lastAccess(){return reqtime;}
-     ChaosSharedPtr<chaos::common::data::CDataWrapper> getLiveChannel(std::string&key,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
-      chaos::common::data::VectorCDWShrdPtr getLiveChannel(std::vector<std::string>&keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
-      chaos::common::data::VectorCDWShrdPtr getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
+     /**
+      * Return one live channel corresponding to a CUname and a domain
+     */
+     ChaosSharedPtr<chaos::common::data::CDataWrapper> getLiveChannel(const std::string&CUNAME="",int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
+    /**
+     * Return an array of live channels referring to an array of keys 
+     * */  
+    chaos::common::data::VectorCDWShrdPtr getLiveChannel(const std::vector<std::string>&keys);
+
+    /**
+     * Return an array of live channels referring to an array of CUnames of a particular domain
+     * */  
+    chaos::common::data::VectorCDWShrdPtr getLiveChannel(const std::vector<std::string>&CUNAMEs,int domain);
+      /**
+     * Return all the available live channels of a given CUNAME
+     * */  
+    chaos::common::data::VectorCDWShrdPtr getLiveAllChannels(const std::string&CUNAME="");
+
+    chaos::common::data::VectorCDWShrdPtr getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys,int domain= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
 protected:
       int sendCmd(command_t& cmd,bool wait,uint64_t perform_at=0,uint64_t wait_for=0);
       int sendMDSCmd(command_t& cmd);

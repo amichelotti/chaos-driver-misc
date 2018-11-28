@@ -51,7 +51,6 @@ using namespace ::driver::misc;
 
 void ChaosController::setTimeout(uint64_t timeo_us)
 {
-    controller->setRequestTimeWaith(timeo_us / 1000);
     timeo = timeo_us;
 }
 
@@ -83,7 +82,7 @@ int ChaosController::forceState(int dstState)
         {
         case chaos::CUStateKey::DEINIT:
             DBGET << "[deinit] apply \"init\"";
-            controller->initDevice();
+            initDevice();
             break;
 
         case chaos::CUStateKey::INIT:
@@ -91,13 +90,13 @@ int ChaosController::forceState(int dstState)
             {
             case chaos::CUStateKey::DEINIT:
                 DBGET << "[init] apply \"deinit\" ";
-                controller->deinitDevice();
+                deinitDevice();
                 break;
             case chaos::CUStateKey::START:
             case chaos::CUStateKey::STOP:
                 DBGET << "[init] apply \"start\"";
                 ;
-                controller->startDevice();
+                startDevice();
                 break;
             }
 
@@ -105,7 +104,7 @@ int ChaosController::forceState(int dstState)
 
         case chaos::CUStateKey::START:
             DBGET << "[start] apply \"stop\"";
-            controller->stopDevice();
+            stopDevice();
             break;
 
         case chaos::CUStateKey::STOP:
@@ -114,11 +113,11 @@ int ChaosController::forceState(int dstState)
             case chaos::CUStateKey::DEINIT:
             case chaos::CUStateKey::INIT:
                 DBGET << "[stop] apply \"deinit\"";
-                controller->deinitDevice();
+                deinitDevice();
                 break;
             case chaos::CUStateKey::START:
                 DBGET << "[stop] apply \"start\"";
-                controller->startDevice();
+                startDevice();
                 break;
             }
 
@@ -172,7 +171,7 @@ int ChaosController::init(int force)
 
         return forceState(chaos::CUStateKey::INIT);
     }
-    return controller->initDevice();
+    return initDevice();
 }
 
 int ChaosController::stop(int force)
@@ -181,7 +180,7 @@ int ChaosController::stop(int force)
     {
         return forceState(chaos::CUStateKey::STOP);
     }
-    return controller->stopDevice();
+    return stopDevice();
 }
 
 int ChaosController::start(int force)
@@ -190,7 +189,7 @@ int ChaosController::start(int force)
     {
         return forceState(chaos::CUStateKey::START);
     }
-    return controller->startDevice();
+    return startDevice();
 }
 
 int ChaosController::deinit(int force)
@@ -199,15 +198,16 @@ int ChaosController::deinit(int force)
     {
         return forceState(chaos::CUStateKey::DEINIT);
     }
-    return controller->deinitDevice();
+    return deinitDevice();
 }
 
-uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat)
+uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,const std::string& dev)
 {
     uint64_t ret = 0;
-    CDataWrapper *tmp = controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth).get();
+    std::string name=(dev=="")?path:dev;
+    ChaosSharedPtr<chaos::common::data::CDataWrapper> tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
     stat = chaos::CUStateKey::UNDEFINED;
-    if (tmp && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
+    if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
         std::string state = tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
         if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
@@ -247,13 +247,6 @@ ChaosController::command_t ChaosController::prepareCommand(std::string alias)
     return cmd;
 }
 
-int ChaosController::setSchedule(uint64_t us)
-{
-
-    schedule = us;
-    return controller->setScheduleDelay(us);
-}
-
 std::string ChaosController::getJsonState()
 {
     std::string ret;
@@ -261,7 +254,7 @@ std::string ChaosController::getJsonState()
     return ret;
 }
 
-int ChaosController::init(std::string p, uint64_t timeo_)
+int ChaosController::init(const std::string& p, uint64_t timeo_)
 {
 
     path = p;
@@ -287,13 +280,14 @@ int ChaosController::init(std::string p, uint64_t timeo_)
 
     try
     {
-        if (controller == NULL)
+       /* if (controller == NULL)
         {
             ChaosMetadataServiceClient::getInstance()->getNewCUController(path, &controller);
         }
         else {
             controller->updateChannel();
         }
+        */
         
     }
     catch (chaos::CException &e)
@@ -309,13 +303,12 @@ int ChaosController::init(std::string p, uint64_t timeo_)
         CTRLERR_ << "bad handle for controller " << path;
         return -1;
     }
-    controller->setRequestTimeWaith(timeo_ / 1000);
-    controller->setupTracking();
+  
     timeo = timeo_;
     wostate = 0;
 
     setUid(path);
-
+/*
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
@@ -323,6 +316,7 @@ int ChaosController::init(std::string p, uint64_t timeo_)
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
     controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
+    */
     for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
         last_ts[cnt] = 0;
@@ -517,8 +511,16 @@ int ChaosController::executeCmd(command_t &cmd, bool wait, uint64_t perform_at, 
     }
     return ret;
 }
+void ChaosController::update(){
+    CDWUniquePtr tmp_data_handler;
+    CHAOS_ASSERT(deviceChannel)
+    LDBG_<<"UPDATING \""<<path<<"\"";
+    int err = mdsChannel->getLastDatasetForDevice(path, tmp_data_handler, MDS_TIMEOUT);
+    if(err!=0 || !tmp_data_handler.get()) return;
+    datasetDB.addAttributeToDataSetFromDataWrapper(*tmp_data_handler);
 
-ChaosController::ChaosController(std::string p, uint32_t timeo_) : common::misc::scheduler::SchedTimeElem(p, 0), timeo(timeo_)
+}
+ChaosController::ChaosController(std::string p, uint32_t timeo_) : common::misc::scheduler::SchedTimeElem(p, 0), timeo(timeo_),datasetDB(true)
 {
     int ret;
     controller = NULL;
@@ -682,11 +684,12 @@ uint64_t ChaosController::sched(uint64_t ts)
     return delta_update;
 }
 
-ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChannel(std::string &key, int domain)
+ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChannel(const std::string &key, int domain)
 {
     size_t value_len = 0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
-    std::string lkey = key + chaos::datasetTypeToPostfix(domain);
+    std::string CUNAME=(key=="")?path:key;
+    std::string lkey = CUNAME + chaos::datasetTypeToPostfix(domain);
     char *value = live_driver->retriveRawData(lkey, (size_t *)&value_len);
     if (value)
     {
@@ -697,17 +700,38 @@ ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChanne
     }
     return ret;
 }
-chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(std::vector<string> &keys, int domain)
+chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<string> &keys, int domain)
 {
     chaos::common::data::VectorCDWShrdPtr results;
     std::vector<std::string> channels;
-    for (std::vector<std::string>::iterator i = keys.begin(); i != keys.end(); i++)
+    for ( std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); i++)
     {
         channels.push_back(*i + chaos::datasetTypeToPostfix(domain));
     }
     live_driver->retriveMultipleData(channels, results);
     return results;
 }
+chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<std::string>&channels){
+    chaos::common::data::VectorCDWShrdPtr results;
+    live_driver->retriveMultipleData(channels, results);
+    return  results;
+}
+
+chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const std::string&n){
+    chaos::common::data::VectorCDWShrdPtr results;
+    std::vector<std::string> channels;
+    std::string CUNAME=(n=="")?path:n;
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainInput));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainOutput));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainSystem));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCustom));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
+    live_driver->retriveMultipleData(channels, results);
+    return results;
+}
+
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper *keys, int domain)
 {
     chaos::common::data::VectorCDWShrdPtr results;
@@ -720,7 +744,8 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     return results;
 }
 
-ChaosController::ChaosController() : common::misc::scheduler::SchedTimeElem("none", 0), controller(NULL), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER)
+ChaosController::ChaosController() : common::misc::scheduler::SchedTimeElem("none", 0), controller(NULL), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
+
 {
 
     mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
@@ -824,20 +849,15 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             uint64_t ts = 0;
             std::map<int, chaos::common::data::CDataWrapper *> set;
             CDataWrapper ch[7];
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainInput, &ch[0]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput, &ch[1]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth, &ch[2]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem, &ch[3]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainCustom, &ch[4]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm, &ch[5]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm, &ch[6]);
-            set[KeyDataStorageDomainInput] = &ch[0];
-            set[KeyDataStorageDomainOutput] = &ch[1];
-            set[KeyDataStorageDomainHealth] = &ch[2];
-            set[KeyDataStorageDomainSystem] = &ch[3];
-            set[KeyDataStorageDomainCustom] = &ch[4];
-            set[KeyDataStorageDomainDevAlarm] = &ch[5];
-            set[KeyDataStorageDomainCUAlarm] = &ch[6];
+            chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
+            set[KeyDataStorageDomainInput] = res[0].get();            
+            set[KeyDataStorageDomainOutput] = res[1].get();         
+            set[KeyDataStorageDomainHealth] =res[2].get();         
+            set[KeyDataStorageDomainSystem] =res[3].get();         
+            set[KeyDataStorageDomainCustom] =res[4].get();         
+            set[KeyDataStorageDomainDevAlarm] =res[5].get();         
+            set[KeyDataStorageDomainCUAlarm] = res[6].get();         
+        
 
             retdata = combineDataSets(set);
         }
@@ -849,22 +869,27 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             uint64_t ts = 0;
             std::map<int, chaos::common::data::CDataWrapper *> set;
             CDataWrapper ch[7];
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainHealth, &ch[0]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem, &ch[1]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainDevAlarm, &ch[2]);
-            controller->getCurrentDatasetForDomain(KeyDataStorageDomainCUAlarm, &ch[3]);
-            set[KeyDataStorageDomainHealth] = &ch[0];
-            set[KeyDataStorageDomainSystem] = &ch[1];
-            set[KeyDataStorageDomainDevAlarm] = &ch[2];
-            set[KeyDataStorageDomainCUAlarm] = &ch[3];
+            std::vector<std::string> channels;
+
+            channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
+            channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainSystem));
+            channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
+            channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
+            chaos::common::data::VectorCDWShrdPtr res=getLiveChannel(channels);
+            set[KeyDataStorageDomainHealth] =res[0].get();         
+            set[KeyDataStorageDomainSystem] =res[1].get();         
+            set[KeyDataStorageDomainDevAlarm] =res[2].get();         
+            set[KeyDataStorageDomainCUAlarm] = res[3].get();         
+
 
             retdata = combineDataSets(set);
         }
         else
         {
             CDataWrapper data;
+            ChaosSharedPtr<chaos::common::data::CDataWrapper> res=getLiveChannel();
 
-            if (controller->getCurrentDatasetForDomain((chaos::metadata_service_client::node_controller::DatasetDomain)channel, &data) != 0)
+            if (res.get()==NULL)
             {
                 std::stringstream ss;
                 retdata.reset(new CDataWrapper());
@@ -873,7 +898,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
                 retdata->appendAllElement(*bundle_state.getData());
                 return retdata;
             }
-            retdata = normalizeToJson(&data, binaryToTranslate);
+            retdata = normalizeToJson(res.get(), binaryToTranslate);
         }
 
         //        DBGET<<"channel "<<channel<<" :"<<data->getCompliantJSONString();
@@ -1110,7 +1135,13 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                    \
         return CHAOS_DEV_CMD;                                                                                           \
     }
-
+#define EXECUTE_CHAOS_RET_API(api_name, time_out, ...)                                                                        \
+    int ret;DBGET << " "                                                                                                          \
+          << " Executing Api:\"" << #api_name << "\"";                                                                    \
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__); \
+    apires->setTimeout(time_out);                                                                                         \
+    apires->wait();ret= apires->getError();                                                                                
+    
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
           << " Executing Api:\"" << #api_name << "\"";                                                                    \
@@ -1201,6 +1232,70 @@ void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::strin
 
 }
 */
+
+
+int ChaosController::setSchedule(uint64_t us, const std::string& cuname){
+    std::string name=(cuname=="")?path:cuname;
+    chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::GROUP_NAME);
+    pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
+    DBGET<<"["<<name<<"] set schedule to:"<<us<<" us";
+    EXECUTE_CHAOS_RET_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,pg);
+    
+    return ret;
+}
+
+int ChaosController::setAttributeToValue(const char *attributeName, const char *attributeValue, const std::string& cuname){
+    std::string name=(cuname=="")?path:cuname;
+
+    DBGET<<"["<<name<<"] Set attribute '"<<attributeName<<"'='"<<attributeValue<<"'";
+   ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue>  att_obj(new chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue(attributeName,attributeValue));
+   std::vector<ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue> > vc;
+   vc.push_back(att_obj);
+   ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::ControlUnitInputDatasetChangeSet> tmp(new chaos::metadata_service_client::api_proxy::control_unit::ControlUnitInputDatasetChangeSet(name,vc));
+
+   std::vector<ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::ControlUnitInputDatasetChangeSet> > change_set;
+    change_set.push_back(tmp);
+    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::SetInputDatasetAttributeValues, MDS_TIMEOUT, change_set);
+
+    return ret;
+}
+int ChaosController::initDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+    
+    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
+    return ret;
+
+}
+int ChaosController::stopDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+
+    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
+    return ret;
+}
+int ChaosController::startDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+
+    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
+    return ret;
+}
+int ChaosController::deinitDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+
+    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, false);
+    return ret;
+}
+int ChaosController::loadDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+
+    EXECUTE_CHAOS_RET_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
+    return ret;
+}
+int ChaosController::unloadDevice(const std::string& dev){
+    std::string name=(dev=="")?path:dev;
+
+    EXECUTE_CHAOS_RET_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
+    return ret;
+}
 int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
     std::vector<std::string> tags;
     return queryHistory(start,end,tags, channel,res, page);
@@ -2423,11 +2518,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         {
             wostate = 0;
             bundle_state.append_log("init device:" + path);
-            err = controller->initDevice();
+            err = initDevice();
             if (err != 0)
             {
                 init(path, timeo);
-                err = controller->initDevice();
+                err = initDevice();
             }
             if (err != 0)
             {
@@ -2443,11 +2538,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "start")
         {
             wostate = 0;
-            err = controller->startDevice();
+            err = startDevice();
             if (err != 0)
             {
                 init(path, timeo);
-                err = controller->startDevice();
+                err = startDevice();
             }
             if (err != 0)
             {
@@ -2462,11 +2557,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "stop")
         {
             wostate = 0;
-            err = controller->stopDevice();
+            err = stopDevice();
             if (err != 0)
             {
                 init(path, timeo);
-                err = controller->stopDevice();
+                err = stopDevice();
             }
             if (err != 0)
             {
@@ -2486,11 +2581,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "deinit")
         {
             wostate = 0;
-            err = controller->deinitDevice();
+            err = deinitDevice();
             if (err != 0)
             {
                 init(path, timeo);
-                err = controller->deinitDevice();
+                err = deinitDevice();
             }
             if (err != 0)
             {
@@ -2507,11 +2602,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "sched" && (args != 0))
         {
             bundle_state.append_log("sched device:" + path + " args:" + std::string(args));
-            err = controller->setScheduleDelay(atoll((char *)args));
+            err = setSchedule(atoll((char *)args));
             if (err != 0)
             {
                 init(path, timeo);
-                err = controller->setScheduleDelay(atoll((char *)args));
+                err = setSchedule(atoll((char *)args));
             }
             if (err != 0)
             {
@@ -3190,13 +3285,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 DBGET << "applying \"" << i->c_str() << "\"=" << param;
                 bundle_state.append_log("send attr:\"" + cmd + "\" args: \"" + std::string(param) + "\" to device:\"" + path + "\"");
-                err = controller->setAttributeToValue(i->c_str(), param, false);
+                err = setAttributeToValue(i->c_str(), param);
                 if (err != 0)
                 {
                     if (init(path, timeo) == 0)
                     {
                         DBGET << "error reapplying ...";
-                        err = controller->setAttributeToValue(i->c_str(), param, false);
+                        err = setAttributeToValue(i->c_str(), param);
                     }
                 }
                 if (err != 0)
