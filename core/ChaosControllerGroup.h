@@ -180,6 +180,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
         }
         
     }
+    #if 0
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
         if((*i)->T::waitCmd()!=0){
             CTRLERRG_<<" waiting command  "<<(*i)->getPath();   
@@ -187,6 +188,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
             return -1;
         }
     }
+    #endif
     
     return 0;
 

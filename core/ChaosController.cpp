@@ -34,6 +34,8 @@
 using namespace chaos::cu::data_manager;
 using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
+using namespace chaos;
+using namespace chaos::common::io;
 
 using namespace ::driver::misc;
 
@@ -124,21 +126,7 @@ int ChaosController::forceState(int dstState)
             break;
         default:
             return 0;
-            // controller->deinitDevice();
-            // controller->initDevice();
-            /*
-                 switch(dstState){
-                 case chaos::CUStateKey::DEINIT:
-                 break;
-                 case chaos::CUStateKey::INIT:
-                 break;
-                 case chaos::CUStateKey::START:
-                 controller->startDevice();
-                 break;
-                 case chaos::CUStateKey::STOP:
-                 controller->stopDevice();
-                 break;
-                 }*/
+            
         }
         if ((boost::posix_time::microsec_clock::local_time() - start).total_microseconds() > timeo)
         {
@@ -233,10 +221,13 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
     return 0;
 }
 
-uint64_t ChaosController::getTimeStamp()
+uint64_t ChaosController::getTimeStamp(const std::string& dev,int domain)
 {
-    uint64_t ret;
-    controller->getTimeStamp(ret);
+    uint64_t ret=0;
+    ChaosSharedPtr<chaos::common::data::CDataWrapper> obj=getLiveChannel(dev,domain);
+    if(obj.get()){
+        ret= obj->getInt64Value(DataPackCommonKey::DPCK_TIMESTAMP)*1000;
+    }
     return ret;
 }
 
@@ -254,6 +245,53 @@ std::string ChaosController::getJsonState()
     return ret;
 }
 
+void ChaosController::initializeAttributeIndexMap() {
+    //	boost::mutex::scoped_lock lock(trackMutext);
+    vector<string> attributeNames;
+    RangeValueInfo attributerangeInfo;
+    
+    attributeValueMap.clear();
+    
+    
+    //get all attribute name from db
+    datasetDB.getDatasetAttributesName(DataType::Input, attributeNames);
+    for (vector<string>::iterator iter = attributeNames.begin();
+         iter != attributeNames.end();
+         iter++) {
+        
+        if(datasetDB.getAttributeRangeValueInfo(*iter, attributerangeInfo)!=0){
+            LERR_<<"CANNOT RETRIVE attr range info of:"<<*iter;
+        }
+        //     LDBG_<<"IN attr:"<<attributerangeInfo.name<<" type:"<<attributerangeInfo.valueType<<" bin type:"<<attributerangeInfo.binType;
+        attributeValueMap.insert(make_pair(*iter, attributerangeInfo));
+        
+    }
+    
+    attributeNames.clear();
+    datasetDB.getDatasetAttributesName(DataType::Output, attributeNames);
+    for (vector<string>::iterator iter = attributeNames.begin();
+         iter != attributeNames.end();
+         iter++) {
+        
+        
+        if(datasetDB.getAttributeRangeValueInfo(*iter, attributerangeInfo)!=0){
+            LERR_<<"CANNOT RETRIVE attr range info of:"<<*iter;
+            
+        }
+        //    LDBG_<<"OUT attr:"<<attributerangeInfo.name<<" type:"<<attributerangeInfo.valueType<<" bin type:"<<attributerangeInfo.binType;
+        attributeValueMap.insert(make_pair(*iter, attributerangeInfo));
+        
+    }
+    
+}
+
+std::vector<chaos::common::data::RangeValueInfo> ChaosController::getDeviceValuesInfo(){
+    std::vector<chaos::common::data::RangeValueInfo> ret;
+    for(std::map<std::string,chaos::common::data::RangeValueInfo>::iterator i= attributeValueMap.begin();i!=attributeValueMap.end();i++)
+        ret.push_back(i->second);
+    
+    return ret;
+}
 int ChaosController::init(const std::string& p, uint64_t timeo_)
 {
 
@@ -267,56 +305,14 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
           << " timeo:" << timeo_;
     last_access = reqtime = tot_us = naccess = refresh = 0;
 
-    /*
-     if (controller != NULL) {
-
-        DBGET << " removing existing controller";
-
-        ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
-        controller = NULL;
-    }
-    */
     ChaosWriteLock ll(ioctrl);
 
-    try
-    {
-       /* if (controller == NULL)
-        {
-            ChaosMetadataServiceClient::getInstance()->getNewCUController(path, &controller);
-        }
-        else {
-            controller->updateChannel();
-        }
-        */
-        
-    }
-    catch (chaos::CException &e)
-    {
-        std::stringstream ss;
-        ss << "Exception during get controller for device:\"" << path << "\" ex: \"" << e.what() << "\"";
-        bundle_state.append_error(ss.str());
-        CTRLERR_ << "Exception during get controller for device:" << e.what();
-        return -3;
-    }
-    if (controller == NULL)
-    {
-        CTRLERR_ << "bad handle for controller " << path;
-        return -1;
-    }
-  
+   
     timeo = timeo_;
     wostate = 0;
 
     setUid(path);
-/*
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainInput);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainOutput);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainHealth);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainSystem);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCustom);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainDevAlarm);
-    controller->fetchCurrentDatatasetFromDomain(KeyDataStorageDomainCUAlarm);
-    */
+
     for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
         last_ts[cnt] = 0;
@@ -328,7 +324,7 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
         DBGET << "Uknown state for device assuming wostate";
         wostate = 1;
     }
-    std::vector<chaos::common::data::RangeValueInfo> vi = controller->getDeviceValuesInfo();
+    std::vector<chaos::common::data::RangeValueInfo> vi = getDeviceValuesInfo();
     for (std::vector<chaos::common::data::RangeValueInfo>::iterator i = vi.begin(); i != vi.end(); i++)
     {
         DBGET << "attr_name:" << i->name << "type:" << i->valueType;
@@ -341,17 +337,19 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
     DBGET << i->name<<" is of type64 :"<<i->valueType;
     }*/
     }
-    chaos::common::data::CDataWrapper *dataWrapper;
+    ChaosSharedPtr<chaos::common::data::CDataWrapper> dataWrapper;
     if (wostate)
     {
-        dataWrapper = controller->getCurrentDatasetForDomain(KeyDataStorageDomainOutput).get();
+        dataWrapper=getLiveChannel(path,KeyDataStorageDomainOutput);
+
     }
     else
     {
-        dataWrapper = controller->getCurrentDatasetForDomain(KeyDataStorageDomainSystem).get();
+        dataWrapper=getLiveChannel(path,KeyDataStorageDomainSystem);
+
     }
 
-    if (dataWrapper)
+    if (dataWrapper.get())
     {
         json_dataset = dataWrapper->getCompliantJSONString();
     }
@@ -360,13 +358,14 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
         CTRLERR_ << "cannot retrieve system dataset from " << path;
         return -3;
     }
-    DBGET << "initalization ok handle:" << (void *)controller;
+    DBGET << "initalization ok";
 
     last_access = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
 
     return 0;
 }
 
+/*
 int ChaosController::waitCmd()
 {
     return waitCmd(last_cmd);
@@ -397,6 +396,7 @@ int ChaosController::waitCmd(command_t &cmd)
 
     return -100;
 }
+*/
 int ChaosController::sendMDSCmd(command_t& cmd){
     CDWUniquePtr local_command_pack(new CDataWrapper());
     CDWUniquePtr result_data;
@@ -425,6 +425,7 @@ int ChaosController::sendMDSCmd(command_t& cmd){
     }
     return 0;
 }
+#if 0
 int ChaosController::sendCmd(command_t &cmd, bool wait, uint64_t perform_at, uint64_t wait_for)
 {
     int err = 0;
@@ -455,6 +456,45 @@ int ChaosController::sendCmd(command_t &cmd, bool wait, uint64_t perform_at, uin
     //    LAPP_ << "command after:" << ss.str().c_str();
     return err;
 }
+#endif
+int ChaosController::executeCmd(command_t &cmd, bool wait, uint64_t perform_at, uint64_t wait_for)
+{
+    int ret = sendMDSCmd(cmd);
+    if (ret != 0)
+    {
+        // retry to update channel
+        CTRLERR_ << "error sending command to:" << path << " update controller";
+
+        if (init(path, timeo) == 0)
+        {
+            ret = sendMDSCmd(cmd);
+        }
+        else
+        {
+            CTRLERR_ << "cannot reinitialize controller:" << path;
+        }
+        return ret;
+    }
+    last_cmd = cmd;
+    #if 0
+    if (wait)
+    {
+        DBGET << "waiting command id:" << cmd->command_id;
+        if ((ret = waitCmd(cmd)) != 0)
+        {
+            CTRLERR_ << "error waiting ret:" << ret;
+
+            return ret;
+        }
+        DBGET << "command performed";
+    }
+    #endif
+    return ret;
+}
+
+void ChaosController::releaseQuery(QueryCursor *query_cursor) {
+    live_driver->releaseQuery(query_cursor);
+}
 
 void ChaosController::cleanUpQuery()
 {
@@ -468,7 +508,7 @@ void ChaosController::cleanUpQuery()
             DBGET << " Expired max time for paged query, removing uid:" << i->first << " query started at:" << diff / 1000 << " s ago";
             if (i->second.qc)
             {
-                controller->releaseQuery(i->second.qc);
+                releaseQuery(i->second.qc);
             }
             query_cursor_map.erase(i);
             cleanedup++;
@@ -479,38 +519,7 @@ void ChaosController::cleanUpQuery()
         DBGET << " cleaned up " << cleanedup;
     }
 }
-int ChaosController::executeCmd(command_t &cmd, bool wait, uint64_t perform_at, uint64_t wait_for)
-{
-    int ret = sendCmd(cmd, wait, perform_at, wait_for);
-    if (ret != 0)
-    {
-        // retry to update channel
-        CTRLERR_ << "error sending command to:" << path << " update controller";
 
-        if (init(path, timeo) == 0)
-        {
-            ret = sendCmd(cmd, wait, perform_at, wait_for);
-        }
-        else
-        {
-            CTRLERR_ << "cannot reinitialize controller:" << path;
-        }
-        return ret;
-    }
-    last_cmd = cmd;
-    if (wait)
-    {
-        DBGET << "waiting command id:" << cmd->command_id;
-        if ((ret = waitCmd(cmd)) != 0)
-        {
-            CTRLERR_ << "error waiting ret:" << ret;
-
-            return ret;
-        }
-        DBGET << "command performed";
-    }
-    return ret;
-}
 void ChaosController::update(){
     CDWUniquePtr tmp_data_handler;
     CHAOS_ASSERT(deviceChannel)
@@ -518,12 +527,11 @@ void ChaosController::update(){
     int err = mdsChannel->getLastDatasetForDevice(path, tmp_data_handler, MDS_TIMEOUT);
     if(err!=0 || !tmp_data_handler.get()) return;
     datasetDB.addAttributeToDataSetFromDataWrapper(*tmp_data_handler);
-
+    initializeAttributeIndexMap();
 }
-ChaosController::ChaosController(std::string p, uint32_t timeo_) : common::misc::scheduler::SchedTimeElem(p, 0), timeo(timeo_),datasetDB(true)
+ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::misc::scheduler::SchedTimeElem(p, 0), timeo(timeo_),datasetDB(true)
 {
     int ret;
-    controller = NULL;
     heart = 0;
     mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
     if (!mdsChannel)
@@ -590,37 +598,11 @@ void ChaosController::deinitializeClient()
 uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
-    {
-        ChaosReadLock ll(ioctrl);
-        controller->fetchAllDataset();
-    }
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> channels[DPCK_LAST_DATASET_INDEX + 1];
+   
+    chaos::common::data::VectorCDWShrdPtr channels=getLiveAllChannels();
     delta_update = CU_HEALTH_UPDATE_US;
-    for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
+    for (int cnt = 0; cnt < channels.size(); cnt++)
     {
-        ChaosReadLock ll(ioctrl);
-        channels[cnt] = controller->getCurrentDatasetForDomain(static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt));
-
-        uint64_t tss, pckid;
-        if (channels[cnt]->hasKey("ndk_uid") && (channels[cnt]->getStringValue("ndk_uid") != path))
-        {
-            DBGETERR << "REALLIGN with CU RESTART because name mismatch \"" + channels[cnt]->getStringValue("ndk_uid") + "\" should be:\"" + path + "\"";
-            init(path, timeo);
-            continue;
-        }
-        /*if(channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
-            pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-            if(pckid<last_pckid[cnt]){
-                DBGETERR<<"REALLIGN with CU RESTART because pckid:"<<pckid<<" less than last:"<<last_pckid[cnt];
-                init(path,timeo);
-                continue;
-            }
-            last_pckid[cnt]=pckid;
-        }*/
-        if (!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP))
-        {
-            continue;
-        }
         ChaosWriteLock l(iomutex);
 
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
@@ -744,7 +726,7 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     return results;
 }
 
-ChaosController::ChaosController() : common::misc::scheduler::SchedTimeElem("none", 0), controller(NULL), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
+ChaosController::ChaosController() : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
 
 {
 
@@ -775,7 +757,6 @@ ChaosController::~ChaosController()
      db->disconnect();
      }
      */
-     ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
 
     if (mdsChannel)
     {
@@ -784,7 +765,6 @@ ChaosController::~ChaosController()
     }
    
     
-    controller = NULL;
     deinitializeClient();
     DBGET<<"deleted ChaosController:"<<getPath();
 }
@@ -1300,6 +1280,87 @@ int32_t ChaosController::queryHistory(const std::string &start, const std::strin
     std::vector<std::string> tags;
     return queryHistory(start,end,tags, channel,res, page);
 }
+
+void ChaosController::executeTimeIntervallQuery(DatasetDomain domain,
+                                             uint64_t      start_ts,
+                                             uint64_t      end_ts,
+                                             QueryCursor** query_cursor,
+                                            const std::string&name,
+                                             uint32_t      page) {
+  executeTimeIntervallQuery(
+      domain,
+      start_ts,
+      end_ts,
+      ChaosStringSet(),
+      query_cursor,
+      name,
+      page);
+}
+void ChaosController::executeTimeIntervallQuery(DatasetDomain domain,
+                                             uint64_t start_ts,
+                                             uint64_t end_ts,
+                                             const ChaosStringSet& meta_tags,
+                                             QueryCursor **query_cursor,
+                                             const std::string&name,
+                                             uint32_t page) {
+    if((domain>=0) && (domain<=DPCK_LAST_DATASET_INDEX)){
+        std::string n=(name=="")?path:name;
+        std::string lkey = n + chaos::datasetTypeToPostfix(domain);
+
+        *query_cursor = live_driver->performQuery(lkey,
+                                                       start_ts,
+                                                       end_ts,
+                                                       meta_tags,
+                                                       
+                                                       page);
+    }
+}
+
+void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
+                                            const uint64_t start_ts,
+                                            const uint64_t end_ts,
+                                            const uint64_t seqid,
+                                            const uint64_t runid,
+                                            chaos::common::io::QueryCursor **query_cursor,
+                                            const std::string&name,
+
+                                            const uint32_t page_len){
+executeTimeIntervalQuery(
+    domain,
+    start_ts,
+    end_ts,
+    seqid,
+    runid,
+    ChaosStringSet(),
+    query_cursor,
+    name,
+    page_len);
+}
+
+void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
+                                            const uint64_t start_ts,
+                                            const uint64_t end_ts,
+                                            const uint64_t seqid,
+                                            const uint64_t runid,
+                                            const ChaosStringSet& meta_tags,
+                                            chaos::common::io::QueryCursor **query_cursor,
+                                            const std::string&name,
+
+                                            const uint32_t page_len){
+    if((domain>=0) && (domain<=DPCK_LAST_DATASET_INDEX)){
+        std::string n=(name=="")?path:name;
+        std::string lkey = n + chaos::datasetTypeToPostfix(domain);
+
+        *query_cursor = live_driver->performQuery(lkey,
+                                                       start_ts,
+                                                       end_ts,
+                                                       seqid,
+                                                       runid,
+                                                       meta_tags,
+                                                       page_len);
+    }
+    
+}
 int32_t ChaosController::queryHistory(const std::string& start,const std::string& end,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page){
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
@@ -1308,7 +1369,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     if (page == 0)
     {
         std::set<std::string> tagsv(tags.begin(),tags.end());
-        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagsv, &query_cursor);
+        executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagsv, &query_cursor);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1325,7 +1386,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     else
     {
         int cnt = 0;
-        controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
+        executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor, path,page);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1354,12 +1415,12 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     }
     if (query_cursor && (err = query_cursor->getError()))
     {
-        controller->releaseQuery(query_cursor);
+        releaseQuery(query_cursor);
         return -abs(err);
     }
     else
     {
-        controller->releaseQuery(query_cursor);
+        releaseQuery(query_cursor);
     }
     return 0;
 }
@@ -1396,7 +1457,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
                 if ((err = query_cursor->getError()))
                 {
                     query_cursor_map.erase(query_cursor_map.find(uid));
-                    controller->releaseQuery(query_cursor);
+                    releaseQuery(query_cursor);
                     return -abs(err);
                 }
                 else
@@ -1406,7 +1467,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
                     if (!query_cursor->hasNext())
                     {
                         query_cursor_map.erase(query_cursor_map.find(uid));
-                        controller->releaseQuery(query_cursor);
+                        releaseQuery(query_cursor);
                         return 0;
                     }
                     return uid;
@@ -1415,7 +1476,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
             else
             {
                 query_cursor_map.erase(query_cursor_map.find(uid));
-                controller->releaseQuery(query_cursor);
+                releaseQuery(query_cursor);
                 return 0;
             }
         }
@@ -1424,7 +1485,36 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
 
     return -1;
 }
+int ChaosController::createNewSnapshot(const std::string& snapshot_tag,
+                                    const std::vector<std::string>& other_snapped_device) {
+    
+ 
+    std::vector<std::string> device_id_in_snap = other_snapped_device;
+    device_id_in_snap.push_back(path);
+    return mdsChannel->createNewSnapshot(snapshot_tag,
+                                         device_id_in_snap);
+}
+int ChaosController::deleteSnapshot(const std::string& snapshot_tag) {
 
+        return mdsChannel->deleteSnapshot(snapshot_tag);
+}
+int ChaosController::getSnapshotList(ChaosStringVector& snapshot_list) {
+    CHAOS_ASSERT(mdsChannel)
+    return mdsChannel->searchSnapshotForNode(path,
+                                             snapshot_list,
+                                             MDS_TIMEOUT);
+}
+int ChaosController::restoreDeviceToTag(const std::string& restore_tag) {
+    return mdsChannel->restoreSnapshot(restore_tag, MDS_TIMEOUT);
+
+}
+int ChaosController::recoverDeviceFromError(const std::string& cu) {
+    std::vector<std::string> names;
+    names.push_back((cu==""?path:cu));
+    EXECUTE_CHAOS_RET_API(chaos::metadata_service_client::api_proxy::control_unit::RecoverError,MDS_TIMEOUT,names);
+
+    return ret;
+}
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string &cmd, char *args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf)
 {
     int err;
@@ -2458,12 +2548,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
         }
 
-        if (controller == NULL)
-        {
-            CTRLERR_ << "no controller defined for cmd:\"" << cmd << "\"";
-
-            return CHAOS_DEV_CMD;
-        }
+        
         //Json::Reader rreader;
         //Json::Value vvalue;
         /*	if (wostate == 0) {
@@ -2783,7 +2868,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 DBGET << "START SEQ QUERY :" << std::dec << start_ts << " end:" << end_ts << "seq id " << seqid << " run id:" << runid << " page:" << page;
 
-                controller->executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, page);
+                executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, path,page);
                 if (query_cursor)
                 {
                     cnt = 0;
@@ -2819,7 +2904,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     query_cursor->getIndexes(runid, seqid);
                     res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
 
-                    controller->releaseQuery(query_cursor);
+                    releaseQuery(query_cursor);
                     json_buf = res.str();
                     return CHAOS_DEV_OK;
                 }
@@ -2843,7 +2928,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     DBGET << "START PAGED QUERY :" << std::dec << start_ts << " end:" << end_ts << " page size " << page;
 
-                    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor, page);
+                    executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor,path, page);
                     if (query_cursor)
                     {
                         cnt = 0;
@@ -2889,7 +2974,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             int32_t err;
                             if ((err = query_cursor->getError()))
                             {
-                                controller->releaseQuery(query_cursor);
+                                releaseQuery(query_cursor);
                                 bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", % getPath() % err));
                                 json_buf = bundle_state.getData()->getCompliantJSONString();
                                 /// TODO : perche' devo rinizializzare il controller?
@@ -2903,7 +2988,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                 res << ",\"uid\":0}";
                                 DBGET << "queryhst no more pages items:" << cnt;
                             }
-                            controller->releaseQuery(query_cursor);
+                            releaseQuery(query_cursor);
                         }
                     }
                     else
@@ -2930,7 +3015,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 boost::shared_ptr<chaos::common::data::CDataWrapper> data;
                 DBGET << "START QUERY :" << std::dec << start_ts << " end:" << end_ts << " page size " << page;
 
-                controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
+                executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
                 bool n = query_cursor->hasNext();
                 if (query_cursor)
                 {
@@ -2971,7 +3056,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (query_cursor && ((!query_cursor->hasNext()) || (cnt == limit)))
             {
                 DBGET << "queryhst no more pages items:" << cnt;
-                controller->releaseQuery(query_cursor);
+                releaseQuery(query_cursor);
                 if (current_query)
                 {
                     query_cursor_map.erase(query_cursor_map.find(current_query));
@@ -3085,7 +3170,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         int32_t err;
                         if ((err = query_cursor->getError()))
                         {
-                            controller->releaseQuery(query_cursor);
+                            releaseQuery(query_cursor);
                             query_cursor_map.erase(query_cursor_map.find(uid));
                             bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", % getPath() % uid % err));
                             json_buf = bundle_state.getData()->getCompliantJSONString();
@@ -3096,7 +3181,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         res << ",\"uid\":0}";
                         DBGET << "queryhstnext no more pages items:" << cnt << " with uid:" << uid;
-                        controller->releaseQuery(query_cursor);
+                        releaseQuery(query_cursor);
                         query_cursor_map.erase(query_cursor_map.find(uid));
                     }
                     else
@@ -3132,7 +3217,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 else
                 {
-                    controller->releaseQuery(query_cursor);
+                    releaseQuery(query_cursor);
                     query_cursor = NULL;
                 }
             }
@@ -3158,7 +3243,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             json_buf = "{}";
 
             std::vector<std::string> other;
-            ret = controller->createNewSnapshot(snapname, other);
+            ret = createNewSnapshot(snapname, other);
             DBGET << "creating snapshot " << snapname << " ret:" << ret;
 
             if (ret == 0)
@@ -3187,7 +3272,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             catch (std::exception ee)
             {
             }
-            ret = controller->deleteSnapshot(snapname);
+            ret = deleteSnapshot(snapname);
             if (ret == 0)
             {
                 DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
@@ -3232,8 +3317,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         {
             ChaosStringVector snaps;
             int ret;
-            controller->setRequestTimeWaith(50000);
-            ret = controller->getSnapshotList(snaps);
+            ret = getSnapshotList(snaps);
             std::stringstream ss;
 
             DBGET << "list " << snaps.size() << " snapshots err:" << ret;
@@ -3312,7 +3396,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "recover")
         {
             bundle_state.append_log("send recover from error:\"" + path);
-            err = controller->recoverDeviceFromError();
+            err = recoverDeviceFromError();
             if (err != 0)
             {
                 bundle_state.append_error("error recovering from error " + path);
@@ -3327,7 +3411,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         else if (cmd == "restore" && (args != 0))
         {
             bundle_state.append_log("send restore on \"" + path + "\" tag:\"" + std::string(args) + "\"");
-            err = controller->restoreDeviceToTag(args);
+            err = restoreDeviceToTag(args);
             if (err != 0)
             {
                 bundle_state.append_error("error setting restoring:\"" + path + "\" with tag:\"" + std::string(args) + "\"");
