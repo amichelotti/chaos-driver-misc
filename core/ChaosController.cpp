@@ -34,7 +34,6 @@
 using namespace chaos::cu::data_manager;
 using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
-using namespace chaos;
 using namespace chaos::common::io;
 
 using namespace ::driver::misc;
@@ -226,7 +225,7 @@ uint64_t ChaosController::getTimeStamp(const std::string& dev,int domain)
     uint64_t ret=0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> obj=getLiveChannel(dev,domain);
     if(obj.get()){
-        ret= obj->getInt64Value(DataPackCommonKey::DPCK_TIMESTAMP)*1000;
+      ret= obj->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP)*1000;
     }
     return ret;
 }
@@ -254,7 +253,7 @@ void ChaosController::initializeAttributeIndexMap() {
     
     
     //get all attribute name from db
-    datasetDB.getDatasetAttributesName(DataType::Input, attributeNames);
+    datasetDB.getDatasetAttributesName(chaos::DataType::Input, attributeNames);
     for (vector<string>::iterator iter = attributeNames.begin();
          iter != attributeNames.end();
          iter++) {
@@ -268,7 +267,7 @@ void ChaosController::initializeAttributeIndexMap() {
     }
     
     attributeNames.clear();
-    datasetDB.getDatasetAttributesName(DataType::Output, attributeNames);
+    datasetDB.getDatasetAttributesName(chaos::DataType::Output, attributeNames);
     for (vector<string>::iterator iter = attributeNames.begin();
          iter != attributeNames.end();
          iter++) {
