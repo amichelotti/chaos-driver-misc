@@ -337,27 +337,9 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
     DBGET << i->name<<" is of type64 :"<<i->valueType;
     }*/
     }
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> dataWrapper;
-    if (wostate)
-    {
-        dataWrapper=getLiveChannel(path,KeyDataStorageDomainOutput);
-
-    }
-    else
-    {
-        dataWrapper=getLiveChannel(path,KeyDataStorageDomainSystem);
-
-    }
-
-    if (dataWrapper.get())
-    {
-        json_dataset = dataWrapper->getCompliantJSONString();
-    }
-    else
-    {
-        CTRLERR_ << "cannot retrieve system dataset from " << path;
-        return -3;
-    }
+    fetch(-1);
+    fetch(255);
+   
     DBGET << "initalization ok";
 
     last_access = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
@@ -703,11 +685,11 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const 
     chaos::common::data::VectorCDWShrdPtr results;
     std::vector<std::string> channels;
     std::string CUNAME=(n=="")?path:n;
-    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainInput));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainOutput));
-    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
-    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainSystem));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainInput));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCustom));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainSystem));
+    channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
     live_driver->retriveMultipleData(channels, results);
