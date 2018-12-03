@@ -516,6 +516,7 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
     mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
     if (!mdsChannel)
         throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
+    initializeClient();
 
     if ((ret = init(p, timeo_)) != 0)
     {
@@ -536,7 +537,6 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
     {
         cachedJsonChannels[cnt] = "{}";
     }
-    initializeClient();
 }
 
 void ChaosController::initializeClient()
