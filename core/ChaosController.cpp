@@ -658,7 +658,7 @@ ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChanne
     {
         chaos::common::data::CDataWrapper *tmp = new CDataWrapper(value);
         ret.reset(tmp);
-        free(value);
+        delete []value;
         return ret;
     }
     return ret;
