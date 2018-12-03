@@ -503,7 +503,6 @@ void ChaosController::cleanUpQuery()
 
 void ChaosController::update(){
     CDWUniquePtr tmp_data_handler;
-    CHAOS_ASSERT(deviceChannel)
     LDBG_<<"UPDATING \""<<path<<"\"";
     int err = mdsChannel->getLastDatasetForDevice(path, tmp_data_handler, MDS_TIMEOUT);
     if(err!=0 || !tmp_data_handler.get()) return;
