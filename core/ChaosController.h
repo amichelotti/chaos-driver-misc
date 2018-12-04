@@ -270,6 +270,10 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     //!return the snapshot list for device controlled by this isntance
     int getSnapshotList(ChaosStringVector &snapshot_list);
 
+    //!return the dataset of the specified cu associated to a given snapshot
+    // 
+    CDataWrapper getSnapshotDataset(const std::string&snapname,const std::string& cuname);
+
     command_t prepareCommand(std::string alias);
     template <typename T>
     void addParameter(command_t &cmd, std::string name, T value)
