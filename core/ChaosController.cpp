@@ -1497,7 +1497,8 @@ int ChaosController::recoverDeviceFromError(const std::string& cu) {
 }
 CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,const std::string& cuname){
    CDataWrapper res;
-   mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT); 
+   mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
+   return res; 
 }
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string &cmd, char *args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf)
