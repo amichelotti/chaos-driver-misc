@@ -39,6 +39,7 @@ namespace driver {
 			double* hvsupply;
 			double* Supply5V;
 			double* SupplyN5V;
+			const double* voltageRes;
 		};
 	}
 }

@@ -46,6 +46,7 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	this->Supply5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"Supply5V");
 	this->SupplyN5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"SupplyN5V");
 	this->hvsupply= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVMain");
+	this->voltageRes= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
 
 	BC_NORMAL_RUNNING_PROPERTY
 }
@@ -89,6 +90,7 @@ void own::CmdGIBDefault::acquireHandler() {
 	else
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
 			char nums[8];
@@ -96,6 +98,15 @@ void own::CmdGIBDefault::acquireHandler() {
 			std::string attrname=(std::string)"CH"+ nums;
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
+			if ((*this->voltageRes) != NULL)
+			{
+				double *tmpInput=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,attrname);
+				if (std::fabs((*tmp - *tmpInput) > (*this->voltageRes) ))
+				{
+					setStateVariableSeverity(StateVariableTypeAlarmDEV,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+
+				}
+			}
 		}
 	}
 	std::vector<int32_t> Amp;

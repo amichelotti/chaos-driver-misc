@@ -180,6 +180,9 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	addStateVariable(StateVariableTypeAlarmCU,"setPoint_not_reached",
 		"notified when a channel voltage setPoint is not reached after a set Voltage command");
 
+	addStateVariable(StateVariableTypeAlarmDEV,"channel_out_of_set",
+		"notified when a channel voltage shifted from setpoint");
+
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
 }
