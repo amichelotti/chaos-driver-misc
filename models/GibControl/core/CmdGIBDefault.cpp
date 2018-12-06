@@ -103,6 +103,7 @@ void own::CmdGIBDefault::acquireHandler() {
 				double *tmpInput=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,attrname);
 				if (std::fabs((*tmp - *tmpInput) > (*this->voltageRes) ))
 				{
+					SCLERR_ << "CH"<< i << "shifted from " << *tmpInput << " to " << *tmp  ;
 					setStateVariableSeverity(StateVariableTypeAlarmDEV,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 
 				}
