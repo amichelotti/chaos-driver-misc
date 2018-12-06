@@ -90,7 +90,7 @@ void own::CmdGIBDefault::acquireHandler() {
 	else
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-		setStateVariableSeverity(StateVariableTypeAlarmDEV,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
 			char nums[8];
@@ -104,7 +104,7 @@ void own::CmdGIBDefault::acquireHandler() {
 				if (std::fabs((*tmp - *tmpInput) > (*this->voltageRes) ))
 				{
 					SCLERR_ << "CH"<< i << "shifted from " << *tmpInput << " to " << *tmp  ;
-					setStateVariableSeverity(StateVariableTypeAlarmDEV,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+					setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 
 				}
 			}
