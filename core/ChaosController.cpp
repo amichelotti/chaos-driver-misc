@@ -2358,8 +2358,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     else if (what == "get")
                     {
+                         CHECK_PARENT;
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::LoadNodeAssociation, MDS_TIMEOUT, name, parent);
-                        chaos::common::data::CDataWrapper *r = apires->getResult();
                         res << json_buf;
                     }
                     else if (what == "list")
