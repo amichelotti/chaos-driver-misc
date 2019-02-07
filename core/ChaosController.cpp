@@ -580,6 +580,9 @@ uint64_t ChaosController::sched(uint64_t ts)
     CDataWrapper all, common;
    
     chaos::common::data::VectorCDWShrdPtr channels=getLiveAllChannels();
+    if(channels.size()==0){
+        return 0;
+    }
     delta_update = CU_HEALTH_UPDATE_US;
     for (int cnt = 0; cnt < channels.size(); cnt++)
     {
@@ -810,16 +813,18 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             std::map<int, chaos::common::data::CDataWrapper *> set;
             CDataWrapper ch[7];
             chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
-            set[KeyDataStorageDomainInput] = res[0].get();            
-            set[KeyDataStorageDomainOutput] = res[1].get();         
-            set[KeyDataStorageDomainHealth] =res[2].get();         
-            set[KeyDataStorageDomainSystem] =res[3].get();         
-            set[KeyDataStorageDomainCustom] =res[4].get();         
-            set[KeyDataStorageDomainDevAlarm] =res[5].get();         
-            set[KeyDataStorageDomainCUAlarm] = res[6].get();         
-        
+            if(res.size()>=7){
+                set[KeyDataStorageDomainInput] = res[0].get();            
+                set[KeyDataStorageDomainOutput] = res[1].get();         
+                set[KeyDataStorageDomainHealth] =res[2].get();         
+                set[KeyDataStorageDomainSystem] =res[3].get();         
+                set[KeyDataStorageDomainCustom] =res[4].get();         
+                set[KeyDataStorageDomainDevAlarm] =res[5].get();         
+                set[KeyDataStorageDomainCUAlarm] = res[6].get();         
+            
 
-            retdata = combineDataSets(set);
+                retdata = combineDataSets(set);
+            }
         }
         else if (channel == 255)
         {
@@ -836,13 +841,13 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
             chaos::common::data::VectorCDWShrdPtr res=getLiveChannel(channels);
-            set[KeyDataStorageDomainHealth] =res[0].get();         
-            set[KeyDataStorageDomainSystem] =res[1].get();         
-            set[KeyDataStorageDomainDevAlarm] =res[2].get();         
-            set[KeyDataStorageDomainCUAlarm] = res[3].get();         
-
-
-            retdata = combineDataSets(set);
+            if(res.size()>=4){
+                set[KeyDataStorageDomainHealth] =res[0].get();         
+                set[KeyDataStorageDomainSystem] =res[1].get();         
+                set[KeyDataStorageDomainDevAlarm] =res[2].get();         
+                set[KeyDataStorageDomainCUAlarm] = res[3].get();        
+                retdata = combineDataSets(set);
+            }
         }
         else
         {
