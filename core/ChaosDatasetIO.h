@@ -16,6 +16,10 @@ namespace chaos{
         }
     }
 };
+#define GET_TIMESTAMP(x) (x->getInt64Value("dpck_ats"))
+#define GET_HWTIMESTAMP(x) (x->getInt64Value("dpck_hr_ats"))
+#define GET_PCKID(x) (x->getInt64Value("dpck_seq_id"))
+#define GET_RUNID(x) (x->getInt64Value("cudk_run_id"))
 
 namespace driver{
     namespace misc{
