@@ -95,6 +95,7 @@ namespace driver{
              \return uid to be used to get page of datas, 0 if nothing found
              */
             uint64_t queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,uint32_t page,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            
             /**
              Same query over owned datasets
              */
@@ -104,6 +105,15 @@ namespace driver{
              */
             std::vector<ChaosDataSet> queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
             std::vector<ChaosDataSet> queryHistoryDatasets(uint64_t ms_start,uint64_t ms_end,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            
+            /**
+             Perform a full query on the current device specifing a starting runid and a sequid and a tag.
+             */
+            uint64_t queryHistoryDatasets(uint64_t ms_start,uint64_t ms_end,const uint64_t runid,const uint64_t sequid,const ChaosStringSet& meta_tags,uint32_t page,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            /**
+             Perform a full query on the specified device specifing a starting runid and a sequid and a tag.
+             */
+            uint64_t queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,const uint64_t runid,const uint64_t sequid,const ChaosStringSet& meta_tags,uint32_t page,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
             bool queryHasNext(uint64_t uid);
             std::string getUid(){return uid;}
             uint64_t getRunID(){return runid;}

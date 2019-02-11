@@ -435,6 +435,33 @@ uint64_t ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname, uint64_
     query_cursor_map[query_index] = q;
     return query_index;
 }
+/**
+             Perform a full query on the current device specifing a starting runid and a sequid and a tag.
+             */
+uint64_t ChaosDatasetIO::queryHistoryDatasets(uint64_t ms_start,uint64_t ms_end,const uint64_t runid,const uint64_t sequid,const ChaosStringSet& meta_tags,uint32_t page,int type){
+    return queryHistoryDatasets(uid,ms_start,ms_end,runid,sequid,meta_tags,page,type);
+}
+           
+uint64_t ChaosDatasetIO::queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,const uint64_t runid,const uint64_t sequid,const ChaosStringSet& meta_tags,uint32_t page,int type){
+    std::string dst = dsname + chaos::datasetTypeToPostfix(type);
+    DPD_LDBG << "Query To:" << dst << " start:" << ms_start << " end_ms:" << ms_end << "runid:"<<runid<<" sequid:"<<sequid<<"ntags:"<< meta_tags.size()<<" page:" << page;
+
+    chaos::common::io::QueryCursor *pnt = ioLiveDataDriver->performQuery(dst, ms_start, ms_end, sequid,runid,meta_tags,page);
+    if (pnt == NULL)
+    {
+        DPD_LERR << "NO CURSOR";
+
+        return 0;
+    }
+    query_index++;
+    qc_t q;
+    q.page_len = page;
+    q.qc = pnt;
+    q.qt = query_index;
+    query_cursor_map[query_index] = q;
+    return query_index;
+
+}
 bool ChaosDatasetIO::queryHasNext(uint64_t uid)
 {
     bool ret;
