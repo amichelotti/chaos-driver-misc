@@ -98,7 +98,7 @@ void own::CmdGIBDefault::acquireHandler() {
 			std::string attrname=(std::string)"CH"+ nums;
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
-			if ((*this->voltageRes) != NULL)
+			if (this->voltageRes != NULL)
 			{
 				double *tmpInput=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,attrname);
 				if (std::fabs((*tmp - *tmpInput) > (*this->voltageRes) ))

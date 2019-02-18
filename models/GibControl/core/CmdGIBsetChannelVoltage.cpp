@@ -127,7 +127,21 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
-	
+	//Adding the offset in tmp_Voltage of tmp_channel
+	char nums[8];
+	sprintf(nums,"%d",tmp_channel);
+	std::string attrname=(std::string)"OFFSET_CH"+ nums;
+	const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
+	if (tmp)
+	{
+		if (!isnan(*tmp))
+		{
+			tmp_Voltage+=(*tmp);
+		}
+	}
+
+
+
 	if (err=gibcontrol_drv->setChannelVoltage(tmp_channel,tmp_Voltage) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelVoltage not acknowledged");

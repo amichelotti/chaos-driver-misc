@@ -171,6 +171,17 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	   addHandlerOnInputAttributeName< ::driver::gibcontrol::SCGibControlControlUnit,double>(this,
 		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
 	}
+	for (int i=0; i < numofchannels; ++i)
+	{
+	   char nums[8];
+       sprintf(nums,"%d",i);
+	   std::string chanName=(std::string)"OFFSET_CH"+ nums;
+	   addAttributeToDataSet(chanName,
+							"voltage channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+	}
+
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"notified when driver answers not zero");
 	addStateVariable(StateVariableTypeAlarmCU,"gib_unreachable",
