@@ -74,6 +74,18 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	double tmp_Voltage=data->getDoubleValue(CMD_GIB_SETCHANNELVOLTAGE_VOLTAGE);
 	this->chanNum=tmp_channel;
 	this->setValue=tmp_Voltage;
+	//Adding the offset in tmp_Voltage of tmp_channel
+	char nums[8];
+	sprintf(nums,"%d",tmp_channel);
+	std::string attrname=(std::string)"OFFSET_CH"+ nums;
+	const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
+	if (tmp)
+	{
+		if (!isnan(*tmp))
+		{
+			tmp_Voltage+=(*tmp);
+		}
+	}
 	if (tmp_channel >= (*this->numOfchannels))
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter out of bounds" );
@@ -127,18 +139,7 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY;
 		return;
 	}
-	//Adding the offset in tmp_Voltage of tmp_channel
-	char nums[8];
-	sprintf(nums,"%d",tmp_channel);
-	std::string attrname=(std::string)"OFFSET_CH"+ nums;
-	const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
-	if (tmp)
-	{
-		if (!isnan(*tmp))
-		{
-			tmp_Voltage+=(*tmp);
-		}
-	}
+	
 
 
 
