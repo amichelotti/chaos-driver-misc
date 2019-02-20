@@ -106,6 +106,14 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"status",
 							DataType::TYPE_STRING,
 							DataType::Output, 256);
+	
+	addAttributeToDataSet("HardwareUID",
+							"A string used to the user to descrive the hardware connected with the GIB",
+							DataType::TYPE_STRING,
+							DataType::Input, 512);
+
+
+
 	addAttributeToDataSet("status_id",
 							"status_id",
 							DataType::TYPE_INT32,
