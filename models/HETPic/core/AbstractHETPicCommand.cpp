@@ -38,8 +38,12 @@ void AbstractHETPicCommand::setHandler(c_data::CDataWrapper *data) {
 	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "status_id");
 	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
 	numOfChanPt =getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "NumberOfChannels");;
-	//setting default timeout (usec) 
-	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
+	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
+	//setting default timeout (usec)
+	if (*userTimeout > 0)
+		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) (*userTimeout)*1000);
+	else
+		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
 	chaos::cu::driver_manager::driver::DriverAccessor *hetpic_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(hetpic_accessor != NULL) {
 		if(hetpic_drv == NULL) {
