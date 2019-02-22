@@ -31,13 +31,14 @@ namespace driver {
 		const char* const CMD_HPC_SETLOWTHRESHOLD_MILLIVOLTS = "millivolts";
 		const char* const CMD_HPC_SETPULSE_ALIAS = "setPulse";
 		const char* const CMD_HPC_SETPULSE_VALUE = "value";
-		const char* const CMD_HPC_GETLOWTHRESHOLDS_ALIAS = "getLowThresholds";
-		const char* const CMD_HPC_GETLOWTHRESHOLDS_LOWTHRESHOLDS = "lowthresholds";
+		const char* const CMD_HPC_GETNUMBEROFCHANNEL_ALIAS = "getNumberOfChannel";
+		const char* const CMD_HPC_GETNUMBEROFCHANNEL_CHANNUM = "chanNum";
+		const char* const CMD_HPC_GETSTATUS_ALIAS = "getStatus";
+		const char* const CMD_HPC_GETSTATUS_STATUS = "status";
 		const char* const CMD_HPC_GETHIGHTHRESHOLDS_ALIAS = "getHighThresholds";
-		const char* const CMD_HPC_GETHIGHTHRESHOLDS_HIGHTHRESHOLDS = "highthresholds";
-		const char* const CMD_HPC_GETTEMPERATURES_ALIAS = "getTemperatures";
-		const char* const CMD_HPC_GETTEMPERATURES_TEMPERATURE_0 = "temperature_0";
-		const char* const CMD_HPC_GETTEMPERATURES_TEMPERATURE_1 = "temperature_1";
+		const char* const CMD_HPC_GETHIGHTHRESHOLDS_HIGHTHRESHOLDS = "highThresholds";
+		const char* const CMD_HPC_GETLOWTHRESHOLDS_ALIAS = "getLowThresholds";
+		const char* const CMD_HPC_GETLOWTHRESHOLDS_LOWTHRESHOLDS = "lowThresholds";
 		#define DEFAULT_COMMAND_TIMEOUT_MS   10000
 	}
 }

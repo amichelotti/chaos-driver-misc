@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION(driver::hetpic::,CmdHPCDefault,
 	"Default command executed when no other commands in queue",
-	"3955c779-1267-4964-8235-ee433a9c9b81")
+	"f89e0cbd-f1df-436b-b0fc-17f0165c8176")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
@@ -43,6 +43,8 @@ uint8_t own::CmdHPCDefault::implementedHandler(){
 void own::CmdHPCDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractHETPicCommand::setHandler(data);
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
+	chLowThr=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"ChannelLowThresholds");
+	chHighThr=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"ChannelHighThresholds");
 	setBusyFlag(false);
 	SCLAPP_ << "Set Handler Default "; 
 	BC_NORMAL_RUNNING_PROPERTY
@@ -50,7 +52,38 @@ void own::CmdHPCDefault::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdHPCDefault::acquireHandler() {
 	SCLDBG_ << "o_status_id: " << *o_status_id;
-	SCLDBG_ << "o_alarms: " << *o_alarms;
+	std::vector<int32_t> thres;
+	int err;
+	bool errorThatTime=false;
+	if ((err=hetpic_drv->getLowThresholds(thres)  ) != 0)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		errorThatTime=true;
+	}
+	else
+	{
+		for (int i=0; i < *this->numOfChanPt; i++)
+		{
+			this->chLowThr[i]=thres[i];
+		}
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+	thres.clear();
+	if ((err=hetpic_drv->getHighThresholds(thres)  ) != 0)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		for (int i=0; i < *this->numOfChanPt; i++)
+		{
+			this->chHighThr[i]=thres[i];
+		}
+		if (!errorThatTime)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		}
+	}
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler

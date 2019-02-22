@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::hetpic::,CmdHPCSetLowThreshold,CMD_HPC_SETLOWTHRESHOLD_ALIAS,
 	"set the low threshold for a specified (or all) channel",
-	"a7b24bfa-3b00-478b-a9bb-b3c652f45357")
+	"70f9c1a1-abc0-455a-ab29-3cd5ae7bcf78")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_HPC_SETLOWTHRESHOLD_CHANNEL,"the channel to set (-1 for all)",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_HPC_SETLOWTHRESHOLD_MILLIVOLTS,"the millivolt value to be set on",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()

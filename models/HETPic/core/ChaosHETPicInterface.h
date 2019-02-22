@@ -33,9 +33,10 @@ namespace chaos {
 				OP_SETHIGHTHRESHOLD,
 				OP_SETLOWTHRESHOLD,
 				OP_SETPULSE,
-				OP_GETLOWTHRESHOLDS,
+				OP_GETNUMBEROFCHANNEL,
+				OP_GETSTATUS,
 				OP_GETHIGHTHRESHOLDS,
-				OP_GETTEMPERATURES
+				OP_GETLOWTHRESHOLDS
 			} ChaosHETPicOpcode;
 			typedef struct {
 				uint32_t timeout;
@@ -46,8 +47,7 @@ namespace chaos {
 				int64_t int64_t1;
 				int32_t result;
 				int32_t  int32_tE1;
-				double  doubleE1;
-				double  doubleE2;
+				std::vector<int32_t>  vector_int32_t_E1;
 			} hetpic_oparams_t;
 			//wrapper interface
 			class ChaosHETPicInterface:public ::common::hetpic::AbstractHETPic {
@@ -59,9 +59,10 @@ namespace chaos {
 				int SetHighThreshold(int32_t channel,int32_t millivolts);
 				int SetLowThreshold(int32_t channel,int32_t millivolts);
 				int setPulse(int32_t value);
-				int getLowThresholds(int32_t& lowthresholds);
-				int getHighThresholds(int32_t& highthresholds);
-				int getTemperatures(double& temperature_0,double& temperature_1);
+				int getNumberOfChannel(int32_t& chanNum);
+				int getStatus(int32_t& status);
+				int getHighThresholds(std::vector<int32_t>& highThresholds);
+				int getLowThresholds(std::vector<int32_t>& lowThresholds);
 			};
 		}
 	}//driver

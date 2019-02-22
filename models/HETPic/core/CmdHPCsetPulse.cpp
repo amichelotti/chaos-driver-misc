@@ -31,7 +31,7 @@ namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::hetpic::,CmdHPCsetPulse,CMD_HPC_SETPULSE_ALIAS,
 	"send the command to start pulsing at the specified value",
-	"0e23418e-eb2f-4856-9163-28e3f3145462")
+	"78fb177c-54ab-4b3b-8215-d563613d5314")
 BATCH_COMMAND_ADD_INT32_PARAM(CMD_HPC_SETPULSE_VALUE,"0 for off",chaos::common::batch_command::BatchCommandAndParameterDescriptionkey::BC_PARAMETER_FLAG_MANDATORY)
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 

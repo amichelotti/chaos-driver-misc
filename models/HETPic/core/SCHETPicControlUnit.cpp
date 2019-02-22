@@ -65,6 +65,18 @@ void ::driver::hetpic::SCHETPicControlUnit::unitDefineActionAndDataset()  {
 	if (hetpic_drv == NULL) {
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
+	int32_t chans;
+	SCCUAPP << "Reading number of channels" ;
+	if (hetpic_drv->getNumberOfChannel(chans) != 0)
+	{
+		throw chaos::CException(-3, "Cannot receive number of channels info from driver", __FUNCTION__);
+	}
+	this->numberOfChannels=chans;
+
+
+
+
+
 	addAttributeToDataSet("status_id",
 							"default status attribute",
 							DataType::TYPE_INT32,
@@ -81,23 +93,15 @@ void ::driver::hetpic::SCHETPicControlUnit::unitDefineActionAndDataset()  {
 							"returns the number of channels driven by this PIC",
 							DataType::TYPE_INT32,
 							DataType::Output);
-	addAttributeToDataSet("Temperature_0",
-							"the first of the two temperatures read ",
-							DataType::TYPE_DOUBLE,
-							DataType::Output);
-	addAttributeToDataSet("Temperature_1",
-							"the second of the two temperatures read ",
-							DataType::TYPE_DOUBLE,
-							DataType::Output);
 	addBinaryAttributeAsSubtypeToDataSet("ChannelHighThresholds",
 							"the high thresholds current value of each channel",
 							chaos::DataType::SUB_TYPE_INT32,
-							32*sizeof(int32_t),
+							chans*sizeof(int32_t),
 							chaos::DataType::Output);
 	addBinaryAttributeAsSubtypeToDataSet("ChannelLowThresholds",
 							"the high thresholds current value of each channel",
 							chaos::DataType::SUB_TYPE_INT32,
-							32*sizeof(int32_t),
+							chans*sizeof(int32_t),
 							chaos::DataType::Output);
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"default driver communication error");
@@ -106,6 +110,8 @@ void ::driver::hetpic::SCHETPicControlUnit::unitDefineCustomAttribute() {
 }
 // Abstract method for the initialization of the control unit
 void ::driver::hetpic::SCHETPicControlUnit::unitInit() {
+	int32_t * numChanPt=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"NumberOfChannels");
+	*numChanPt=this->numberOfChannels;
 }
 // Abstract method for the start of the control unit
 void ::driver::hetpic::SCHETPicControlUnit::unitStart() {
