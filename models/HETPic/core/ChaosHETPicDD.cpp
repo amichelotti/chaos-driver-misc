@@ -61,15 +61,15 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosHETPicDD::execOpcode(
 			} break;
 		case OP_GETSTATUS: {
 			out->result=devicedriver->getStatus(out->int32_tE1);
-			ACDBG << "Sent to driver command getStatus result is " << out->result;
+			//ACDBG << "Sent to driver command getStatus result is " << out->result;
 			} break;
 		case OP_GETHIGHTHRESHOLDS: {
 			out->result=devicedriver->getHighThresholds(out->vector_int32_t_E1);
-			ACDBG << "Sent to driver command getHighThresholds result is " << out->result;
+			//ACDBG << "Sent to driver command getHighThresholds result is " << out->result;
 			} break;
 		case OP_GETLOWTHRESHOLDS: {
 			out->result=devicedriver->getLowThresholds(out->vector_int32_t_E1);
-			ACDBG << "Sent to driver command getLowThresholds result is " << out->result;
+			//ACDBG << "Sent to driver command getLowThresholds result is " << out->result;
 			} break;
 	}
 	return result;

@@ -51,10 +51,29 @@ void own::CmdHPCDefault::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdHPCDefault::acquireHandler() {
-	SCLDBG_ << "o_status_id: " << *o_status_id;
+	
 	std::vector<int32_t> thres;
+	int32_t picState;
 	int err;
 	bool errorThatTime=false;
+	if ((err=hetpic_drv->getStatus(picState)  ) != 0)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		errorThatTime=true;
+	}
+	else
+	{
+		*o_status_id=picState;
+		if (!errorThatTime)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		}
+		SCLDBG_ << "o_status_id: " << *o_status_id;
+		
+	}
+	
+
+
 	if ((err=hetpic_drv->getLowThresholds(thres)  ) != 0)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
@@ -66,7 +85,10 @@ void own::CmdHPCDefault::acquireHandler() {
 		{
 			this->chLowThr[i]=thres[i];
 		}
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		if (!errorThatTime)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		}
 	}
 	thres.clear();
 	if ((err=hetpic_drv->getHighThresholds(thres)  ) != 0)
