@@ -51,6 +51,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                                                 query_index(0),
                                                                 defaultPage(30),
                                                                 last_seq(0),
+                                                                packet_size(0),
                                                                 last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO")
 {
     try
@@ -125,15 +126,20 @@ ChaosDatasetIO::~ChaosDatasetIO()
 void ChaosDatasetIO::updateHealth()
 {
     uint64_t rate_acq_ts = TimingUtil::getTimeStamp();
-    double time_offset = (double(rate_acq_ts - last_push_rate_grap_ts)) / 1000.0;                                                         //time in seconds
-    double output_ds_rate = (time_offset > 0) ? (pkids[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT] - last_seq) / time_offset : 0; //rate in seconds
+    double time_offset = (double(rate_acq_ts - last_push_rate_grap_ts)) / 1000.0;
+    uint32_t npushes=  (pkids[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT] - last_seq);                                                       //time in seconds
+    double output_ds_rate = (time_offset > 0) ?  npushes/ time_offset : 0; //rate in seconds
+    int32_t output_ds_size = (npushes > 0) ? packet_size / npushes : 0; //rate in seconds
 
     HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                     output_ds_rate, true);
-
+    HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                    chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                                    output_ds_size, true);
     //keep track of acquire timestamp
     last_push_rate_grap_ts = rate_acq_ts;
+    packet_size=0;
     //reset pushe count
     last_seq = pkids[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT];
 }
@@ -200,6 +206,7 @@ int ChaosDatasetIO::pushDataset(int type)
     {
         new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, type);
     }
+    packet_size+=new_dataset->getBSONRawSize();
     //ChaosUniquePtr<SerializationBuffer> serialization(new_dataset->getBSONData());
     //    DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
     // DirectIOChannelsInfo    *next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
@@ -351,6 +358,9 @@ void ChaosDatasetIO::createMDSEntry()
     CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(uid,
                                                chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                chaos::DataType::TYPE_DOUBLE););
+    CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(uid,
+                                               chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                               chaos::DataType::TYPE_INT32););                                               
 
     CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(uid,
                                                     chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
