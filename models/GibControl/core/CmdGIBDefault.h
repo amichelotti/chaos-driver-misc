@@ -40,6 +40,7 @@ namespace driver {
 			double* Supply5V;
 			double* SupplyN5V;
 			const double* voltageRes;
+			bool genericDriverErrorRaisedHere;
 		};
 	}
 }

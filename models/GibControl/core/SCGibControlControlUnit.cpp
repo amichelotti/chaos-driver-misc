@@ -202,6 +202,8 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	addStateVariable(StateVariableTypeAlarmCU,"channel_out_of_set",
 		"notified when a channel voltage shifted from setpoint");
 
+	addStateVariable(StateVariableTypeAlarmDEV,"wrong_driver_status_error",
+		"notified when driver return not coherent values");
 }
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineCustomAttribute() {
 }

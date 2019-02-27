@@ -43,6 +43,7 @@ uint8_t own::CmdGIBDefault::implementedHandler(){
 void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler Default ";
+	 genericDriverErrorRaisedHere=false;
 	this->Supply5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"Supply5V");
 	this->SupplyN5V= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"SupplyN5V");
 	this->hvsupply= getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"HVMain");
@@ -54,7 +55,8 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 void own::CmdGIBDefault::acquireHandler() {
  	int state;
 	int err= 0;
-        std::string descr;
+    std::string descr;
+	
 	
 
 	int32_t *ptAmpls=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"PulsingAmplitudes");
@@ -62,10 +64,15 @@ void own::CmdGIBDefault::acquireHandler() {
     
 	if ((err=gibcontrol_drv->getState(&state,descr)) != 0)
 	{
-		 metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
+		 //metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
 		 if (err == ::common::gibcontrol::GIB_UNREACHABLE )
 		{
 		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		else
+		{
+			genericDriverErrorRaisedHere=true;
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		}
 		
 	}
@@ -86,9 +93,16 @@ void own::CmdGIBDefault::acquireHandler() {
 		{
 		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		}
+		else
+		{
+			genericDriverErrorRaisedHere=true;
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		
 	}
 	else
 	{
+		
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
@@ -114,10 +128,15 @@ void own::CmdGIBDefault::acquireHandler() {
 	std::vector<int32_t> Wid;
 	if ((err=gibcontrol_drv->getPulsingState(Amp,Wid)) != 0 )
 	{
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
+		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve pulsing channels data");
 		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
 		{
 		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		else
+		{
+			genericDriverErrorRaisedHere=true;
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		}
 
 	}
@@ -133,10 +152,15 @@ void own::CmdGIBDefault::acquireHandler() {
 
 	if ((err=gibcontrol_drv->getSupplyVoltages(this->hvsupply,this->Supply5V,this->SupplyN5V)) != 0 )
 	{
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve supply voltages");
+		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve supply voltages");
 		if (err == ::common::gibcontrol::GIB_UNREACHABLE )
 		{
 		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		else
+		{
+			genericDriverErrorRaisedHere=true;
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		}
 
 	}
@@ -144,8 +168,20 @@ void own::CmdGIBDefault::acquireHandler() {
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	}
+	if (genericDriverErrorRaisedHere==true)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		genericDriverErrorRaisedHere=false;
+	}
+	if ((*this->hvsupply < 10) && (CHECKMASK(state,::common::gibcontrol::GIBCONTROL_SUPPLIED) ))
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"wrong_driver_status_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"wrong_driver_status_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 
-
+	}
 
 	getAttributeCache()->setOutputDomainAsChanged();
 }
