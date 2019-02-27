@@ -81,7 +81,7 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
 	if (tmp)
 	{
-		if (!isnan(*tmp))
+		if (!std::isnan(*tmp))
 		{
 			tmp_Voltage+=(*tmp);
 		}
