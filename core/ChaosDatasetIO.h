@@ -59,6 +59,7 @@ namespace driver{
             void timeout();
             bool deinitialized;
             std::string implementation;
+            uint64_t packet_size;
         public:
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
