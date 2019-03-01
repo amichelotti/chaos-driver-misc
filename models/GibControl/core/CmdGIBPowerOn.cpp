@@ -43,9 +43,10 @@ uint8_t own::CmdGIBPowerOn::implementedHandler(){
 // empty set handler
 void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
+	AbstractGibControlCommand::clearCUAlarms();
 	SCLAPP_ << "Set Handler PowerOn "; 
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-	int32_t tmp_on_state=data->getInt32Value(CMD_GIB_POWERON_ON_STATE);
+	this->tmp_on_state=data->getInt32Value(CMD_GIB_POWERON_ON_STATE);
 	int err=0;
 	if (err=gibcontrol_drv->PowerOn(tmp_on_state) != 0)
 	{
@@ -56,13 +57,39 @@ void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdGIBPowerOn::acquireHandler() {
-	SCLDBG_ << "Acquire Handler PowerOn "; 
+	SCLDBG_ << "Acquire Handler PowerOn ";
 }
 // empty correlation handler
 void own::CmdGIBPowerOn::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	int err;
+	std::string descr;
+	int state;
+	if ((err=gibcontrol_drv->getState(&state,descr)) != 0)
+	{
+		 //metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve status of GIB");
+		 if (err == ::common::gibcontrol::GIB_UNREACHABLE )
+		{
+		    setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		else
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+
+	}
+	else
+	{
+		bool  readOnState=CHECKMASK(state,::common::gibcontrol::GIBCONTROL_SUPPLIED);
+		int32_t toComp=(readOnState)? 1 : 0;
+		if (this->tmp_on_state == toComp)
+		{
+			BC_END_RUNNING_PROPERTY;
+		}
+	}
+	
 }
 // empty timeout handler
 bool own::CmdGIBPowerOn::timeoutHandler() {
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"wrong_driver_status_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	return false;
 }

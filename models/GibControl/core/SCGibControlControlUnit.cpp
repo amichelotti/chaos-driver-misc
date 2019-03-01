@@ -179,7 +179,7 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 	   addHandlerOnInputAttributeName< ::driver::gibcontrol::SCGibControlControlUnit,double>(this,
 		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
 	}
-	for (int i=0; i < numofchannels; ++i)
+	/*for (int i=0; i < numofchannels; ++i)
 	{
 	   char nums[8];
        sprintf(nums,"%d",i);
@@ -188,7 +188,7 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 							"voltage channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Input);
-	}
+	}*/
 
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"notified when driver answers not zero");

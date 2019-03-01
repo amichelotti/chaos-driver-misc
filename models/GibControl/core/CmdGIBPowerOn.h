@@ -35,6 +35,7 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			int32_t tmp_on_state;
 		};
 	}
 }
