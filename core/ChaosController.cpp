@@ -1123,7 +1123,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 uint64_t ChaosController::offsetToTimestamp(const std::string &off)
 {
     boost::smatch what;
-    boost::regex ts_ms("([0-9]{13})");
+    boost::regex ts_ms("([0-9]+)");
 
     if (boost::regex_match(off, what, ts_ms))
     {
