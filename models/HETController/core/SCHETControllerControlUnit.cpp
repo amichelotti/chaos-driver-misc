@@ -62,6 +62,7 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdHCTSetHighThreshold));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdHCTSetLowThreshold));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdHCTSwitchPulse));
+	/*
 	chaos::cu::driver_manager::driver::DriverAccessor *hetcontroller_accessor = getAccessoInstanceByIndex(0);
 	if (hetcontroller_accessor == NULL ) {
 		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
@@ -70,6 +71,7 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 	if (hetcontroller_drv == NULL) {
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
+	*/
 	addAttributeToDataSet("status_id",
 							"default status attribute",
 							DataType::TYPE_INT32,
