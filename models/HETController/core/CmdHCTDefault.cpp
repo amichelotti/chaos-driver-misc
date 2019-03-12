@@ -17,8 +17,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "CmdHCTDefault.h"
-
+#include <common/misc/utility/bitmaskUtils.h>
+#include <common/powersupply/core/AbstractPowerSupply.h>
 #include <cmath>
+
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
@@ -44,10 +46,14 @@ void own::CmdHCTDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractHETControllerCommand::setHandler(data);
 	this->loggedNotStartedMsg=false;
 	this->loggedDeadCUMsg=false;
+	this->loggedDataRetrieving=false;
 	o_Positron_LTHR=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "PositronsLowTHR");
 	o_Positron_HTHR=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "PositronsHighTHR");
 	o_Electron_LTHR=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "ElectronsLowTHR");
 	o_Electron_HTHR=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "ElectronsHighTHR");
+	hvChannelStatus=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT, "HVChannelStatus");
+	hvChannelVoltages=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "HVChannelVoltages");
+	hvChannelAlarms=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT, "HVChannelAlarms");
 	mainUnitStatusDescription=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"HV_Main_Status_Description");
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
 	setBusyFlag(false);
@@ -110,7 +116,11 @@ void own::CmdHCTDefault::acquireHandler() {
 		if (LVPDataset == NULL)
 		{
 			SCLERR_ << "LV Positron Dataset null";
-			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for LV_Elecron");
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for LV_Positron");
+				this->loggedDataRetrieving=true;
+			}
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			failed=true;
 		}
@@ -121,7 +131,11 @@ void own::CmdHCTDefault::acquireHandler() {
 		if (LVEDataset == NULL)
 		{
 			SCLERR_ << "LV Electron Dataset null";
-			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for LV_Elecron");
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for LV_Elecron");
+				this->loggedDataRetrieving=true;
+			}
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			failed=true;
 		}
@@ -132,7 +146,11 @@ void own::CmdHCTDefault::acquireHandler() {
 		if (HVDataset == NULL)
 		{
 			SCLERR_ << "HVDataset Dataset null";
-			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for HV Power Supply");
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset for HV Power Supply");
+				this->loggedDataRetrieving=true;
+			}
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			failed=true;
 		}
@@ -140,16 +158,16 @@ void own::CmdHCTDefault::acquireHandler() {
 		{
 			UpdateMPSFromDataset(HVDataset);
 		}
-		
+		if (!failed)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+			this->loggedDataRetrieving=false;
+		}
 
-
-
-
-		
 	}
 	catch (int  e)
 	{
-		SCLDBG_ << "ALEDEBUG EXCEPTION CATCHED";
+		SCLDBG_ << "EXCEPTION CATCHED";
 	}
 	getAttributeCache()->setOutputDomainAsChanged();
 
@@ -165,16 +183,46 @@ bool own::CmdHCTDefault::timeoutHandler() {
 bool own::CmdHCTDefault::UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fetched)
 {
 	*o_status_id=fetched->getInt32Value("status_id");
-	
-	std::string tmpDesc=fetched->getStringValue("Main_Status_Description");
-	strncpy(mainUnitStatusDescription,tmpDesc.c_str(),tmpDesc.length());
-	char* bindata;
-	uint32_t size;
 
-	bindata=(char*)fetched->getBinaryValue("ChannelStatus",size);
-	for (int  i=0;((i < size/(sizeof(int32_t))) && (i<32)); i++)
+	
+	int64_t* bindata;
+	uint32_t size;
+	int32_t * chNum=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "HVChannels");
+	bindata=(int64_t*)fetched->getBinaryValue("ChannelStatus",size);
+	*chNum=size/(sizeof(int64_t));
+	int onChannels=0;
+	for (int  i=0;i < (*chNum); i++)
 	{
-		//LTHR_dest[i]=(int32_t)bindata[i*(sizeof(int32_t))];
+		hvChannelStatus[i]=bindata[i];
+		if (CHECKMASK(hvChannelStatus[i],::common::powersupply::POWER_SUPPLY_STATE_ON))
+		{
+			onChannels++;
+		}
+
+	}
+	int64_t* bindataAl=(int64_t*)fetched->getBinaryValue("ChannelAlarms",size);
+	for (int  i=0;i < size/(sizeof(int64_t)); i++)
+	{
+		hvChannelAlarms[i]=bindataAl[i];
+	}
+
+
+
+	std::string tmpDesc=fetched->getStringValue("Main_Status_Description");
+	char onChStr[32], totalChStr[32];
+	sprintf(onChStr,"%d",onChannels);
+	sprintf(totalChStr,"%d",*chNum);
+	std::string  myStr1(onChStr);
+	std::string  myStr2(totalChStr);
+
+	tmpDesc+= " " + myStr1+ "/"+myStr2+" HV channels ON";
+	strncpy(mainUnitStatusDescription,tmpDesc.c_str(),tmpDesc.length());
+
+	double* bindataD=(double*)fetched->getBinaryValue("ChannelVoltages",size);
+	int32_t chansHere=size/(sizeof(double));
+	for (int  i=0;i < chansHere; i++)
+	{
+		hvChannelVoltages[i]=bindataD[i];
 	}
 
 }
@@ -182,10 +230,6 @@ bool own::CmdHCTDefault::UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fe
 
 bool own::CmdHCTDefault::UpdateVoltagesFromDataset(chaos::common::data::CDWShrdPtr fetched, int32_t* LTHR_dest,int32_t* HTHR_dest)
 {
-	//SCLDBG_ << "ALEDEBUG UPDATING VOLTAGES" << fetched->getCompliantJSONString();
-	//int numOfChannels= fetched->getInt32Value("NumberOfChannels");
-	//SCLDBG_ << "read number of channels " << numOfChannels;
-	
 	char* bindata;
 	uint32_t size;
 	bindata=(char*)fetched->getBinaryValue("ChannelLowThresholds",size);

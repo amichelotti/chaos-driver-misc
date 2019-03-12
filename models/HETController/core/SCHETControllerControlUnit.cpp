@@ -80,7 +80,7 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 							"a string with the description of the main unit status",
 							DataType::TYPE_STRING,
 							DataType::Output, 256);
-							
+
 	addAttributeToDataSet("alarms",
 							"default alarms attribute",
 							DataType::TYPE_INT64,
@@ -105,6 +105,33 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 							chaos::DataType::SUB_TYPE_INT32,
 							32*sizeof(int32_t),
 							chaos::DataType::Output);
+	
+	addAttributeToDataSet("HVChannels",
+							"The number of the channels of the HV Power Supply",
+							DataType::TYPE_INT32,
+							DataType::Output);
+
+	addBinaryAttributeAsSubtypeToDataSet("HVChannelVoltages",
+							"the values of the voltage channels",
+							chaos::DataType::SUB_TYPE_DOUBLE,
+							256*sizeof(double),
+							chaos::DataType::Output);
+
+	addBinaryAttributeAsSubtypeToDataSet("HVChannelAlarms",
+							"the alarms  from the HV channels",
+							chaos::DataType::SUB_TYPE_INT64,
+							256*sizeof(int64_t),
+							chaos::DataType::Output);
+
+	addBinaryAttributeAsSubtypeToDataSet("HVChannelStatus",
+							"the status  of the HV channels",
+							chaos::DataType::SUB_TYPE_INT64,
+							256*sizeof(int64_t),
+							chaos::DataType::Output);
+
+
+
+/*INPUT*/
 	addAttributeToDataSet("driver_timeout",
 							"custom user timeout in milliseconds for commands",
 							DataType::TYPE_INT32,

@@ -42,9 +42,13 @@ namespace driver {
 			int32_t* o_Positron_LTHR;
 			int32_t* o_Electron_HTHR;
 			int32_t* o_Electron_LTHR;
+			int64_t* hvChannelStatus;
+			int64_t* hvChannelAlarms;
+			double* hvChannelVoltages;
 			char* mainUnitStatusDescription;
 			bool loggedNotStartedMsg;
 			bool loggedDeadCUMsg;
+			bool loggedDataRetrieving;
 			chaos::common::data::CDWShrdPtr  LVPDataset;
 			chaos::common::data::CDWShrdPtr  LVEDataset;
 			chaos::common::data::CDWShrdPtr  HVDataset;
