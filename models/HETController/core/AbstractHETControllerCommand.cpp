@@ -24,19 +24,70 @@ limitations under the License.
 using namespace driver::hetcontroller;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
-AbstractHETControllerCommand::AbstractHETControllerCommand() {
+AbstractHETControllerCommand::AbstractHETControllerCommand() :LV_Positron(NULL),LV_Electron(NULL),HVPS(NULL){
 	hetcontroller_drv = NULL;
+	//
 }
 AbstractHETControllerCommand::~AbstractHETControllerCommand() {
 	if(hetcontroller_drv)
 		delete(hetcontroller_drv);
+	if (LV_Positron)
+		delete(LV_Positron);
+	if (LV_Electron)
+		delete(LV_Electron);
+	if (HVPS)
+		delete(HVPS);
+	
+	LV_Positron=LV_Electron=HVPS=NULL;
 	hetcontroller_drv = NULL;
 }
 void AbstractHETControllerCommand::setHandler(c_data::CDataWrapper *data) {
 	CMDCUDBG_ << "loading pointer for output channel"; 
 	//get pointer to the output dataset variable
-	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "status_id");
+	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "HV_MainUnit_Status");
 	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
+	bool configOk=false;
+	LVPName = getAttributeCache()->getROPtr<char>(DOMAIN_INPUT, "LVPositron_ControlUnit_CompleteName");
+	if ((LVPName == NULL) || (strlen(LVPName)==0) )
+	{
+		CMDCUERR_ << "ALEDEBUG LVPName not set" ;
+	}
+	else
+	{
+		LV_Positron= new ::driver::misc::ChaosController(LVPName);
+		LVEName = getAttributeCache()->getROPtr<char>(DOMAIN_INPUT, "LVElectron_ControlUnit_CompleteName");
+		if ((LVEName == NULL) || (strlen(LVEName)==0) )
+		{
+			CMDCUERR_ << "ALEDEBUG LVEName not set" ;
+		}
+		else
+		{
+			LV_Electron= new ::driver::misc::ChaosController(LVEName);
+			MPSName = getAttributeCache()->getROPtr<char>(DOMAIN_INPUT, "HVMPS_ControlUnit_CompleteName");
+			if ((MPSName == NULL) || (strlen(MPSName)==0) )
+			{
+				CMDCUERR_ << "ALEDEBUG MPSName not set" ;
+			}
+			else
+			{
+				HVPS= new ::driver::misc::ChaosController(MPSName);
+				configOk=true;
+
+			}
+		}
+		
+	}
+	if (!configOk)
+	{
+		throw chaos::CException(-1, "Failed to config the control of CU", __FUNCTION__);
+	}
+
+
+
+
+
+
+
 	//setting default timeout (usec) 
 	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
 	if (*userTimeout > 0)
@@ -59,5 +110,45 @@ void AbstractHETControllerCommand::ccHandler() {
 }
 void AbstractHETControllerCommand::setWorkState(bool working_flag) {
 	setBusyFlag(working_flag);
+}
+std::pair<std::vector<int32_t>,std::vector<std::string>> AbstractHETControllerCommand::checkHealthState() {
+	std::pair<std::vector<int32_t>,std::vector<std::string>> ReturnObject;
+	std::vector<int32_t> differenceTimeVector;
+	std::vector<std::string> CUStateVector;
+	differenceTimeVector.resize(3);
+	CUStateVector.resize(3);
+	chaos::common::data::CDWShrdPtr  LVP_HDS, LVE_HDS, HVMPS_HDS;
+	LVP_HDS=LV_Positron->getLiveChannel(LVPName,4);
+	LVE_HDS=LV_Electron->getLiveChannel(LVEName,4);
+	HVMPS_HDS=HVPS->getLiveChannel(MPSName,4);
+	
+	u_int64_t atsTime;
+	time_t now;
+	u_int64_t differenceTime;
+	std::string custate;
+	now=time(NULL);
+	
+	atsTime=LVP_HDS->getUInt64Value("dpck_ats");
+	custate=LVP_HDS->getStringValue("nh_status");
+	differenceTime=now-(u_int64_t)(atsTime/1000);
+	differenceTimeVector[0]=differenceTime;
+	CUStateVector[0]=custate;
+
+	atsTime=LVE_HDS->getUInt64Value("dpck_ats");
+	custate=LVE_HDS->getStringValue("nh_status");
+	differenceTime=now-(u_int64_t)(atsTime/1000);
+	differenceTimeVector[1]=differenceTime;
+	CUStateVector[1]=custate;
+
+	atsTime=HVMPS_HDS->getUInt64Value("dpck_ats");
+	custate=HVMPS_HDS->getStringValue("nh_status");
+	differenceTime=now-(u_int64_t)(atsTime/1000);
+	differenceTimeVector[2]=differenceTime;
+	CUStateVector[2]=custate;
+
+
+	ReturnObject.first=differenceTimeVector;
+	ReturnObject.second=CUStateVector;
+	return ReturnObject;
 }
 

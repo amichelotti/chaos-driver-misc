@@ -46,6 +46,15 @@ namespace driver {
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
 			void setWorkState(bool working);
+			const u_int32_t DEFAULT_ELAPSED_TIME_HEALTH = 10;
+			std::pair<std::vector<int32_t>,std::vector<std::string>> checkHealthState();
+			::driver::misc::ChaosController *LV_Positron;
+			::driver::misc::ChaosController *LV_Electron;
+			::driver::misc::ChaosController *HVPS;
+			const char* LVPName;
+			const char* LVEName;
+			const char* MPSName;
+			
 		};// AbstractHETControllerCommand
 	}// hetcontroller
 }

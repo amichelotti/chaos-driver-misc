@@ -72,10 +72,15 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
 	*/
-	addAttributeToDataSet("status_id",
-							"default status attribute",
+	addAttributeToDataSet("HV_MainUnit_Status",
+							"The HV Status of the Main Unit",
 							DataType::TYPE_INT32,
 							DataType::Output);
+	addAttributeToDataSet("HV_Main_Status_Description",
+							"a string with the description of the main unit status",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+							
 	addAttributeToDataSet("alarms",
 							"default alarms attribute",
 							DataType::TYPE_INT64,
@@ -104,8 +109,31 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 							"custom user timeout in milliseconds for commands",
 							DataType::TYPE_INT32,
 							DataType::Input);
+	addAttributeToDataSet("LVPositron_ControlUnit_CompleteName",
+							"the name of the CU that controls the Low Voltages thresholds for positron side",
+							DataType::TYPE_STRING,
+							DataType::Input,256);
+	addAttributeToDataSet("LVElectron_ControlUnit_CompleteName",
+							"the name of the CU that controls the Low Voltages thresholds for electron side",
+							DataType::TYPE_STRING,
+							DataType::Input,256);
+	addAttributeToDataSet("HVMPS_ControlUnit_CompleteName",
+							"the name of the CU that controls the High Voltages Power Supply",
+							DataType::TYPE_STRING,
+							DataType::Input,256);
+
+	
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"default driver communication error");
+	
+	addStateVariable(StateVariableTypeAlarmCU,"data_retrieving_error",
+		"raised on communication error while retrieving data from  CUs");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"HET_CU_DEAD",
+		"Some of the controlled Control Unit is dead");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"HET_CU_NOT_STARTED",
+		"Some of the controlled Control Unit is not in start phase");
 }
 void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineCustomAttribute() {
 }

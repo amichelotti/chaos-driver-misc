@@ -35,6 +35,19 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			bool UpdateVoltagesFromDataset(chaos::common::data::CDWShrdPtr fetched, int32_t* LTHR_dest,int32_t* HTHR_dest);
+			bool UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fetched);
+
+			int32_t* o_Positron_HTHR;
+			int32_t* o_Positron_LTHR;
+			int32_t* o_Electron_HTHR;
+			int32_t* o_Electron_LTHR;
+			char* mainUnitStatusDescription;
+			bool loggedNotStartedMsg;
+			bool loggedDeadCUMsg;
+			chaos::common::data::CDWShrdPtr  LVPDataset;
+			chaos::common::data::CDWShrdPtr  LVEDataset;
+			chaos::common::data::CDWShrdPtr  HVDataset;
 		};
 	}
 }
