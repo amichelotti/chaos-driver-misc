@@ -158,6 +158,56 @@ void own::CmdHCTDefault::acquireHandler() {
 		{
 			UpdateMPSFromDataset(HVDataset);
 		}
+		LVPDataset=LV_Positron->getLiveChannel(LVPName,6);
+		LVEDataset=LV_Electron->getLiveChannel(LVEName,6);
+		HVDataset=HVPS->getLiveChannel(MPSName,6);
+		if (LVPDataset == NULL)
+		{
+			SCLERR_ << "LV Positron Health Dataset null";
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve health dataset for LV_Positron");
+				this->loggedDataRetrieving=true;
+			}
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			failed=true;
+		}
+		else
+		{
+			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+		}
+		if (LVEDataset == NULL)
+		{
+			SCLERR_ << "LV Electron Health Dataset null";
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve health dataset for LV_Electron");
+				this->loggedDataRetrieving=true;
+			}
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			failed=true;
+		}
+		else
+		{
+			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+		}
+		if (HVDataset == NULL)
+		{
+			SCLERR_ << "HVMPS Health Dataset null";
+			if (this->loggedDataRetrieving==false)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve health dataset for HV MPS");
+				this->loggedDataRetrieving=true;
+			}
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			failed=true;
+		}
+		else
+		{
+			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+		}
+
+
 		if (!failed)
 		{
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"data_retrieving_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
@@ -188,6 +238,7 @@ bool own::CmdHCTDefault::UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fe
 	int64_t* bindata;
 	uint32_t size;
 	int32_t * chNum=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "HVChannels");
+	
 	bindata=(int64_t*)fetched->getBinaryValue("ChannelStatus",size);
 	*chNum=size/(sizeof(int64_t));
 	int onChannels=0;
@@ -241,6 +292,112 @@ bool own::CmdHCTDefault::UpdateVoltagesFromDataset(chaos::common::data::CDWShrdP
 	for (int  i=0;((i < size/(sizeof(int32_t))) && (i<32)); i++)
 	{
 		HTHR_dest[i]=(int32_t)bindata[i*(sizeof(int32_t))];
+	}
+	return true;
+}
+
+bool own::CmdHCTDefault::CheckAlarmsFromCUs(chaos::common::data::CDWShrdPtr fetchedAlarm,uint64_t* alarmBitMask,uint8_t element) {
+
+	ChaosStringSet keys;
+	fetchedAlarm->getAllKey(keys);
+	for (ChaosStringSetIterator i= keys.begin();i != keys.end();i++)
+	{
+/*		if (((*i).find("dpck") != std::string::npos)  || ((*i).find("ndk") != std::string::npos) )
+			continue;
+
+		if ((*i) == "gib_unreachable")
+		{
+			if (fetchedAlarm->getInt32Value(*i) > 0)
+			{
+				switch( element)
+				{
+					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_unreachable); break;
+					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_unreachable); break;
+					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_unreachable); break;
+					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_unreachable); break;
+				}
+			}
+			else
+			{
+				switch( element)
+				{
+					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_unreachable); break;
+					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_unreachable); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_unreachable); break;
+					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_unreachable); break;
+				}
+			}
+		}
+		if ((*i) == "setPoint_not_reached")
+		{
+			if (fetchedAlarm->getInt32Value(*i) > 0)
+			{
+				switch( element)
+				{
+					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_setpointnotreached); break;
+					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_setpointnotreached); break;
+					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_setpointnotreached); break;
+					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_setpointnotreached); break;
+				}
+			}
+			else
+			{
+				switch( element)
+				{
+					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_setpointnotreached); break;
+					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_setpointnotreached); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_setpointnotreached); break;
+					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_setpointnotreached); break;
+				}
+			}
+		}
+		if ((*i) == "channel_out_of_set")
+		{
+			if (fetchedAlarm->getInt32Value(*i) > 0)
+			{
+				switch( element)
+				{
+					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_channeloutofset); break;
+					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_channeloutofset); break;
+					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_channeloutofset); break;
+					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_channeloutofset); break;
+				}
+			}
+			else
+			{
+				switch( element)
+				{
+					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_channeloutofset); break;
+					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_channeloutofset); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_channeloutofset); break;
+					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_channeloutofset); break;
+				}
+			}
+		}
+		if ((*i) == "wrong_driver_status_error")
+		{
+			if (fetchedAlarm->getInt32Value(*i) > 0)
+			{
+				switch( element)
+				{
+					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_wrong_driver_status); break;
+					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_wrong_driver_status); break;
+					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_wrong_driver_status); break;
+					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_wrong_driver_status); break;
+				}
+			}
+			else
+			{
+				switch( element)
+				{
+					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_wrong_driver_status); break;
+					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_wrong_driver_status); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_wrong_driver_status); break;
+					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_wrong_driver_status); break;
+				}
+			}
+		}
+*/
 	}
 	return true;
 }
