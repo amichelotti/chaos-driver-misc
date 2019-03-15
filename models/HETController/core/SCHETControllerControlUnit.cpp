@@ -161,6 +161,22 @@ void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineActionAndDat
 	
 	addStateVariable(StateVariableTypeAlarmDEV,"HET_CU_NOT_STARTED",
 		"Some of the controlled Control Unit is not in start phase");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"LV_electron_driver_error",
+		"The control unit for LV side Electrons have driver communication error");
+	addStateVariable(StateVariableTypeAlarmDEV,"LV_positron_driver_error",
+		"The control unit for LV side Positron have driver communication error");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"HV_powersupply_driver_error",
+		"The control unit for HV crate have driver communication error");
+
+	addStateVariable(StateVariableTypeAlarmDEV,"HV_channel_setPoint_not_reached",
+		"The control unit for HV crate have failed reaching the setpoint");
+
+	addStateVariable(StateVariableTypeAlarmDEV,"HV_channel_drifted_from_setPoint",
+		"Raised when a HV Channel drifted from his setpoint");
+
+
 }
 void ::driver::hetcontroller::SCHETControllerControlUnit::unitDefineCustomAttribute() {
 }

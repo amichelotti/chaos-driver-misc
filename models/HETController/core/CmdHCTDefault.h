@@ -38,6 +38,7 @@ namespace driver {
 			bool UpdateVoltagesFromDataset(chaos::common::data::CDWShrdPtr fetched, int32_t* LTHR_dest,int32_t* HTHR_dest);
 			bool UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fetched);
 			bool CheckAlarmsFromCUs(chaos::common::data::CDWShrdPtr fetchedAlarm,uint64_t* alarmBitMask,uint8_t element);
+			void DecodeAlarmMaskAndRaiseAlarms();
 
 			int32_t* o_Positron_HTHR;
 			int32_t* o_Positron_LTHR;

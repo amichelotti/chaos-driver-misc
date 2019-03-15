@@ -22,6 +22,17 @@ limitations under the License.
 #define __common_AbstractHETController_h__
 namespace common {
 	namespace hetcontroller {
+		typedef enum {
+			HETCONTROLLER_LVPOSITRON_DRIVER_ERROR = 0x1,
+			HETCONTROLLER_LVELECTRON_DRIVER_ERROR = 0x2,
+			HETCONTROLLER_HVPOWERSUPPLY_DRIVER_ERROR = 0x4,
+			HETCONTROLLER_HV_SETPOINT_NOT_REACHED  = 0x8,
+			HETCONTROLLER_HVCHANNEL_OUT_OF_SET = 0x10
+		} HETAlarms;
+
+
+
+
 		class AbstractHETController {
 		  public:
 			AbstractHETController() {};

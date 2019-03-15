@@ -18,6 +18,7 @@ limitations under the License.
 */
 #include "CmdHCTDefault.h"
 #include <common/misc/utility/bitmaskUtils.h>
+#include "AbstractHETController.h"
 #include <common/powersupply/core/AbstractPowerSupply.h>
 #include <cmath>
 
@@ -174,7 +175,7 @@ void own::CmdHCTDefault::acquireHandler() {
 		}
 		else
 		{
-			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+			this->CheckAlarmsFromCUs(LVPDataset,o_alarms,1);
 		}
 		if (LVEDataset == NULL)
 		{
@@ -189,7 +190,7 @@ void own::CmdHCTDefault::acquireHandler() {
 		}
 		else
 		{
-			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+			this->CheckAlarmsFromCUs(LVEDataset,o_alarms,2);
 		}
 		if (HVDataset == NULL)
 		{
@@ -204,7 +205,7 @@ void own::CmdHCTDefault::acquireHandler() {
 		}
 		else
 		{
-			//this->CheckGibsAlarms(CUAlarmsDataset,o_alarms,1);
+			this->CheckAlarmsFromCUs(HVDataset,o_alarms,3);
 		}
 
 
@@ -302,102 +303,119 @@ bool own::CmdHCTDefault::CheckAlarmsFromCUs(chaos::common::data::CDWShrdPtr fetc
 	fetchedAlarm->getAllKey(keys);
 	for (ChaosStringSetIterator i= keys.begin();i != keys.end();i++)
 	{
-/*		if (((*i).find("dpck") != std::string::npos)  || ((*i).find("ndk") != std::string::npos) )
+		if (((*i).find("dpck") != std::string::npos)  || ((*i).find("ndk") != std::string::npos) )
 			continue;
 
-		if ((*i) == "gib_unreachable")
+		if ((*i) == "driver_command_error")
 		{
 			if (fetchedAlarm->getInt32Value(*i) > 0)
 			{
 				switch( element)
 				{
-					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_unreachable); break;
-					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_unreachable); break;
-					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_unreachable); break;
-					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_unreachable); break;
+					case 1 : UPMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_LVPOSITRON_DRIVER_ERROR); break;
+					case 2 : UPMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_LVELECTRON_DRIVER_ERROR); break;
+					case 3 : UPMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HVPOWERSUPPLY_DRIVER_ERROR); break;
 				}
 			}
 			else
 			{
 				switch( element)
 				{
-					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_unreachable); break;
-					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_unreachable); break;
-					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_unreachable); break;
-					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_unreachable); break;
+					case 1 : DOWNMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_LVPOSITRON_DRIVER_ERROR); break;
+					case 2 : DOWNMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_LVELECTRON_DRIVER_ERROR); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HVPOWERSUPPLY_DRIVER_ERROR); break;
 				}
 			}
 		}
+
 		if ((*i) == "setPoint_not_reached")
 		{
 			if (fetchedAlarm->getInt32Value(*i) > 0)
 			{
 				switch( element)
 				{
-					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_setpointnotreached); break;
-					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_setpointnotreached); break;
-					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_setpointnotreached); break;
-					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_setpointnotreached); break;
+					case 3 : UPMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HV_SETPOINT_NOT_REACHED); break;
 				}
 			}
 			else
 			{
 				switch( element)
 				{
-					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_setpointnotreached); break;
-					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_setpointnotreached); break;
-					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_setpointnotreached); break;
-					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_setpointnotreached); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HV_SETPOINT_NOT_REACHED); break;
 				}
 			}
 		}
+		
 		if ((*i) == "channel_out_of_set")
 		{
 			if (fetchedAlarm->getInt32Value(*i) > 0)
 			{
 				switch( element)
 				{
-					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_channeloutofset); break;
-					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_channeloutofset); break;
-					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_channeloutofset); break;
-					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_channeloutofset); break;
+					case 3 : UPMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HVCHANNEL_OUT_OF_SET); break;
 				}
 			}
 			else
 			{
 				switch( element)
 				{
-					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_channeloutofset); break;
-					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_channeloutofset); break;
-					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_channeloutofset); break;
-					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_channeloutofset); break;
+					case 3 : DOWNMASK(*alarmBitMask,::common::hetcontroller::HETCONTROLLER_HVCHANNEL_OUT_OF_SET); break;
 				}
 			}
 		}
-		if ((*i) == "wrong_driver_status_error")
-		{
-			if (fetchedAlarm->getInt32Value(*i) > 0)
-			{
-				switch( element)
-				{
-					case 1 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_wrong_driver_status); break;
-					case 2 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_wrong_driver_status); break;
-					case 3 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_wrong_driver_status); break;
-					case 4 : UPMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_wrong_driver_status); break;
-				}
-			}
-			else
-			{
-				switch( element)
-				{
-					case 1 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB1_wrong_driver_status); break;
-					case 2 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB2_wrong_driver_status); break;
-					case 3 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB3_wrong_driver_status); break;
-					case 4 : DOWNMASK(*alarmBitMask,::common::ccaltcontroller::CCALTCONTROLLER_GIB4_wrong_driver_status); break;
-				}
-			}
-		}
-*/
+
 	}
 	return true;
+}
+
+void own::CmdHCTDefault::DecodeAlarmMaskAndRaiseAlarms()
+{
+	if (CHECKMASK(*o_alarms,::common::hetcontroller::HETCONTROLLER_LVELECTRON_DRIVER_ERROR) 	   )
+	{
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"LV_electron_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"LV_electron_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+
+
+	if (CHECKMASK(*o_alarms,::common::hetcontroller::HETCONTROLLER_LVPOSITRON_DRIVER_ERROR) 	   )
+	{
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"LV_positron_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"LV_positron_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+
+
+	if (CHECKMASK(*o_alarms,::common::hetcontroller::HETCONTROLLER_HVPOWERSUPPLY_DRIVER_ERROR) 	   )
+	{
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_powersupply_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_powersupply_driver_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+
+
+	if (CHECKMASK(*o_alarms,::common::hetcontroller::HETCONTROLLER_HV_SETPOINT_NOT_REACHED) 	   )
+	{
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_channel_setPoint_not_reached",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_channel_setPoint_not_reached",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+
+
+	if (CHECKMASK(*o_alarms,::common::hetcontroller::HETCONTROLLER_HVCHANNEL_OUT_OF_SET) 	   )
+	{
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_channel_drifted_from_setPoint",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmDEV,"HV_channel_drifted_from_setPoint",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
 }
