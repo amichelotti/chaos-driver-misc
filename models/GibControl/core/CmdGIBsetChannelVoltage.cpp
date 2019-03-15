@@ -151,7 +151,7 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 
 
 
-	if (err=gibcontrol_drv->setChannelVoltage(tmp_channel,tmp_Voltage) != 0)
+	if ((err=gibcontrol_drv->setChannelVoltage(tmp_channel,tmp_Voltage)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelVoltage not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
