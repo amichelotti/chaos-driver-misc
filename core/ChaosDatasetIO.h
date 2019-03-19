@@ -72,6 +72,8 @@ namespace driver{
              
              */
             int registerDataset ();
+            int pushDataset(ChaosDataSet&ds, int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
             int pushDataset( int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
             /**
              Retrieve its own datasets from live

@@ -98,6 +98,15 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     } else{
         uid = groupName + "/" + datasetName;
     }
+    ChaosDataSet sys=allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
+    sys->addStringValue(chaos::DataPackSystemKey::DP_SYS_UNIT_TYPE,chaos::NodeType::NODE_SUBTYPE_SCRIPTABLE_EXECUTION_UNIT);
+    sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL,0);
+    sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL,0);
+    sys->addBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE,false);
+
+    allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
+    allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
+
 }
 
 int ChaosDatasetIO::setAgeing(uint64_t secs)
@@ -158,13 +167,9 @@ ChaosDataSet ChaosDatasetIO::allocateDataset(int type)
 
     return i->second;
 }
+int ChaosDatasetIO::pushDataset(ChaosDataSet& new_dataset, int type){
+        int err = 0;
 
-// push a dataset
-int ChaosDatasetIO::pushDataset(int type)
-{
-    int err = 0;
-    //ad producer key
-    ChaosDataSet new_dataset = datasets[type];
     uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
     uint64_t tsh = chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
 
@@ -214,6 +219,13 @@ int ChaosDatasetIO::pushDataset(int type)
     ioLiveDataDriver->storeData(uid + chaos::datasetTypeToPostfix(type),new_dataset, (chaos::DataServiceNodeDefinitionType::DSStorageType)storageType);
 
     return err;
+}
+
+// push a dataset
+int ChaosDatasetIO::pushDataset(int type)
+{
+    //ad producer key
+    return pushDataset(datasets[type],type);
 }
 ChaosDataSet ChaosDatasetIO::getDataset(int type)
 {
@@ -417,6 +429,7 @@ int ChaosDatasetIO::registerDataset()
             return -1;
         }
     }
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
     return 0;
 }
 uint64_t ChaosDatasetIO::queryHistoryDatasets(uint64_t ms_start, uint64_t ms_end, uint32_t page, int type)
