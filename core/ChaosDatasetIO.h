@@ -14,6 +14,10 @@ namespace chaos{
         namespace network{
             class NetworkBroker;
         }
+        namespace metadata_logging{
+            class StandardLoggingChannel;
+            class AlarmLoggingChannel;
+        }
     }
 };
 #define GET_TIMESTAMP(x) (x->getInt64Value("dpck_ats"))
@@ -30,7 +34,11 @@ namespace driver{
             ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
-            
+             //!logging channel
+            chaos::common::metadata_logging::StandardLoggingChannel *standard_logging_channel;
+                
+                //!control unit alarm group
+            chaos::common::metadata_logging::AlarmLoggingChannel    *alarm_logging_channel;
             typedef struct {uint64_t qt;
                 uint32_t page_len;
                 chaos::common::io::QueryCursor * qc;
@@ -60,6 +68,10 @@ namespace driver{
             bool deinitialized;
             std::string implementation;
             uint64_t packet_size;
+            uint8_t cu_alarm_lvl;
+            uint8_t dev_alarm_lvl;
+            int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
+            std::vector<std::string> cu_alarms,dev_alarms;
         public:
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
@@ -117,6 +129,28 @@ namespace driver{
              Perform a full query on the specified device specifing a starting runid and a sequid and a tag.
              */
             uint64_t queryHistoryDatasets(const std::string &dsname, uint64_t ms_start,uint64_t ms_end,const uint64_t runid,const uint64_t sequid,const ChaosStringSet& meta_tags,uint32_t page,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            /**
+             * Allocate a CU alarm
+             * return 0 if success
+            */
+            int allocateCUAlarm(const std::string& name);
+            /**
+             * Allocate a DEV alarm
+             * return 0 if success
+            */
+            int allocateDEVAlarm(const std::string& name);
+
+            /**
+             * Set a preallocated CUalarm to a given level (0= no alarm,1=warning,2>=failure)
+             * return 0 if No CU alarm set, 1 if some warning,2 if some failure
+            */
+            int setCUAlarmLevel(const std::string& name,uint8_t value,const std::string msg="");
+            void log(const std::string& subject, int log_level,const std::string&message);
+            /**
+             * Set a preallocated DEValarm to a given level (0= no alarm,1=warning,2>=failure)
+             * return 0 if No DEV alarm set, 1 if some warning,2 if some failure
+            */
+            int setDeviceAlarmLevel(const std::string& name,uint8_t value,const std::string msg="");
             bool queryHasNext(uint64_t uid);
             std::string getUid(){return uid;}
             uint64_t getRunID(){return runid;}

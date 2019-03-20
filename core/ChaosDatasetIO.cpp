@@ -7,6 +7,7 @@
 #include <chaos_metadata_service_client/api_proxy/unit_server/ManageCUType.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/SetInstanceDescription.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
+#include <chaos/common/metadata_logging/metadata_logging.h>
 
 #include <chaos/common/network/NetworkBroker.h>
 
@@ -24,7 +25,7 @@ using namespace chaos::common::direct_io;
 using namespace chaos::common::direct_io::channel;
 using namespace chaos::common::healt_system;
 using namespace chaos::metadata_service_client;
-
+using namespace chaos::common::metadata_logging;
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DPD_LDBG << " "                                                                                                       \
              << " Executing Api:\"" << #api_name << "\"";                                                                 \
@@ -52,6 +53,8 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                                                 defaultPage(30),
                                                                 last_seq(0),
                                                                 packet_size(0),
+                                                                cu_alarm_lvl(0),
+                                                                dev_alarm_lvl(0),
                                                                 last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO")
 {
     try
@@ -77,6 +80,8 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
         }
       try{
         StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
+        InizializableService::initImplementation(chaos::common::metadata_logging::MetadataLoggingManager::getInstance(), NULL, "MetadataLoggingManager", __PRETTY_FUNCTION__);
+
       } catch(...){
           
       }
@@ -98,6 +103,18 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     } else{
         uid = groupName + "/" + datasetName;
     }
+
+    alarm_logging_channel = (AlarmLoggingChannel*)MetadataLoggingManager::getInstance()->getChannel("AlarmLoggingChannel");
+    if (alarm_logging_channel == NULL) {
+        LOG_AND_TROW(DPD_LERR, -1, "Alarm logging channel not found");
+    }
+
+  standard_logging_channel = (StandardLoggingChannel*)MetadataLoggingManager::getInstance()->getChannel("StandardLoggingChannel");
+  if (standard_logging_channel == NULL) {
+    LOG_AND_TROW(DPD_LERR, -2, "Standard logging channel not found");
+  }
+  standard_logging_channel->setLogLevel(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelInfo);
+ 
     ChaosDataSet sys=allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
     sys->addStringValue(chaos::DataPackSystemKey::DP_SYS_UNIT_TYPE,chaos::NodeType::NODE_SUBTYPE_SCRIPTABLE_EXECUTION_UNIT);
     sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL,0);
@@ -562,6 +579,105 @@ void ChaosDatasetIO::timeout()
     //update push metric
     updateHealth();
 }
+
+int ChaosDatasetIO::allocateCUAlarm(const std::string& name){
+    if(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM]->hasKey(name)){
+        return -1;
+    }
+    cu_alarms.push_back(name);
+
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM]->addInt32Value(name,0);
+    return 0;
+}
+
+int32_t ChaosDatasetIO::findMax(ChaosDataSet&ds, std::vector<std::string>& dataset_key){
+    int32_t ret=0;
+
+  for (std::vector<std::string>::iterator it = dataset_key.begin();
+       it != dataset_key.end();
+       it++) {
+           int32_t val=ds->getInt32Value(*it);
+           if(val>ret){
+               ret=val;
+           }
+       }
+       return ret;
+}
+
+int ChaosDatasetIO::allocateDEVAlarm(const std::string& name){
+     if(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM]->hasKey(name)){
+        return -1;
+    }
+    dev_alarms.push_back(name);
+
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM]->addInt32Value(name,0);
+    return 0;
+
+}
+int ChaosDatasetIO::setCUAlarmLevel(const std::string& name,uint8_t value,const std::string msg){
+    if(!(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM]->hasKey(name))){
+        throw chaos::CException(-1, "No CU Alarm \""+name + "\" found", __PRETTY_FUNCTION__);
+
+        return -1;
+    }
+    
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM]->setValue(name,value);
+    cu_alarm_lvl=findMax(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM],cu_alarms);
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL,cu_alarm_lvl);
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
+    if(msg.size()>0){
+        log("CU Alarm",cu_alarm_lvl+1,msg);
+    }
+    return cu_alarm_lvl;
+}
+int ChaosDatasetIO::setDeviceAlarmLevel(const std::string& name,uint8_t value,const std::string msg){
+    if(!(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM]->hasKey(name))){
+        throw chaos::CException(-1, "No DEV Alarm \""+name + "\" found", __PRETTY_FUNCTION__);
+
+        return -1;
+    }
+    
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM]->setValue(name,value);
+    dev_alarm_lvl=findMax(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM],dev_alarms);
+
+    datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL,dev_alarm_lvl);
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
+    if(msg.size()>0){
+        log("Device Alarm",dev_alarm_lvl+1,msg);
+    }
+
+    return dev_alarm_lvl;
+}
+
+void ChaosDatasetIO::log(const std::string&                                                      subject,
+                                           int log_leve,
+                                          const std::string& message) {
+  if (standard_logging_channel == NULL) return;
+  chaos::common::metadata_logging::StandardLoggingChannel::LogLevel log_level=(chaos::common::metadata_logging::StandardLoggingChannel::LogLevel)log_leve;
+  standard_logging_channel->logMessage(uid,
+                                       subject,
+                                      log_level,
+                                       message);
+  switch (log_level) {
+    case StandardLoggingChannel::LogLevelInfo:
+      DPD_LAPP << "["<<log_leve<<"]"<<message;
+      break;
+    case StandardLoggingChannel::LogLevelDebug:
+      DPD_LDBG << "["<<log_leve<<"]"<<message;
+      break;
+    case StandardLoggingChannel::LogLevelWarning:
+      DPD_LDBG << "["<<log_leve<<"]"<<message;
+      break;
+    case StandardLoggingChannel::LogLevelError:
+      DPD_LERR << "["<<log_leve<<"]"<<message;
+      break;
+    case StandardLoggingChannel::LogLevelFatal:
+      DPD_LERR << "["<<log_leve<<"]"<<message;
+      break;
+  }
+}
 void ChaosDatasetIO::deinit()
 {
 
@@ -574,7 +690,17 @@ void ChaosDatasetIO::deinit()
         EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid, groupName);
     }
     DEBUG_CODE(DPD_LDBG << "Timer removed");
+  CHAOS_NOT_THROW(InizializableService::deinitImplementation(MetadataLoggingManager::getInstance(), "MetadataLoggingManager", __PRETTY_FUNCTION__););
 
+ if (alarm_logging_channel) {
+    MetadataLoggingManager::getInstance()->releaseChannel(alarm_logging_channel);
+    alarm_logging_channel = NULL;
+  }
+
+  if (standard_logging_channel) {
+    MetadataLoggingManager::getInstance()->releaseChannel(standard_logging_channel);
+    standard_logging_channel = NULL;
+  }
     chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(this);
 
     sleep(2);
