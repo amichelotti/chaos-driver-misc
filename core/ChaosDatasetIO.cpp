@@ -55,6 +55,8 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                                                 packet_size(0),
                                                                 cu_alarm_lvl(0),
                                                                 dev_alarm_lvl(0),
+                                                                alarm_logging_channel(NULL),
+                                                                standard_logging_channel(NULL),
                                                                 last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO")
 {
     try
@@ -106,12 +108,15 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
 
     alarm_logging_channel = (AlarmLoggingChannel*)MetadataLoggingManager::getInstance()->getChannel("AlarmLoggingChannel");
     if (alarm_logging_channel == NULL) {
-        LOG_AND_TROW(DPD_LERR, -1, "Alarm logging channel not found");
+        DPD_LERR<<"Alarm logging channel not found";
+        //LOG_AND_TROW(DPD_LERR, -1, "Alarm logging channel not found");
     }
 
   standard_logging_channel = (StandardLoggingChannel*)MetadataLoggingManager::getInstance()->getChannel("StandardLoggingChannel");
   if (standard_logging_channel == NULL) {
-    LOG_AND_TROW(DPD_LERR, -2, "Standard logging channel not found");
+    DPD_LERR<<"Standard logging channel not found";
+
+   // LOG_AND_TROW(DPD_LERR, -2, "Standard logging channel not found");
   }
   standard_logging_channel->setLogLevel(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelInfo);
  
