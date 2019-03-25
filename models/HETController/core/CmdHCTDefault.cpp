@@ -276,7 +276,7 @@ bool own::CmdHCTDefault::UpdateMPSFromDataset(chaos::common::data::CDWShrdPtr fe
 	{
 		hvChannelVoltages[i]=bindataD[i];
 	}
-
+	return true;
 }
 
 
