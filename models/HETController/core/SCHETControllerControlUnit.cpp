@@ -226,6 +226,8 @@ break;
 case BatchCommandEventType::EVT_FAULT:
     SCCUAPP << cmd_id << " -> FAULT";
 break;
+default:
+break;
 }
 usleep(500000);
 } while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&

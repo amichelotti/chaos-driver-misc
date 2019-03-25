@@ -259,7 +259,8 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
                 break;
             }
             }
-
+            //memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+            //ptr+=cd->getValueSize(*it);
         }
         if((branch_counter+1)<q.nbranch){
             // if multiple branch buffer is different, offset to zero
@@ -271,9 +272,10 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
     return 0;
 }
 
+
 static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
                         const std::string& start, const std::string&end, const int channel,
-                        const std::string treeid, const std::string desc,int pageLen,bool multi,const std::vector<std::string> tags=std::vector<std::string>()) {
+                        const std::string treeid, const std::string desc,int pageLen,bool multi,uint64_t runid,uint64_t pckid,const std::vector<std::string> tags=std::vector<std::string>()) {
     std::string brname;
     try {
         treeQuery_t q;
@@ -291,7 +293,7 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
 */
         ctrl = new ChaosController(chaosNode);
 
-        int32_t ret = ctrl->queryHistory(start, end, tags,channel, res, pageLen);
+        int32_t ret = ctrl->queryHistory(start, end, runid,pckid,tags,channel, res, pageLen);
         int cnt = 0;
         if (res.size() > 0) {
             ROOTDBG<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
@@ -350,8 +352,20 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
         return NULL;
     }
 }
+
+static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
+                        const std::string& start, const std::string&end, const int channel,
+                        const std::string treeid, const std::string desc,int pageLen,bool multi,const std::vector<std::string> tags=std::vector<std::string>()) {
+                        
+                        return query_int(tree_ret, chaosNode,start, end, channel,treeid, desc, pageLen,multi,0,0,tags);
+}
 TTree* queryChaosTree(const std::string&chaosNode,const std::string& start,const std::string&end,const std::vector<std::string>& tags,const int channel,const std::string& treeid,const std::string& desc,int pageLen){
     return query_int(NULL, chaosNode,start,end, channel,treeid, desc,pageLen,true,tags);
+
+}
+TTree* queryChaosTree(const std::string&chaosNode,const std::vector<std::string>& tags,const uint64_t runid, const int channel,const std::string& treeid,const std::string& desc,int pageLen ){
+
+    return query_int(NULL, chaosNode,"0","-1", channel,treeid, desc,pageLen,true,tags);
 
 }
 
@@ -646,6 +660,7 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
             }
         } else {
             //ROOTDBG<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
+
             switch(cd->getValueType(*it)){
             case chaos::DataType::TYPE_DOUBLE:
             case chaos::DataType::TYPE_INT64:
@@ -656,7 +671,8 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
                 break;
             }
             }
-
+            // memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+            //ptr+=cd->getValueSize(*it);
         }
         if((branch_counter+1)<nbranch){
             // if multiple branch buffer is different, offset to zero

@@ -532,6 +532,9 @@ public:
         case chaos_batch::BatchCommandEventType::EVT_WAITING:
           LAPP_ << " is waiting" << std::endl;
           break;
+          default:
+          break;
+
         }
         LAPP_ << "Device state end ---------------------------------------------------------" << std::endl;
         LERR_ << "iteraction: " << idx << " cur_ts:" << cur_ts << " got_ts:" << got_ts << " delay:" << got_delay;

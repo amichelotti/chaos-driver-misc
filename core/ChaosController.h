@@ -230,14 +230,14 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      */
     //int waitCmd();
 
-    void executeTimeIntervallQuery(DatasetDomain domain,
+    void executeTimeIntervalQuery(DatasetDomain domain,
                                    uint64_t start_ts,
                                    uint64_t end_ts,
                                    chaos::common::io::QueryCursor **query_cursor,
                                    const std::string&name="",
                                    uint32_t page= DEFAULT_PAGE_LEN);
 
-    void executeTimeIntervallQuery(DatasetDomain domain,
+    void executeTimeIntervalQuery(DatasetDomain domain,
                                    uint64_t start_ts,
                                    uint64_t end_ts,
                                    const ChaosStringSet &meta_tags,
@@ -314,7 +314,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
     int32_t queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res, int page = 0);
-    int32_t queryHistory(const std::string &start, const std::string &end, const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res, int page = 0);
+    int32_t queryHistory(const std::string &start, const std::string &end, uint64_t runid,uint64_t seqid,const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res, int page = 0);
 
     int32_t queryNext(int32_t id, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res);
     bool queryHasNext(int32_t id);
