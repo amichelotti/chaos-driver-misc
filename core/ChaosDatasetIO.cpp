@@ -117,8 +117,10 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     DPD_LERR<<"Standard logging channel not found";
 
    // LOG_AND_TROW(DPD_LERR, -2, "Standard logging channel not found");
+  } else {
+        standard_logging_channel->setLogLevel(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelInfo);
+
   }
-  standard_logging_channel->setLogLevel(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelInfo);
  
     ChaosDataSet sys=allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
     sys->addStringValue(chaos::DataPackSystemKey::DP_SYS_UNIT_TYPE,chaos::NodeType::NODE_SUBTYPE_SCRIPTABLE_EXECUTION_UNIT);
