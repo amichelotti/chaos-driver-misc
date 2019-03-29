@@ -2783,9 +2783,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 else
                 {
                     start_ts = p.getInt64Value("start");
+                    
                     if (start_ts == -1)
                     {
                         start_ts = chaos::common::utility::TimingUtil::getLocalTimeStamp();
+                    } else {
+                        char stringa[256];
+                        sprintf(stringa,"%lld",start_ts);
+                        start_ts = offsetToTimestamp(stringa);
                     }
                 }
             }
@@ -2805,6 +2810,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     if (end_ts == -1)
                     {
                         end_ts = chaos::common::utility::TimingUtil::getLocalTimeStamp();
+                    } else {
+                        char stringa[256];
+                        sprintf(stringa,"%lld",end_ts);
+                        end_ts = offsetToTimestamp(stringa);
                     }
                 }
             }
