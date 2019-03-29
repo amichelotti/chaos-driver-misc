@@ -1120,10 +1120,30 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         bundle_state.append_error(ss.str());                                                                              \
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      \
     } else { chaos::common::data::CDataWrapper *r=apires->getResult();if((r!=NULL)) json_buf=r->getCompliantJSONString();}
+
+
+static long int getMSSince1970Until(std::string dateAndHour ) {
+
+  tm tm = {};
+  stringstream ss( dateAndHour );
+  ss >> get_time(&tm, "%y%m%d%H%M%S");
+  boost::chrono::system_clock::time_point tp = boost::chrono::system_clock::from_time_t(mktime(&tm));
+
+  return boost::chrono::duration_cast<boost::chrono::milliseconds>(tp.time_since_epoch()).count();
+
+}
+
 uint64_t ChaosController::offsetToTimestamp(const std::string &off)
 {
     boost::smatch what;
     boost::regex ts_ms("([0-9]+)");
+    boost::regex ts_data("([0-9]{12})");
+    if(off=="NOW" || off=="now"){
+        return chaos::common::utility::TimingUtil::getTimeStamp();
+    }
+    if(boost::regex_match(off, what, ts_data)){
+        return getMSSince1970Until(off);
+    }
 
     if (boost::regex_match(off, what, ts_ms))
     {
@@ -1131,7 +1151,7 @@ uint64_t ChaosController::offsetToTimestamp(const std::string &off)
 
         return strtoull(dd.c_str(), 0, 0);
     }
-
+    
     boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
 
     //        std::string::const_iterator start = input.begin() ;
