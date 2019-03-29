@@ -1124,9 +1124,13 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 
 static long int getMSSince1970Until(std::string dateAndHour ) {
 
-  tm tm = {};
-  stringstream ss( dateAndHour );
-  ss >> get_time(&tm, "%y%m%d%H%M%S");
+struct tm tm;
+char buf[255];
+
+memset(&tm, 0, sizeof(struct tm));
+strptime(dateAndHour.c_str(), "%y%m%d%H%M%S", &tm);
+           
+  
   boost::chrono::system_clock::time_point tp = boost::chrono::system_clock::from_time_t(mktime(&tm));
 
   return boost::chrono::duration_cast<boost::chrono::milliseconds>(tp.time_since_epoch()).count();
