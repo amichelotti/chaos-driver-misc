@@ -1132,7 +1132,7 @@ strptime(dateAndHour.c_str(), "%y%m%d%H%M%S", &tm);
            
   boost::chrono::system_clock::time_point tp = boost::chrono::system_clock::from_time_t(mktime(&tm));
     res=boost::chrono::duration_cast<boost::chrono::milliseconds>(tp.time_since_epoch()).count();
-   DBGET << " Converting DATE:"<<dateAndHour<< " EPOCH:"<<res;
+   LDBG_ << " Converting DATE:"<<dateAndHour<< " EPOCH:"<<res;
 
   return res;
 
