@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 2.8)
 add_subdirectory(benchmark)
+
 SET(DRIVERS_LIB ${DRIVERS_LIB} PARENT_SCOPE)
 IF (CERN_ROOT)
 add_subdirectory(cernRoot)
 ENDIF()
+IF(CHAOS_VME)
+FILE(REMOVE vme/UnitServerIgnore)
+add_subdirectory(vme)
+ELSE()
+  FILE(WRITE vme/UnitServerIgnore "disabled ${PROJECT_NAME}")
+ENDIF()
+add_subdirectory(GibControl)
+add_subdirectory(HETPic)
+add_subdirectory(HETController)
+

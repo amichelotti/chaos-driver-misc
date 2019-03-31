@@ -13,403 +13,681 @@ using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
 
+#define ROOTDBG LDBG_<<"["<<__PRETTY_FUNCTION__<<"] "
 using namespace chaos::common::data;
 using namespace driver::misc;
+typedef struct branchAlloc{
+    char* branchBuffer;
+    int32_t size;
+    std::string branchContent;
+    std::string brname;
+    branchAlloc(){size=0;branchBuffer=NULL;}
+    ~branchAlloc(){if((size>0)&&(branchBuffer)) {        ROOTDBG<<" removing breanch:'"<<brname<<"' size:"<<size<<" content type:"<<branchContent;free(branchBuffer);}}
+} branchAlloc_t;
+
 typedef struct treeQuery{
-  TTree* associated;
-  uint32_t page_uid;
-  int32_t channel;
-  uint32_t page;
-  bool treeAllocated;
-  char* branchBuffer;
-  int32_t size;
-  std::string branchContent;
-  std::string brname;
-  ChaosController*ctrl;
-  treeQuery(){associated=NULL;size=0;ctrl=NULL;branchBuffer=NULL;}
+    uint32_t page_uid;
+    int32_t channel;
+    uint32_t page;
+    bool treeAllocated;
+    TTree* tree;
+    branchAlloc_t* branch;
+    int nbranch;
+    ChaosController*ctrl;
+    treeQuery(){ctrl=NULL;branch=NULL;treeAllocated=false;tree=NULL;nbranch=0;}
 } treeQuery_t;
 
 static std::map<TTree*, treeQuery_t> queries;
-static std::map<std::string, ChaosController*> ctrls;
+//static std::map<std::string, ChaosController*> ctrls;
+//create a unique branch with all dataset
 
-static int createBranch(treeQuery_t& query,chaos::common::data::CDataWrapper*cd) {
-	std::stringstream varname;
-	std::vector<std::string> contained_key;
-	cd->getAllKey(contained_key);
-	if(query.size>0){
-		free(query.branchBuffer);
-		query.branchBuffer=0;
-	}
-	query.size=0;
+static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::CDataWrapper*cd,const std::string& brname,bool multiple=true) {
+    std::stringstream varname;
+    std::vector<std::string> contained_key;
+    int disable_dump=0;
+    cd->getAllKey(contained_key);
+    branchAlloc_t*query=NULL;
+    int branch_counter=0;
+    std::string branch_prefix;
+    if(contained_key.size()==0){
+        return NULL;
+    }
+    if(multiple){
+        query = new branchAlloc_t[contained_key.size()];
+        q.nbranch=contained_key.size();
 
-	for (std::vector<std::string>::iterator it = contained_key.begin();
-			it != contained_key.end(); it++) {
-		int found=0;
+    } else {
+        query = new branchAlloc_t[1];
+        q.nbranch=1;
+        branch_prefix="";//brname+std::string("__");
+    }
+    ROOTDBG<<" creating "<<q.nbranch<<" branches";
 
-		int type_size = CDataWrapperTypeDouble;
-		if (cd->isVector(*it)) {
-			int size = 0;
-			CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
-			varname << *it;
+    q.branch=query;
+    if(query[0].size>0){
+        free(query[0].branchBuffer);
+        query[0].branchBuffer=0;
+    }
+    query[0].size=0;
 
-			varname << "[" << da->size() << "]";
-			found++;
-			if (da->size()) {
-				if (da->isDoubleElementAtIndex(0)) {
-					type_size = CDataWrapperTypeDouble;
-					query.size+=da->size()*sizeof(double);
+    for (std::vector<std::string>::iterator it = contained_key.begin();
+         it != contained_key.end(); it++,branch_counter++) {
+        disable_dump=0;
+        int found=0;
+        if(multiple==false){
+            branch_counter=0;
+        } else {
+            varname.str(branch_prefix);
+            if(query[branch_counter].size>0){
+                free(query[branch_counter].branchBuffer);
+                query[branch_counter].branchBuffer=0;
+            }
+            query[branch_counter].size=0;
+        }
+        chaos::DataType::DataType type_size = chaos::DataType::TYPE_DOUBLE;
+        if (cd->isVector(*it)) {
+            int size = 0;
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
+            //if(!multiple)
+                varname <<*it;
 
-				} else if (da->isInt32ElementAtIndex(0)) {
-					type_size = CDataWrapperTypeInt32;
-					query.size+=da->size()*sizeof(int32_t);
+            varname << "[" << da->size() << "]";
+            found++;
+            if (da->size()) {
+                if (da->isDoubleElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_DOUBLE;
+                    query[branch_counter].size+=da->size()*sizeof(double);
 
-				} else if (da->isInt64ElementAtIndex(0)) {
-					type_size = CDataWrapperTypeInt64;
-					query.size+=da->size()*sizeof(int64_t);
+                } else if (da->isInt32ElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_INT32;
+                    query[branch_counter].size+=da->size()*sizeof(int32_t);
 
-				} else if (da->isStringElementAtIndex(0)) {
-					type_size = CDataWrapperTypeString;
-					query.size+=da->size()*(da->getStringElementAtIndex(0).size());
+                } else if (da->isInt64ElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_INT64;
+                    query[branch_counter].size+=da->size()*sizeof(int64_t);
 
-				}
-			}
-			//	LDBG_<<" BELE "<<varname<<" tot size:"<<query.size;
+                } else if (da->isStringElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_STRING;
+                    query[branch_counter].size+=da->size()*(da->getStringElementAtIndex(0).size());
 
-		} else {
-			if((type_size==CDataWrapperTypeDouble )||(type_size==CDataWrapperTypeInt64)||(type_size==CDataWrapperTypeBool)){
+                }
+            }
+            //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
-				type_size = cd->getValueType(*it);
-				query.size+=cd->getValueSize(*it);
+        } else {
+            if((type_size==chaos::DataType::TYPE_DOUBLE )||(type_size==chaos::DataType::TYPE_INT32)||(type_size==chaos::DataType::TYPE_INT64)||(type_size==chaos::DataType::TYPE_BOOLEAN)){
 
-				/*if((type_size==CDataWrapperTypeString)){
-					int ret;
-					if(!(ret=(cd->getValueSize(*it)%4))){
-						query.size+=ret;
-					}
-				}*/
-				LDBG_<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query.size;
-			}
-		}
-		switch (type_size) {
-		case CDataWrapperTypeNoType:
-			break;
-		case CDataWrapperTypeNULL:
-			break;
-		case CDataWrapperTypeBool:
-			varname << *it;
-			varname << "/O";
-			found++;
-			break;
-		case CDataWrapperTypeInt32:
-			found++;
-			varname << *it;
-			varname << "/I";
+                type_size = cd->getValueType(*it);
+                query[branch_counter].size+=cd->getValueSize(*it);
 
-			break;
-		case CDataWrapperTypeInt64:
-			found++;
-			varname << *it;
-			varname << "/L";
+                /*if((type_size==CDataWrapperTypeString)){
+                    int ret;
+                    if(!(ret=(cd->getValueSize(*it)%4))){
+                        query[branch_counter].size+=ret;
+                    }
+                }*/
+                ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
+            }
+        }
+        switch (type_size) {
 
-			break;
-		case CDataWrapperTypeDouble:
-			found++;
-			varname << *it;
-			varname << "/D";
+        case chaos::DataType::TYPE_BOOLEAN:
+            found++;
+         //   if(!multiple)
+                varname <<*it;
+            varname << "/O";
 
-			break;
-		case CDataWrapperTypeString:
-	//		found++;
-	//		varname << *it;
-	//		varname << "/C";
+            break;
+        case chaos::DataType::TYPE_INT32:
+            found++;
+       //     if(!multiple)
+                varname <<*it;
+            varname << "/I";
 
-			break;
-		case CDataWrapperTypeBinary:
-			break;
-		case CDataWrapperTypeObject:
-			break;
-		case CDataWrapperTypeVector:
-			break;
-		default:
-			break;
-		}
-		if(found &&( (it+1)!= contained_key.end())){
-			varname<<":";
-		}
-	}
-	query.branchContent=varname.str();
-	query.branchBuffer=(char*)malloc(query.size);
-	query.associated->Branch(query.brname.c_str(), (void*)query.branchBuffer,varname.str().c_str());
-	LDBG_<<"create ROOT BRANCH \""<<query.brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query.size<<" address 0x"<<std::hex<<(uint64_t)query.branchBuffer<<std::dec;
+            break;
+        case chaos::DataType::TYPE_INT64:
+            found++;
+           // if(!multiple)
+                varname <<*it;
+            varname << "/L";
 
-	return query.size;
+            break;
+        case chaos::DataType::TYPE_DOUBLE:
+            found++;
+            //if(!multiple)
+                varname <<*it;
+            varname << "/D";
+
+            break;
+        case chaos::DataType::TYPE_STRING:
+            disable_dump=1;
+     //               found++;
+     //               varname << *it;
+     //           varname << "/C";
+
+            break;
+
+        default:
+            break;
+        }
+        if((multiple==false) && (found &&( (it+1)!= contained_key.end()))){
+            varname<<":";
+        }
+        if(multiple && (disable_dump == 0)){
+            std::stringstream ss;
+            ss<<brname<<"."<<(*it);
+            query[branch_counter].branchContent=varname.str();
+            query[branch_counter].branchBuffer=(char*)malloc(query[branch_counter].size);
+            query[branch_counter].brname=ss.str();
+            tr->Branch(query[branch_counter].brname.c_str(), (void*)query[branch_counter].branchBuffer,varname.str().c_str());
+            ROOTDBG<<"create ROOT BRANCH \""<<query[branch_counter].brname<<"\""<< " content:\""<<varname.str()<<"\" size:"<<query[branch_counter].size<<" address 0x"<<std::hex<<(uint64_t)query[branch_counter].branchBuffer<<std::dec;
+        }
+    }
+    if(multiple==false){
+        query[0].brname=brname;
+        query[0].branchContent=varname.str();
+        query[0].branchBuffer=(char*)malloc(query[0].size);
+        tr->Branch(brname.c_str(), (void*)query[0].branchBuffer,varname.str().c_str());
+        ROOTDBG<<"create ROOT BRANCH \""<<query[0].brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query[0].size<<" address 0x"<<std::hex<<(uint64_t)query[0].branchBuffer<<std::dec;
+
+    }
+
+    return query;
 }
-#if 0
-static void createBranch(TTree* tr, const std::string&prefix,
-		const std::string& key, chaos::common::data::CDataWrapper*cd) {
-	std::string brname = prefix + "." + key;
-	std::stringstream varname;
-	varname << key;
-	int type_size = CDataWrapperTypeDouble;
-	if (cd->isVector(key)) {
-		int size = 0;
-		CMultiTypeDataArrayWrapper* da = cd->getVectorValue(key);
-		varname << "[" << da->size() << "]";
-		if (da->size()) {
-			if (da->isDoubleElementAtIndex(0)) {
-				type_size = CDataWrapperTypeDouble;
-			} else if (da->isInt32ElementAtIndex(0)) {
-				type_size = CDataWrapperTypeDouble;
 
-			} else if (da->isInt64ElementAtIndex(0)) {
-				type_size = CDataWrapperTypeInt64;
-			} else if (da->isStringElementAtIndex(0)) {
-				type_size = CDataWrapperTypeString;
-			}
-		}
-	} else {
-		type_size = cd->getValueType(key);
-	}
-	switch (type_size) {
-	case CDataWrapperTypeNoType:
-		break;
-	case CDataWrapperTypeNULL:
-		break;
-	case CDataWrapperTypeBool:
-		varname << "/O";
-		break;
-	case CDataWrapperTypeInt32:
-		varname << "/I";
-
-		break;
-	case CDataWrapperTypeInt64:
-		varname << "/L";
-
-		break;
-	case CDataWrapperTypeDouble:
-		varname << "/D";
-
-		break;
-	case CDataWrapperTypeString:
-		varname << "/C";
-
-		break;
-	case CDataWrapperTypeBinary:
-		break;
-	case CDataWrapperTypeObject:
-		break;
-	case CDataWrapperTypeVector:
-		break;
-	default:
-		varname << "/D";
-
-	}
-	LDBG_<<"create ROOT BRANCH \""<<brname<<"\""<< "variable:\""<<varname.str()<<"\"";
-
-	tr->Branch(brname.c_str(), (void*) cd->getRawValuePtr(key),
-			varname.str().c_str());
-	tr->Fill();
-}
-#endif
 static TTree* buildTree(const std::string& name, const std::string& desc) {
-	TTree* tr = new TTree(name.c_str(), desc.c_str());
-	LDBG_<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\"";
+    TTree* tr = new TTree(name.c_str(), desc.c_str());
+    ROOTDBG<<"create ROOT TREE \""<<name<<"\""<< " desc:\""<<desc<<"\" tree:"<<std::hex<<(void*)tr<<std::dec;
 
-	if (tr == NULL) {
-		LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree  \""<<name<<"\"";
+    if (tr == NULL) {
+        LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree  \""<<name<<"\"";
 
-		return NULL;
-	}
+        return NULL;
+    }
 
-	/*for (std::vector<std::string>::iterator it = contained_key.begin();
-			it != contained_key.end(); it++) {
+    /*for (std::vector<std::string>::iterator it = contained_key.begin();
+            it != contained_key.end(); it++) {
 
-		createBranch(tr, prefix, *it, cd);
-	}*/
-	return tr;
+        createBranch(tr, prefix, *it, cd);
+    }*/
+    return tr;
 }
 
-static int addTree(treeQuery_t& query, chaos::common::data::CDataWrapper*cd) {
-	std::vector < std::string > contained_key;
-	int type_size=0;
-	cd->getAllKey(contained_key);
-	int ptr=0;
-	for (std::vector<std::string>::iterator it = contained_key.begin();
-			it != contained_key.end(); it++) {
-		if (cd->isVector(*it)) {
-					int size = 0;
-					CMultiTypeDataArrayWrapper* da = cd->getVectorValue(*it);
+static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
+    std::vector < std::string > contained_key;
+    branchAlloc_t* query=q.branch;
+    int branch_counter=0;
+    int type_size=0;
+    cd->getAllKey(contained_key);
+    int ptr=0;
+    for (std::vector<std::string>::iterator it = contained_key.begin();
+         it != contained_key.end(); it++) {
+        if (cd->isVector(*it)) {
+            int size = 0;
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
 
-					for(int cnt=0;cnt<da->size();cnt++){
-						if (da->isDoubleElementAtIndex(cnt)) {
-							double tmp=da->getDoubleElementAtIndex(cnt);
-							memcpy(query.branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
-							ptr+=sizeof(tmp);
-						} else if (da->isInt32ElementAtIndex(cnt)) {
-							int32_t tmp=da->getInt32ElementAtIndex(cnt);
-							memcpy(query.branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
-							ptr+=sizeof(tmp);
-						} else if (da->isInt64ElementAtIndex(cnt)) {
-							int64_t tmp=da->getInt64ElementAtIndex(cnt);
-							memcpy(query.branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
-							ptr+=sizeof(tmp);
+            for(int cnt=0;cnt<da->size();cnt++){
+                if (da->isDoubleElementAtIndex(cnt)) {
+                    double tmp=da->getDoubleElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
+                } else if (da->isInt32ElementAtIndex(cnt)) {
+                    int32_t tmp=da->getInt32ElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
+                } else if (da->isInt64ElementAtIndex(cnt)) {
+                    int64_t tmp=da->getInt64ElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
 
-						} else if (da->isStringElementAtIndex(cnt)) {
-							std::string tmp=da->getStringElementAtIndex(cnt);
-							memcpy(query.branchBuffer+ptr,(void*)(tmp.c_str()),tmp.size());
-							ptr+=tmp.size();
+                } else if (da->isStringElementAtIndex(cnt)) {
+                    std::string tmp=da->getStringElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,(void*)(tmp.c_str()),tmp.size());
+                    ptr+=tmp.size();
 
-						}
-					}
-		} else {
-			//LDBG_<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
-			switch(cd->getValueType(*it)){
-			case CDataWrapperTypeDouble:
-			case CDataWrapperTypeInt64:
-			case CDataWrapperTypeBool:
-			case CDataWrapperTypeInt32:{
-				memcpy(query.branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
-				ptr+=cd->getValueSize(*it);
-				break;
-			}
-			}
+                }
+            }
+        } else {
+            //ROOTDBG<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
+            switch(cd->getValueType(*it)){
+            case chaos::DataType::TYPE_DOUBLE:
+            case chaos::DataType::TYPE_INT64:
+            case chaos::DataType::TYPE_BOOLEAN:
+            case chaos::DataType::TYPE_INT32:{
+                memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+                ptr+=cd->getValueSize(*it);
+                break;
+            }
+            }
+            //memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+            //ptr+=cd->getValueSize(*it);
+        }
+        if((branch_counter+1)<q.nbranch){
+            // if multiple branch buffer is different, offset to zero
+            ptr=0;
+            branch_counter++;
+        }
+    }
+    q.tree->Fill();
+    return 0;
+}
 
-		}
-	
-	}
-	LDBG_<<" WRITE ELE "<<query.brname<<" tot size:"<<ptr <<" address 0x"<<std::hex<<(uint64_t)query.branchBuffer<<std::dec;;
 
-	query.associated->Fill();
-	return 0;
+static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
+                        const std::string& start, const std::string&end, const int channel,
+                        const std::string treeid, const std::string desc,int pageLen,bool multi,uint64_t runid,uint64_t pckid,const std::vector<std::string> tags=std::vector<std::string>()) {
+    std::string brname;
+    try {
+        treeQuery_t q;
+        branchAlloc_t* branch=NULL;
+        q.treeAllocated=false;
+
+        ChaosController* ctrl = NULL;
+        std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
+   /*     if (ctrls.find(chaosNode) != ctrls.end()) {
+            ctrl = ctrls[chaosNode];
+        } else {
+            ctrl = new ChaosController(chaosNode);
+            ctrls[chaosNode] = ctrl;
+        }
+*/
+        ctrl = new ChaosController(chaosNode);
+
+        int32_t ret = ctrl->queryHistory(start, end, runid,pckid,tags,channel, res, pageLen);
+        int cnt = 0;
+        if (res.size() > 0) {
+            ROOTDBG<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
+
+            if (tree_ret == NULL) {
+                tree_ret = buildTree((treeid=="")?chaosNode:treeid, desc);
+                brname=(treeid=="")?chaos::datasetTypeToHuman(channel):treeid;
+                q.treeAllocated=true;
+            } else {
+                brname=(treeid=="")?(chaosNode+std::string(chaos::datasetTypeToHuman(channel))):treeid;
+
+            }
+            q.tree=tree_ret;
+
+            std::vector < std::string > contained_key;
+            boost::shared_ptr<chaos::common::data::CDataWrapper> cd = res[0];
+            branch=createBranch(tree_ret,q,cd.get(),chaos::datasetTypeToHuman(channel),multi);
+
+        } else {
+            LAPP_<< "CHAOS no entries found from \""<<start<<"\" to \""<<end<<" on \""<<chaosNode<<"\"";
+            return NULL;
+        }
+
+        if (tree_ret == NULL) {
+            LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree on \""<<chaosNode;
+            return tree_ret;
+        }
+        if(branch==NULL){
+            delete tree_ret;
+            return NULL;
+        }
+        q.page_uid = ret;
+        q.page = pageLen;
+        q.ctrl = ctrl;
+        q.channel = channel;
+        queries[tree_ret] = q;
+        for (std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
+             res.begin(); i != res.end(); i++) {
+            addTree(q, i->get());
+        }
+
+        if(pageLen==0){
+            queryFree(tree_ret);
+        }
+
+
+        return tree_ret;
+    } catch (chaos::CException e) {
+        LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << "Exception on \""<<chaosNode<<"\""<< " errn:"<<e.errorCode<<" domain:"<<e.errorDomain<<" what:"<<e.what();
+        return NULL;
+    } catch (std::exception ee) {
+        LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]" << " Library Exception on \""<<chaosNode<<"\""<<" what:"<<ee.what();
+        return NULL;
+    } catch (...) {
+        LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]" << " Unexpected Exception on \""<<chaosNode;
+        return NULL;
+    }
+}
+
+static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
+                        const std::string& start, const std::string&end, const int channel,
+                        const std::string treeid, const std::string desc,int pageLen,bool multi,const std::vector<std::string> tags=std::vector<std::string>()) {
+                        
+                        return query_int(tree_ret, chaosNode,start, end, channel,treeid, desc, pageLen,multi,0,0,tags);
+}
+TTree* queryChaosTree(const std::string&chaosNode,const std::string& start,const std::string&end,const std::vector<std::string>& tags,const int channel,const std::string& treeid,const std::string& desc,int pageLen){
+    return query_int(NULL, chaosNode,start,end, channel,treeid, desc,pageLen,true,tags);
+
+}
+TTree* queryChaosTree(const std::string&chaosNode,const std::vector<std::string>& tags,const uint64_t runid, const int channel,const std::string& treeid,const std::string& desc,int pageLen ){
+
+    return query_int(NULL, chaosNode,"0","-1", channel,treeid, desc,pageLen,true,tags);
+
+}
+
+TTree* queryChaosTree(const std::string&chaosNode,const std::string& start, const std::string&end, const int channel,const std::string& treeid, const std::string& desc,int pageLen) {
+    return query_int(NULL, chaosNode,start,end, channel,treeid, desc,pageLen,true);
 }
 TTree* queryChaosTree(TTree* tree_ret, const std::string&chaosNode,
-		const std::string& start, const std::string&end, const int channel,
-		const std::string treeid, const std::string desc,int pageLen) {
-	std::string brname;
-	try {
-		ChaosController* ctrl = NULL;
-		std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
-		treeQuery_t q;
-		if (ctrls.find(chaosNode) != ctrls.end()) {
-			ctrl = ctrls[chaosNode];
-		} else {
-			ctrl = new ChaosController(chaosNode);
-			ctrls[chaosNode] = ctrl;
-		}
-
-		int32_t ret = ctrl->queryHistory(start, end, channel, res, pageLen);
-		int cnt = 0;
-		if (res.size() > 0) {
-			if (tree_ret == NULL) {
-				tree_ret = buildTree((treeid=="")?chaosNode:treeid, desc);
-				q.treeAllocated = true;
-				q.brname=(treeid=="")?chaos::datasetTypeToHuman(channel):treeid;
-			} else {
-				q.brname=(treeid=="")?(chaosNode+std::string(chaos::datasetTypeToHuman(channel))):treeid;
-
-			}
-		} else {
-			LAPP_<< "CHAOS no entries found from \""<<start<<"\" to \""<<end<<" on \""<<chaosNode<<"\"";
-			return NULL;
-		}
-
-		if (tree_ret == NULL) {
-			LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << " cannot create tree on \""<<chaosNode;
-			return tree_ret;
-		}
-		q.associated=tree_ret;
-		q.page_uid = ret;
-		q.page = pageLen;
-		q.ctrl = ctrl;
-		q.channel = channel;
-		queries[tree_ret] = q;
-		createBranch(q,res[0].get());
-		for (std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
-				res.begin(); i != res.end(); i++) {
-			addTree(q, i->get());
-		}
-
-
-
-		return tree_ret;
-	} catch (chaos::CException e) {
-		LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << "Exception on \""<<chaosNode<<"\""<< " errn:"<<e.errorCode<<" domain:"<<e.errorDomain<<" what:"<<e.what();
-		return NULL;
-	} catch (std::exception ee) {
-		LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]" << " Library Exception on \""<<chaosNode<<"\""<<" what:"<<ee.what();
-		return NULL;
-	} catch (...) {
-		LERR_ << "[ "<<__PRETTY_FUNCTION__<<"]" << " Unexpected Exception on \""<<chaosNode;
-		return NULL;
-	}
+                      const std::string& start, const std::string&end, const int channel,
+                      const std::string& treeid, const std::string& desc,int pageLen) {
+    return query_int(tree_ret, chaosNode,start,end, channel,treeid, desc,pageLen,true);
+}
+TTree* queryChaosTreeSB(const std::string&chaosNode,
+                        const std::string& start, const std::string&end, const int channel,
+                        const std::string& treeid, const std::string& desc,int pageLen) {
+    return query_int(NULL, chaosNode,start,end, channel,treeid, desc,pageLen,false);
 }
 
-TTree* queryChaosTree(const std::string&chaosNode, const std::string& start,
-		      const std::string&end, const int channel, const std::string& branchid,const std::string& desc,
-		int pageLen) {
-	return queryChaosTree((TTree*) NULL, chaosNode, start, end, channel, branchid,"",
-			pageLen);
-
-}
-
-bool queryHasNextChaosTree(TTree*tree) {
-	std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
-	if (page != queries.end()) {
-		ChaosController* ctrl = queries[tree].ctrl;
-		int32_t uid = queries[tree].page_uid;
-		if (ctrl) {
-			return ctrl->queryHasNext(uid);
-		} else {
-			queries.erase(page);
-			return false;
-		}
-	}
-
-	return false;
-}
 
 bool queryNextChaosTree(TTree*tree) {
-	std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
-	if (page != queries.end()) {
-		ChaosController* ctrl = queries[tree].ctrl;
-		int32_t uid = queries[tree].page_uid;
-		uint32_t pagelen = queries[tree].page;
-		if (ctrl) {
-			std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
-			do {
-				uid = ctrl->queryNext(uid, res);
-				LDBG_<<"ROOT querynext "<<uid<<" returned:"<<res.size();
+    std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
+    ROOTDBG<<"ROOT check next tree:0x"<<std::hex<<tree<<std::dec;
 
-				for (std::vector<
-						boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
-						res.begin(); i != res.end(); i++) {
-					addTree(queries[tree],i->get());
-				}
-			} while ((pagelen--) && (uid > 0));
+    if (page != queries.end()) {
+        ChaosController* ctrl = queries[tree].ctrl;
+        int32_t uid = queries[tree].page_uid;
+        uint32_t pagelen = queries[tree].page;
+        int totcnt=0,last_size;;
+        ROOTDBG<<"ROOT retriving uid:"<<uid<<" pagelen:"<<pagelen;
+        if (ctrl) {
+            do {
+                std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > res;
 
-		} else {
-			queries.erase(page);
-			return false;
-		}
-		if (uid == 0) {
-			LDBG_<<"ROOT paged query ended, free resources";
-			delete ctrl;
-			queries.erase(page);
-			return false;
-		} else if(uid>0) {
-			return true;
-		} else {
-			LERR_<<"ROOT paged query error, free resources";
-			delete ctrl;
-			queries.erase(page);
-			return false;
-		}
-	}
-	LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << "not paged query found for this TREE";
+                uid = ctrl->queryNext(uid, res);
+                last_size=res.size();
+                totcnt+=last_size;
+                //ROOTDBG<<"ROOT querynext uid:"<<uid<<" returned:"<<last_size<<" tot:"<<totcnt;
 
-	return false;
+                for (std::vector<
+                     boost::shared_ptr<chaos::common::data::CDataWrapper> >::iterator i =
+                     res.begin(); i != res.end(); i++) {
+                    addTree(queries[tree],i->get());
+                }
+
+            } while ((--pagelen) && (uid > 0));
+            ROOTDBG<<"ROOT querynext uid:"<<uid<<" last returned:"<<last_size<<" tot:"<<totcnt;
+        } else {
+            ROOTDBG<<"NO Controller associated";
+
+            queries.erase(page);
+            return false;
+        }
+        if (uid == 0) {
+            ROOTDBG<<"ROOT paged query ended:"<<std::hex<<tree<<std::dec;
+           queryFree(tree);
+
+            return false;
+        } else if(uid>0) {
+            return true;
+        } else {
+            LERR_<<"ROOT paged query error";
+          //  delete ctrl;
+           // queries.erase(page);
+            //queryFree(tree);
+            return false;
+        }
+    }
+    LERR_<< "[ "<<__PRETTY_FUNCTION__<<"]" << "not paged query found for this TREE";
+    return false;
 }
 bool queryFree(TTree*tree) {
+    std::map<TTree*, treeQuery_t>::iterator page = queries.find(tree);
+     ROOTDBG<<" Freeing tree:"<<std::hex<<tree<<std::dec;
+    if (page != queries.end()) {
+
+
+        ROOTDBG<<" removing "<< page->second.nbranch<<" branches";
+        delete [] page->second.branch;
+        delete page->second.ctrl;
+        queries.erase(page);
+
+        return true;
+    }
+    ROOTDBG<<" Not found tree:"<<std::hex<<tree<<std::dec;
+
+    return false;
+}
+
+#include "TBufferJSON.h"
+void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const TTree* val){
+    TString json=TBufferJSON::ConvertToJSON(val);
+    dst.setSerializedJsonData(json.Data());
+
 
 }
 
+void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string& key,const TTree* val){
+    TString json=TBufferJSON::ConvertToJSON(val);
+    chaos::common::data::CDataWrapper tmp;
+    tmp.setSerializedJsonData(json.Data());
+    dst.addCSDataValue(key,tmp);
+}
+TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& brname,bool multiple){
+    TTree* tr = new TTree();
+    typedef struct branchAlloc{
+        char* branchBuffer;
+        int32_t size;
+        std::string branchContent;
+        std::string brname;
+        branchAlloc(){size=0;branchBuffer=NULL;}
+        ~branchAlloc(){if((size>0)&&(branchBuffer)) {free(branchBuffer);size=0;}}
+    } branchAlloc_t;
+    int nbranch;
+
+    std::stringstream varname;
+    std::vector<std::string> contained_key;
+    int disable_dump=0;
+    branchAlloc_t*query=NULL;
+
+    const CDataWrapper*cd=&src;
+    cd->getAllKey(contained_key);
+    int branch_counter=0;
+    if(contained_key.size()==0){
+        return NULL;
+    }
+    if(multiple){
+        query = new branchAlloc_t[contained_key.size()];
+        nbranch=contained_key.size();
+
+    } else {
+        query = new branchAlloc_t[1];
+        nbranch=1;
+    //    branch_prefix="";//brname+std::string("__");
+    }
+
+
+    /**
+      create branch and space
+      */
+    for (std::vector<std::string>::iterator it = contained_key.begin();
+         it != contained_key.end(); it++,branch_counter++) {
+        disable_dump=0;
+        int found=0;
+        if(multiple==false){
+            branch_counter=0;
+        } else {
+            varname.str("");
+            if(query[branch_counter].size>0){
+                free(query[branch_counter].branchBuffer);
+                query[branch_counter].branchBuffer=0;
+            }
+            query[branch_counter].size=0;
+        }
+
+
+        chaos::DataType::DataType type_size = chaos::DataType::TYPE_DOUBLE;
+        if (cd->isVector(*it)) {
+            int size = 0;
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
+            //if(!multiple)
+                varname <<*it;
+
+            varname << "[" << da->size() << "]";
+            found++;
+            if (da->size()) {
+                if (da->isDoubleElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_DOUBLE;
+                    query[branch_counter].size+=da->size()*sizeof(double);
+
+                } else if (da->isInt32ElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_INT32;
+                    query[branch_counter].size+=da->size()*sizeof(int32_t);
+
+                } else if (da->isInt64ElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_INT64;
+                    query[branch_counter].size+=da->size()*sizeof(int64_t);
+
+                } else if (da->isStringElementAtIndex(0)) {
+                    type_size = chaos::DataType::TYPE_STRING;
+                    query[branch_counter].size+=da->size()*(da->getStringElementAtIndex(0).size());
+
+                }
+            }
+            //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
+
+        } else {
+            if((type_size==chaos::DataType::TYPE_DOUBLE )||(type_size==chaos::DataType::TYPE_INT32)||(type_size==chaos::DataType::TYPE_INT64)||(type_size==chaos::DataType::TYPE_BOOLEAN)){
+
+                type_size = cd->getValueType(*it);
+                query[branch_counter].size+=cd->getValueSize(*it);
+
+              //  ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
+            }
+        }
+        switch (type_size) {
+
+        case chaos::DataType::TYPE_BOOLEAN:
+            found++;
+         //   if(!multiple)
+                varname <<*it;
+            varname << "/O";
+
+            break;
+        case chaos::DataType::TYPE_INT32:
+            found++;
+       //     if(!multiple)
+                varname <<*it;
+            varname << "/I";
+
+            break;
+        case chaos::DataType::TYPE_INT64:
+            found++;
+           // if(!multiple)
+                varname <<*it;
+            varname << "/L";
+
+            break;
+        case chaos::DataType::TYPE_DOUBLE:
+            found++;
+            //if(!multiple)
+                varname <<*it;
+            varname << "/D";
+
+            break;
+        case chaos::DataType::TYPE_STRING:
+            disable_dump=1;
+     //               found++;
+     //               varname << *it;
+     //           varname << "/C";
+
+            break;
+
+        default:
+            break;
+        }
+
+        if((multiple==false) && (found &&( (it+1)!= contained_key.end()))){
+            varname<<":";
+        }
+        if(multiple && (disable_dump == 0)){
+            std::stringstream ss;
+            ss<<brname<<"."<<(*it);
+            query[branch_counter].branchContent=varname.str();
+            query[branch_counter].branchBuffer=(char*)malloc(query[branch_counter].size);
+            query[branch_counter].brname=ss.str();
+            tr->Branch(query[branch_counter].brname.c_str(), (void*)query[branch_counter].branchBuffer,varname.str().c_str());
+          //  ROOTDBG<<"create ROOT BRANCH \""<<query[branch_counter].brname<<"\""<< " content:\""<<varname.str()<<"\" size:"<<query[branch_counter].size<<" address 0x"<<std::hex<<(uint64_t)query[branch_counter].branchBuffer<<std::dec;
+        }
+    }
+    if(multiple==false){
+        query[0].brname=brname;
+        query[0].branchContent=varname.str();
+        query[0].branchBuffer=(char*)malloc(query[0].size);
+        tr->Branch(brname.c_str(), (void*)query[0].branchBuffer,varname.str().c_str());
+       // ROOTDBG<<"create ROOT BRANCH \""<<query[0].brname<<"\""<< "content:\""<<varname.str()<<"\" size:"<<query[0].size<<" address 0x"<<std::hex<<(uint64_t)query[0].branchBuffer<<std::dec;
+
+    }
+
+
+    /**
+      FILL
+*/
+    branch_counter=0;
+
+
+    int ptr=0;
+    for (std::vector<std::string>::iterator it = contained_key.begin();
+         it != contained_key.end(); it++) {
+        if (cd->isVector(*it)) {
+            int size = 0;
+            ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
+
+            for(int cnt=0;cnt<da->size();cnt++){
+                if (da->isDoubleElementAtIndex(cnt)) {
+                    double tmp=da->getDoubleElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
+                } else if (da->isInt32ElementAtIndex(cnt)) {
+                    int32_t tmp=da->getInt32ElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
+                } else if (da->isInt64ElementAtIndex(cnt)) {
+                    int64_t tmp=da->getInt64ElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
+                    ptr+=sizeof(tmp);
+
+                } else if (da->isStringElementAtIndex(cnt)) {
+                    std::string tmp=da->getStringElementAtIndex(cnt);
+                    memcpy(query[branch_counter].branchBuffer+ptr,(void*)(tmp.c_str()),tmp.size());
+                    ptr+=tmp.size();
+
+                }
+            }
+        } else {
+            //ROOTDBG<<"ELE "<<*it<<" size:"<<cd->getValueSize(*it);
+
+            switch(cd->getValueType(*it)){
+            case chaos::DataType::TYPE_DOUBLE:
+            case chaos::DataType::TYPE_INT64:
+            case chaos::DataType::TYPE_BOOLEAN:
+            case chaos::DataType::TYPE_INT32:{
+                memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+                ptr+=cd->getValueSize(*it);
+                break;
+            }
+            }
+            // memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+            //ptr+=cd->getValueSize(*it);
+        }
+        if((branch_counter+1)<nbranch){
+            // if multiple branch buffer is different, offset to zero
+            ptr=0;
+            branch_counter++;
+        }
+    }
+    tr->Fill();
+    for(branch_counter=0;branch_counter<nbranch;branch_counter++){
+        free(query[branch_counter].branchBuffer);
+
+    }
+    return tr;
+
+}
+void initChaosRoot(){
+    ROOTDBG<<"initializing ChaosRoot";
+}

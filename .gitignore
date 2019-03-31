@@ -82,3 +82,4 @@ moc_*.cpp
 ccs_automoc.cpp
 ccs/ccs
 ccs/qt_build*
+generators/UnitServerIgnore

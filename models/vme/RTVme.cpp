@@ -21,7 +21,6 @@
 #include "RTVme.h"
 #include <stdlib.h>
 #include <boost/algorithm/string.hpp>
-#include <chaos/ui_toolkit/LowLevelApi/LLRpcApi.h>
 #include <chaos/cu_toolkit/command_manager/CommandManager.h>
 #include <common/debug/core/debug.h>
 
@@ -143,7 +142,7 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 	 int cnt;
 	 for(cnt=0;cnt<vme_offs.size();cnt++){
 		 uint32_t data=0;
-		 vmewrap_read32(vme,vme_offs[cnt],&data);
+		 vmewrap_read32(vme,vme_offs[cnt],&data,1);
 		 getAttributeCache()->setOutputAttributeValue(cnt,&data,sizeof(data));
 	 }
 	if(vme_offs.size()){

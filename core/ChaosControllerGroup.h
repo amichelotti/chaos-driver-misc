@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include "ChaosController.h"
+#include <chaos/common/global.h>
 
 #define CTRLAPPG_ LAPP_ << "[ "<<__FUNCTION__<<" ] "
 #define CTRLDBGG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
@@ -121,6 +122,7 @@ for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++) delete (*i);}
             return -1;
            }
     }
+    return 0;
     }
 uint64_t getState( chaos::CUStateKey::ControlUnitState &state){
 	 chaos::CUStateKey::ControlUnitState ret,prev;
@@ -178,6 +180,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
         }
         
     }
+    #if 0
     for(typename ccgrp_t::iterator i=group.begin();i!=group.end();i++){
         if((*i)->T::waitCmd()!=0){
             CTRLERRG_<<" waiting command  "<<(*i)->getPath();   
@@ -185,6 +188,7 @@ int executeCmd(ChaosController::command_t& cmd,bool wait,uint64_t perform_at=0,u
             return -1;
         }
     }
+    #endif
     
     return 0;
 

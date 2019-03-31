@@ -17,31 +17,45 @@ using namespace std;
  */
 using namespace driver::misc;
 using namespace chaos::metadata_service_client;
+class ChaosRoot:public TRint {
+public:
+    ChaosRoot(const char* appClassName, int* argc, char** argv, void* options = 0, int numOptions = 0, Bool_t noLogo = kFALSE):TRint(appClassName, argc, argv, options , numOptions, noLogo){
+    }
+    ~ChaosRoot(){
 
-int main(int argc, char** argv) {
+
+    }
+    void Terminate(int status){
+        std::cout<<"Deinitializing ChaosRoot..."<<std::endl;
+        ChaosMetadataServiceClient::getInstance()->stop();
+        ChaosMetadataServiceClient::getInstance()->deinit();
+        std::cout<<"...done"<<std::endl;
+        exit(status);
+    }
+};
+static ChaosRoot *rootapp;
+int main(int argc, const char** argv) {
 	std::string rootopt;
-	char* root_opts[120];
+    const char* root_opts[120];
 	int nroot_opts=0;
 	std::string buf;
-	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give tu CERN ROOT interpreter ");
+	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
 	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
 	ChaosMetadataServiceClient::getInstance()->start();
-	 if (0) {
-		 TTree* tt= queryChaosTree("buttami","-3m","-1",0,"");
-		 printf("%p",tt);
-
-	 }
+    initChaosRoot();
 	 root_opts[nroot_opts++]=argv[0];
 
 	 stringstream ss(rootopt);
 	 while (ss >> buf){
-		 root_opts[nroot_opts++]=strdup(buf.c_str());
+         root_opts[nroot_opts++]=buf.c_str();
 	 }
 
 
-	TRint *rootapp = new TRint("Rint", &nroot_opts, root_opts);
+    rootapp = new ChaosRoot("Rint", &nroot_opts, (char**)root_opts);
 	rootapp->SetPrompt("chaosRoot[%d]>");
-	  rootapp->Run();
+	rootapp->Run();
+  //  ChaosMetadataServiceClient::getInstance()->stop();
+  //  ChaosMetadataServiceClient::getInstance()->deinit();
 
     return 0;
 }

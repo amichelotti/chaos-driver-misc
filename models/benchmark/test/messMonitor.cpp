@@ -45,7 +45,7 @@ namespace cu_driver_manager = chaos::cu::driver_manager;
 
 #define LOCK_FILE_NAME "/tmp/chaos_mess.lock"
 
-int main (int argc, char* argv[] ) {
+int main (int argc, const char* argv[] ) {
     try {
 		std::ofstream os;
 		//check if we are the only instance

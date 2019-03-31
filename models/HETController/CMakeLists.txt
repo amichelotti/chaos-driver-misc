@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 2.8)
+project(chaos_driver_hetcontroller)
+find_package(chaos MODULE REQUIRED)
+if(WIN32)
+include_directories(${ALL_WINDOWS_INCLUDE_DIR})
+else()
+include_directories(../ ${chaos_INCLUDE_DIRS})
+endif(WIN32)
+FILE(GLOB core_src core/*.cpp)
+SET(DRIVERS_LIB )
+
+MESSAGE(STATUS "Libraries ${DRIVERS_LIB}")
+IF(BUILD_FORCE_STATIC)
+ADD_LIBRARY(${PROJECT_NAME} STATIC ${core_src})
+ELSE()
+ADD_LIBRARY(${PROJECT_NAME}  SHARED ${core_src})
+ENDIF()
+if(WIN32)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${ALL_WINDOWS_LIBPATH})
+else()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_cutoolkit ${FrameworkLib})
+endif()
+FILE(GLOB files "core/*.h")
+INSTALL(FILES ${files} DESTINATION include/driver/misc/models/HETController/core)
+IF (WIN32)
+INSTALL(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
+ELSE()
+INSTALL(TARGETS ${PROJECT_NAME}
+        DESTINATION "lib"
+        PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
+ENDIF(WIN32)
