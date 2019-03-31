@@ -1122,7 +1122,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
     } else { chaos::common::data::CDataWrapper *r=apires->getResult();if((r!=NULL)) json_buf=r->getCompliantJSONString();}
 
 
-static uint64_t getMSSince1970Until(std::string dateAndHour ) {
+static uint64_t getMSSince1970Until(const std::string& dateAndHour ) {
 
 struct tm tm;
 char buf[255];
