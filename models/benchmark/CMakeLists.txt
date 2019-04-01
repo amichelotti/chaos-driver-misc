@@ -5,7 +5,6 @@ SET(messlib ChaosMESS.cpp DefaultCommand.cpp DummyDriver.cpp CmdCalcTrxDelay.cpp
 SET(MessMonitor_src test/messMonitor.cpp)
 SET(MessClient_src test/messClient.cpp)
 INCLUDE_DIRECTORIES(. ..)
-ADD_DEFINITIONS(-O3)
 ADD_EXECUTABLE(MessMonitor ${MessMonitor_src})
 ADD_EXECUTABLE(MessClient ${MessClient_src})
 MESSAGE(info "libraries:${FrameworkLib}")
@@ -19,12 +18,16 @@ ELSE()
 ENDIF()
 
 TARGET_LINK_LIBRARIES(MessMonitor ${PROJECT_NAME} chaos_cutoolkit boost_random ${FrameworkLib})
-TARGET_LINK_LIBRARIES(MessClient ${PROJECT_NAME} chaos_uitoolkit chaos_common boost_random ${FrameworkLib})
+TARGET_LINK_LIBRARIES(MessClient ${PROJECT_NAME} chaos_metadata_service_client chaos_common boost_random ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} pthread chaos_cutoolkit chaos_common boost_random ${FrameworkLib})
 SET(DRIVERS_LIB ${DRIVERS_LIB} ${PROJECT_NAME} PARENT_SCOPE)
 INSTALL_TARGETS(/bin MessMonitor)
 INSTALL_TARGETS(/bin MessClient)
 INSTALL_TARGETS(/lib ${PROJECT_NAME})
-installHeaders(.)
+FILE(GLOB files "*.h")
+INSTALL(FILES ${files} DESTINATION include/driver/misc/models/benchmark)
+FILE(GLOB files "conf/*.gnuplot")
+INSTALL(FILES ${files} DESTINATION etc/)
+
 

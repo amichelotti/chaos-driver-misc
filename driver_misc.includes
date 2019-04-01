@@ -1,8 +1,7 @@
+../../chaosframework
+.
+../../chaosframework/usr/local/include
 core
-generators
-generators/drivers/remote
-generators/drivers/simulator
-models/benchmark
+test
+models
 models/cernRoot
-models/vme
-/usr/local/chaos/chaos-distrib/include

@@ -74,9 +74,7 @@ void ChaosMESS::unitDefineActionAndDataset() throw(CException) {
                           "trial buffer to calculate perfomance",
                           DataType::TYPE_BYTEARRAY,
                           DataType::Output,
-                          4*1024*1024);
-    
-	
+                          1024);
 }
 
 void ChaosMESS::defineSharedVariable() {
@@ -112,9 +110,9 @@ void ChaosMESS::unitDeinit() throw(CException) {
 	
 }
 
-CDataWrapper *ChaosMESS::getLastTrxDelay(CDataWrapper *actionParam, bool& detachParam) {
+CDWUniquePtr ChaosMESS::getLastTrxDelay(CDWUniquePtr actionParam) {
     if(!o_lct_delay) throw CException(-1, "o_lct_delay not allocated", __PRETTY_FUNCTION__);
-	CDataWrapper *result =  new CDataWrapper();
+	CreateNewDataWrapper(result, );
 	result->addInt64Value("trx_delay", *o_lct_delay);
 	return result;
 }

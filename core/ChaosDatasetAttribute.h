@@ -9,12 +9,26 @@
 #define	ChaosDatasetAttribute_H
 #include <map>
 #include <string>
-#include <chaos/ui_toolkit/ChaosUIToolkit.h>
+#include <chaos/common/exception/CException.h>
+#include <chaos/common/data/CUSchemaDB.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
+#include <chaos/common/global.h>
+
+
 #define ATTRAPP_ LAPP_ << "[ "<<__FUNCTION__<<" ]"
 #define ATTRDBG_ LDBG_<< "[ "<<__PRETTY_FUNCTION__<<" ]"
 #define ATTRERR_ LERR_ << "[ "<<__PRETTY_FUNCTION__<<" ]"
 
 namespace chaos{
+namespace common{
+namespace data{
+    class CDataWrapper;
+}
+/*namespace io{
+    class QueryCursor;
+}*/
+}
 namespace metadata_service_client{
 	class ChaosMetadataServiceClient;
 namespace node_controller{
@@ -23,6 +37,8 @@ namespace node_controller{
 }
 }
 }
+#define ChaosCuInput(path,var) ::driver::misc::ChaosDatasetAttribute var(path,::driver::misc::ChaosDatasetAttribute::INPUT)
+#define ChaosCuOutput(path,var) ::driver::misc::ChaosDatasetAttribute var(path,::driver::misc::ChaosDatasetAttribute::OUTPUT)
 
 namespace driver{
     
@@ -31,11 +47,19 @@ class ChaosDatasetAttribute{
     
   public:  
     typedef struct datinfo {
-        
+        std::string id;
+        std::string pather;
         uint64_t tget;
         uint64_t tstamp;
-        chaos::common::data::CDataWrapper*  data;
-        datinfo(){tget=tstamp=0; data=NULL;}
+        uint64_t pckid;
+        void *ptr_cache;
+        int32_t cache_size;
+       // chaos::common::data::CDataWrapper*  data;
+        datinfo(const std::string& _pather,const std::string& _id);
+        ~datinfo();
+        void set(void*buf,int size,int off=0);
+        void resize(uint32_t size);
+
         uint64_t getTimeStamp()const {return tstamp;}
         
         uint64_t getLastGet()const {return tget;}
@@ -48,12 +72,15 @@ class ChaosDatasetAttribute{
         DONTUPDATE
     };
     
-
+    typedef enum IO {
+        INPUT,
+        OUTPUT
+    } iomode_t;
     datinfo_psh info;
     static int initialize_framework;
-    ChaosDatasetAttribute(std::string path,uint32_t timeo=5000);
+    ChaosDatasetAttribute(std::string path,iomode_t IO=OUTPUT,uint32_t timeo=5000);
 
-    ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
+    explicit ChaosDatasetAttribute(const ChaosDatasetAttribute& orig);
     virtual ~ChaosDatasetAttribute();
     
    
@@ -74,15 +101,17 @@ class ChaosDatasetAttribute{
 
 
 private:
+    iomode_t iomode;
     uint64_t update_time;
     uint32_t timeo;
-    std::string attr_parent;
-    std::string attr_path;
-    std::string attr_name;
-    std::string attr_desc;
+    std::string attr_parent; //parent= cu name
+    std::string attr_path; // full path name
+    std::string attr_name; // variable name
+    std::string attr_desc; // description
+    std::string attr_unique_name; // variable name included direction (input,output)
     chaos::common::data::RangeValueInfo attr_type;
-    void *ptr_cache;
-    int32_t cache_size; 
+
+  //  int32_t cache_size;
     uint64_t cache_updated;
     //chaos::DataType::DataSetAttributeIOAttribute attr_dir;
     uint32_t attr_size;
@@ -96,7 +125,6 @@ private:
 public:
     int set(void*buf,int size);
     void* get(uint32_t* size);
-    void resize(int32_t newsize) throw (chaos::CException);
     std::string getParent(){return attr_parent;}
     std::string getGroup();
     std::string getPath(){return attr_path;}
@@ -105,9 +133,12 @@ public:
     chaos::common::data::RangeValueInfo& getValueInfo(){return attr_type;}
     chaos::DataType::DataType getType(){return attr_type.valueType;}
     chaos::common::data::VectorBinSubtype getBinaryType(){return attr_type.binType;}
+    uint64_t getTimestamp();
+    uint64_t getPackSeq();
 
     chaos::DataType::DataSetAttributeIOAttribute getDir(){return attr_type.dir;}
     uint32_t getSize(){return attr_size;}
+
     template<typename T>
     operator T()  throw (chaos::CException){
             
@@ -117,33 +148,60 @@ public:
             
         return reinterpret_cast<T*>(get(NULL));
     }
+
+    template<class T>
+    int get(std::vector<T>& var){
+        uint32_t size=0;
+        T* d=(T*)get(&size);
+        var.clear();
+        ATTRDBG_<<attr_path<<": vector byte size:"<<size<<" items:"<<size/sizeof(T) << " size type:"<<sizeof(T);
+        for(int cnt=0;cnt<size/sizeof(T);cnt++){
+            var.push_back(d[cnt]);
+        }
+        return size/sizeof(T);
+    }
+    template<class T>
+    int get(T& var){
+        uint32_t size=0;
+        T* d=(T*)get(&size);
+        var=*d;
+        return sizeof(T);
+
+    }
+    template<class T>
+     operator const std::vector<T> () throw (chaos::CException){
+        std::vector<T> tmp;
+        get(tmp);
+
+        return tmp;
+    }
+
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<double>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<int32_t>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<int64_t>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<char>&);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<bool>&);
+
+    int query(uint64_t ms_start,uint64_t ms_end,char*);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<double> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int32_t> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<int64_t> > &v);
+    int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<bool> > &v);
+
     template<typename T>
-    T operator=(T& d) throw (chaos::CException) {
-        if(set(&d,sizeof(T))==0)
-            return d;
+    ChaosDatasetAttribute& operator=(const T& d) throw (chaos::CException) {
+        if(set((void*)&d,sizeof(T))==0)
+            return *this;
         throw chaos::CException(-1,"cannot assign to remote variable:"+attr_path,__FUNCTION__);
     }
+
+
+
     
 };
+
     }}
-/*
-template <typename T>
-class ChaosDatasetAttribute:public ChaosDatasetAttributeBase{
-public:
-    ChaosDatasetAttribute(const char* path,uint32_t timeo=5000):ChaosDatasetAttributeBase(path,timeo){}
-    T get( ){
-       return *reinterpret_cast<T*>(getAttribute(NULL));
-    }
-    
-    T* get( uint32_t& size){
-       return reinterpret_cast<T*>(getAttribute(&size));
-    }
-     void set(T& t){
-         setAttribute((void*)&t,sizeof(T));
-     }
-   
-};
-*/
+
 
 #endif	/* ChaosDatasetAttribute_H */
 
