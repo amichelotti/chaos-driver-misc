@@ -25,6 +25,7 @@ namespace DafneData
 	template <class T> class DafneSingleData
 	{
 	public:  
+	
 		T  innerValue;
 		std::string description;
 		std::string measureUnit;

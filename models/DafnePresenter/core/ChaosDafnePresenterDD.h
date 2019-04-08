@@ -19,7 +19,7 @@ limitations under the License.
 #ifndef __driver_ChaosDafnePresenterDD_h__
 #define __driver_ChaosDafnePresenterDD_h__
 #include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>
-#include <common/misc/DafnePresenter/core/AbstractDafnePresenter.h>
+#include "AbstractDafnePresenter.h"
 DEFINE_CU_DRIVER_DEFINITION_PROTOTYPE(ChaosDafnePresenterDD)
 namespace cu_driver = chaos::cu::driver_manager::driver;
 namespace chaos {
