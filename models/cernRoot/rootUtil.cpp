@@ -195,6 +195,8 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
 
                 break;
             }
+            break;
+         }
 
         case chaos::DataType::TYPE_STRING:
             disable_dump=1;
