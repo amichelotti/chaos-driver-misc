@@ -47,7 +47,8 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
 	setBusyFlag(false);
 	SCLAPP_ << "Set Handler Default ";
-	
+	pastTimestamp=0;
+	lastTimeUpdated=0;
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 
@@ -133,6 +134,39 @@ void own::CmdDafDefault::acquireHandler() {
 		*p_lifetime_ele=DATO.lifetime_ele;
 		*p_lifetime_pos=DATO.lifetime_pos;
 		*p_rf=DATO.rf;
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		
+		if (lastTimeUpdated==0)
+			lastTimeUpdated=time(NULL);
+		if (pastTimestamp == 0)
+			pastTimestamp=*p_timestamp;
+		uint64_t deltaT = (*p_timestamp -pastTimestamp);
+		
+		if (deltaT != 0)
+		{
+			//si è aggiornato abbasso allarme
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+			lastTimeUpdated=time(NULL);
+			pastTimestamp=*p_timestamp;
+
+			
+		}
+		else
+		{
+			uint64_t deltaU =(time(NULL) - this->lastTimeUpdated );
+			
+			if (deltaU > 30)
+			{
+				if ( deltaU < 60)
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+			else
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+
+			}
+			
+		}
+
+		
 	}
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
@@ -154,7 +188,15 @@ void own::CmdDafDefault::acquireHandler() {
 
 		}
 	}
-
+	if (!ret)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
+	
 	
 	getAttributeCache()->setOutputDomainAsChanged();
 }

@@ -43,7 +43,8 @@ namespace driver {
 
 
 			private:
-			
+			uint64_t pastTimestamp;
+			uint64_t lastTimeUpdated;
 			const int32_t  *kindOfPrint;
 			const char* dafnestatPathPointer;
 			const char* outfilePointer;

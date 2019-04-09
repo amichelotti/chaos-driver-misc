@@ -316,7 +316,13 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_incorrect",
 		"raised when file with dafne data has format not recognized");
 	addStateVariable(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",
-		"raised when fail to retrieve CCALT data");
+		"raised when fails to retrieve CCALT data");
+		
+	addStateVariable(StateVariableTypeAlarmCU,"failed_to_write_output_file",
+		"raised when fails to write output file");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"dafne_file_not_updated",
+		"raised when timestamp of dafne file is not updated (Storer problem)");
 }
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttribute() {
 	char newdafnepath[256];
