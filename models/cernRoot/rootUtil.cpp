@@ -115,18 +115,14 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
         } else {
+              type_size = cd->getValueType(*it);
+           query[branch_counter].size+=cd->getValueSize(*it);
+            ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" type:"<<type_size<<" tot size:"<<query[branch_counter].size;
+
             if((type_size==chaos::DataType::TYPE_DOUBLE )||(type_size==chaos::DataType::TYPE_INT32)||(type_size==chaos::DataType::TYPE_INT64)||(type_size==chaos::DataType::TYPE_BOOLEAN)){
 
-                type_size = cd->getValueType(*it);
-                query[branch_counter].size+=cd->getValueSize(*it);
 
-                /*if((type_size==CDataWrapperTypeString)){
-                    int ret;
-                    if(!(ret=(cd->getValueSize(*it)%4))){
-                        query[branch_counter].size+=ret;
-                    }
-                }*/
-                ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
+              //  ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
             }
         }
         switch (type_size) {
@@ -159,6 +155,47 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
             varname << "/D";
 
             break;
+         case chaos::DataType::TYPE_BYTEARRAY:{
+            int binsize=cd->getValueSize(*it);
+            varname <<*it;
+
+            switch(cd->getBinarySubtype(*it)){
+                 case(chaos::DataType::SUB_TYPE_BOOLEAN):
+                 varname << "[" << binsize/sizeof(bool) << "]/O";
+
+                 break;
+            //!Integer char bit length
+                case chaos::DataType::SUB_TYPE_CHAR:
+                    varname << "[" << binsize/sizeof(char) << "]/B";
+
+                break;
+            //!Integer 8 bit length
+                case chaos::DataType::SUB_TYPE_INT8:
+                    varname << "[" << binsize/sizeof(int8_t) << "]/b";
+
+                break;
+            //!Integer 16 bit length
+                case chaos::DataType::SUB_TYPE_INT16:
+                    varname << "[" << binsize/sizeof(int16_t) << "]/s";
+
+                break;
+            //!Integer 32 bit length
+                case chaos::DataType::SUB_TYPE_INT32:
+                    varname << "[" << binsize/sizeof(int32_t) << "]/I";
+
+                break;
+            //!Integer 64 bit length
+                case chaos::DataType::SUB_TYPE_INT64:
+                    varname << "[" << binsize/sizeof(int64_t) << "]/L";
+
+                break;
+            //!Double 64 bit length
+                case chaos::DataType::SUB_TYPE_DOUBLE:
+                    varname << "[" << binsize/sizeof(double) << "]/D";
+
+                break;
+            }
+
         case chaos::DataType::TYPE_STRING:
             disable_dump=1;
      //               found++;
