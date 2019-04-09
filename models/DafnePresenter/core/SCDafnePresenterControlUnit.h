@@ -50,6 +50,8 @@ namespace driver {
 			SCDafnePresenterControlUnit(const std::string& _control_unit_id,const std::string& _control_unit_param,const ControlUnitDriverList& _control_unit_drivers);
 			/*Base Destructor*/
 			~SCDafnePresenterControlUnit();
+			std::string loadedNewDafnePath;
+			std::string loadedOutFile;
 		};
 	}
 }

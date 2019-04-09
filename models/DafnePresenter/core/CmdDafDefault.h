@@ -40,13 +40,17 @@ namespace driver {
 			bool timeoutHandler();
 
 
+
 			private:
+			const int32_t  *kindOfPrint;
+			const char* dafnestatPathPointer;
+			const char* outfilePointer;
 			uint64_t *p_timestamp;
 			int32_t *p_dafne_status;
 			double *p_i_ele;
 			double *p_i_pos;
-			double *p_nbunch_ele;
-			double *p_nbunch_pos;
+			int32_t *p_nbunch_ele;
+			int32_t *p_nbunch_pos;
 			int32_t *p_fill_pattern_ele;
 			int32_t *p_fill_pattern_pos;
 			int32_t *p_lifetime_ele;

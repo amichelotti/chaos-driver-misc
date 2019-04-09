@@ -46,14 +46,16 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractDafnePresenterCommand::setHandler(data);
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
 	setBusyFlag(false);
-	SCLAPP_ << "Set Handler Default "; 
+	SCLAPP_ << "Set Handler Default ";
+	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
+	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
 	p_i_pos = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_pos");
-	p_nbunch_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "nbunch_ele");
-	p_nbunch_pos = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "nbunch_pos");
+	p_nbunch_ele = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "nbunch_ele");
+	p_nbunch_pos = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "nbunch_pos");
 	p_fill_pattern_ele = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "fill_pattern_ele");
 	p_fill_pattern_pos = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "fill_pattern_pos");
 	p_lifetime_ele = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "lifetime_ele");
@@ -111,20 +113,48 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdDafDefault::acquireHandler() {
 	DafneData::DafneDataToShow  DATO;
-	bool ret= DATO.ReadFromNewDafne("/home/aduffizi/Documenti/DafnePublisher/newdafne.stat");
+	std::string where= dafnestatPathPointer;
+	std::string outf=outfilePointer;
+	bool ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
 	if (!ret)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
-	SCLDBG_ << "ALEDEBUG ret is " << ret ;
+	else
+	{
+		*p_timestamp=DATO.timestamp.innerValue;
+		*p_i_ele = DATO.i_ele.innerValue;
+		*p_i_pos = DATO.i_pos.innerValue;
+		*p_nbunch_ele= DATO.nbunch_ele;
+		*p_nbunch_pos=DATO.nbunch_pos;
+		*p_fill_pattern_ele=DATO.fill_pattern_ele;
+		*p_fill_pattern_pos=DATO.fill_pattern_pos;
+		*p_lifetime_ele=DATO.lifetime_ele;
+		*p_lifetime_pos=DATO.lifetime_pos;
+		*p_rf=DATO.rf;
+	}
+	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
+	ret=true;
+	switch (*kindOfPrint)
+	{
+		case 0:
+		default: ret= true; break;
+		case 1 :  ret=DATO.PrintAsJson(outf,false); break;
+		case 2 :  ret=DATO.PrintAsJson(outf,true); break;
+		case 3 :  ret=DATO.PrintAsRawtxt(outf); break;
+		case 4 :  
+		{
+			std::string flname=outf+"1";
+			ret &=DATO.PrintAsJson(flname,false);
+			flname=outf+"2";
+			ret &=DATO.PrintAsJson(flname,true);
+			flname=outf+"3";
+			ret=DATO.PrintAsRawtxt(flname);
 
-	*p_timestamp=DATO.timestamp.innerValue;
-	*p_i_ele = DATO.i_ele.innerValue;
-	*p_i_pos = DATO.i_pos.innerValue;
-	*p_nbunch_ele= DATO.nbunch_ele;
-	*p_nbunch_pos=DATO.nbunch_pos;
+		}
+	}
 
-
+	
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler
@@ -135,3 +165,6 @@ bool own::CmdDafDefault::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler Default "; 
 	return false;
 }
+
+
+

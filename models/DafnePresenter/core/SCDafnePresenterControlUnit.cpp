@@ -22,6 +22,7 @@ limitations under the License.
 #include <common/debug/core/debug.h>
 #include <chaos/cu_toolkit/windowsCompliant.h>
 #include "CmdDafDefault.h"
+#include <json/json.h>
 using namespace chaos;
 using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
@@ -41,6 +42,32 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 :  chaos::cu::control_manager::SCAbstractControlUnit(_control_unit_id,
 			 _control_unit_param, _control_unit_drivers) {
 	dafnepresenter_drv = NULL;
+	SCCUAPP << "ALEDEBUG Constructing CU with load parameter " << _control_unit_param ;
+	Json::Value json_parameter;
+  	Json::Reader json_reader;
+	this->loadedNewDafnePath="";
+	  if (!json_reader.parse(_control_unit_param, json_parameter))
+	{
+		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << _control_unit_param;
+		
+	
+	}
+	else
+	{
+		try
+		{
+			std::string dafnefilePath= json_parameter["dafneFilePath"].asString();
+			SCCUAPP << "ALEDEBUG path for reading dafne data: " << dafnefilePath ;
+			this->loadedNewDafnePath=dafnefilePath;
+			std::string outFile= json_parameter["outFile"].asString();
+			this->loadedOutFile=outFile;
+		}
+		catch(...)
+		{
+			throw chaos::CException(-1, "Bad CU Configuration. Cannot retrieve dafne filepath or outFile", __FUNCTION__);
+		}
+
+	}
 }
 /*Base Destructor*/
 ::driver::dafnepresenter::SCDafnePresenterControlUnit::~SCDafnePresenterControlUnit() {
@@ -278,10 +305,10 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 							DataType::Input);
 
 
-	addAttributeToDataSet("newDafneFilePath",
-							"path for newDafneFile",
-							DataType::TYPE_STRING,
-							DataType::Input,256);
+	addAttributeToDataSet("printFile",
+							"0: no print; 1: print as JsonSimple; 2 print as JsonComplete; 3 print as Raw TXT",
+							DataType::TYPE_INT32,
+							DataType::Input);
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"default driver communication error");
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_not_found",
@@ -292,6 +319,14 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		"raised when fail to retrieve CCALT data");
 }
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttribute() {
+	char newdafnepath[256];
+	strcpy(newdafnepath,this->loadedNewDafnePath.c_str());
+	char outfile[256];
+	strcpy(outfile, this->loadedOutFile.c_str());
+	getAttributeCache()->addCustomAttribute("newdafnepath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("newdafnepath", newdafnepath, sizeof(char)*256);
+	getAttributeCache()->addCustomAttribute("outFileName", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("outFileName", outfile, sizeof(char)*256);
 }
 // Abstract method for the initialization of the control unit
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitInit() {

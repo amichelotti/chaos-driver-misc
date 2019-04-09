@@ -59,7 +59,7 @@ std::string DafneDataToShow::asJSonKey(std::string name)
 	return "\"" + name + "\":";
 }
 
-void DafneDataToShow::PrintAsJson(std::string outFilePath,bool complete)
+bool DafneDataToShow::PrintAsJson(std::string outFilePath,bool complete)
 {
 
 #define PRINTJVAL(namestr)  outFile << asJSonKey(#namestr )   << namestr.toJSonValueString(complete)
@@ -128,11 +128,17 @@ void DafneDataToShow::PrintAsJson(std::string outFilePath,bool complete)
 		outFile << "}";
 		outFile.close();
 	}
+	else
+	{
+	   return false;
+	}
+	
 #undef PRINTJVAL	
+return true;
 }
 
 
-bool DafneDataToShow::PrintAsRowtxt(std::string outFilePath)
+bool DafneDataToShow::PrintAsRawtxt(std::string outFilePath)
 {
 	std::ofstream outFile(outFilePath);
 	if (outFile.is_open())
@@ -257,7 +263,7 @@ int main()
 	bool completeJson = false;
 	DATO.ReadFromNewDafne(newdafnepath);
 	DATO.PrintAsJson(outFilePath, completeJson);
-	DATO.PrintAsRowtxt(outFileTxtPath);
+	DATO.PrintAsRawtxt(outFileTxtPath);
 	return 0;
 }
 #endif

@@ -183,8 +183,8 @@ namespace DafneData
 		public: void PrintOnConsole();
 		private: std::string asJSonKey(std::string name);
 
-		public: void PrintAsJson(std::string outFilePath,bool complete);
-		public: bool PrintAsRowtxt(std::string outFilePath);
+		public: bool PrintAsJson(std::string outFilePath,bool complete);
+		public: bool PrintAsRawtxt(std::string outFilePath);
 		public:  bool ReadFromNewDafne(std::string newdafnepath);
 
 	};
