@@ -141,7 +141,7 @@ void own::CmdDafDefault::acquireHandler() {
 		if (pastTimestamp == 0)
 			pastTimestamp=*p_timestamp;
 		uint64_t deltaT = (*p_timestamp -pastTimestamp);
-		
+		SCLDBG_ << "deltaT = " << deltaT;
 		if (deltaT != 0)
 		{
 			//si è aggiornato abbasso allarme
@@ -154,7 +154,7 @@ void own::CmdDafDefault::acquireHandler() {
 		else
 		{
 			uint64_t deltaU =(time(NULL) - this->lastTimeUpdated );
-			
+			SCLDBG_ << "deltaU = " << deltaU;
 			if (deltaU > 30)
 			{
 				if ( deltaU < 60)
