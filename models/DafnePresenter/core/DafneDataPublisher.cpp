@@ -1,8 +1,7 @@
-
-
 #include <iostream>
 #include <fstream>
 #include "DafneDataPublisher.h"
+#include <stdlib.h>
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
