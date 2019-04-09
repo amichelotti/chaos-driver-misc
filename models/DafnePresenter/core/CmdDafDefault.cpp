@@ -17,9 +17,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "CmdDafDefault.h"
-#ifndef _DAFNEDATAPUBLISHER_H_
+
 #include "DafneDataPublisher.h"
-#endif
+
 #include <cmath>
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -47,6 +47,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
 	setBusyFlag(false);
 	SCLAPP_ << "Set Handler Default ";
+	
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 

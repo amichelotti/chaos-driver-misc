@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "AbstractDafnePresenterCommand.h"
 
+
 #include <bitset>
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
@@ -42,6 +43,7 @@ namespace driver {
 
 
 			private:
+			
 			const int32_t  *kindOfPrint;
 			const char* dafnestatPathPointer;
 			const char* outfilePointer;
