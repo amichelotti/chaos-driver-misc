@@ -56,7 +56,6 @@ int main(int argc, const char** argv) {
 	rootapp->Run();
   //  ChaosMetadataServiceClient::getInstance()->stop();
   //  ChaosMetadataServiceClient::getInstance()->deinit();
-
     return 0;
 }
 

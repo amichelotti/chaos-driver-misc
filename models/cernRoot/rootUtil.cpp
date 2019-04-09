@@ -551,10 +551,12 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
             //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
 
         } else {
+           type_size = cd->getValueType(*it);
+           query[branch_counter].size+=cd->getValueSize(*it);
+            ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" type:"<<type_size<<" tot size:"<<query[branch_counter].size;
+
             if((type_size==chaos::DataType::TYPE_DOUBLE )||(type_size==chaos::DataType::TYPE_INT32)||(type_size==chaos::DataType::TYPE_INT64)||(type_size==chaos::DataType::TYPE_BOOLEAN)){
 
-                type_size = cd->getValueType(*it);
-                query[branch_counter].size+=cd->getValueSize(*it);
 
               //  ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot size:"<<query[branch_counter].size;
             }
@@ -586,7 +588,7 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
             found++;
             //if(!multiple)
                 varname <<*it;
-            varname << "/D";
+                varname << "/D";
 
             break;
         case chaos::DataType::TYPE_STRING:
@@ -596,7 +598,49 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
      //           varname << "/C";
 
             break;
+        case chaos::DataType::TYPE_BYTEARRAY:{
+            int binsize=cd->getValueSize(*it);
+            varname <<*it;
 
+            switch(cd->getBinarySubtype(*it)){
+                 case(chaos::DataType::SUB_TYPE_BOOLEAN):
+                 varname << "[" << binsize/sizeof(bool) << "]/O";
+
+                 break;
+            //!Integer char bit length
+                case chaos::DataType::SUB_TYPE_CHAR:
+                    varname << "[" << binsize/sizeof(char) << "]/B";
+
+                break;
+            //!Integer 8 bit length
+                case chaos::DataType::SUB_TYPE_INT8:
+                    varname << "[" << binsize/sizeof(int8_t) << "]/b";
+
+                break;
+            //!Integer 16 bit length
+                case chaos::DataType::SUB_TYPE_INT16:
+                    varname << "[" << binsize/sizeof(int16_t) << "]/s";
+
+                break;
+            //!Integer 32 bit length
+                case chaos::DataType::SUB_TYPE_INT32:
+                    varname << "[" << binsize/sizeof(int32_t) << "]/I";
+
+                break;
+            //!Integer 64 bit length
+                case chaos::DataType::SUB_TYPE_INT64:
+                    varname << "[" << binsize/sizeof(int64_t) << "]/L";
+
+                break;
+            //!Double 64 bit length
+                case chaos::DataType::SUB_TYPE_DOUBLE:
+                    varname << "[" << binsize/sizeof(double) << "]/D";
+
+                break;
+            }
+
+        break;
+        }
         default:
             break;
         }
@@ -636,7 +680,6 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
         if (cd->isVector(*it)) {
             int size = 0;
             ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
-
             for(int cnt=0;cnt<da->size();cnt++){
                 if (da->isDoubleElementAtIndex(cnt)) {
                     double tmp=da->getDoubleElementAtIndex(cnt);
@@ -665,7 +708,8 @@ TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const
             case chaos::DataType::TYPE_DOUBLE:
             case chaos::DataType::TYPE_INT64:
             case chaos::DataType::TYPE_BOOLEAN:
-            case chaos::DataType::TYPE_INT32:{
+            case chaos::DataType::TYPE_INT32:
+            case chaos::DataType::TYPE_BYTEARRAY:{
                 memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
                 ptr+=cd->getValueSize(*it);
                 break;
