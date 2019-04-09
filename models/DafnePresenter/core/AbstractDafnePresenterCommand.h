@@ -21,6 +21,7 @@ limitations under the License.
 #include "DafnePresenterConstants.h"
 #include <driver/misc/models/DafnePresenter/core/ChaosDafnePresenterInterface.h>
 #include <chaos/cu_toolkit/control_manager/slow_command/SlowCommand.h>
+#include <driver/misc/core/ChaosController.h>
 
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
@@ -34,6 +35,7 @@ namespace driver {
 			//common members
 			int32_t	*o_status_id;
 			uint64_t	*o_alarms;
+			::driver::misc::ChaosController *CCALT;
 			//reference of the chaos abstraction of driver
 			chaos::driver::dafnepresenter::ChaosDafnePresenterInterface *dafnepresenter_drv;
 			//implemented handler
