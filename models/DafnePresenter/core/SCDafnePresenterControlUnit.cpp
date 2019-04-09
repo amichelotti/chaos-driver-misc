@@ -62,14 +62,7 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
 	*/ //Uncomment when you want to connect the driver
-	addAttributeToDataSet("status_id",
-							"default status attribute",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	addAttributeToDataSet("alarms",
-							"default alarms attribute",
-							DataType::TYPE_INT64,
-							DataType::Output);
+	
 	addAttributeToDataSet("timestamp",
 							"timestamp of data",
 							DataType::TYPE_INT64,
@@ -266,6 +259,19 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 							"Luminosità (10^30 cm-2 s-1)",
 							DataType::TYPE_DOUBLE,
 							DataType::Output);
+	
+	addAttributeToDataSet("status_id",
+							"default status attribute",
+							DataType::TYPE_INT32,
+							DataType::Output);
+	addAttributeToDataSet("alarms",
+							"default alarms attribute",
+							DataType::TYPE_INT64,
+							DataType::Output);
+	
+	
+	
+	
 	addAttributeToDataSet("driver_timeout",
 							"custom user timeout in milliseconds for commands",
 							DataType::TYPE_INT32,

@@ -55,10 +55,8 @@ namespace DafneData
 			this->initialized = true;
 			return *this;
 		}
-		T operator=(DafneSingleData val)
-		{
-			return this->innerValue;
-		}
+     
+	    operator T() {return (T) this->innerValue;}
 
 		friend std::ostream& operator<< (std::ostream& stream, const DafneSingleData& data)
 		{

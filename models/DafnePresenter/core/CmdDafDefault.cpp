@@ -116,6 +116,15 @@ void own::CmdDafDefault::acquireHandler() {
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
+	SCLDBG_ << "ALEDEBUG ret is " << ret ;
+
+	*p_timestamp=DATO.timestamp.innerValue;
+	*p_i_ele = DATO.i_ele.innerValue;
+	*p_i_pos = DATO.i_pos.innerValue;
+	*p_nbunch_ele= DATO.nbunch_ele;
+	*p_nbunch_pos=DATO.nbunch_pos;
+
+
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler
