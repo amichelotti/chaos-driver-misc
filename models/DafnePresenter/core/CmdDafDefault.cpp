@@ -141,11 +141,11 @@ void own::CmdDafDefault::acquireHandler() {
 		if (pastTimestamp == 0)
 			pastTimestamp=*p_timestamp;
 		uint64_t deltaT = (*p_timestamp -pastTimestamp);
-		SCLDBG_ << "deltaT = " << deltaT;
+		//SCLDBG_ << "deltaT = " << deltaT;
 		if (deltaT != 0)
 		{
 			//si è aggiornato abbasso allarme
-			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+			setStateVariableSeverity(StateVariableTypeAlarmDEV,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 			lastTimeUpdated=time(NULL);
 			pastTimestamp=*p_timestamp;
 
@@ -154,13 +154,13 @@ void own::CmdDafDefault::acquireHandler() {
 		else
 		{
 			uint64_t deltaU =(time(NULL) - this->lastTimeUpdated );
-			SCLDBG_ << "deltaU = " << deltaU;
+			//SCLDBG_ << "deltaU = " << deltaU;
 			if (deltaU > 30)
 			{
 				if ( deltaU < 60)
-				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+				setStateVariableSeverity(StateVariableTypeAlarmDEV,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
 			else
-				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+				setStateVariableSeverity(StateVariableTypeAlarmDEV,"dafne_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 
 			}
 			
