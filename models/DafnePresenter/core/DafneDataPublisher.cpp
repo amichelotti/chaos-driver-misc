@@ -215,7 +215,7 @@ bool DafneDataToShow::ReadFromNewDafne(std::string newdafnepath)
 			std::vector<std::string> values;
 			for (unsigned int i = 0; i < tokenized.size(); i++)
 			{
-				if ((tokenized.size() > 0) && (tokenized[i] != " ") && (tokenized[i] != "  ") && (tokenized[i] != "   "))
+				if ((tokenized[i].size() > 0) && (tokenized[i] != " ") && (tokenized[i] != "  ") && (tokenized[i] != "   "))
 					values.push_back(tokenized[i]);
 			}
 			uint32_t tmp;
