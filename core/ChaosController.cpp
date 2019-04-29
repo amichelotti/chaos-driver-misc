@@ -578,24 +578,29 @@ void ChaosController::deinitializeClient()
 uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
-   
-    chaos::common::data::VectorCDWShrdPtr channels=getLiveAllChannels();
-    if(channels.size()==0){
+   // chaos::common::data::VectorCDWShrdPtr channels;
+    if((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US){
+        cached_channels=getLiveAllChannels();
+        update_all_channels_ts=ts;
+    } else {
+        cached_channels[KeyDataStorageDomainOutput]=getLiveChannel(path,KeyDataStorageDomainOutput);
+    }
+    if(cached_channels.size()==0){
         return 0;
     }
     delta_update = CU_HEALTH_UPDATE_US;
-    for (int cnt = 0; cnt < channels.size(); cnt++)
+    for (int cnt = 0; cnt < cached_channels.size(); cnt++)
     {
         ChaosWriteLock l(iomutex);
 
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
-        if(channels[cnt].get()){
-            std::string tmp= channels[cnt]->getCompliantJSONString();
+        if(cached_channels[cnt].get()){
+            std::string tmp= cached_channels[cnt]->getCompliantJSONString();
             if(tmp.size()<2){
                 cachedJsonChannels[cnt] ="{}";
             } else {
                 cachedJsonChannels[cnt] =tmp;
-                all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+                all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(cached_channels[cnt].get()));
 
             }
             
@@ -605,9 +610,9 @@ uint64_t ChaosController::sched(uint64_t ts)
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainDevAlarm) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainCUAlarm))
         {
-            if(channels[cnt].get()){
+            if(cached_channels[cnt].get()){
 
-                common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+                common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(cached_channels[cnt].get()));
             }
         }
 
@@ -634,17 +639,17 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
     float rate;
-    if (channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
-        ((rate = channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
+    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
+        ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
     }
-    else if (channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
+    else if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
     {
-        delta_update = channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
+        delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
     }
     delta_update = std::min(delta_update, (uint64_t)CU_HEALTH_UPDATE_US);
-
+    setQuantum(delta_update);
     //DBGET<<"SCHED STOP delta update:"<<delta_update;
     return delta_update;
 }
@@ -709,7 +714,7 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     return results;
 }
 
-ChaosController::ChaosController() : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
+ChaosController::ChaosController() : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0),update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
 
 {
 
