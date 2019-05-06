@@ -122,10 +122,13 @@ static boost::condition_variable_any cond;
 int performTest(const std::string &name, testparam_t &tparam) {
   double freq = 1, phase = 0, amp = 1, afreq, aamp;
   double delta;
-  int err = 0;
+  int countErr = 0;
+  if((exit_after_nerror > 0)&& (tot_error >= exit_after_nerror)){
+      exit(tot_error);
+  }
   for (uint32_t point_cnt = npoints, incr = 2;
        (point_cnt <= pointmax) &&
-       ((exit_after_nerror == 0) || (err < exit_after_nerror));
+       ((exit_after_nerror == 0) || (tot_error < exit_after_nerror));
        (incr == 0) ? (point_cnt += pointincr)
                    : (point_cnt = (pow(pointincr, incr))),
                 incr++) {
@@ -181,7 +184,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       if (test->pushDataset(
               chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT) != 0) {
         LERR_ << " cannot push:" << my_input->getJSONString();
-        err++;
+        countErr++;
       } else {
         //  LDBG_<<"pushing:"<<my_input->getJSONString();
       }
@@ -224,7 +227,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
         // LDBG_<<"int32 value:"<<my_ouput->getInt32Value("counter32");
         if (test->pushDataset() != 0) {
           LERR_ << " cannot push:" << my_ouput->getJSONString();
-          err++;
+          countErr++;
         }
         if (waitloops) {
           usleep(waitloops);
@@ -263,61 +266,68 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 << "] retriving data... from:" << query_time_start
                 << " to:" << query_time_end << " runID:" << test->getRunID()
                 << " pagelen:" << pagelen << std::endl;
-      start_time =
-          chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-      uint32_t uid =
-          test->queryHistoryDatasets(query_time_start, query_time_end, pagelen);
-      uint32_t total = 0;
+      start_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+      int retry = 2;
+      int checkErr = 0;
 
-      uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
-               pckt = 0;
-      query_time_end += 5000; // consider time errors
-      query_time_start -= 2000;
-      if (pagelen == 0) {
-        std::vector<ChaosDataSet> res =
-            test->queryHistoryDatasets(query_time_start, query_time_end);
-        end_time = chaos::common::utility::TimingUtil::
-            getLocalTimeStampInMicroseconds();
-        pull_time = (end_time - start_time);
+      do {
+        uint32_t uid = test->queryHistoryDatasets(query_time_start, query_time_end, pagelen);
+        uint32_t total = 0;
 
-        pull_avg = res.size() * 1000000.0 / pull_time;
-        std::cout << "[" << name << "] retrived:" << res.size()
-                  << " items, items/s:" << pull_avg << " time:" << pull_time
-                  << std::endl;
-        total = res.size();
-        err += checkData(test, res, pckmissing, pckt, pcktreplicated,
-                         pckmalformed, badid);
-      } else {
-        while (test->queryHasNext(uid)) {
-          std::vector<ChaosDataSet> res = test->getNextPage(uid);
-          total += res.size();
+        uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
+                 pckt = 0;
+        query_time_end += 5000; // consider time errors
+        query_time_start -= 2000;
+        if (pagelen == 0) {
+          std::vector<ChaosDataSet> res =
+              test->queryHistoryDatasets(query_time_start, query_time_end);
           end_time = chaos::common::utility::TimingUtil::
               getLocalTimeStampInMicroseconds();
           pull_time = (end_time - start_time);
-          pull_avg = total * 1000000.0 / pull_time;
-          std::cout << "[" << name << "] retrived:" << res.size() << "/"
-                    << total << " items , items/s:" << pull_avg
-                    << " time:" << pull_time << std::endl;
 
-          err += checkData(test, res, pckmissing, pckt, pcktreplicated,
-                           pckmalformed, badid);
+          pull_avg = res.size() * 1000000.0 / pull_time;
+          std::cout << "[" << name << "] retrived:" << res.size()
+                    << " items, items/s:" << pull_avg << " time:" << pull_time
+                    << std::endl;
+          total = res.size();
+          checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated, pckmalformed, badid);
+          countErr += checkErr;
+        } else {
+          while (test->queryHasNext(uid)) {
+            std::vector<ChaosDataSet> res = test->getNextPage(uid);
+            total += res.size();
+            end_time = chaos::common::utility::TimingUtil::
+                getLocalTimeStampInMicroseconds();
+            pull_time = (end_time - start_time);
+            pull_avg = total * 1000000.0 / pull_time;
+            std::cout << "[" << name << "] retrived:" << res.size() << "/"
+                      << total << " items , items/s:" << pull_avg
+                      << " time:" << pull_time << std::endl;
+            checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated, pckmalformed, badid);
+            countErr += checkErr;
+          }
         }
-      }
 
-      if (total != loops) {
-        std::cout << "[" << name << "] # number of data retrived " << total
-                  << " different from expected:" << loops << std::endl;
-        err++;
-      }
-      if (err != 0) {
-        std::cout << "[" << name << "] ## Total errors:" << err
-                  << " missing packets:" << pckmissing
-                  << " replicated:" << pcktreplicated
-                  << " pcktmalformed:" << pckmalformed << " badrunid:" << badid
-                  << std::endl;
-      } else {
-        std::cout << "[" << name << "] check ok" << std::endl;
-      }
+        if (total != loops) {
+          std::cout << "[" << name << "] # number of data retrived " << total
+                    << " different from expected:" << loops << std::endl;
+          countErr++;
+          checkErr++;
+        }
+        if (countErr != 0) {
+          std::cout << "[" << name << "] ## Total errors:" << countErr
+                    << " missing packets:" << pckmissing
+                    << " replicated:" << pcktreplicated
+                    << " pcktmalformed:" << pckmalformed << " badrunid:" << badid
+                    << std::endl;
+        } else {
+          std::cout << "[" << name << "] check ok" << std::endl;
+        }
+        if ((retry-- > 0) && (checkErr > 0)) {
+          std::cout << "[" << name << "] RETRY SAME QUERY because of:" << checkErr << " errors" << std::endl;
+        }
+      } while ((retry > 0) && (checkErr > 0));
+
       tparam.points = point_cnt;
       tparam.payload = payloadKB;
       tparam.push_sec = push_avg;
@@ -326,11 +336,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
       tparam.pull_time = pull_time;
       tparam.bandwith = bandwithMB;
       tparam.overhead = overhead_tot;
-      tparam.errors = err;
+      tparam.errors = countErr;
 
     } else {
       LERR_ << "[" << name << "] cannot register!:";
-      err++;
+      countErr++;
     }
 
     {
@@ -390,8 +400,8 @@ int performTest(const std::string &name, testparam_t &tparam) {
     }
     cond.notify_all();
   }
-  tot_error += err;
-  return err;
+  tot_error += countErr;
+  return countErr;
 }
 int main(int argc, const char **argv) {
   std::string name, group;
