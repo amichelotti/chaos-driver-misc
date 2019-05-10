@@ -523,7 +523,7 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
         throw chaos::CException(ret, "cannot allocate controller for:" + path + " check if exists", __FUNCTION__);
     }
     cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX + 1);
-
+    cached_channels.resize(DPCK_LAST_DATASET_INDEX + 1);
     /*db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
      db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 

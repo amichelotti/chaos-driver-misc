@@ -48,7 +48,7 @@ void own::CmdGIBPowerOn::setHandler(c_data::CDataWrapper *data) {
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	this->tmp_on_state=data->getInt32Value(CMD_GIB_POWERON_ON_STATE);
 	int err=0;
-	if (err=gibcontrol_drv->PowerOn(tmp_on_state) != 0)
+	if ((err=gibcontrol_drv->PowerOn(tmp_on_state)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command PowerOn not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
