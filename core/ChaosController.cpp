@@ -558,6 +558,7 @@ void ChaosController::initializeClient()
     if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)){
         live_driver->updateConfiguration(best_available_da_ptr.get());
     }
+    cached_channels=getLiveAllChannels();
 }
 void ChaosController::deinitializeClient()
 {
@@ -579,10 +580,11 @@ uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
    // chaos::common::data::VectorCDWShrdPtr channels;
-    if((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US){
+    if((cached_channels.size()==0)||((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US)){
         cached_channels=getLiveAllChannels();
         update_all_channels_ts=ts;
     } else {
+        
         cached_channels[KeyDataStorageDomainOutput]=getLiveChannel(path,KeyDataStorageDomainOutput);
     }
     if(cached_channels.size()==0){
