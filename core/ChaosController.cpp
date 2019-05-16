@@ -523,7 +523,7 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
         throw chaos::CException(ret, "cannot allocate controller for:" + path + " check if exists", __FUNCTION__);
     }
     cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX + 1);
-
+    cached_channels.resize(DPCK_LAST_DATASET_INDEX + 1);
     /*db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
      db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 
@@ -558,6 +558,7 @@ void ChaosController::initializeClient()
     if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)){
         live_driver->updateConfiguration(best_available_da_ptr.get());
     }
+    cached_channels=getLiveAllChannels();
 }
 void ChaosController::deinitializeClient()
 {
@@ -578,24 +579,30 @@ void ChaosController::deinitializeClient()
 uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
-   
-    chaos::common::data::VectorCDWShrdPtr channels=getLiveAllChannels();
-    if(channels.size()==0){
+   // chaos::common::data::VectorCDWShrdPtr channels;
+    if((cached_channels.size()==0)||((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US)){
+        cached_channels=getLiveAllChannels();
+        update_all_channels_ts=ts;
+    } else {
+        
+        cached_channels[KeyDataStorageDomainOutput]=getLiveChannel(path,KeyDataStorageDomainOutput);
+    }
+    if(cached_channels.size()==0){
         return 0;
     }
     delta_update = CU_HEALTH_UPDATE_US;
-    for (int cnt = 0; cnt < channels.size(); cnt++)
+    for (int cnt = 0; cnt < cached_channels.size(); cnt++)
     {
         ChaosWriteLock l(iomutex);
 
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
-        if(channels[cnt].get()){
-            std::string tmp= channels[cnt]->getCompliantJSONString();
+        if(cached_channels[cnt].get()){
+            std::string tmp= cached_channels[cnt]->getCompliantJSONString();
             if(tmp.size()<2){
                 cachedJsonChannels[cnt] ="{}";
             } else {
                 cachedJsonChannels[cnt] =tmp;
-                all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+                all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(cached_channels[cnt].get()));
 
             }
             
@@ -605,9 +612,9 @@ uint64_t ChaosController::sched(uint64_t ts)
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainDevAlarm) ||
             (static_cast<chaos::cu::data_manager::KeyDataStorageDomain>(cnt) == KeyDataStorageDomainCUAlarm))
         {
-            if(channels[cnt].get()){
+            if(cached_channels[cnt].get()){
 
-                common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(channels[cnt].get()));
+                common.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(cached_channels[cnt].get()));
             }
         }
 
@@ -634,17 +641,17 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
     float rate;
-    if (channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
-        ((rate = channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
+    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()&& cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
+        ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
     }
-    else if (channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
+    else if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get()&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
     {
-        delta_update = channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
+        delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
     }
     delta_update = std::min(delta_update, (uint64_t)CU_HEALTH_UPDATE_US);
-
+    setQuantum(delta_update);
     //DBGET<<"SCHED STOP delta update:"<<delta_update;
     return delta_update;
 }
@@ -709,7 +716,7 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     return results;
 }
 
-ChaosController::ChaosController() : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
+ChaosController::ChaosController() : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0),update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER),datasetDB(true)
 
 {
 
@@ -1100,29 +1107,30 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                    \
         return CHAOS_DEV_CMD;                                                                                           \
     }
-#define EXECUTE_CHAOS_RET_API(api_name, time_out, ...)                                                                        \
-    int ret;DBGET << " "                                                                                                          \
+#define EXECUTE_CHAOS_RET_API(ret,api_name, time_out, ...)                                                                        \
+    DBGET << " "                                                                                                          \
           << " Executing Api:\"" << #api_name << "\"";                                                                    \
     chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__); \
     apires->setTimeout(time_out);                                                                                         \
-    apires->wait();ret= apires->getError();                                                                                
-    
+    if(apires->wait()){ret= apires->getError();} else {ret =-1;}                                                                                
+
+
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
           << " Executing Api:\"" << #api_name << "\"";                                                                    \
     chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__); \
     apires->setTimeout(time_out);                                                                                         \
-    apires->wait();json_buf = "{}";                                                                                                      \
-    if (apires->getError() )                                                                                               \
+    json_buf = "{}";                                                                                                      \
+    if ( (apires->wait() ==false) ||( apires->getError()) )                                                                                               \
     {                                                                                                                     \
         std::stringstream ss;                                                                                             \
         ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "|" << #api_name << " " << apires->getErrorMessage();   \
         bundle_state.append_error(ss.str());                                                                              \
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      \
-    } else { chaos::common::data::CDataWrapper *r=apires->getResult();if((r!=NULL)) json_buf=r->getCompliantJSONString();}
+    } else {chaos::common::data::CDWUniquePtr r=apires->detachResult();if((r.get()!=NULL)) json_buf=r->getCompliantJSONString();}
 
 
-static uint64_t getMSSince1970Until(std::string dateAndHour ) {
+static uint64_t getMSSince1970Until(const std::string& dateAndHour ) {
 
 struct tm tm;
 char buf[255];
@@ -1225,18 +1233,19 @@ void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::strin
 
 
 int ChaosController::setSchedule(uint64_t us, const std::string& cuname){
+    int ret;
     std::string name=(cuname=="")?path:cuname;
     chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::P_GROUP_NAME);
     pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
     DBGET<<"["<<name<<"] set schedule to:"<<us<<" us";
-    EXECUTE_CHAOS_RET_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,pg);
+    EXECUTE_CHAOS_RET_API(ret,chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,pg);
     
     return ret;
 }
 
 int ChaosController::setAttributeToValue(const char *attributeName, const char *attributeValue, const std::string& cuname){
     std::string name=(cuname=="")?path:cuname;
-
+    int ret;
     DBGET<<"["<<name<<"] Set attribute '"<<attributeName<<"'='"<<attributeValue<<"'";
    ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue>  att_obj(new chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue(attributeName,attributeValue));
    std::vector<ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue> > vc;
@@ -1245,45 +1254,51 @@ int ChaosController::setAttributeToValue(const char *attributeName, const char *
 
    std::vector<ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::ControlUnitInputDatasetChangeSet> > change_set;
     change_set.push_back(tmp);
-    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::SetInputDatasetAttributeValues, MDS_TIMEOUT, change_set);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::SetInputDatasetAttributeValues, MDS_TIMEOUT, change_set);
 
     return ret;
 }
 int ChaosController::initDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
     
-    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
     return ret;
 
 }
 int ChaosController::stopDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
 
-    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
     return ret;
 }
 int ChaosController::startDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
 
-    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
     return ret;
 }
 int ChaosController::deinitDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
 
-    EXECUTE_CHAOS_RET_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, false);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, false);
     return ret;
 }
 int ChaosController::loadDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
 
-    EXECUTE_CHAOS_RET_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
     return ret;
 }
 int ChaosController::unloadDevice(const std::string& dev){
+    int ret;
     std::string name=(dev=="")?path:dev;
 
-    EXECUTE_CHAOS_RET_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
     return ret;
 }
 int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
@@ -1502,9 +1517,10 @@ int ChaosController::restoreDeviceToTag(const std::string& restore_tag) {
 
 }
 int ChaosController::recoverDeviceFromError(const std::string& cu) {
+    int ret;
     std::vector<std::string> names;
     names.push_back((cu==""?path:cu));
-    EXECUTE_CHAOS_RET_API(chaos::metadata_service_client::api_proxy::control_unit::RecoverError,MDS_TIMEOUT,names);
+    EXECUTE_CHAOS_RET_API(ret,chaos::metadata_service_client::api_proxy::control_unit::RecoverError,MDS_TIMEOUT,names);
 
     return ret;
 }
@@ -2273,15 +2289,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     else if (what == "del")
                     {
-
+                        int ret,ret1;
                         CHECK_PARENT;
                         {
-                            EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
-                        }
-                        {
-                            EXECUTE_CHAOS_API(api_proxy::control_unit::Delete, MDS_TIMEOUT, name);
+                            EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
                         }
 
+                        {
+                            EXECUTE_CHAOS_RET_API(ret1,api_proxy::control_unit::Delete, MDS_TIMEOUT, name);
+                        }
+                        if(ret!=0 || ret1!=0){
+                        std::stringstream ss;                                                                                             
+
+                        ss << " error Deleting CU in :" << __FUNCTION__ << "|" << __LINE__;  
+                        bundle_state.append_error(ss.str());                                                                          
+
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                  
+
+                        } else {
+                            json_buf = "{}";
+                        }
                         res << json_buf;
                     }
                     else if (what == "get")
@@ -2423,8 +2450,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 domains.push_back(node_type);
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry, MDS_TIMEOUT, name, domains, start_ts, end_ts, seq_id, page);
                 //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
-                chaos::common::data::CDataWrapper *r = apires->getResult();
-                if (r)
+                chaos::common::data::CDWUniquePtr r = apires->detachResult();
+                if (r.get())
                 {
                     json_buf = r->getCompliantJSONString();
                 }
@@ -2489,8 +2516,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             {
                 CHECK_VALUE_PARAM;
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript, MDS_TIMEOUT, json_value);
-                chaos::common::data::CDataWrapper *r = apires->getResult();
-                if (r)
+                chaos::common::data::CDWUniquePtr r = apires->detachResult();
+                if (r.get())
                 {
                     json_buf = r->getCompliantJSONString();
                 }
@@ -2509,8 +2536,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 CHECK_VALUE_PARAM;
 
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchInstancesForScript, MDS_TIMEOUT, json_value);
-                chaos::common::data::CDataWrapper *r = apires->getResult();
-                if (r)
+                chaos::common::data::CDWUniquePtr r = apires->detachResult();
+                if (r.get())
                 {
                     json_buf = r->getCompliantJSONString();
                 }

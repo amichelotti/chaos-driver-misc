@@ -66,9 +66,10 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     std::vector<std::string> mds_server_l;
     std::string path;
     chaos::common::data::DatasetDB datasetDB;
+    chaos::common::data::VectorCDWShrdPtr cached_channels;
 
     chaos::CUStateKey::ControlUnitState state, last_state, next_state;
-    uint64_t timeo, schedule;
+    uint64_t timeo, schedule,update_all_channels_ts;
     std::map<std::string, int> binaryToTranslate;
     uint64_t last_access, heart, reqtime, tot_us, naccess, refresh;
     int wostate;
