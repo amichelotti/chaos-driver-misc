@@ -558,6 +558,7 @@ void ChaosController::initializeClient()
     if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)){
         live_driver->updateConfiguration(best_available_da_ptr.get());
     }
+    cached_channels=getLiveAllChannels();
 }
 void ChaosController::deinitializeClient()
 {
@@ -579,10 +580,11 @@ uint64_t ChaosController::sched(uint64_t ts)
 {
     CDataWrapper all, common;
    // chaos::common::data::VectorCDWShrdPtr channels;
-    if((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US){
+    if((cached_channels.size()==0)||((ts-update_all_channels_ts)>CU_HEALTH_UPDATE_US)){
         cached_channels=getLiveAllChannels();
         update_all_channels_ts=ts;
     } else {
+        
         cached_channels[KeyDataStorageDomainOutput]=getLiveChannel(path,KeyDataStorageDomainOutput);
     }
     if(cached_channels.size()==0){
@@ -639,12 +641,12 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
     float rate;
-    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
+    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()&& cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
         ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
     }
-    else if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
+    else if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get()&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
     {
         delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
     }
