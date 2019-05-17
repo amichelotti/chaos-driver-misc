@@ -51,7 +51,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	lastTimeUpdated=0;
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
-
+	faststatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"fastfilepath");
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
@@ -127,13 +127,14 @@ void own::CmdDafDefault::acquireHandler() {
 		*p_timestamp=DATO.timestamp.innerValue;
 		*p_i_ele = DATO.i_ele.innerValue;
 		*p_i_pos = DATO.i_pos.innerValue;
+		*p_dafne_status=DATO.dafne_status.innerValue;
 		*p_nbunch_ele= DATO.nbunch_ele;
 		*p_nbunch_pos=DATO.nbunch_pos;
 		*p_fill_pattern_ele=DATO.fill_pattern_ele;
 		*p_fill_pattern_pos=DATO.fill_pattern_pos;
 		*p_lifetime_ele=DATO.lifetime_ele;
 		*p_lifetime_pos=DATO.lifetime_pos;
-		*p_rf=DATO.rf;
+		*p_rf=DATO.rf.innerValue;
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		
 		if (lastTimeUpdated==0)
@@ -168,6 +169,7 @@ void own::CmdDafDefault::acquireHandler() {
 
 		
 	}
+	ret = DATO.ReadFromFast("");
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
 	switch (*kindOfPrint)

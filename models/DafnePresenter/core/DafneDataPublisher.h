@@ -185,7 +185,8 @@ namespace DafneData
 
 		public: bool PrintAsJson(std::string outFilePath,bool complete);
 		public: bool PrintAsRawtxt(std::string outFilePath);
-		public:  bool ReadFromNewDafne(std::string newdafnepath);
+		public: bool ReadFromNewDafne(std::string newdafnepath);
+		public: bool ReadFromFast(std::string fastfilepath);
 
 	};
 }

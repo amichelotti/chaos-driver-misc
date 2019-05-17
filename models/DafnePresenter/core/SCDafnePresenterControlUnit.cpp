@@ -46,6 +46,7 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 	Json::Value json_parameter;
   	Json::Reader json_reader;
 	this->loadedNewDafnePath="";
+	this->loadedFastPath="";
 	  if (!json_reader.parse(_control_unit_param, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << _control_unit_param;
@@ -61,10 +62,12 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 			this->loadedNewDafnePath=dafnefilePath;
 			std::string outFile= json_parameter["outFile"].asString();
 			this->loadedOutFile=outFile;
+			std::string fastfilePath= json_parameter["fastFilePath"].asString();
+			this->loadedFastPath=fastfilePath;
 		}
 		catch(...)
 		{
-			throw chaos::CException(-1, "Bad CU Configuration. Cannot retrieve dafne filepath or outFile", __FUNCTION__);
+			throw chaos::CException(-1, "Bad CU Configuration. Cannot retrieve dafne files path", __FUNCTION__);
 		}
 
 	}
@@ -329,8 +332,12 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttr
 	strcpy(newdafnepath,this->loadedNewDafnePath.c_str());
 	char outfile[256];
 	strcpy(outfile, this->loadedOutFile.c_str());
+	char fastfile[256];
+	strcpy(fastfile,this->loadedFastPath.c_str());
 	getAttributeCache()->addCustomAttribute("newdafnepath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("newdafnepath", newdafnepath, sizeof(char)*256);
+	getAttributeCache()->addCustomAttribute("fastfilepath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("fastfilepath", fastfile, sizeof(char)*256);
 	getAttributeCache()->addCustomAttribute("outFileName", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("outFileName", outfile, sizeof(char)*256);
 }

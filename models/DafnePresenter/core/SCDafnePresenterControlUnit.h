@@ -52,6 +52,7 @@ namespace driver {
 			~SCDafnePresenterControlUnit();
 			std::string loadedNewDafnePath;
 			std::string loadedOutFile;
+			std::string loadedFastPath;
 		};
 	}
 }

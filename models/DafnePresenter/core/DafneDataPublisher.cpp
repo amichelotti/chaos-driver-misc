@@ -251,11 +251,69 @@ bool DafneDataToShow::ReadFromNewDafne(std::string newdafnepath)
 	return false;
 }
 
+bool DafneDataToShow::ReadFromFast(std::string fastfilepath)
+{
+	std::ifstream newdafne(fastfilepath);
+	if (newdafne.is_open())
+	{
+		std::string line;
+
+		if (getline(newdafne, line))
+		{
+			std::vector<std::string> tokenized = split(line, " ");
+			std::vector<std::string> values;
+			for (unsigned int i = 0; i < tokenized.size(); i++)
+			{
+				if ((tokenized[i].size() > 0) && (tokenized[i] != " ") && (tokenized[i] != "  ") && (tokenized[i] != "   "))
+					values.push_back(tokenized[i]);
+			}
+			uint32_t tmp;
+			for (uint32_t i = 0; i < values.size(); i++)
+			{
+				switch (i)
+				{
+					case 0: this->timestamp = (uint64_t)atol(values[i].c_str()); break;
+					case 1: this->i_ele =  atof(values[i].c_str());break; //DUPLIC
+					case 2: this->i_pos = atof(values[i].c_str());break; //DUPLIC
+					case 7: sscanf(values[i].c_str(), "%x", &tmp); this->fill_pattern_ele = tmp; break;  //DUPLIC
+					case 8:	sscanf(values[i].c_str(), "%x", &tmp); this->fill_pattern_pos = tmp; break;    //DUPLIC
+					case 20: this->rf = atof(values[i].c_str());break;
+					case 34: this->VUGPL101 = atof(values[i].c_str());break;//G
+					case 35: this->VUGPS101 = atof(values[i].c_str());break;//G
+					case 36: this->VUGPS201 = atof(values[i].c_str());break;//G
+					case 37: this->VUGEL201 = atof(values[i].c_str());break;
+					case 38: this->VUGEL202 = atof(values[i].c_str());break;
+					case 39: this->VUGEL203 = atof(values[i].c_str());break;
+					case 40: this->VUGES101 = atof(values[i].c_str());break;
+					case 41: this->VUGES102 = atof(values[i].c_str());break;
+					case 42: this->VUGES103 = atof(values[i].c_str());break;
+					case 43: this->VUGES201 = atof(values[i].c_str());break;
+					case 44: this->VUGES202 = atof(values[i].c_str());break;
+					case 45: this->VUGES203 = atof(values[i].c_str());break;
+					default: break;
+				}
+			}
+			return true;
+		}
+		else
+		{
+			/* FILE fastfilepath empty*/
+			return false;
+		}
+
+	}
+	else
+	{
+		/* FILE NOT FOUND*/
+		return false;
+	}
+
+}
 
 #ifndef CHAOS
 int main()
 {
-    std::string newdafnepath= "/home/aduffizi/Documenti/DafnePublisher/newdafne.stat";
+    std::string newdafnepath= "/u2/data/fast/newdafne.stat";
 	std::string outFilePath = "/home/aduffizi/Documenti/DafnePublisher/DafneJson.json";
 	std::string outFileTxtPath = "/home/aduffizi/Documenti/DafnePublisher/Dafnetxt.txt";
 	DafneDataToShow   DATO;
