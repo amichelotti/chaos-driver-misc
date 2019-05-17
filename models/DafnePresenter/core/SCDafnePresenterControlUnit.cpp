@@ -316,6 +316,8 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		"default driver communication error");
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_not_found",
 		"raised when file with dafne data cannot be found");
+	addStateVariable(StateVariableTypeAlarmCU,"fast_file_not_found",
+		"raised when file with fast data cannot be found");
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_incorrect",
 		"raised when file with dafne data has format not recognized");
 	addStateVariable(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",

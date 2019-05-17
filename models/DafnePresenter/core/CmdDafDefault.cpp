@@ -169,7 +169,26 @@ void own::CmdDafDefault::acquireHandler() {
 
 		
 	}
-	ret = DATO.ReadFromFast("");
+	ret = DATO.ReadFromFast(faststatPathPointer);
+	if (!ret)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		*p_i_ele = DATO.i_ele.innerValue;
+		*p_i_pos = DATO.i_pos.innerValue;
+		*p_fill_pattern_ele=DATO.fill_pattern_ele;
+		*p_fill_pattern_pos=DATO.fill_pattern_pos;
+		*p_rf=DATO.rf.innerValue;
+		*p_VUGPL101=DATO.VUGPL101.innerValue;
+		*p_VUGPS101=DATO.VUGPS101.innerValue;
+		*p_VUGPS201=DATO.VUGPS201.innerValue;
+
+
+
+	}
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
 	switch (*kindOfPrint)
