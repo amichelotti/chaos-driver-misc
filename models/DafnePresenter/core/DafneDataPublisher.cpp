@@ -137,10 +137,36 @@ bool DafneDataToShow::PrintAsJson(std::string outFilePath,bool complete)
 return true;
 }
 
-
-bool DafneDataToShow::PrintAsRawtxt(std::string outFilePath)
+bool DafneDataToShow::AppendSiddhartaFile(std::string siddhartaMainPath)
 {
-	std::ofstream outFile(outFilePath);
+	time_t t = time(0);
+	struct tm * now = localtime( & t );
+    char buffer [80];
+    strftime (buffer,80,"%Y%m%d.stat",now);
+	std::string currFile=siddhartaMainPath+ "/"+ std::string(buffer);
+	std::fstream outFile;
+	//if (outFile.open(currFile,std::ios_base::)
+	outFile.open (currFile,std::fstream::out | std::fstream::app);
+	if (outFile.is_open())
+	{
+		this->PrintAsRawtxt(outFile);
+		outFile.close();
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+	
+
+
+
+
+}
+
+bool DafneDataToShow::PrintAsRawtxt(std::fstream& outFile)
+{
+	
 	if (outFile.is_open())
 	{
 		outFile << (timestamp) << " ";
@@ -196,7 +222,7 @@ bool DafneDataToShow::PrintAsRawtxt(std::string outFilePath)
 		outFile << (R1C_pos) << " ";
 
 		outFile << (lum_CCAL) << std::endl;
-		outFile.close();
+		
 	}
 	return true;
 }
@@ -315,13 +341,13 @@ int main()
 {
     std::string newdafnepath= "/u2/data/fast/newdafne.stat";
 	std::string outFilePath = "/home/aduffizi/Documenti/DafnePublisher/DafneJson.json";
-	std::string outFileTxtPath = "/home/aduffizi/Documenti/DafnePublisher/Dafnetxt.txt";
+	std::string outFileTxtPath = "/home/aduffizi/Documenti/DafnePublisher/";
 	DafneDataToShow   DATO;
 	DATO.modeToPrint = 1;
 	bool completeJson = false;
 	DATO.ReadFromNewDafne(newdafnepath);
 	DATO.PrintAsJson(outFilePath, completeJson);
-	DATO.PrintAsRawtxt(outFileTxtPath);
+	DATO.AppendSiddhartaFile(outFileTxtPath);
 	return 0;
 }
 #endif

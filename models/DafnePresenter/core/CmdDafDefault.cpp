@@ -197,7 +197,7 @@ void own::CmdDafDefault::acquireHandler() {
 		default: ret= true; break;
 		case 1 :  ret=DATO.PrintAsJson(outf,false); break;
 		case 2 :  ret=DATO.PrintAsJson(outf,true); break;
-		case 3 :  ret=DATO.PrintAsRawtxt(outf); break;
+		case 3 :  /*ret=DATO.PrintAsRawtxt(outf);*/ break;
 		case 4 :  
 		{
 			std::string flname=outf+"1";
@@ -205,7 +205,7 @@ void own::CmdDafDefault::acquireHandler() {
 			flname=outf+"2";
 			ret &=DATO.PrintAsJson(flname,true);
 			flname=outf+"3";
-			ret=DATO.PrintAsRawtxt(flname);
+			//ret=DATO.PrintAsRawtxt(flname);
 
 		}
 	}

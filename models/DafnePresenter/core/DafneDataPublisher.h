@@ -184,7 +184,8 @@ namespace DafneData
 		private: std::string asJSonKey(std::string name);
 
 		public: bool PrintAsJson(std::string outFilePath,bool complete);
-		public: bool PrintAsRawtxt(std::string outFilePath);
+		public: bool PrintAsRawtxt(std::fstream& outFile);
+		public: bool AppendSiddhartaFile(std::string siddhartaMainPath);
 		public: bool ReadFromNewDafne(std::string newdafnepath);
 		public: bool ReadFromFast(std::string fastfilepath);
 
