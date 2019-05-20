@@ -95,7 +95,11 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
 	*/ //Uncomment when you want to connect the driver
-	
+	addAttributeToDataSet("dafne_status_string",
+							"Human Readable Dafne Status",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+
 	addAttributeToDataSet("timestamp",
 							"timestamp of data",
 							DataType::TYPE_INT64,
@@ -293,14 +297,14 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 							DataType::TYPE_DOUBLE,
 							DataType::Output);
 	
-	addAttributeToDataSet("status_id",
+	/*addAttributeToDataSet("status_id",
 							"default status attribute",
 							DataType::TYPE_INT32,
 							DataType::Output);
 	addAttributeToDataSet("alarms",
 							"default alarms attribute",
 							DataType::TYPE_INT64,
-							DataType::Output);
+							DataType::Output);*/
 	
 	
 	

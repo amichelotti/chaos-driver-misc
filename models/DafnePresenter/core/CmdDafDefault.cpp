@@ -36,6 +36,22 @@ BATCH_COMMAND_OPEN_DESCRIPTION(driver::dafnepresenter::,CmdDafDefault,
 	"9a2582ee-0fc1-420f-bc3d-624640f9fa2a")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
+std::string getNameForDafneStatus(int32_t status)
+{
+	switch (status)
+	{
+		case 0: return "DAFNE: STDBY";
+		case 1: return "DAFNE: E- INJECT";
+		case 2: return "DAFNE: E+ INJECT";
+		case 3: return "DAFNE: E- STORED";
+		case 4: return "DAFNE: E+ STORED";
+		case 5: return "DAFNE: FILLED";
+		case 6: return "DAFNE: COLLIDING";
+		case 7: return "DAFNE: BTF DELIVERING";
+		case 8: return "DAFNE: BTF DELIVERING & COLLIDING";
+		default: return "DAFNE: UNKNOWN";
+	}
+}
 
 // return the implemented handler
 uint8_t own::CmdDafDefault::implementedHandler(){
@@ -53,6 +69,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 	faststatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"fastfilepath");
 	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
+	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
@@ -168,7 +185,7 @@ void own::CmdDafDefault::acquireHandler() {
 			}
 			
 		}
-
+		strncpy(p_dafne_status_readable,getNameForDafneStatus(DATO.dafne_status).c_str(),256);
 		
 	}
 	ret = DATO.ReadFromFast(faststatPathPointer);
