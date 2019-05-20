@@ -47,6 +47,7 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
   	Json::Reader json_reader;
 	this->loadedNewDafnePath="";
 	this->loadedFastPath="";
+	this->loadedSiddPath="";
 	  if (!json_reader.parse(_control_unit_param, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << _control_unit_param;
@@ -64,6 +65,8 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 			this->loadedOutFile=outFile;
 			std::string fastfilePath= json_parameter["fastFilePath"].asString();
 			this->loadedFastPath=fastfilePath;
+			std::string siddPath= json_parameter["siddhartaFilesPath"].asString();
+			this->loadedSiddPath=siddPath;
 		}
 		catch(...)
 		{
@@ -342,6 +345,9 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttr
     getAttributeCache()->setCustomAttributeValue("fastfilepath", fastfile, sizeof(char)*256);
 	getAttributeCache()->addCustomAttribute("outFileName", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("outFileName", outfile, sizeof(char)*256);
+
+	getAttributeCache()->addCustomAttribute("siddhartaPath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("siddhartaPath",(char*) this->loadedSiddPath.c_str(), sizeof(char)*256);
 }
 // Abstract method for the initialization of the control unit
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitInit() {

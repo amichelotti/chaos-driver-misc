@@ -53,6 +53,7 @@ namespace driver {
 			std::string loadedNewDafnePath;
 			std::string loadedOutFile;
 			std::string loadedFastPath;
+			std::string loadedSiddPath;
 		};
 	}
 }

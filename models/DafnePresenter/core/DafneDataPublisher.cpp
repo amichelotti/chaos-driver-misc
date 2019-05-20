@@ -143,7 +143,7 @@ bool DafneDataToShow::AppendSiddhartaFile(std::string siddhartaMainPath)
 	struct tm * now = localtime( & t );
     char buffer [80];
     strftime (buffer,80,"%Y%m%d.stat",now);
-	std::string currFile=siddhartaMainPath+ "/"+ std::string(buffer);
+	std::string currFile=siddhartaMainPath+  std::string(buffer);
 	std::fstream outFile;
 	//if (outFile.open(currFile,std::ios_base::)
 	outFile.open (currFile,std::fstream::out | std::fstream::app);
@@ -307,15 +307,17 @@ bool DafneDataToShow::ReadFromFast(std::string fastfilepath)
 					case 34: this->VUGPL101 = atof(values[i].c_str());break;//G
 					case 35: this->VUGPS101 = atof(values[i].c_str());break;//G
 					case 36: this->VUGPS201 = atof(values[i].c_str());break;//G
-					case 37: this->VUGEL201 = atof(values[i].c_str());break;
-					case 38: this->VUGEL202 = atof(values[i].c_str());break;
-					case 39: this->VUGEL203 = atof(values[i].c_str());break;
+					case 37: this->VUGPS203 = atof(values[i].c_str());break;
+					case 38: this->VUGPL201 = atof(values[i].c_str());break;
+					case 39: this->VUGEL101 = atof(values[i].c_str());break;
 					case 40: this->VUGES101 = atof(values[i].c_str());break;
-					case 41: this->VUGES102 = atof(values[i].c_str());break;
-					case 42: this->VUGES103 = atof(values[i].c_str());break;
-					case 43: this->VUGES201 = atof(values[i].c_str());break;
-					case 44: this->VUGES202 = atof(values[i].c_str());break;
-					case 45: this->VUGES203 = atof(values[i].c_str());break;
+					case 41: this->VUGES201 = atof(values[i].c_str());break;
+
+					case 42: this->VUGES203 = atof(values[i].c_str());break;
+					case 43: this->VUGEL201 = atof(values[i].c_str());break;
+
+					case 44: this->VUGPL203 = atof(values[i].c_str());break;
+					case 45: this->VUGEL203 = atof(values[i].c_str());break;
 					default: break;
 				}
 			}

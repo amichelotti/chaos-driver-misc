@@ -52,6 +52,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 	faststatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"fastfilepath");
+	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
@@ -114,6 +115,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdDafDefault::acquireHandler() {
+	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)15000000);
 	DafneData::DafneDataToShow  DATO;
 	std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
@@ -185,7 +187,15 @@ void own::CmdDafDefault::acquireHandler() {
 		*p_VUGPL101=DATO.VUGPL101.innerValue;
 		*p_VUGPS101=DATO.VUGPS101.innerValue;
 		*p_VUGPS201=DATO.VUGPS201.innerValue;
-
+		*p_VUGPS203=DATO.VUGPS203.innerValue;
+		*p_VUGPL201=DATO.VUGPL201.innerValue;
+		*p_VUGEL101=DATO.VUGEL101.innerValue;
+		*p_VUGES101=DATO.VUGES101.innerValue;
+		*p_VUGES201=DATO.VUGES201.innerValue;
+		*p_VUGES203=DATO.VUGES203.innerValue;
+		*p_VUGEL201=DATO.VUGEL201.innerValue;
+		*p_VUGPL203=DATO.VUGPL203.innerValue;
+		*p_VUGEL203=DATO.VUGEL203.innerValue;
 
 
 	}
@@ -209,6 +219,7 @@ void own::CmdDafDefault::acquireHandler() {
 
 		}
 	}
+	ret=DATO.AppendSiddhartaFile(siddhartaPathPointer);
 	if (!ret)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
