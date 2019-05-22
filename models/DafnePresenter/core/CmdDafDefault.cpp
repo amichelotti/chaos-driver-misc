@@ -36,6 +36,22 @@ BATCH_COMMAND_OPEN_DESCRIPTION(driver::dafnepresenter::,CmdDafDefault,
 	"9a2582ee-0fc1-420f-bc3d-624640f9fa2a")
 BATCH_COMMAND_CLOSE_DESCRIPTION()
 
+std::string getNameForDafneStatus(int32_t status)
+{
+	switch (status)
+	{
+		case 0: return "DAFNE: STDBY";
+		case 1: return "DAFNE: E- INJECT";
+		case 2: return "DAFNE: E+ INJECT";
+		case 3: return "DAFNE: E- STORED";
+		case 4: return "DAFNE: E+ STORED";
+		case 5: return "DAFNE: FILLED";
+		case 6: return "DAFNE: COLLIDING";
+		case 7: return "DAFNE: BTF DELIVERING";
+		case 8: return "DAFNE: BTF DELIVERING & COLLIDING";
+		default: return "DAFNE: UNKNOWN";
+	}
+}
 
 // return the implemented handler
 uint8_t own::CmdDafDefault::implementedHandler(){
@@ -51,7 +67,9 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	lastTimeUpdated=0;
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
-
+	faststatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"fastfilepath");
+	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
+	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
@@ -114,6 +132,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdDafDefault::acquireHandler() {
+	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)15000000);
 	DafneData::DafneDataToShow  DATO;
 	std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
@@ -127,13 +146,14 @@ void own::CmdDafDefault::acquireHandler() {
 		*p_timestamp=DATO.timestamp.innerValue;
 		*p_i_ele = DATO.i_ele.innerValue;
 		*p_i_pos = DATO.i_pos.innerValue;
+		*p_dafne_status=DATO.dafne_status.innerValue;
 		*p_nbunch_ele= DATO.nbunch_ele;
 		*p_nbunch_pos=DATO.nbunch_pos;
 		*p_fill_pattern_ele=DATO.fill_pattern_ele;
 		*p_fill_pattern_pos=DATO.fill_pattern_pos;
 		*p_lifetime_ele=DATO.lifetime_ele;
 		*p_lifetime_pos=DATO.lifetime_pos;
-		*p_rf=DATO.rf;
+		*p_rf=DATO.rf.innerValue;
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		
 		if (lastTimeUpdated==0)
@@ -165,8 +185,36 @@ void own::CmdDafDefault::acquireHandler() {
 			}
 			
 		}
-
+		strncpy(p_dafne_status_readable,getNameForDafneStatus(DATO.dafne_status).c_str(),256);
 		
+	}
+	ret = DATO.ReadFromFast(faststatPathPointer);
+	if (!ret)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		*p_i_ele = DATO.i_ele.innerValue;
+		*p_i_pos = DATO.i_pos.innerValue;
+		*p_fill_pattern_ele=DATO.fill_pattern_ele;
+		*p_fill_pattern_pos=DATO.fill_pattern_pos;
+		*p_rf=DATO.rf.innerValue;
+		*p_VUGPL101=DATO.VUGPL101.innerValue;
+		*p_VUGPS101=DATO.VUGPS101.innerValue;
+		*p_VUGPS201=DATO.VUGPS201.innerValue;
+		*p_VUGPS203=DATO.VUGPS203.innerValue;
+		*p_VUGPL201=DATO.VUGPL201.innerValue;
+		*p_VUGEL101=DATO.VUGEL101.innerValue;
+		*p_VUGES101=DATO.VUGES101.innerValue;
+		*p_VUGES201=DATO.VUGES201.innerValue;
+		*p_VUGES203=DATO.VUGES203.innerValue;
+		*p_VUGEL201=DATO.VUGEL201.innerValue;
+		*p_VUGPL203=DATO.VUGPL203.innerValue;
+		*p_VUGEL203=DATO.VUGEL203.innerValue;
+
+
 	}
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
@@ -176,7 +224,7 @@ void own::CmdDafDefault::acquireHandler() {
 		default: ret= true; break;
 		case 1 :  ret=DATO.PrintAsJson(outf,false); break;
 		case 2 :  ret=DATO.PrintAsJson(outf,true); break;
-		case 3 :  ret=DATO.PrintAsRawtxt(outf); break;
+		case 3 :  /*ret=DATO.PrintAsRawtxt(outf);*/ break;
 		case 4 :  
 		{
 			std::string flname=outf+"1";
@@ -184,10 +232,11 @@ void own::CmdDafDefault::acquireHandler() {
 			flname=outf+"2";
 			ret &=DATO.PrintAsJson(flname,true);
 			flname=outf+"3";
-			ret=DATO.PrintAsRawtxt(flname);
+			//ret=DATO.PrintAsRawtxt(flname);
 
 		}
 	}
+	ret=DATO.AppendSiddhartaFile(siddhartaPathPointer);
 	if (!ret)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelHigh);

@@ -47,7 +47,10 @@ namespace driver {
 			uint64_t lastTimeUpdated;
 			const int32_t  *kindOfPrint;
 			const char* dafnestatPathPointer;
+			const char* faststatPathPointer;
 			const char* outfilePointer;
+			const char* siddhartaPathPointer;
+			char* p_dafne_status_readable;
 			uint64_t *p_timestamp;
 			int32_t *p_dafne_status;
 			double *p_i_ele;
