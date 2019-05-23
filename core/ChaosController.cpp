@@ -1117,7 +1117,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
-          << " Executing Api:\"" << #api_name << "\"";                                                                    \
+          << " Executing Api:\"" << #api_name << "\" name:"<<name;                                                                    \
     chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__); \
     apires->setTimeout(time_out);                                                                                         \
     json_buf = "{}";                                                                                                      \
