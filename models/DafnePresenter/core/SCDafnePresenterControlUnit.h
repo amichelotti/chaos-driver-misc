@@ -52,8 +52,10 @@ namespace driver {
 			~SCDafnePresenterControlUnit();
 			std::string loadedNewDafnePath;
 			std::string loadedOutFile;
-			std::string loadedFastPath;
+			std::string loadedVugName;
 			std::string loadedSiddPath;
+			std::string loadedBeamElectronPath;
+			std::string loadedBeamPositronPath;
 		};
 	}
 }

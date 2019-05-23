@@ -260,6 +260,8 @@ bool DafneDataToShow::ReadFromNewDafne(std::string newdafnepath)
 					case 20:	this->lifetime_ele =     atoi(values[i].c_str()); break;
 					case 21:	this->lifetime_pos =	 atoi(values[i].c_str()); break;
 					case 25:	this->rf			=    atof(values[i].c_str()); break;
+					case 44: this->Ty_ele = atof(values[i].c_str());break;
+					case 46: this->Ty_pos = atof(values[i].c_str());break;
 					default: break;
 
 				}
@@ -277,7 +279,60 @@ bool DafneDataToShow::ReadFromNewDafne(std::string newdafnepath)
 	return false;
 }
 
-bool DafneDataToShow::ReadFromFast(std::string fastfilepath)
+int32_t DafneDataToShow::ReadSigmas(std::string beamfilepath, bool electrons)
+{
+	std::ifstream newdafne(beamfilepath);
+	if (newdafne.is_open())
+	{
+		std::string line;
+
+		if (getline(newdafne, line))
+		{
+			std::vector<std::string> tokenized = split(line, " ");
+			std::vector<std::string> values;
+			for (unsigned int i = 0; i < tokenized.size(); i++)
+			{
+				if ((tokenized[i].size() > 0) && (tokenized[i] != " ") && (tokenized[i] != "  ") && (tokenized[i] != "   "))
+					values.push_back(tokenized[i]);
+			}
+			uint32_t tmp;
+			double dBeamTimestamp=0;
+			for (uint32_t i = 0; i < values.size(); i++)
+			{
+				if (electrons)
+				{
+					switch (i)
+					{
+						case 0: dBeamTimestamp = atof(values[i].c_str()); break;
+						case 1: this->sx_ele =  atof(values[i].c_str());break; 
+						case 2: this->sy_ele = atof(values[i].c_str());break; 
+						default: break;
+					}
+				}
+				else//positrons
+				{
+					switch (i)
+					{
+						case 0: dBeamTimestamp = atof(values[i].c_str()); break;
+						case 1: this->sx_pos =  atof(values[i].c_str());break; 
+						case 2: this->sy_pos = atof(values[i].c_str());break;
+						default: break;
+					}
+				}
+			}//end for
+			//checking if updated;
+			time_t now=time(0);
+			time_t readTimestamp=(time_t)dBeamTimestamp;
+			if ((now-readTimestamp) > 20)
+				return -2;
+			return 0;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+bool DafneDataToShow::ReadFromFast(std::string fastfilepath) //UNUSEFUL and DUPLIC
 {
 	std::ifstream newdafne(fastfilepath);
 	if (newdafne.is_open())
@@ -303,7 +358,7 @@ bool DafneDataToShow::ReadFromFast(std::string fastfilepath)
 					case 2: this->i_pos = atof(values[i].c_str());break; //DUPLIC
 					case 7: sscanf(values[i].c_str(), "%x", &tmp); this->fill_pattern_ele = tmp; break;  //DUPLIC
 					case 8:	sscanf(values[i].c_str(), "%x", &tmp); this->fill_pattern_pos = tmp; break;    //DUPLIC
-					case 20: this->rf = atof(values[i].c_str());break;
+					case 20: this->rf = atof(values[i].c_str());break; //DUPLIC
 					case 34: this->VUGPL101 = atof(values[i].c_str());break;//G
 					case 35: this->VUGPS101 = atof(values[i].c_str());break;//G
 					case 36: this->VUGPS201 = atof(values[i].c_str());break;//G
@@ -318,6 +373,9 @@ bool DafneDataToShow::ReadFromFast(std::string fastfilepath)
 
 					case 44: this->VUGPL203 = atof(values[i].c_str());break;
 					case 45: this->VUGEL203 = atof(values[i].c_str());break;
+					case 46: this->Ty_ele = atof(values[i].c_str());break;
+					case 48: this->Ty_pos = atof(values[i].c_str());break;
+
 					default: break;
 				}
 			}
