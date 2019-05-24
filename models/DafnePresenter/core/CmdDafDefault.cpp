@@ -65,11 +65,16 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	SCLAPP_ << "Set Handler Default ";
 	pastTimestamp=0;
 	lastTimeUpdated=0;
+	beamFileElectronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathE");
+	beamFilePositronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathP");
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
-	faststatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"fastfilepath");
+	vugNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CUvugImportName");
 	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
 	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
+	
+	
+	
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
 	p_i_ele = getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT, "i_ele");
@@ -134,7 +139,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 void own::CmdDafDefault::acquireHandler() {
 	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)15000000);
 	DafneData::DafneDataToShow  DATO;
-	std::string where= dafnestatPathPointer;
+	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
 	bool ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
 	if (!ret)
@@ -154,6 +159,10 @@ void own::CmdDafDefault::acquireHandler() {
 		*p_lifetime_ele=DATO.lifetime_ele;
 		*p_lifetime_pos=DATO.lifetime_pos;
 		*p_rf=DATO.rf.innerValue;
+		*p_ty_ele=DATO.Ty_ele.innerValue;
+		*p_ty_pos=DATO.Ty_pos.innerValue;
+		
+
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		
 		if (lastTimeUpdated==0)
@@ -188,34 +197,76 @@ void own::CmdDafDefault::acquireHandler() {
 		strncpy(p_dafne_status_readable,getNameForDafneStatus(DATO.dafne_status).c_str(),256);
 		
 	}
-	ret = DATO.ReadFromFast(faststatPathPointer);
-	if (!ret)
+	VUGImporterName=vugNamePointer;
+	VUGImporterDataset=VUGImporter->getLiveChannel(VUGImporterName,0);
+	if (VUGImporterDataset == NULL)
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		SCLERR_ << "VUGImporterDataset null";
+		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset VUGImporterDataset");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	else
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"fast_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-		*p_i_ele = DATO.i_ele.innerValue;
-		*p_i_pos = DATO.i_pos.innerValue;
-		*p_fill_pattern_ele=DATO.fill_pattern_ele;
-		*p_fill_pattern_pos=DATO.fill_pattern_pos;
-		*p_rf=DATO.rf.innerValue;
-		*p_VUGPL101=DATO.VUGPL101.innerValue;
-		*p_VUGPS101=DATO.VUGPS101.innerValue;
-		*p_VUGPS201=DATO.VUGPS201.innerValue;
-		*p_VUGPS203=DATO.VUGPS203.innerValue;
-		*p_VUGPL201=DATO.VUGPL201.innerValue;
-		*p_VUGEL101=DATO.VUGEL101.innerValue;
-		*p_VUGES101=DATO.VUGES101.innerValue;
-		*p_VUGES201=DATO.VUGES201.innerValue;
-		*p_VUGES203=DATO.VUGES203.innerValue;
-		*p_VUGEL201=DATO.VUGEL201.innerValue;
-		*p_VUGPL203=DATO.VUGPL203.innerValue;
-		*p_VUGEL203=DATO.VUGEL203.innerValue;
+		try
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+			*p_VUGEL102=DATO.VUGEL102.innerValue=VUGImporterDataset->getDoubleValue("VUGEL102_press");
+			*p_VUGEL103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGEL103_press");
+			*p_VUGEL202=DATO.VUGEL202.innerValue=VUGImporterDataset->getDoubleValue("VUGEL202_press");
+			*p_VUGES102=DATO.VUGES102.innerValue=VUGImporterDataset->getDoubleValue("VUGES102_press");
+			*p_VUGES103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGES103_press");
+			*p_VUGES202=DATO.VUGES202.innerValue=VUGImporterDataset->getDoubleValue("VUGES202_press");
 
+			*p_VUGPL102=DATO.VUGPL102.innerValue=VUGImporterDataset->getDoubleValue("VUGPL102_press");
+			*p_VUGPL103=DATO.VUGPL103.innerValue=VUGImporterDataset->getDoubleValue("VUGPL103_press");
+			*p_VUGPL202=DATO.VUGPL202.innerValue=VUGImporterDataset->getDoubleValue("VUGPL202_press");
+			*p_VUGPS102=DATO.VUGPS102.innerValue=VUGImporterDataset->getDoubleValue("VUGPS102_press");
+			*p_VUGPS103=DATO.VUGPS103.innerValue=VUGImporterDataset->getDoubleValue("VUGPS103_press");
+			*p_VUGPS202=DATO.VUGPS202.innerValue=VUGImporterDataset->getDoubleValue("VUGPS202_press");
+
+			*p_VUGPL101=DATO.VUGPL101.innerValue=VUGImporterDataset->getDoubleValue("VUGPL101_press");
+			*p_VUGPS101=DATO.VUGPS101.innerValue=VUGImporterDataset->getDoubleValue("VUGPS101_press");
+			*p_VUGPS201=DATO.VUGPS201.innerValue=VUGImporterDataset->getDoubleValue("VUGPS201_press");
+			*p_VUGPS203=DATO.VUGPS203.innerValue=VUGImporterDataset->getDoubleValue("VUGPS203_press");
+			*p_VUGPL201=DATO.VUGPL201.innerValue=VUGImporterDataset->getDoubleValue("VUGPL201_press");
+			*p_VUGEL101=DATO.VUGEL101.innerValue=VUGImporterDataset->getDoubleValue("VUGEL101_press");
+			*p_VUGES101=DATO.VUGES101.innerValue=VUGImporterDataset->getDoubleValue("VUGES101_press");
+			*p_VUGES201=DATO.VUGES201.innerValue=VUGImporterDataset->getDoubleValue("VUGES201_press");
+			*p_VUGES203=DATO.VUGES203.innerValue=VUGImporterDataset->getDoubleValue("VUGES203_press");
+			*p_VUGEL201=DATO.VUGEL201.innerValue=VUGImporterDataset->getDoubleValue("VUGEL201_press");
+			*p_VUGPL203=DATO.VUGPL203.innerValue=VUGImporterDataset->getDoubleValue("VUGPL203_press");
+			*p_VUGEL203=DATO.VUGEL203.innerValue=VUGImporterDataset->getDoubleValue("VUGEL203_press");
+
+
+
+		}
+		catch (chaos::CException)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+	}
+	int32_t sigmaret;
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	sigmaret=DATO.ReadSigmas(beamFileElectronPathPointer,true);
+	switch (sigmaret)
+	{
+		case -1 : setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh); break;
+		case -2 : setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		default : *p_sx_ele=DATO.sx_ele.innerValue;
+				  *p_sy_ele=DATO.sy_ele.innerValue;
 
 	}
+	sigmaret=DATO.ReadSigmas(beamFilePositronPathPointer,false);
+	switch (sigmaret)
+	{
+		case -1 : setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh); break;
+		case -2 : setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		default : *p_sx_pos=DATO.sx_pos.innerValue;
+				  *p_sy_pos=DATO.sy_pos.innerValue;
+
+	}
+
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
 	switch (*kindOfPrint)
