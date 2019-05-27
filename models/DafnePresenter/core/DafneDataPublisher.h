@@ -188,6 +188,7 @@ namespace DafneData
 		public: bool AppendSiddhartaFile(std::string siddhartaMainPath);
 		public: bool ReadFromNewDafne(std::string newdafnepath);
 		public: bool ReadFromFast(std::string fastfilepath);
+		public: int32_t ReadSigmas(std::string beamfilepath, bool electrons);
 
 	};
 }
