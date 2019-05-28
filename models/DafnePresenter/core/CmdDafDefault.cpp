@@ -72,7 +72,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	vugNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CUvugImportName");
 	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
 	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
-	
+	CalLumiNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CULuminometerCCALT");
 	
 	
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
@@ -198,8 +198,9 @@ void own::CmdDafDefault::acquireHandler() {
 		
 	}
 	VUGImporterName=vugNamePointer;
+	
 	VUGImporterDataset=VUGImporter->getLiveChannel(VUGImporterName,0);
-	if (VUGImporterDataset == NULL)
+	if ((VUGImporterDataset == NULL) || (VUGImporterDataset->isEmpty()) )
 	{
 		SCLERR_ << "VUGImporterDataset null";
 		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset VUGImporterDataset");
@@ -209,6 +210,7 @@ void own::CmdDafDefault::acquireHandler() {
 	{
 		try
 		{
+			
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 			*p_VUGEL102=DATO.VUGEL102.innerValue=VUGImporterDataset->getDoubleValue("VUGEL102_press");
 			*p_VUGEL103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGEL103_press");
@@ -237,13 +239,52 @@ void own::CmdDafDefault::acquireHandler() {
 			*p_VUGPL203=DATO.VUGPL203.innerValue=VUGImporterDataset->getDoubleValue("VUGPL203_press");
 			*p_VUGEL203=DATO.VUGEL203.innerValue=VUGImporterDataset->getDoubleValue("VUGEL203_press");
 
-
+			int64_t readTS=VUGImporterDataset->getInt64Value("dpck_ats");
+			int64_t now=time(0);
+			//SCLDBG_ << "read TS "<< readTS << " now "<< now ;
+			readTS/=1000;
+			if ((now - readTS) > 30)
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			}
 
 		}
 		catch (chaos::CException)
 		{
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		}
+	}
+	CCALTLumiDataset=CCALT->getLiveChannel(CalLumiNamePointer,0);
+	if ((CCALTLumiDataset == NULL)  ||  CCALTLumiDataset->isEmpty())
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		try 
+		{
+			*p_R1C_ele=DATO.R1C_ele.innerValue=CCALTLumiDataset->getDoubleValue("R1C_ele");
+			*p_R1C_pos=DATO.R1C_pos.innerValue=CCALTLumiDataset->getDoubleValue("R1C_pos");
+			*p_R2_CCAL=DATO.R2_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("R2_CCAL");
+			*p_R2_BKG=DATO.R2_BKG.innerValue=CCALTLumiDataset->getDoubleValue("R2_BKG");
+			*p_Dead_TC=DATO.Dead_TC.innerValue=CCALTLumiDataset->getDoubleValue("Dead_TC");
+			*p_lum_CCAL=DATO.lum_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("lum_CCAL");
+
+			int64_t readTS=CCALTLumiDataset->getInt64Value("dpck_ats");
+			int64_t now=time(0);
+			//SCLDBG_ << "read TS "<< readTS << " now "<< now ;
+			readTS/=1000;
+			if ((now - readTS) > 30)
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			}
+		}
+		catch (chaos::CException)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+
 	}
 	int32_t sigmaret;
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
