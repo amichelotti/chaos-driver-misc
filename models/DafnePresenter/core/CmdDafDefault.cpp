@@ -239,6 +239,12 @@ void own::CmdDafDefault::acquireHandler() {
 			*p_VUGPL203=DATO.VUGPL203.innerValue=VUGImporterDataset->getDoubleValue("VUGPL203_press");
 			*p_VUGEL203=DATO.VUGEL203.innerValue=VUGImporterDataset->getDoubleValue("VUGEL203_press");
 
+			*p_sx_ele=DATO.sx_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmax_e");
+			*p_sy_ele=DATO.sy_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmay_e");
+
+			*p_sx_ele=DATO.sx_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmax_p");
+			*p_sy_ele=DATO.sy_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmay_p");
+
 			int64_t readTS=VUGImporterDataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
 			//SCLDBG_ << "read TS "<< readTS << " now "<< now ;
@@ -289,7 +295,7 @@ void own::CmdDafDefault::acquireHandler() {
 	int32_t sigmaret;
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-	sigmaret=DATO.ReadSigmas(beamFileElectronPathPointer,true);
+	/*sigmaret=DATO.ReadSigmas(beamFileElectronPathPointer,true);
 	switch (sigmaret)
 	{
 		case -1 : setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh); break;
@@ -307,6 +313,7 @@ void own::CmdDafDefault::acquireHandler() {
 				  *p_sy_pos=DATO.sy_pos.innerValue;
 
 	}
+	*/
 
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
