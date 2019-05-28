@@ -3380,6 +3380,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 return CHAOS_DEV_CMD;
             }
+        } else if(cmd=="buildInfo"){
+            std::string buildinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo();
+            DBGET << "BUILD INFO" << buildinfo;
+
+            json_buf=buildinfo;
+            return CHAOS_DEV_OK;
+
+            
         }
         else if (cmd == "attr" && (args != 0))
         {
