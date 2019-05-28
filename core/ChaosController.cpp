@@ -1117,7 +1117,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
 
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
-          << " Executing Api:\"" << #api_name << "\"";                                                                    \
+          << " Executing Api:\"" << #api_name << "\" name:"<<name;                                                                    \
     chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__); \
     apires->setTimeout(time_out);                                                                                         \
     json_buf = "{}";                                                                                                      \
@@ -3380,6 +3380,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 json_buf = bundle_state.getData()->getCompliantJSONString();
                 return CHAOS_DEV_CMD;
             }
+        } else if(cmd=="buildInfo"){
+            std::string buildinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo();
+            DBGET << "BUILD INFO" << buildinfo;
+
+            json_buf=buildinfo;
+            return CHAOS_DEV_OK;
+
+            
         }
         else if (cmd == "attr" && (args != 0))
         {

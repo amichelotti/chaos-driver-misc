@@ -46,7 +46,11 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 	Json::Value json_parameter;
   	Json::Reader json_reader;
 	this->loadedNewDafnePath="";
-	  if (!json_reader.parse(_control_unit_param, json_parameter))
+	this->loadedVugName="";
+	this->loadedSiddPath="";
+	this->loadedBeamElectronPath="";
+	this->loadedBeamPositronPath="";
+	if (!json_reader.parse(_control_unit_param, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << _control_unit_param;
 		
@@ -57,14 +61,22 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 		try
 		{
 			std::string dafnefilePath= json_parameter["dafneFilePath"].asString();
-			SCCUAPP << "ALEDEBUG path for reading dafne data: " << dafnefilePath ;
+			//SCCUAPP << "ALEDEBUG path for reading dafne data: " << dafnefilePath ;
 			this->loadedNewDafnePath=dafnefilePath;
 			std::string outFile= json_parameter["outFile"].asString();
 			this->loadedOutFile=outFile;
+			std::string vugName= json_parameter["VugImport"].asString();
+			this->loadedVugName=vugName;
+			std::string siddPath= json_parameter["siddhartaFilesPath"].asString();
+			this->loadedSiddPath=siddPath;
+			std::string BeamEPath= json_parameter["BeamElectronFilePath"].asString();
+			this->loadedBeamElectronPath=BeamEPath;
+			std::string BeamPPath= json_parameter["BeamPositronFilePath"].asString();
+			this->loadedBeamPositronPath=BeamPPath;
 		}
 		catch(...)
 		{
-			throw chaos::CException(-1, "Bad CU Configuration. Cannot retrieve dafne filepath or outFile", __FUNCTION__);
+			throw chaos::CException(-1, "Bad CU Configuration. Cannot retrieve dafne files path", __FUNCTION__);
 		}
 
 	}
@@ -89,7 +101,11 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
 	*/ //Uncomment when you want to connect the driver
-	
+	addAttributeToDataSet("dafne_status_string",
+							"Human Readable Dafne Status",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+
 	addAttributeToDataSet("timestamp",
 							"timestamp of data",
 							DataType::TYPE_INT64,
@@ -286,19 +302,7 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 							"Luminosità (10^30 cm-2 s-1)",
 							DataType::TYPE_DOUBLE,
 							DataType::Output);
-	
-	addAttributeToDataSet("status_id",
-							"default status attribute",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	addAttributeToDataSet("alarms",
-							"default alarms attribute",
-							DataType::TYPE_INT64,
-							DataType::Output);
-	
-	
-	
-	
+
 	addAttributeToDataSet("driver_timeout",
 							"custom user timeout in milliseconds for commands",
 							DataType::TYPE_INT32,
@@ -313,26 +317,47 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		"default driver communication error");
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_not_found",
 		"raised when file with dafne data cannot be found");
+	addStateVariable(StateVariableTypeAlarmCU,"beam_file_not_found",
+		"raised when file with beam data cannot be found");
+
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_incorrect",
 		"raised when file with dafne data has format not recognized");
 	addStateVariable(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",
 		"raised when fails to retrieve CCALT data");
+	
+	addStateVariable(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",
+		"raised when fails to retrieve VUG Dataset");
 		
 	addStateVariable(StateVariableTypeAlarmCU,"failed_to_write_output_file",
 		"raised when fails to write output file");
 	
 	addStateVariable(StateVariableTypeAlarmDEV,"dafne_file_not_updated",
 		"raised when timestamp of dafne file is not updated (Storer problem)");
+	
+	addStateVariable(StateVariableTypeAlarmDEV,"beam_file_not_updated",
+		"raised when timestamp of beam files is not updated");
 }
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttribute() {
 	char newdafnepath[256];
 	strcpy(newdafnepath,this->loadedNewDafnePath.c_str());
 	char outfile[256];
 	strcpy(outfile, this->loadedOutFile.c_str());
+	char vugName[256];
+	strcpy(vugName,this->loadedVugName.c_str());
 	getAttributeCache()->addCustomAttribute("newdafnepath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("newdafnepath", newdafnepath, sizeof(char)*256);
+	getAttributeCache()->addCustomAttribute("CUvugImportName", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("CUvugImportName", vugName, sizeof(char)*256);
 	getAttributeCache()->addCustomAttribute("outFileName", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("outFileName", outfile, sizeof(char)*256);
+
+	getAttributeCache()->addCustomAttribute("siddhartaPath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("siddhartaPath",(char*) this->loadedSiddPath.c_str(), sizeof(char)*256);
+
+	getAttributeCache()->addCustomAttribute("beamFilePathP", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("beamFilePathP",(char*) this->loadedBeamPositronPath.c_str(), sizeof(char)*256);
+	getAttributeCache()->addCustomAttribute("beamFilePathE", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+    getAttributeCache()->setCustomAttributeValue("beamFilePathE",(char*) this->loadedBeamElectronPath.c_str(), sizeof(char)*256);
 }
 // Abstract method for the initialization of the control unit
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitInit() {

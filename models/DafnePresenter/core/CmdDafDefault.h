@@ -43,11 +43,17 @@ namespace driver {
 
 
 			private:
+			chaos::common::data::CDWShrdPtr  VUGImporterDataset;
 			uint64_t pastTimestamp;
 			uint64_t lastTimeUpdated;
 			const int32_t  *kindOfPrint;
 			const char* dafnestatPathPointer;
+			const char* vugNamePointer;
 			const char* outfilePointer;
+			const char* siddhartaPathPointer;
+			const char* beamFileElectronPathPointer;
+			const char* beamFilePositronPathPointer;
+			char* p_dafne_status_readable;
 			uint64_t *p_timestamp;
 			int32_t *p_dafne_status;
 			double *p_i_ele;

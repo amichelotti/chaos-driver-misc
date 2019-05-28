@@ -36,6 +36,8 @@ namespace driver {
 			int32_t	*o_status_id;
 			uint64_t	*o_alarms;
 			::driver::misc::ChaosController *CCALT;
+			::driver::misc::ChaosController *VUGImporter;
+			std::string VUGImporterName="DAFNE/IMPORT/VUG";
 			//reference of the chaos abstraction of driver
 			chaos::driver::dafnepresenter::ChaosDafnePresenterInterface *dafnepresenter_drv;
 			//implemented handler
@@ -43,6 +45,7 @@ namespace driver {
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
 			void setWorkState(bool working);
+
 		};// AbstractDafnePresenterCommand
 	}// dafnepresenter
 }
