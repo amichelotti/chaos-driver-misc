@@ -242,8 +242,8 @@ void own::CmdDafDefault::acquireHandler() {
 			*p_sx_ele=DATO.sx_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmax_e");
 			*p_sy_ele=DATO.sy_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmay_e");
 
-			*p_sx_ele=DATO.sx_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmax_p");
-			*p_sy_ele=DATO.sy_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmay_p");
+			*p_sx_pos=DATO.sx_pos.innerValue=VUGImporterDataset->getDoubleValue("sigmax_p");
+			*p_sy_pos=DATO.sy_pos.innerValue=VUGImporterDataset->getDoubleValue("sigmay_p");
 
 			int64_t readTS=VUGImporterDataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
