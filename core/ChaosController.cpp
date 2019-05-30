@@ -2450,18 +2450,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 domains.push_back(node_type);
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry, MDS_TIMEOUT, name, domains, start_ts, end_ts, seq_id, page);
                 //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
-                chaos::common::data::CDWUniquePtr r = apires->detachResult();
-                if (r.get())
+                //chaos::common::data::CDWUniquePtr r = apires->detachResult();
+                if (apires->getError())
                 {
-                    json_buf = r->getCompliantJSONString();
-                }
-                else
-                {
-                    json_buf = "[]";
-                    CTRLERR_ << "an error arise during API:\"" << cmd << "\"";
-
                     return CHAOS_DEV_CMD;
                 }
+                
                 return CHAOS_DEV_OK;
             }
             serr << cmd << " bad command format";

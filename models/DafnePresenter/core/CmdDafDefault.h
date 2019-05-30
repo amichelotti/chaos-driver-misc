@@ -44,11 +44,13 @@ namespace driver {
 
 			private:
 			chaos::common::data::CDWShrdPtr  VUGImporterDataset;
+			chaos::common::data::CDWShrdPtr  CCALTLumiDataset;
 			uint64_t pastTimestamp;
 			uint64_t lastTimeUpdated;
 			const int32_t  *kindOfPrint;
 			const char* dafnestatPathPointer;
 			const char* vugNamePointer;
+			const char* CalLumiNamePointer;
 			const char* outfilePointer;
 			const char* siddhartaPathPointer;
 			const char* beamFileElectronPathPointer;
