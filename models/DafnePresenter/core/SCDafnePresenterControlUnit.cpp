@@ -326,6 +326,9 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 		"raised when file with dafne data has format not recognized");
 	addStateVariable(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",
 		"raised when fails to retrieve CCALT data");
+
+	addStateVariable(StateVariableTypeAlarmCU,"push_data_graphics_failed",
+		"raised when the post call for updating data for graphics fails");
 	
 	addStateVariable(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",
 		"raised when fails to retrieve VUG Dataset");

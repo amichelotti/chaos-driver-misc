@@ -21,7 +21,8 @@ limitations under the License.
 #include "DafneDataPublisher.h"
 
 #include <cmath>
-#include  <boost/format.hpp>
+#include <common/misc/utility/HttpSender.h>
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
 #define SCLAPP_ INFO_LOG(CmdDafDefault) << "[" << getDeviceID() << "] "
@@ -314,6 +315,18 @@ void own::CmdDafDefault::acquireHandler() {
 
 	}
 	*/
+	::general::utility::HTTPResponse resp;
+	::general::utility::HTTPClient   Sender("192.168.198.52","80");
+	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
+	SCLDBG_ << "ALEDEBUG: Sending data for graphics returned " << resp.ReturnCode; 
+	if (resp.ReturnCode != 201)
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	else
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	}
 
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;

@@ -183,6 +183,7 @@ namespace DafneData
 		public: void PrintOnConsole();
 		private: std::string asJSonKey(std::string name);
 
+		public: std::string AsJsonStr();
 		public: bool PrintAsJson(std::string outFilePath,bool complete);
 		public: bool PrintAsRawtxt(std::fstream& outFile);
 		public: bool AppendSiddhartaFile(std::string siddhartaMainPath);
