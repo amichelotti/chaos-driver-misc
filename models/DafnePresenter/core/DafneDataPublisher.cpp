@@ -59,6 +59,74 @@ std::string DafneDataToShow::asJSonKey(std::string name)
 	return "\"" + name + "\":";
 }
 
+std::string DafneDataToShow::AsJsonStr()
+{
+	#define JVALTOSTR(namestr)  streamb << asJSonKey(#namestr) << namestr.toJSonValueString(false)  
+	std::stringstream streamb;
+	streamb << "{"<<std::endl;
+	JVALTOSTR(timestamp) << ","<<std::endl;
+		JVALTOSTR(i_ele) << "," << std::endl;
+		JVALTOSTR(i_pos) << "," << std::endl;
+		JVALTOSTR(dafne_status) << "," << std::endl;
+		JVALTOSTR(nbunch_ele) << "," << std::endl;
+		JVALTOSTR(nbunch_pos) << "," << std::endl;
+		JVALTOSTR(fill_pattern_ele) << "," << std::endl;
+		JVALTOSTR(fill_pattern_pos) << "," << std::endl;
+		JVALTOSTR(lifetime_ele) << "," << std::endl;
+		JVALTOSTR(lifetime_pos) << "," << std::endl;
+		JVALTOSTR(sx_ele) << "," << std::endl;
+		JVALTOSTR(sy_ele) << "," << std::endl;
+		JVALTOSTR(th_ele) << "," << std::endl;
+		JVALTOSTR(sx_pos) << "," << std::endl;
+		JVALTOSTR(sy_pos) << "," << std::endl;
+		JVALTOSTR(th_pos) << "," << std::endl;
+		JVALTOSTR(rf) << "," << std::endl;  //
+
+		JVALTOSTR(VUGEL101) << "," << std::endl;
+		JVALTOSTR(VUGEL102) << "," << std::endl;
+		JVALTOSTR(VUGEL103) << "," << std::endl;
+		JVALTOSTR(VUGEL201) << "," << std::endl;
+		JVALTOSTR(VUGEL202) << "," << std::endl;
+		JVALTOSTR(VUGEL203) << "," << std::endl;
+		JVALTOSTR(VUGES101) << "," << std::endl;
+		JVALTOSTR(VUGES102) << "," << std::endl;
+		JVALTOSTR(VUGES103) << "," << std::endl;
+		JVALTOSTR(VUGES201) << "," << std::endl;
+		JVALTOSTR(VUGES202) << "," << std::endl;
+		JVALTOSTR(VUGES203) << "," << std::endl;
+
+		JVALTOSTR(VUGPL101) << "," << std::endl;
+		JVALTOSTR(VUGPL102) << "," << std::endl;
+		JVALTOSTR(VUGPL103) << "," << std::endl;
+		JVALTOSTR(VUGPL201) << "," << std::endl;
+		JVALTOSTR(VUGPL202) << "," << std::endl;
+		JVALTOSTR(VUGPL203) << "," << std::endl;
+		JVALTOSTR(VUGPS101) << "," << std::endl;
+		JVALTOSTR(VUGPS102) << "," << std::endl;
+		JVALTOSTR(VUGPS103) << "," << std::endl;
+		JVALTOSTR(VUGPS201) << "," << std::endl;
+		JVALTOSTR(VUGPS202) << "," << std::endl;
+		JVALTOSTR(VUGPS203) << "," << std::endl;
+
+		JVALTOSTR(Ty_ele) << "," << std::endl;
+		JVALTOSTR(Ty_pos) << "," << std::endl;
+		JVALTOSTR(R2_CCAL) << "," << std::endl;
+		JVALTOSTR(R2_BKG) << "," << std::endl;
+		JVALTOSTR(Dead_TC) << "," << std::endl;
+		JVALTOSTR(R1C_ele) << "," << std::endl;
+		JVALTOSTR(R1C_pos) << "," << std::endl;
+		
+		JVALTOSTR(lum_CCAL) << std::endl;
+		
+
+		streamb << "}";
+		#undef JVALTOSTR
+		return streamb.str();
+
+}
+
+
+
 bool DafneDataToShow::PrintAsJson(std::string outFilePath,bool complete)
 {
 
