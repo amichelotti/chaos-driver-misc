@@ -3375,19 +3375,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 return CHAOS_DEV_CMD;
             }
         } else if(cmd=="buildInfo"){
-            chaos::common::data::CDWUniquePtr mdsinfo;
-            std::stringstream ss;
-            std::string buildinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo();
-            ss<<"{\"webui\":"<<buildinfo;
+            chaos::common::data::CDWUniquePtr mdsinfo,webuinfo,webuiproc,mdsproc;
+            chaos::common::data::CDataWrapper infos;
+
+            webuinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo(chaos::common::data::CDWUniquePtr());
+            webuiproc=ChaosMetadataServiceClient::getInstance()->getProcessInfo(chaos::common::data::CDWUniquePtr());
+            webuinfo->addCSDataValue("process",*webuiproc.get());
+            infos.addCSDataValue("webui",*webuinfo.get());
             mdsChannel->getBuildInfo(mdsinfo);
-            if(mdsinfo.get()){
-                ss<<",\"mds\":"<<mdsinfo->getCompliantJSONString();
-            }
-            ss<<"}";
+            mdsChannel->getProcessInfo(mdsproc);
+            mdsinfo->addCSDataValue("process",*mdsproc.get());
+            infos.addCSDataValue("mds",*mdsinfo.get());
 
-            DBGET << "BUILD INFO:" << ss.str();
 
-            json_buf=ss.str();
+            DBGET << "BUILD INFO:" << infos.getCompliantJSONString();
+
+            json_buf=infos.getCompliantJSONString();
             return CHAOS_DEV_OK;
 
             
