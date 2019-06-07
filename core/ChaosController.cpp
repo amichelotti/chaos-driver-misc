@@ -3375,19 +3375,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 return CHAOS_DEV_CMD;
             }
         } else if(cmd=="buildInfo"){
-            chaos::common::data::CDWUniquePtr mdsinfo;
-            std::stringstream ss;
             std::string buildinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo();
-            ss<<"{\"webui\":"<<buildinfo;
-            mdsChannel->getBuildInfo(mdsinfo);
-            if(mdsinfo.get()){
-                ss<<",\"mds\":"<<mdsinfo->getCompliantJSONString();
-            }
-            ss<<"}";
+            DBGET << "BUILD INFO" << buildinfo;
 
-            DBGET << "BUILD INFO:" << ss.str();
-
-            json_buf=ss.str();
+            json_buf=buildinfo;
             return CHAOS_DEV_OK;
 
             
