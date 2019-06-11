@@ -1556,7 +1556,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent")
+            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="webui")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
@@ -3375,21 +3375,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             chaos::common::data::CDWUniquePtr mdsinfo,webuinfo,webuiproc,mdsproc;
             chaos::common::data::CDataWrapper infos;
 
-            webuinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo(chaos::common::data::CDWUniquePtr());
-            webuiproc=ChaosMetadataServiceClient::getInstance()->getProcessInfo(chaos::common::data::CDWUniquePtr());
-            webuinfo->addCSDataValue("process",*webuiproc.get());
-            infos.addCSDataValue("webui",*webuinfo.get());
             mdsChannel->getBuildInfo(mdsinfo);
             mdsChannel->getProcessInfo(mdsproc);
             mdsinfo->addCSDataValue("process",*mdsproc.get());
             infos.addCSDataValue("mds",*mdsinfo.get());
             
-            auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
             DBGET << "BUILD INFO:" << infos.getCompliantJSONString();
-            chaos::common::data::CDWUniquePtr agent=getBuildProcessInfo("","agent");
+            chaos::common::data::CDWUniquePtr webui=getBuildProcessInfo("","webui",true);
+            infos.addCSDataValue("webui",*webui.get());
+
+            chaos::common::data::CDWUniquePtr agent=getBuildProcessInfo("","agent",true);
             infos.addCSDataValue("agent",*agent.get());
-            chaos::common::data::CDWUniquePtr us=getBuildProcessInfo("","us");
+            chaos::common::data::CDWUniquePtr us=getBuildProcessInfo("","us",true);
             infos.addCSDataValue("us",*us.get());
+            chaos::common::data::CDWUniquePtr mds=getBuildProcessInfo("","mds",true);
+            infos.addCSDataValue("mdss",*mds.get());
+            
             json_buf=infos.getCompliantJSONString();
             return CHAOS_DEV_OK;
 
@@ -3755,7 +3756,7 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     chaos::common::data::VectorCDWUniquePtr ret;
         chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
-
+      DBGET<< "search "<<what<<"("<<node_type<<") with key:"<<search;
       if (mdsChannel->searchNode(search, node_type, alive, 0, MAX_QUERY_ELEMENTS, node_found, MDS_TIMEOUT) != 0){
            CTRLERR_ <<"Nothing found for search \""<<search<<" type:" <<what;
                 
@@ -3772,7 +3773,7 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
 }
 chaos::common::data::CDWUniquePtr ChaosController::getBuildProcessInfo(const std::string& search,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
-    chaos::common::data::VectorCDWUniquePtr agent=getNodeInfo(search,what);
+    chaos::common::data::VectorCDWUniquePtr agent=getNodeInfo(search,what,alive);
     auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
 
     for (chaos::common::data::VectorCDWUniquePtr::iterator i=agent.begin();i!=agent.end();i++){
