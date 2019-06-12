@@ -135,6 +135,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     std::vector<double> val;
     mutex_sync.lock();
     ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
+    test->setAgeing(7200);
     mutex_sync.unlock();
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
@@ -501,7 +502,7 @@ int main(int argc, const char **argv) {
   fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
         "time(us),bandwith(MB/s),overhead(us),errors,threads"
      << std::endl;
-
+  
   for (int cnt = 0; cnt < nthreads; cnt++) {
     std::stringstream ss;
     ss << name << "_" << cnt;
