@@ -31,6 +31,7 @@
 #include <json/reader.h>
 #include <json/writer.h>
 #include <json/value.h>
+using namespace chaos::common::message;
 using namespace chaos::cu::data_manager;
 using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
@@ -1555,16 +1556,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent")
+            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="webui")
             {
                 json_buf = "[]";
+                chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
-                int node_type = 2;
-                if (what == "agent")
-                    node_type = 3;
-                if (what == "us")
-                    node_type = 1;
-
+              
                 if ((names.get()) && names->size())
                 {
                     DBGET << "list nodes of type:" << node_type << "(" << what << ")";
@@ -1614,7 +1611,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
-                                           2,
+                                           chaos::NodeType::NodeSearchType::node_type_cu,
                                            false,
                                            0,
                                            MAX_QUERY_ELEMENTS,
@@ -1650,7 +1647,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         ChaosStringVector node_tmp;
                         const std::string domain = names->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain, 2, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
+                        if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
                         {
                             node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                         }
@@ -1678,7 +1675,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     DBGET << "searching CLASS inside:" << name;
 
                     if (mdsChannel->searchNode(name,
-                                               2,
+                                               chaos::NodeType::NodeSearchType::node_type_cu,
                                                false,
                                                0,
                                                MAX_QUERY_ELEMENTS,
@@ -3378,18 +3375,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             chaos::common::data::CDWUniquePtr mdsinfo,webuinfo,webuiproc,mdsproc;
             chaos::common::data::CDataWrapper infos;
 
-            webuinfo=ChaosMetadataServiceClient::getInstance()->getBuildInfo(chaos::common::data::CDWUniquePtr());
-            webuiproc=ChaosMetadataServiceClient::getInstance()->getProcessInfo(chaos::common::data::CDWUniquePtr());
-            webuinfo->addCSDataValue("process",*webuiproc.get());
-            infos.addCSDataValue("webui",*webuinfo.get());
             mdsChannel->getBuildInfo(mdsinfo);
             mdsChannel->getProcessInfo(mdsproc);
             mdsinfo->addCSDataValue("process",*mdsproc.get());
             infos.addCSDataValue("mds",*mdsinfo.get());
-
-
+            
             DBGET << "BUILD INFO:" << infos.getCompliantJSONString();
+            chaos::common::data::CDWUniquePtr webui=getBuildProcessInfo("","webui",true);
+            infos.addCSDataValue("webui",*webui.get());
 
+            chaos::common::data::CDWUniquePtr agent=getBuildProcessInfo("","agent",true);
+            infos.addCSDataValue("agent",*agent.get());
+            chaos::common::data::CDWUniquePtr us=getBuildProcessInfo("","us",true);
+            infos.addCSDataValue("us",*us.get());
+            chaos::common::data::CDWUniquePtr mds=getBuildProcessInfo("","mds",true);
+            infos.addCSDataValue("mdss",*mds.get());
+            
             json_buf=infos.getCompliantJSONString();
             return CHAOS_DEV_OK;
 
@@ -3735,3 +3736,89 @@ chaos::common::data::CDataWrapper *ChaosController::dev_info_status::getData()
 
     return &data_wrapper;
 }
+chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what){
+        chaos::NodeType::NodeSearchType node_type=chaos::NodeType::NodeSearchType::node_type_cu;
+;
+
+            if (what == "agent")
+                node_type = chaos::NodeType::NodeSearchType::node_type_agent;
+            if (what == "us")
+                node_type = chaos::NodeType::NodeSearchType::node_type_us;
+            if (what == "webui")
+                node_type = chaos::NodeType::NodeSearchType::node_type_wan;
+            if (what == "mds")
+                node_type = chaos::NodeType::NodeSearchType::node_type_cds;
+    return node_type;
+}
+chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::string& search,const std::string& what,bool alive){
+    ChaosStringVector node_found;
+    int reti;
+    chaos::common::data::VectorCDWUniquePtr ret;
+        chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
+
+      DBGET<< "search "<<what<<"("<<node_type<<") with key:"<<search;
+      if (mdsChannel->searchNode(search, node_type, alive, 0, MAX_QUERY_ELEMENTS, node_found, MDS_TIMEOUT) != 0){
+           CTRLERR_ <<"Nothing found for search \""<<search<<" type:" <<what;
+                
+          return ret;
+    }
+    for(ChaosStringVector::iterator i=node_found.begin();i!=node_found.end();i++){
+        EXECUTE_CHAOS_RET_API(reti,api_proxy::node::GetNodeDescription, MDS_TIMEOUT, *i);
+        if(reti==0){
+            ret.push_back(apires->detachResult());
+        }
+    }
+    return ret;
+
+}
+chaos::common::data::CDWUniquePtr ChaosController::getBuildProcessInfo(const std::string& search,const std::string& what,bool alive){
+    chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+    chaos::common::data::VectorCDWUniquePtr agent=getNodeInfo(search,what,alive);
+    auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
+
+    for (chaos::common::data::VectorCDWUniquePtr::iterator i=agent.begin();i!=agent.end();i++){
+
+        CDataWrapper agent;
+         DBGET << what << " INFO:" << (*i)->getCompliantJSONString();
+         if((*i)->hasKey(chaos::NodeDefinitionKey::NODE_RPC_ADDR)){
+
+         
+            std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
+            std::string node_id=(*i)->getStringValue("ndk_uid");
+
+            CDWUniquePtr data_pack;
+               
+            ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
+                                                                                chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
+                                                                                 chaos::NodeDomainAndActionRPC::ACTION_GET_BUILD_INFO,
+                                                                                 MOVE(data_pack));
+                fut->wait(MDS_TIMEOUT);
+                if(fut->getError()==0){
+                    (*i)->addCSDataValue("build",*fut->detachResult().get());
+                } else {
+                    DBGET << "Error sending command to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
+                }
+                ChaosUniquePtr<MessageRequestFuture>  fut2=message_channel->sendRequestWithFuture(remote_host,
+                                                                                chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
+                                                                                 chaos::NodeDomainAndActionRPC::ACTION_GET_PROCESS_INFO,
+                                                                                 MOVE(data_pack));
+                fut2->wait(MDS_TIMEOUT);
+                if(fut2->getError()==0){
+                    (*i)->addCSDataValue("process",*fut2->detachResult().get());
+                } else {
+                    DBGET << "Error sending command to:" << remote_host<<" uid:"<<node_id << " error:"<<fut2->getError();
+
+                }
+
+
+                infos->appendCDataWrapperToArray(*i->get());
+
+            }
+    }
+    infos->finalizeArrayForKey("info");
+    NetworkBroker::getInstance()->disposeMessageChannel(message_channel);
+        
+    return infos;
+}
+

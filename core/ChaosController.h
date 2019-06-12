@@ -101,7 +101,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     std::map<std::string, std::string> class_to_cuname;
 
     std::vector<std::string> cachedChannel_v;
-
+    chaos::NodeType::NodeSearchType human2NodeType(const std::string& str);
     void parseClassZone(ChaosStringVector &v);
     std::string vector2Json(ChaosStringVector &v);
     std::string map2Json(std::map<uint64_t, std::string> &v);
@@ -343,6 +343,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     chaos::common::data::VectorCDWShrdPtr getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper *keys, int domain = chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
     void releaseQuery(chaos::common::io::QueryCursor *query_cursor);
     int restoreDeviceToTag(const std::string &restore_tag);
+    chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
+    chaos::common::data::CDWUniquePtr getBuildProcessInfo(const std::string& search,const std::string& what="agent",bool alive=true);
 
     int recoverDeviceFromError(const std::string& cu="");
 
