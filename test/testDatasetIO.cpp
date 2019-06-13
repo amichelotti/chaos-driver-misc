@@ -432,10 +432,6 @@ int main(int argc, const char **argv) {
       ->addOption("dsgroup",
                   po::value<std::string>(&group)->default_value("DATASETIO"),
                   "name of the group (US)");
-  ChaosMetadataServiceClient::getInstance()
-      ->getGlobalConfigurationInstance()
-      ->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),
-                  "Page len to recover data");
 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
