@@ -135,6 +135,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     std::vector<double> val;
     mutex_sync.lock();
     ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
+    test->setAgeing(7200);
     mutex_sync.unlock();
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
@@ -431,10 +432,6 @@ int main(int argc, const char **argv) {
       ->addOption("dsgroup",
                   po::value<std::string>(&group)->default_value("DATASETIO"),
                   "name of the group (US)");
-  ChaosMetadataServiceClient::getInstance()
-      ->getGlobalConfigurationInstance()
-      ->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),
-                  "Page len to recover data");
 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -490,18 +487,20 @@ int main(int argc, const char **argv) {
                   po::value<uint32_t>(&nthreads)->default_value(nthreads),
                   "Number of concurrent accesses");
 
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
   if (pointmax == 0) {
     pointmax = npoints;
   }
   fs.open(reportName);
+
   boost::thread *workers[nthreads];
   params = new testparam_t[nthreads];
   fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
         "time(us),bandwith(MB/s),overhead(us),errors,threads"
      << std::endl;
-
+  
   for (int cnt = 0; cnt < nthreads; cnt++) {
     std::stringstream ss;
     ss << name << "_" << cnt;
