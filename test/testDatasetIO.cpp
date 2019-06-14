@@ -487,12 +487,14 @@ int main(int argc, const char **argv) {
                   po::value<uint32_t>(&nthreads)->default_value(nthreads),
                   "Number of concurrent accesses");
 
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
   if (pointmax == 0) {
     pointmax = npoints;
   }
   fs.open(reportName);
+
   boost::thread *workers[nthreads];
   params = new testparam_t[nthreads];
   fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
