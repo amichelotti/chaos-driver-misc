@@ -123,6 +123,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
   double freq = 1, phase = 0, amp = 1, afreq, aamp;
   double delta;
   int countErr = 0;
+  auto start = std::chrono::system_clock::now();
+    // Some computation here
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds;// = end-start;
+
   if((exit_after_nerror > 0)&& (tot_error >= exit_after_nerror)){
       exit(tot_error);
   }
@@ -252,12 +257,13 @@ int performTest(const std::string &name, testparam_t &tparam) {
       payloadKB = my_ouput->getBSONRawSize();
       push_avg = loops * 1000000.0 / push_time;
       bandwithMB = (payloadKB / (1024.0 * 1024)) * push_avg;
+      end = std::chrono::system_clock::now();
       std::cout << "[" << name
                 << "] : Average time payload size(Bytes):" << payloadKB
                 << " loops:" << loops << " is:" << push_avg
                 << " push/s, tot us: " << push_time << " points:" << point_cnt
                 << " bandwith (MB/s):" << bandwithMB
-                << " overhead:" << overhead_tot << std::endl;
+                << " overhead:" << overhead_tot << " Total time:"<<(end-start).count()<<" s"<<std::endl;
       if (wait_retrive) {
         std::cout << "[" << name << "] waiting " << wait_retrive
                   << " s before retrive data" << std::endl;
@@ -301,9 +307,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 getLocalTimeStampInMicroseconds();
             pull_time = (end_time - start_time);
             pull_avg = total * 1000000.0 / pull_time;
+                end = std::chrono::system_clock::now();
+
             std::cout << "[" << name << "] retrived:" << res.size() << "/"
                       << total << " items , items/s:" << pull_avg
-                      << " time:" << pull_time << std::endl;
+                      << " pull time:" << pull_time << " Total Time:"<<(end-start).count()<<" s"<<std::endl;
             checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated, pckmalformed, badid);
             countErr += checkErr;
           }
@@ -500,7 +508,7 @@ int main(int argc, const char **argv) {
   fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
         "time(us),bandwith(MB/s),overhead(us),errors,threads"
      << std::endl;
-  
+
   for (int cnt = 0; cnt < nthreads; cnt++) {
     std::stringstream ss;
     ss << name << "_" << cnt;
