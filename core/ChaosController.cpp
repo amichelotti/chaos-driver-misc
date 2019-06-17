@@ -641,14 +641,17 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[-1] = all.getCompliantJSONString();
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
-    float rate;
+    double rate;
     if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()&& cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
-        ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) > 0)))
+        ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)) > 0))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
+       
+        
     }
-    else if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get()&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY))
+    else if ((cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get())&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)&& (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)>0))
     {
+
         delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
     }
     delta_update = std::min(delta_update, (uint64_t)CU_HEALTH_UPDATE_US);
@@ -1240,7 +1243,7 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname){
     pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
     DBGET<<"["<<name<<"] set schedule to:"<<us<<" us";
     EXECUTE_CHAOS_RET_API(ret,chaos::metadata_service_client::api_proxy::node::UpdateProperty,MDS_TIMEOUT,name,pg);
-    
+    setQuantum(us);
     return ret;
 }
 
