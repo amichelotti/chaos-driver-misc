@@ -123,10 +123,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
   double freq = 1, phase = 0, amp = 1, afreq, aamp;
   double delta;
   int countErr = 0;
-  auto start = std::chrono::system_clock::now();
+  auto start = boost::chrono::system_clock::now();
     // Some computation here
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds;// = end-start;
+  auto end = boost::chrono::system_clock::now();
+  boost::chrono::duration<double> elapsed_seconds;// = end-start;
 
   if((exit_after_nerror > 0)&& (tot_error >= exit_after_nerror)){
       exit(tot_error);
@@ -257,7 +257,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       payloadKB = my_ouput->getBSONRawSize();
       push_avg = loops * 1000000.0 / push_time;
       bandwithMB = (payloadKB / (1024.0 * 1024)) * push_avg;
-      end = std::chrono::system_clock::now();
+      end = boost::chrono::system_clock::now();
       std::cout << "[" << name
                 << "] : Average time payload size(Bytes):" << payloadKB
                 << " loops:" << loops << " is:" << push_avg
@@ -307,7 +307,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 getLocalTimeStampInMicroseconds();
             pull_time = (end_time - start_time);
             pull_avg = total * 1000000.0 / pull_time;
-                end = std::chrono::system_clock::now();
+                end = boost::chrono::system_clock::now();
 
             std::cout << "[" << name << "] retrived:" << res.size() << "/"
                       << total << " items , items/s:" << pull_avg
