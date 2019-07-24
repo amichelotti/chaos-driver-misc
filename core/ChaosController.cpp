@@ -863,7 +863,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
         else
         {
             CDataWrapper data;
-            ChaosSharedPtr<chaos::common::data::CDataWrapper> res=getLiveChannel();
+            ChaosSharedPtr<chaos::common::data::CDataWrapper> res=getLiveChannel("",channel);
 
             if (res.get()==NULL)
             {
