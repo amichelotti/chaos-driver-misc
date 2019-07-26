@@ -821,14 +821,15 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
     {
         if (channel == -1)
         {
+           
+            chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
+#if 0       
             chaos::common::data::CDataWrapper *idata = NULL, *odata = NULL;
             chaos::common::data::CDataWrapper resdata;
             std::stringstream out;
             uint64_t ts = 0;
             std::map<int, chaos::common::data::CDataWrapper *> set;
             CDataWrapper ch[7];
-            chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
-#if 0        
             if(res.size()>=7){
                 
                 set[KeyDataStorageDomainOutput] = res[0].get();         
@@ -844,18 +845,14 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 #else
         for (int cnt = 0; cnt < res.size(); cnt++){
             retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
         }
 
 #endif
         }
         else if (channel == 255)
         {
-            chaos::common::data::CDataWrapper *idata = NULL, *odata = NULL;
-            chaos::common::data::CDataWrapper resdata;
-            std::stringstream out;
-            uint64_t ts = 0;
-            std::map<int, chaos::common::data::CDataWrapper *> set;
-            CDataWrapper ch[7];
+           
             std::vector<std::string> channels;
 
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
@@ -864,6 +861,12 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
             chaos::common::data::VectorCDWShrdPtr res=getLiveChannel(channels);
 #if 0
+         chaos::common::data::CDataWrapper *idata = NULL, *odata = NULL;
+            chaos::common::data::CDataWrapper resdata;
+            std::stringstream out;
+            uint64_t ts = 0;
+            std::map<int, chaos::common::data::CDataWrapper *> set;
+            CDataWrapper ch[7];
             if(res.size()>=4){
                 set[KeyDataStorageDomainHealth] =res[0].get();         
                 set[KeyDataStorageDomainSystem] =res[1].get();         
