@@ -673,6 +673,8 @@ ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChanne
         ret.reset(tmp);
         delete []value;
         return ret;
+    } else {
+      DBGETERR << "error fetching data from \"" << lkey;;
     }
     return ret;
 }
@@ -845,7 +847,7 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 #else
         for (int cnt = 0; cnt < res.size(); cnt++){
             retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
-            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
+	    //            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
         }
 
 #endif
@@ -886,7 +888,7 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
         else
         {
             CDataWrapper data;
-            ChaosSharedPtr<chaos::common::data::CDataWrapper> res=getLiveChannel("",channel);
+            ChaosSharedPtr<chaos::common::data::CDataWrapper> res=getLiveChannel(path,channel);
 
             if (res.get()==NULL)
             {
@@ -897,7 +899,7 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                 return retdata;
             }
            // retdata = normalizeToJson(res.get(), binaryToTranslate);
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(channel), *(res.get()));
+            retdata->appendAllElement(*(res.get()));
 
         }
 
