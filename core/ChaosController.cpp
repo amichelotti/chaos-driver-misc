@@ -888,7 +888,6 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
             if (res.get()==NULL)
             {
                 std::stringstream ss;
-                retdata.reset(new CDataWrapper());
                 ss << "error fetching data from channel " << channel;
                 bundle_state.append_error(ss.str());
                 retdata->appendAllElement(*bundle_state.getData());
