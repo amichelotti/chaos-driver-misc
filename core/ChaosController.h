@@ -304,7 +304,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      */
     int updateState();
     uint64_t checkHB();
-    boost::shared_ptr<chaos::common::data::CDataWrapper> fetch(int channel);
+    chaos::common::data::CDWUniquePtr fetch(int channel);
     const std::string fetchJson(int channel);
     /*
      * perform a history query from start to end, return a vector of result

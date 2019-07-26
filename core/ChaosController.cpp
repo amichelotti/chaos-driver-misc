@@ -776,9 +776,13 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
     {
         if (i->second)
         {
+          #if 1
             data = normalizeToJson(i->second, binaryToTranslate);
             //out<<",\"input\":"<<data->getCompliantJSONString();
             resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *(data.get()));
+          #else
+                resdata.addCSDataValue(chaos::datasetTypeToHuman(i->first), *(i->second));
+          #endif
         }
         else
         {
@@ -808,11 +812,11 @@ const std::string ChaosController::fetchJson(int channel)
     return ret;
 }
 
-boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int channel)
+chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 {
     //	boost::mutex::scoped_lock(iomutex);
 
-    boost::shared_ptr<chaos::common::data::CDataWrapper> retdata;
+    chaos::common::data::CDWUniquePtr retdata(new CDataWrapper);
     try
     {
         if (channel == -1)
@@ -824,7 +828,9 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             std::map<int, chaos::common::data::CDataWrapper *> set;
             CDataWrapper ch[7];
             chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
+#if 0        
             if(res.size()>=7){
+                
                 set[KeyDataStorageDomainOutput] = res[0].get();         
 
                 set[KeyDataStorageDomainInput] = res[1].get();
@@ -833,10 +839,14 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
                 set[KeyDataStorageDomainHealth] =res[4].get();         
                 set[KeyDataStorageDomainDevAlarm] =res[5].get();         
                 set[KeyDataStorageDomainCUAlarm] = res[6].get();         
-            
-
                 retdata = combineDataSets(set);
             }
+#else
+        for (int cnt = 0; cnt < res.size(); cnt++){
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+        }
+
+#endif
         }
         else if (channel == 255)
         {
@@ -853,6 +863,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
             channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
             chaos::common::data::VectorCDWShrdPtr res=getLiveChannel(channels);
+#if 0
             if(res.size()>=4){
                 set[KeyDataStorageDomainHealth] =res[0].get();         
                 set[KeyDataStorageDomainSystem] =res[1].get();         
@@ -860,6 +871,14 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
                 set[KeyDataStorageDomainCUAlarm] = res[3].get();        
                 retdata = combineDataSets(set);
             }
+#else
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
+
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+            
+#endif
         }
         else
         {
@@ -875,7 +894,9 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
                 retdata->appendAllElement(*bundle_state.getData());
                 return retdata;
             }
-            retdata = normalizeToJson(res.get(), binaryToTranslate);
+           // retdata = normalizeToJson(res.get(), binaryToTranslate);
+            retdata->addCSDataValue(chaos::datasetTypeToHuman(channel), *(res.get()));
+
         }
 
         //        DBGET<<"channel "<<channel<<" :"<<data->getCompliantJSONString();
@@ -889,6 +910,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
         retdata->appendAllElement(*bundle_state.getData());
         return retdata;
     }
+   #if 0
     if (retdata.get())
     {
         retdata->appendAllElement(*bundle_state.getData());
@@ -898,6 +920,7 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
         retdata.reset(new CDataWrapper());
         retdata->appendAllElement(*bundle_state.getData());
     }
+    #endif
     return retdata;
 }
 
@@ -2769,7 +2792,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         {
             // bundle_state.append_log("return channel :" + parm);
             std::string var_name = args;
-            boost::shared_ptr<chaos::common::data::CDataWrapper> data = fetch(KeyDataStorageDomainOutput);
+            chaos::common::data::CDWUniquePtr data = fetch(KeyDataStorageDomainOutput);
             json_buf = dataset2Var(data.get(), var_name);
             return CHAOS_DEV_OK;
         }
@@ -2777,7 +2800,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         {
             // bundle_state.append_log("return channel :" + parm);
             std::string var_name = args;
-            boost::shared_ptr<chaos::common::data::CDataWrapper> data = fetch(KeyDataStorageDomainInput);
+           chaos::common::data::CDWUniquePtr data = fetch(KeyDataStorageDomainInput);
             json_buf = dataset2Var(data.get(), var_name);
             return CHAOS_DEV_OK;
         }
