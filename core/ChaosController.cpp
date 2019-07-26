@@ -825,11 +825,12 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::fetch(int 
             CDataWrapper ch[7];
             chaos::common::data::VectorCDWShrdPtr res=getLiveAllChannels();
             if(res.size()>=7){
-                set[KeyDataStorageDomainInput] = res[0].get();            
-                set[KeyDataStorageDomainOutput] = res[1].get();         
-                set[KeyDataStorageDomainHealth] =res[2].get();         
+                set[KeyDataStorageDomainOutput] = res[0].get();         
+
+                set[KeyDataStorageDomainInput] = res[1].get();
+                set[KeyDataStorageDomainCustom] =res[2].get();         
                 set[KeyDataStorageDomainSystem] =res[3].get();         
-                set[KeyDataStorageDomainCustom] =res[4].get();         
+                set[KeyDataStorageDomainHealth] =res[4].get();         
                 set[KeyDataStorageDomainDevAlarm] =res[5].get();         
                 set[KeyDataStorageDomainCUAlarm] = res[6].get();         
             
