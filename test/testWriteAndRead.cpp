@@ -141,13 +141,14 @@ int performTest(const std::string &name, testparam_t &tparam) {
                            (const char *)buf, tparam.size);
   if (test->registerDataset() == 0) {
     test->setAgeing(ttl);
-
+    
     for (int cnt = 0; cnt < tparam.size / 4; cnt++) {
       unsigned *ptr = (unsigned *)&buf[cnt];
       *ptr = tparam.thid << 24 | cnt;
     }
     start_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+    std::cout << "[" << name << "] Starting Loop ("<<loops<<") Writing ("<<tparam.size<<" bytes)"<< std::endl;
 
     for (int cnt = 0; cnt < loops; cnt++) {
       if (test->pushDataset() != 0) {
@@ -164,11 +165,12 @@ int performTest(const std::string &name, testparam_t &tparam) {
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
     push_avg = (loops)*1000000 / (end_time - start_time);
     bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
+    push_time= (end_time - start_time);
+
     std::cout << "[" << name << "] loops:" << loops << " push avg:" << push_avg
               << " push/s, tot us: " << (end_time - start_time)
               << " sizeb:" << tparam.size << " bandwith (MB/s):" << bandwithMB
-              << " Total time:" << (end - start).count() << " s" << std::endl;
-    push_time= (end_time - start_time);
+              << " Total time:" << (push_time)/1000.0<< " ms" << std::endl;
   } else {
     LERR_ << "[" << name << "] cannot register!:";
     countErr++;
@@ -189,6 +191,8 @@ int performTest(const std::string &name, testparam_t &tparam) {
   
   start_time =
       chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+  std::cout << "[" << name << "] perform query from " << query_time_start << " page:"<<pagelen<<std::endl;
+
   if (pagelen == 0) {
     std::vector<ChaosDataSet> res =
         test->queryHistoryDatasets(query_time_start, query_time_end);
@@ -342,8 +346,8 @@ int main(int argc, const char **argv) {
     pull_sec += params[cnt].pull_sec;
     errors += params[cnt].errors;
   }
-  LAPP_ << "Tot Size(B):" << tot_size << " push/s:" << push_sec
-        << " pull/s:" << pull_sec << " errors:" << errors;
+  std::cout << "Tot Size(B):" << tot_size << " push/s:" << push_sec
+        << " pull/s:" << pull_sec << " errors:" << errors<<std::endl;
   delete[] params;
   ChaosMetadataServiceClient::getInstance()->stop();
   //    ChaosMetadataServiceClient::getInstance()->deinit();
