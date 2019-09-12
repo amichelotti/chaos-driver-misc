@@ -195,21 +195,21 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
   if (pagelen == 0) {
     std::vector<ChaosDataSet> res =
-        test->queryHistoryDatasets(query_time_start, query_time_end+1000);
+        test->queryHistoryDatasets(query_time_start-1000, query_time_end+1000);
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-    pull_time = (end_time - query_time_end);
+    pull_time = (end_time - start_time);
 
     pull_avg = res.size() * 1000000.0 / pull_time;
     std::cout << "[" << name << "] retrieved:" << res.size()
               << " items, items/s:" << pull_avg << " time:" << pull_time
-              << std::endl;
+              << " us"<<std::endl;
     checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
                          pckmalformed, badid);
     countErr += checkErr;
   } else {
     uint32_t uid =
-        test->queryHistoryDatasets(query_time_start, query_time_end+1000, pagelen);
+        test->queryHistoryDatasets(query_time_start-1000, query_time_end+1000, pagelen);
     while (test->queryHasNext(uid)) {
       std::vector<ChaosDataSet> res = test->getNextPage(uid);
       total += res.size();
