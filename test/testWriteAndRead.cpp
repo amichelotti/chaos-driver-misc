@@ -201,6 +201,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     pull_time = (end_time - start_time);
 
     pull_avg = res.size() * 1000000.0 / pull_time;
+    total=res.size();
     std::cout << "[" << name << "] retrieved:" << res.size()
               << " items, items/s:" << pull_avg << " time:" << pull_time
               << " us"<<std::endl;
