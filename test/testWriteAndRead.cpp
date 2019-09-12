@@ -130,7 +130,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
   uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
            pckt = 0;
   uint32_t total = 0;
-  
+  uint64_t query_time_end,query_time_start =
+          chaos::common::utility::TimingUtil::getTimeStamp();
+
   if ((exit_after_nerror > 0) && (tot_error >= exit_after_nerror)) {
     exit(tot_error);
   }
@@ -148,7 +150,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     }
     start_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-    std::cout << "[" << name << "] Starting Loop ("<<loops<<") Writing ("<<tparam.size<<" bytes)"<< std::endl;
+    std::cout << "[" << name << "] Starting Loop ("<<loops<<") Writing ("<<tparam.size<<" bytes) starting at:"<< query_time_start << std::endl;
 
     for (int cnt = 0; cnt < loops; cnt++) {
       if (test->pushDataset() != 0) {
@@ -166,11 +168,12 @@ int performTest(const std::string &name, testparam_t &tparam) {
     push_avg = (loops)*1000000 / (end_time - start_time);
     bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
     push_time= (end_time - start_time);
+    query_time_end=          chaos::common::utility::TimingUtil::getTimeStamp();
 
     std::cout << "[" << name << "] loops:" << loops << " push avg:" << push_avg
               << " push/s, tot us: " << (end_time - start_time)
               << " sizeb:" << tparam.size << " bandwith (MB/s):" << bandwithMB
-              << " Total time:" << (push_time)/1000.0<< " ms" << std::endl;
+              << " Total time:" << (push_time)/1000.0<< " ms Ended at:" << query_time_end<< std::endl;
   } else {
     LERR_ << "[" << name << "] cannot register!:";
     countErr++;
@@ -183,19 +186,16 @@ int performTest(const std::string &name, testparam_t &tparam) {
     sleep(wait_retrive);
   }
 
-  uint64_t query_time_end =
-      chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
   int retry = 2;
   int checkErr = 0;
-  uint64_t query_time_start = start_time / 1000;
-  
+
   start_time =
       chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
   std::cout << "[" << name << "] perform query from " << query_time_start << " page:"<<pagelen<<std::endl;
 
   if (pagelen == 0) {
     std::vector<ChaosDataSet> res =
-        test->queryHistoryDatasets(query_time_start, query_time_end);
+        test->queryHistoryDatasets(query_time_start, query_time_end+1000);
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
     pull_time = (end_time - query_time_end);
@@ -209,7 +209,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     countErr += checkErr;
   } else {
     uint32_t uid =
-        test->queryHistoryDatasets(query_time_start, query_time_end, pagelen);
+        test->queryHistoryDatasets(query_time_start, query_time_end+1000, pagelen);
     while (test->queryHasNext(uid)) {
       std::vector<ChaosDataSet> res = test->getNextPage(uid);
       total += res.size();
