@@ -95,8 +95,8 @@ typedef struct _testParams {
   float payload;
   float push_sec;
   float pull_sec;
-  uint32_t push_time;
-  uint32_t pull_time;
+  float push_time;
+  float pull_time;
   float overhead;
   uint32_t errors;
 } testparam_t;
@@ -322,8 +322,8 @@ int main(int argc, const char **argv) {
   boost::thread *workers[nthreads];
   params = new testparam_t[nthreads];
 
-  fs << "th,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
-        "time(us),bandwith(MB/s),errors"
+  fs << "th,payload size(Bytes),push/s,pull/s,loop,push time(ms),pull "
+        "time(ms),bandwith(MB/s),W (MB/s),R(MB/s),errors"
      << std::endl;
 
   for (int cnt = 0; cnt < nthreads; cnt++) {
@@ -339,9 +339,9 @@ int main(int argc, const char **argv) {
   for (int cnt = 0; cnt < nthreads; cnt++) {
     workers[cnt]->join();
     delete (workers[cnt]);
-    fs << cnt << params[cnt].size << "," << params[cnt].push_sec << ","
-       << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time
-       << "," << params[cnt].pull_time << ","<< params[cnt].errors << std::endl;
+    fs << cnt << ","<<params[cnt].size << "," << params[cnt].push_sec << ","
+       << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time/1000.0
+       << "," << params[cnt].pull_time/1000.0 << ","<< params[cnt].push_sec*params[cnt].size*loops/(1024*1024)<< ","<< params[cnt].pull_sec*params[cnt].size*loops/(1024*1024)<<","<< params[cnt].errors << std::endl;
     tot_size += params[cnt].size;
     push_sec += params[cnt].push_sec;
     pull_sec += params[cnt].pull_sec;
