@@ -10,7 +10,7 @@ ADD_LIBRARY(${PROJECT_NAME} STATIC ${core_src})
 ELSE()
 ADD_LIBRARY(${PROJECT_NAME}  SHARED ${core_src})
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  common_misc_utility ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_driver_misc common_misc_utility ${FrameworkLib})
 FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/models/DafnePresenter/core)
 INSTALL(TARGETS ${PROJECT_NAME}
