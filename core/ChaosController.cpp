@@ -338,7 +338,7 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
     }*/
     }
     fetch(-1);
-    fetch(255);
+  //  fetch(255);
    
     DBGET << "initalization ok";
 
@@ -846,7 +846,9 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
             }
 #else
         for (int cnt = 0; cnt < res.size(); cnt++){
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+            if(res[cnt].get()){
+                retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+            }
 	    //            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
         }
 
@@ -877,11 +879,18 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                 retdata = combineDataSets(set);
             }
 #else
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
-
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
-            retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+            if(res[0].get()){
+                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
+            }
+            if(res[1].get()){
+                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
+            }
+            if(res[2].get()){
+                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
+            }
+            if(res[3].get()){
+                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+            }
             
 #endif
         }
