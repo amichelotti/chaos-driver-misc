@@ -30,6 +30,7 @@ namespace driver{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO             :protected chaos::common::async_central::TimerHandler{
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            static ChaosSharedMutex iomutex;
 
             ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;

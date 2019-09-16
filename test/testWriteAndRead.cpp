@@ -316,7 +316,7 @@ int main(int argc, const char **argv) {
 
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
-
+  sleep(3);
   fs.open(reportName);
 
   boost::thread *workers[nthreads];
