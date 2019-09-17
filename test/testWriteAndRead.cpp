@@ -195,7 +195,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
   if (pagelen == 0) {
     std::vector<ChaosDataSet> res =
-        test->queryHistoryDatasets(query_time_start-1000, query_time_end+1000);
+        test->queryHistoryDatasets(query_time_start-5000, query_time_end+5000);
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
     pull_time = (end_time - start_time);
