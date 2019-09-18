@@ -40,7 +40,7 @@ static int dumpData(std::ofstream&fs,std::vector<ChaosDataSet> &res,uint32_t& co
 
        }
        if((old_sequid!=-1) && (sequid!=(old_sequid+1))){
-         error<<"|missing:"<<(sequid-old_sequid)<<"packets"<<runid;
+         error<<"|missing:"<<(sequid-old_sequid)<<"packets";
          reterr++;
 
        }
