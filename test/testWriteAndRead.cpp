@@ -22,7 +22,7 @@ static uint32_t start_ts=0,end_ts=0;
  *
  */
 using namespace driver::misc;
-static int dumpData(std::fstream&fs,std::vector<ChaosDataSet> &res,uint32_t& counter) {
+static int dumpData(std::ofstream&fs,std::vector<ChaosDataSet> &res,uint32_t& counter) {
   int reterr = 0;
   
   if(res.size()){
@@ -178,7 +178,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   }
   ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
   std::string fdumpname=name+".dump";
-  std::fstream fsData;
+  std::ofstream fsData;
   fsData.open(fdumpname);
   if(start_ts==0){
   ChaosDataSet my_ouput =
