@@ -178,7 +178,8 @@ int performTest(const std::string &name, testparam_t &tparam) {
   }
   ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
   std::string fdumpname=name+".dump";
-  std::fstream fsData(fdumpname);
+  std::fstream fsData;
+  fsData.open(fdumpname);
   if(start_ts>0){
   ChaosDataSet my_ouput =
       test->allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
