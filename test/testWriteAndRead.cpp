@@ -331,7 +331,7 @@ int main(int argc, const char **argv) {
       ->getGlobalConfigurationInstance()
       ->addOption(
           "dsname",
-          po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),
+          po::value<std::string>(&name)->default_value(name),
           "name of the dataset (CU)");
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -388,7 +388,11 @@ ChaosMetadataServiceClient::getInstance()
   fs << "th,payload size(Bytes),push/s,pull/s,loop,push time(ms),pull "
         "time(ms),bandwith(MB/s),W (MB/s),R(MB/s),errors"
      << std::endl;
-
+  if(name==""){
+    std::stringstream ss;
+    ss<<"PERFOMANCE_MEASURE_"<<time(NULL);
+    name=ss.str();
+  }
   for (int cnt = 0; cnt < nthreads; cnt++) {
     std::stringstream ss;
     ss << name << "_" << cnt;
