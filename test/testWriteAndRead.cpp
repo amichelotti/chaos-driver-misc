@@ -331,7 +331,7 @@ int main(int argc, const char **argv) {
       ->getGlobalConfigurationInstance()
       ->addOption(
           "dsname",
-          po::value<std::string>(&name)->default_value(name),
+          po::value<std::string>(&name)->default_value(""),
           "name of the dataset (CU)");
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
