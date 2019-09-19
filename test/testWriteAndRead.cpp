@@ -17,10 +17,49 @@ using namespace chaos::metadata_service_client;
 static int tot_error = 0;
 static int exit_after_nerror = 1;
 static uint32_t ttl = 7200;
+static uint32_t start_ts=0,end_ts=0;
 /*
  *
  */
 using namespace driver::misc;
+static int dumpData(std::ofstream&fs,std::vector<ChaosDataSet> &res,uint32_t& counter) {
+  int reterr = 0;
+  
+  if(res.size()){
+    uint64_t old_runid=(res[0])->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+    int64_t old_sequid=-1;
+    uint64_t old_ts=(res[0])->getUInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+    for (std::vector<ChaosDataSet>::iterator i = res.begin(); i != res.end();i++){
+       std::stringstream error;
+       uint64_t runid=(*i)->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+       uint64_t sequid=(*i)->getUInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+       uint64_t ts=(*i)->getUInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+       if(runid!=old_runid){
+         error<<"runid changed from:"<<old_runid<<" to:"<<runid;
+         reterr++;
+
+       }
+       if((old_sequid!=-1) && (sequid!=(old_sequid+1))){
+         error<<"|missing:"<<(sequid-old_sequid)<<" packets";
+         reterr++;
+
+       }
+       old_sequid=sequid;
+       if(old_ts>ts){
+         error<<"|timestamp out of order old("<<old_ts<<")>actual("<<ts<<")";
+         reterr++;
+       }
+       if(error.str()==""){
+         error<<"--";
+       }
+       fs<<counter<<","<<runid<<","<<sequid<<","<<ts<<","<<error.str()<<std::endl;
+       counter++;
+    }
+  } else {
+    return -1;
+  }
+  return reterr;
+  }
 static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
                      std::vector<ChaosDataSet> &res, uint64_t &pcktmissing,
                      uint64_t &pckt, uint64_t &pcktreplicated,
@@ -95,8 +134,8 @@ typedef struct _testParams {
   float payload;
   float push_sec;
   float pull_sec;
-  uint32_t push_time;
-  uint32_t pull_time;
+  float push_time;
+  float pull_time;
   float overhead;
   uint32_t errors;
 } testparam_t;
@@ -121,6 +160,7 @@ static boost::condition_variable_any cond;
 
 int performTest(const std::string &name, testparam_t &tparam) {
   int countErr = 0;
+  uint32_t counter=0;
   auto start = boost::chrono::system_clock::now();
   // Some computation here
   boost::chrono::duration<double> elapsed_seconds; // = end-start;
@@ -130,24 +170,31 @@ int performTest(const std::string &name, testparam_t &tparam) {
   uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
            pckt = 0;
   uint32_t total = 0;
-  
+  uint64_t query_time_end,query_time_start =
+          chaos::common::utility::TimingUtil::getTimeStamp();
+
   if ((exit_after_nerror > 0) && (tot_error >= exit_after_nerror)) {
     exit(tot_error);
   }
   ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
+  std::string fdumpname=name+".dump";
+  std::ofstream fsData;
+  fsData.open(fdumpname);
+  if(start_ts==0){
   ChaosDataSet my_ouput =
       test->allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
   my_ouput->addBinaryValue("data", chaos::DataType::SUB_TYPE_INT8,
                            (const char *)buf, tparam.size);
   if (test->registerDataset() == 0) {
     test->setAgeing(ttl);
-
+    
     for (int cnt = 0; cnt < tparam.size / 4; cnt++) {
       unsigned *ptr = (unsigned *)&buf[cnt];
       *ptr = tparam.thid << 24 | cnt;
     }
     start_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+    std::cout << "[" << name << "] Starting Loop ("<<loops<<") Writing ("<<tparam.size<<" bytes) starting at:"<< query_time_start << std::endl;
 
     for (int cnt = 0; cnt < loops; cnt++) {
       if (test->pushDataset() != 0) {
@@ -164,11 +211,13 @@ int performTest(const std::string &name, testparam_t &tparam) {
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
     push_avg = (loops)*1000000 / (end_time - start_time);
     bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
+    push_time= (end_time - start_time);
+    query_time_end=          chaos::common::utility::TimingUtil::getTimeStamp();
+
     std::cout << "[" << name << "] loops:" << loops << " push avg:" << push_avg
               << " push/s, tot us: " << (end_time - start_time)
               << " sizeb:" << tparam.size << " bandwith (MB/s):" << bandwithMB
-              << " Total time:" << (end - start).count() << " s" << std::endl;
-    push_time= (end_time - start_time);
+              << " Total time:" << (push_time)/1000.0<< " ms Ended at:" << query_time_end<< std::endl;
   } else {
     LERR_ << "[" << name << "] cannot register!:";
     countErr++;
@@ -180,29 +229,34 @@ int performTest(const std::string &name, testparam_t &tparam) {
               << " s before retrive data" << std::endl;
     sleep(wait_retrive);
   }
-
-  uint64_t query_time_end =
-      chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+  }
   int retry = 2;
   int checkErr = 0;
-  uint64_t query_time_start = start_time / 1000;
-  
+
   start_time =
       chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
+  query_time_start=(start_ts>0)?start_ts:query_time_start-5000;
+  query_time_end=(end_ts>0)?end_ts:query_time_end+5000;
+  std::cout << "[" << name << "] perform query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
+
   if (pagelen == 0) {
     std::vector<ChaosDataSet> res =
         test->queryHistoryDatasets(query_time_start, query_time_end);
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-    pull_time = (end_time - query_time_end);
+    pull_time = (end_time - start_time);
 
     pull_avg = res.size() * 1000000.0 / pull_time;
+    total=res.size();
     std::cout << "[" << name << "] retrieved:" << res.size()
-              << " items, items/s:" << pull_avg << " time:" << pull_time
-              << std::endl;
-    checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
+              << " items, items/s:" << pull_avg << " time:" << pull_time/1000.0
+              << " ms"<<std::endl;
+    if(start_ts==0){
+      checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
                          pckmalformed, badid);
-    countErr += checkErr;
+      countErr += checkErr;
+    }
+    dumpData(fsData,res,counter);
   } else {
     uint32_t uid =
         test->queryHistoryDatasets(query_time_start, query_time_end, pagelen);
@@ -215,11 +269,13 @@ int performTest(const std::string &name, testparam_t &tparam) {
       pull_avg = total * 1000000.0 / pull_time;
 
       std::cout << "[" << name << "] retrived:" << res.size() << "/" << total
-                << " items , items/s:" << pull_avg << " pull time:" << pull_time
-                << std::endl;
+                << " items , items/s:" << pull_avg << " pull time:" << pull_time/1000.0
+                << " ms"<<std::endl;
       checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
                            pckmalformed, badid);
       countErr += checkErr;
+      dumpData(fsData,res,counter);
+
     }
   }
 
@@ -248,6 +304,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
 
 tot_error += countErr;
+fsData.close();
 return countErr;
 }
 int main(int argc, const char **argv) {
@@ -274,7 +331,7 @@ int main(int argc, const char **argv) {
       ->getGlobalConfigurationInstance()
       ->addOption(
           "dsname",
-          po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),
+          po::value<std::string>(&name)->default_value(""),
           "name of the dataset (CU)");
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -309,18 +366,33 @@ int main(int argc, const char **argv) {
                   po::value<uint32_t>(&nthreads)->default_value(nthreads),
                   "Number of concurrent accesses");
 
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("start",
+                  po::value<uint32_t>(&start_ts)->default_value(start_ts),
+                  "Enable Just read from the specified timestamp");
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("end",
+                  po::value<uint32_t>(&end_ts)->default_value(end_ts),
+                  "If specified constraint the query to the specified timestamp");
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
-
+  sleep(3);
   fs.open(reportName);
 
   boost::thread *workers[nthreads];
   params = new testparam_t[nthreads];
 
-  fs << "th,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
-        "time(us),bandwith(MB/s),errors"
+  fs << "th,payload size(Bytes),push/s,pull/s,loop,push time(ms),pull "
+        "time(ms),bandwith(MB/s),W (MB/s),R(MB/s),errors"
      << std::endl;
-
+  if(name==""){
+    std::stringstream ss;
+    ss<<"PERFOMANCE_MEASURE_"<<time(NULL);
+    name=ss.str();
+  }
   for (int cnt = 0; cnt < nthreads; cnt++) {
     std::stringstream ss;
     ss << name << "_" << cnt;
@@ -334,16 +406,16 @@ int main(int argc, const char **argv) {
   for (int cnt = 0; cnt < nthreads; cnt++) {
     workers[cnt]->join();
     delete (workers[cnt]);
-    fs << cnt << params[cnt].size << "," << params[cnt].push_sec << ","
-       << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time
-       << "," << params[cnt].pull_time << ","<< params[cnt].errors << std::endl;
+    fs << cnt << ","<<params[cnt].size << "," << params[cnt].push_sec << ","
+       << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time/1000.0
+       << "," << params[cnt].pull_time/1000.0 << ","<< params[cnt].push_sec*params[cnt].size*loops/(1024*1024)<< ","<< params[cnt].pull_sec*params[cnt].size*loops/(1024*1024)<<","<< params[cnt].errors << std::endl;
     tot_size += params[cnt].size;
     push_sec += params[cnt].push_sec;
     pull_sec += params[cnt].pull_sec;
     errors += params[cnt].errors;
   }
-  LAPP_ << "Tot Size(B):" << tot_size << " push/s:" << push_sec
-        << " pull/s:" << pull_sec << " errors:" << errors;
+  std::cout << "Tot Size(B):" << tot_size << " push/s:" << push_sec
+        << " pull/s:" << pull_sec << " errors:" << errors<<std::endl;
   delete[] params;
   ChaosMetadataServiceClient::getInstance()->stop();
   //    ChaosMetadataServiceClient::getInstance()->deinit();
