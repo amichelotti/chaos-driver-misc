@@ -20,16 +20,17 @@ namespace chaos{
         }
     }
 };
-#define GET_TIMESTAMP(x) (x->getInt64Value("dpck_ats"))
-#define GET_HWTIMESTAMP(x) (x->getInt64Value("dpck_hr_ats"))
-#define GET_PCKID(x) (x->getInt64Value("dpck_seq_id"))
-#define GET_RUNID(x) (x->getInt64Value("cudk_run_id"))
+#define GET_TIMESTAMP(x) ((x!=NULL)?x->getInt64Value("dpck_ats"):0)
+#define GET_HWTIMESTAMP(x) ((x!=NULL)?x->getInt64Value("dpck_hr_ats"):0)
+#define GET_PCKID(x) ((x!=NULL)?x->getInt64Value("dpck_seq_id"):0)
+#define GET_RUNID(x) ((x!=NULL)?x->getInt64Value("cudk_run_id"):0)
 
 namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO             :protected chaos::common::async_central::TimerHandler{
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            static ChaosSharedMutex iomutex;
 
             ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
