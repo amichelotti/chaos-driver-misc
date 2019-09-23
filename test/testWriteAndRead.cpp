@@ -29,6 +29,7 @@ static int dumpData(std::ofstream&fs,std::vector<ChaosDataSet> &res,uint32_t& co
     uint64_t old_runid=(res[0])->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
     int64_t old_sequid=-1;
     uint64_t old_ts=(res[0])->getUInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+
     for (std::vector<ChaosDataSet>::iterator i = res.begin(); i != res.end();i++){
        std::stringstream error;
        uint64_t runid=(*i)->getUInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
@@ -40,7 +41,7 @@ static int dumpData(std::ofstream&fs,std::vector<ChaosDataSet> &res,uint32_t& co
 
        }
        if((old_sequid!=-1) && (sequid!=(old_sequid+1))){
-         error<<"|missing:"<<(sequid-old_sequid)<<" packets";
+         error<<"|missing:"<<(sequid-old_sequid-1)<<" packets, actual sequid:"<<sequid<<" old:"<<old_sequid;
          reterr++;
 
        }
@@ -180,6 +181,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   std::string fdumpname=name+".dump";
   std::ofstream fsData;
   fsData.open(fdumpname);
+  fsData<<"counter,"<<chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID<<","<<chaos::DataPackCommonKey::DPCK_SEQ_ID<<","<<chaos::DataPackCommonKey::DPCK_TIMESTAMP<<",desc"<<std::endl;
   if(start_ts==0){
   ChaosDataSet my_ouput =
       test->allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
@@ -302,6 +304,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   tparam.pull_time = pull_time;
   tparam.errors = countErr;
 
+  std::cout << "[" << name << "] performed query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
 
 tot_error += countErr;
 fsData.close();
