@@ -36,6 +36,7 @@ using namespace chaos::cu::data_manager;
 using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
 using namespace chaos::common::io;
+using namespace chaos::common::network;
 
 using namespace ::driver::misc;
 

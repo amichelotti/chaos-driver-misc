@@ -45,7 +45,7 @@ using namespace boost::date_time;
 using namespace chaos::metadata_service_client;
 using namespace chaos::metadata_service_client::node_controller;
 using namespace chaos::cu::data_manager;
-
+using namespace chaos::common::network;
 namespace chaos_batch = chaos::common::batch_command;
 
 #define OPT_MESS_DID "mess_device_id"
