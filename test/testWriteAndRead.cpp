@@ -213,7 +213,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
     push_avg = (loops)*1000000.0 / (end_time - start_time);
-    bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
+    bandwithMB = (push_avg * tparam.size) / (1024.0 * 1024);
     push_time= (end_time - start_time);
     query_time_end=          chaos::common::utility::TimingUtil::getTimeStamp();
 
