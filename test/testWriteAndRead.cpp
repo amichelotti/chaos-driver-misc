@@ -17,7 +17,8 @@ using namespace chaos::metadata_service_client;
 static int tot_error = 0;
 static int exit_after_nerror = 1;
 static uint32_t ttl = 7200;
-static uint32_t start_ts=0,end_ts=0;
+static uint64_t start_ts=0,end_ts=0;
+static bool just_write=false;
 /*
  *
  */
@@ -211,7 +212,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-    push_avg = (loops)*1000000 / (end_time - start_time);
+    push_avg = (loops)*1000000.0 / (end_time - start_time);
     bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
     push_time= (end_time - start_time);
     query_time_end=          chaos::common::utility::TimingUtil::getTimeStamp();
@@ -224,6 +225,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
     LERR_ << "[" << name << "] cannot register!:";
     countErr++;
     return -1;
+  }
+  if(just_write){
+    return 0;
   }
 
   if (wait_retrive) {
@@ -304,7 +308,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   tparam.pull_time = pull_time;
   tparam.errors = countErr;
 
-  std::cout << "[" << name << "] performed query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
+  std::cout << "[" << name << "] performed query from:" << query_time_start << " to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
 
 tot_error += countErr;
 fsData.close();
@@ -372,14 +376,18 @@ int main(int argc, const char **argv) {
 ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("start",
-                  po::value<uint32_t>(&start_ts)->default_value(start_ts),
+                  po::value<uint64_t>(&start_ts)->default_value(start_ts),
                   "Enable Just read from the specified timestamp");
 ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("end",
-                  po::value<uint32_t>(&end_ts)->default_value(end_ts),
+                  po::value<uint64_t>(&end_ts)->default_value(end_ts),
                   "If specified constraint the query to the specified timestamp");
-
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("justwrite",
+                  po::value<bool>(&just_write)->default_value(just_write),
+                  "name of the group (US)");
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
   sleep(3);
