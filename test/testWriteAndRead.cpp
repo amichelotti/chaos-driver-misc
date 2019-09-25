@@ -242,7 +242,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   start_time =
       chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
   query_time_start=(start_ts>0)?start_ts:query_time_start-5000;
-  query_time_end=(end_ts>0)?end_ts:chaos::common::utility::TimingUtil::getTimeStamp()+5000;
+  query_time_end=(end_ts>0)?end_ts:chaos::common::utility::TimingUtil::getTimeStamp()+10000;
   std::cout << "[" << name << "] perform query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
 
   if (pagelen == 0) {
