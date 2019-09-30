@@ -17,7 +17,8 @@ using namespace chaos::metadata_service_client;
 static int tot_error = 0;
 static int exit_after_nerror = 1;
 static uint32_t ttl = 7200;
-static uint32_t start_ts=0,end_ts=0;
+static uint64_t start_ts=0,end_ts=0;
+static bool just_write=false;
 /*
  *
  */
@@ -94,9 +95,9 @@ static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
       uint64_t p = (*i)->getUInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
       if (p > pckt) {
         uint64_t missing = (p - pckt);
-        std::cout << "\t ##[" << cnt << "] error missing #pckts:" << missing
+     /*   std::cout << "\t ##[" << cnt << "] error missing #pckts:" << missing
                   << " starting from " << chaos::DataPackCommonKey::DPCK_SEQ_ID
-                  << "  :" << pckt << " to:" << p << std::endl;
+                  << "  :" << pckt << " to:" << p << std::endl;*/
         if (i != res.begin()) {
           LERR_ << "[" << cnt
                 << "] MISSING START:" << (*(i - 1))->getCompliantJSONString()
@@ -211,19 +212,22 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
     end_time =
         chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
-    push_avg = (loops)*1000000 / (end_time - start_time);
-    bandwithMB = (push_avg * tparam.size) / (1024 * 1024);
+    push_avg = (loops)*1000000.0 / (end_time - start_time);
+    bandwithMB = (push_avg * tparam.size) / (1024.0 * 1024);
     push_time= (end_time - start_time);
     query_time_end=          chaos::common::utility::TimingUtil::getTimeStamp();
 
     std::cout << "[" << name << "] loops:" << loops << " push avg:" << push_avg
               << " push/s, tot us: " << (end_time - start_time)
               << " sizeb:" << tparam.size << " bandwith (MB/s):" << bandwithMB
-              << " Total time:" << (push_time)/1000.0<< " ms Ended at:" << query_time_end<< std::endl;
+              << " Total time:" << (push_time)/1000000.0<< " s Ended at:" << query_time_end<< std::endl;
   } else {
     LERR_ << "[" << name << "] cannot register!:";
     countErr++;
     return -1;
+  }
+  if(just_write){
+    return 0;
   }
 
   if (wait_retrive) {
@@ -238,7 +242,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   start_time =
       chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
   query_time_start=(start_ts>0)?start_ts:query_time_start-5000;
-  query_time_end=(end_ts>0)?end_ts:query_time_end+5000;
+  query_time_end=(end_ts>0)?end_ts:chaos::common::utility::TimingUtil::getTimeStamp()+10000;
   std::cout << "[" << name << "] perform query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
 
   if (pagelen == 0) {
@@ -304,7 +308,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   tparam.pull_time = pull_time;
   tparam.errors = countErr;
 
-  std::cout << "[" << name << "] performed query from:" << query_time_start << "to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
+  std::cout << "[" << name << "] performed query from:" << query_time_start << " to:"<<query_time_end<<" page:"<<pagelen<<std::endl;
 
 tot_error += countErr;
 fsData.close();
@@ -372,14 +376,18 @@ int main(int argc, const char **argv) {
 ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("start",
-                  po::value<uint32_t>(&start_ts)->default_value(start_ts),
+                  po::value<uint64_t>(&start_ts)->default_value(start_ts),
                   "Enable Just read from the specified timestamp");
 ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("end",
-                  po::value<uint32_t>(&end_ts)->default_value(end_ts),
+                  po::value<uint64_t>(&end_ts)->default_value(end_ts),
                   "If specified constraint the query to the specified timestamp");
-
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("justwrite",
+                  po::value<bool>(&just_write)->default_value(just_write),
+                  "name of the group (US)");
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
   sleep(3);
@@ -412,12 +420,12 @@ ChaosMetadataServiceClient::getInstance()
     fs << cnt << ","<<params[cnt].size << "," << params[cnt].push_sec << ","
        << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time/1000.0
        << "," << params[cnt].pull_time/1000.0 << ","<< params[cnt].push_sec*params[cnt].size*loops/(1024*1024)<< ","<< params[cnt].pull_sec*params[cnt].size*loops/(1024*1024)<<","<< params[cnt].errors << std::endl;
-    tot_size += params[cnt].size;
+    tot_size += params[cnt].size * loops*1.0/1024.0 ;
     push_sec += params[cnt].push_sec;
     pull_sec += params[cnt].pull_sec;
     errors += params[cnt].errors;
   }
-  std::cout << "Tot Size(B):" << tot_size << " push/s:" << push_sec
+  std::cout << "Tot Size(KB):" << tot_size << " push/s:" << push_sec
         << " pull/s:" << pull_sec << " errors:" << errors<<std::endl;
   delete[] params;
   ChaosMetadataServiceClient::getInstance()->stop();
