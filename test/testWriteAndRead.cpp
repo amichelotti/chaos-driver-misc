@@ -420,12 +420,12 @@ ChaosMetadataServiceClient::getInstance()
     fs << cnt << ","<<params[cnt].size << "," << params[cnt].push_sec << ","
        << params[cnt].pull_sec << "," << loops << "," << params[cnt].push_time/1000.0
        << "," << params[cnt].pull_time/1000.0 << ","<< params[cnt].push_sec*params[cnt].size*loops/(1024*1024)<< ","<< params[cnt].pull_sec*params[cnt].size*loops/(1024*1024)<<","<< params[cnt].errors << std::endl;
-    tot_size += params[cnt].size;
+    tot_size += params[cnt].size * loops*1.0/1024.0 ;
     push_sec += params[cnt].push_sec;
     pull_sec += params[cnt].pull_sec;
     errors += params[cnt].errors;
   }
-  std::cout << "Tot Size(B):" << tot_size << " push/s:" << push_sec
+  std::cout << "Tot Size(KB):" << tot_size << " push/s:" << push_sec
         << " pull/s:" << pull_sec << " errors:" << errors<<std::endl;
   delete[] params;
   ChaosMetadataServiceClient::getInstance()->stop();
