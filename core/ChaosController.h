@@ -34,8 +34,8 @@
 #define DEFAULT_DBREPLICATION "2"
 #define DEFAULT_PAGE 1000
 #define MAX_CONCURRENT_QUERY 100
-#define MAX_QUERY_ELEMENTS 1000
-#define QUERY_PAGE_MAX_TIME 1000 * 60 * 1 // 1 min
+#define MAX_QUERY_ELEMENTS 10000
+#define QUERY_PAGE_MAX_TIME 1000 * 60 * 2 // 1 min
 #define CHECK_HB 10 * 1000 * 1000         //10 s
 namespace chaos
 {
