@@ -344,6 +344,9 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     void releaseQuery(chaos::common::io::QueryCursor *query_cursor);
     int restoreDeviceToTag(const std::string &restore_tag);
     chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
+    
+    chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& search,const std::string&rpcmsg, const std::string& what="agent",bool alive=true);
+
     chaos::common::data::CDWUniquePtr getBuildProcessInfo(const std::string& search,const std::string& what="agent",bool alive=true);
 
     int recoverDeviceFromError(const std::string& cu="");

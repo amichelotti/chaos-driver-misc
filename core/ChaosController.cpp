@@ -2180,6 +2180,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                     EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
                     res << json_buf;
+                } else if (what == "shutdown"){
+                        sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,node_type);
                 }
                 else if (node_type == "us")
                 {
@@ -2229,7 +2231,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation, MDS_TIMEOUT, name, chaos::service_common::data::agent::NodeAssociationOperationRestart);
                         res << json_buf;
-                    }
+                    } 
                 }
                 else if (node_type == "cu")
                 {
@@ -3812,6 +3814,49 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     return ret;
 
 }
+chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,const std::string& what,bool alive){
+    chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+
+    chaos::common::data::VectorCDWUniquePtr node=getNodeInfo(search,what,alive);
+    auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
+    for (chaos::common::data::VectorCDWUniquePtr::iterator i=node.begin();i!=node.end();i++){
+         DBGET << what << " INFO:" << (*i)->getCompliantJSONString();
+         if((*i)->hasKey(chaos::NodeDefinitionKey::NODE_RPC_ADDR)){
+
+         
+            std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
+            std::string node_id=(*i)->getStringValue("ndk_uid");
+
+            CDWUniquePtr data_pack;
+               
+            ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
+                                                                                chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
+                                                                                 rpcmsg,
+                                                                                 MOVE(data_pack));
+                if(rpcmsg==chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN){
+                    DBGET << "SENT IMMEDIATE \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                    return infos;
+                }
+                fut->wait(MDS_TIMEOUT);
+                if(fut->getError()==0){
+                    (*i)->addCSDataValue(node_id,*fut->detachResult().get());
+                } else {
+                    DBGET << "Error sending command \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
+                }
+                
+
+                infos->appendCDataWrapperToArray(*i->get());
+
+            }
+    }
+    infos->finalizeArrayForKey("info");
+    NetworkBroker::getInstance()->disposeMessageChannel(message_channel);
+        
+    return infos;
+}
+
 chaos::common::data::CDWUniquePtr ChaosController::getBuildProcessInfo(const std::string& search,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
     chaos::common::data::VectorCDWUniquePtr agent=getNodeInfo(search,what,alive);
