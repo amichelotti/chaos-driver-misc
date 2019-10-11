@@ -18,17 +18,17 @@ limitations under the License.
 */
 #include "CmdGIBDefault.h"
 
-#include <cmath>
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
 #define SCLAPP_ INFO_LOG(CmdGIBDefault) << "[" << getDeviceID() << "] "
 #define SCLDBG_ DBG_LOG(CmdGIBDefault) << "[" << getDeviceID() << "] "
 #define SCLERR_ ERR_LOG(CmdGIBDefault) << "[" << getDeviceID() << "] "
-namespace own = driver::gibcontrol;
+//namespace own = driver::gibcontrol;
 namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
+using namespace ::driver::gibcontrol;
 BATCH_COMMAND_OPEN_DESCRIPTION(driver::gibcontrol::,CmdGIBDefault,
 			"Default Command",
 			"041d71fe-4f08-4e74-a364-94c873ca2791")
@@ -36,11 +36,11 @@ BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
 // return the implemented handler
-uint8_t own::CmdGIBDefault::implementedHandler(){
+uint8_t CmdGIBDefault::implementedHandler(){
 	return      AbstractGibControlCommand::implementedHandler()|chaos_batch::HandlerType::HT_Acquisition;
 }
 // empty set handler
-void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
+void CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	SCLAPP_ << "Set Handler Default ";
 	 genericDriverErrorRaisedHere=false;
@@ -52,7 +52,7 @@ void own::CmdGIBDefault::setHandler(c_data::CDataWrapper *data) {
 	BC_NORMAL_RUNNING_PROPERTY
 }
 //acquire handler
-void own::CmdGIBDefault::acquireHandler() {
+void CmdGIBDefault::acquireHandler() {
  	int state;
 	int err= 0;
     std::string descr;
@@ -107,9 +107,10 @@ void own::CmdGIBDefault::acquireHandler() {
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
-			char nums[8];
-			sprintf(nums,"%d",i);
-			std::string attrname=(std::string)"CH"+ nums;
+			std::stringstream ss;
+			
+			ss<<"CH"<<i;
+			std::string attrname=ss.str();
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			*tmp=Voltaggi[i];
 			if (this->voltageRes != NULL)
@@ -186,9 +187,9 @@ void own::CmdGIBDefault::acquireHandler() {
 	getAttributeCache()->setOutputDomainAsChanged();
 }
 // empty correlation handler
-void own::CmdGIBDefault::ccHandler() {
+void CmdGIBDefault::ccHandler() {
 }
 // empty timeout handler
-bool own::CmdGIBDefault::timeoutHandler() {
+bool CmdGIBDefault::timeoutHandler() {
 	return false;
 }

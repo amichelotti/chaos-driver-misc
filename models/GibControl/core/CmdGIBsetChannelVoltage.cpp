@@ -29,6 +29,7 @@ namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 using namespace ::common::gibcontrol ;
+using namespace ::driver::gibcontrol ;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
 			"set the voltage to a Channel",
 			"28ab2b93-2c92-455c-b18f-ec91b05bf4ce")
@@ -74,25 +75,7 @@ void CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	this->chanNum=tmp_channel;
 	this->setValue=tmp_Voltage;
 	//Adding the offset in tmp_Voltage of tmp_channel
-	/*char nums[8];
-	sprintf(nums,"%d",tmp_channel);
-	std::string attrname=(std::string)"OFFSET_CH"+ nums;
-	try
-	{
-		const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
-		if (tmp)
-		{
-			if (!std::isnan(*tmp))
-			{
-				tmp_Voltage+=(*tmp);
-			}
-		}
-	}
-	catch ()
-	{
-		
 
-	}*/
 	if (tmp_channel >= (*this->numOfchannels))
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter out of bounds" );
@@ -184,9 +167,11 @@ void CmdGIBsetChannelVoltage::ccHandler() {
 		//DPRINT( "checkTimeout now %f SET=%f, resolution=%f",readChannels[chanNum],this->setValue,channelVoltageResolution);
 		if ( std::fabs(readChannels[chanNum] - this->setValue) <= channelVoltageResolution) 
 		{
-			char Num[8];
-			sprintf(Num,"%d",chanNum);
-			std::string chanName=(std::string)"CH"+Num;
+			std::stringstream ss;
+			
+			ss<<"CH"<<chanNum;
+			std::string chanName=ss.str();
+			
 			double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
 			
 			*chan=this->setValue;
@@ -210,9 +195,11 @@ void CmdGIBsetChannelVoltage::ccHandler() {
 		{
 			for (int i=0;i < (*this->numOfchannels);++i)
 			{
-				char Num[8];
-				sprintf(Num,"%d",i);
-				std::string chanName=(std::string)"CH"+Num;
+				
+				std::stringstream ss;
+			
+				ss<<"CH"<<i;
+				std::string chanName=ss.str();
 				double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
 				*chan=this->setValue;
 			}

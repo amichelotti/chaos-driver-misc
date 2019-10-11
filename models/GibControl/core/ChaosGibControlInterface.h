@@ -18,13 +18,22 @@ limitations under the License.
 */
 #ifndef __ChaosGibControlInterface__
 #define __ChaosGibControlInterface__
-#include <iostream>
-#include <chaos/cu_toolkit/driver_manager/driver/DriverTypes.h>
+//#include <chaos/cu_toolkit/driver_manager/driver/DriverTypes.h>
 #include <chaos/cu_toolkit/driver_manager/driver/DriverAccessor.h>
 #include <common/debug/core/debug.h>
-#include <stdint.h>
 #include <common/misc/GibControl/core/AbstractGibControl.h>
-namespace chaos_driver=::chaos::cu::driver_manager::driver;
+
+/*namespace chaos{
+	namespace cu{
+		namespace driver_manager{
+			namespace driver{
+				class DriverAccessor;
+			}
+		}
+	}
+}
+*/
+namespace chaos_driver=chaos::cu::driver_manager::driver;
 namespace chaos {
 	namespace driver {
 #define MAX_STR_SIZE 256
