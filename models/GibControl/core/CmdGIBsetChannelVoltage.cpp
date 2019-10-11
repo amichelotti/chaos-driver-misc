@@ -25,7 +25,6 @@ limitations under the License.
 #define SCLAPP_ INFO_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
 #define SCLDBG_ DBG_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
 #define SCLERR_ ERR_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
-namespace own = driver::gibcontrol;
 namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
@@ -39,11 +38,11 @@ BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
 // return the implemented handler
-uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
+uint8_t CmdGIBsetChannelVoltage::implementedHandler(){
 	return      AbstractGibControlCommand::implementedHandler()|chaos_batch::HandlerType::HT_Acquisition;
 }
 // empty set handler
-void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
+void CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	
 	inputVoltageResolution= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
@@ -161,11 +160,11 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
-void own::CmdGIBsetChannelVoltage::acquireHandler() {
+void CmdGIBsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
 }
 // empty correlation handler
-void own::CmdGIBsetChannelVoltage::ccHandler() {
+void CmdGIBsetChannelVoltage::ccHandler() {
 	int err=0;
 	std::vector<double> readChannels;
 	if ((err=gibcontrol_drv->getVoltages(readChannels)) != 0)
@@ -225,7 +224,7 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 	
 }
 // empty timeout handler
-bool own::CmdGIBsetChannelVoltage::timeoutHandler() {
+bool CmdGIBsetChannelVoltage::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelVoltage ";
 	
 	metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," setPoint not reached");
