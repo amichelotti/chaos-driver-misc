@@ -25,11 +25,11 @@ limitations under the License.
 #define SCLAPP_ INFO_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
 #define SCLDBG_ DBG_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
 #define SCLERR_ ERR_LOG(CmdGIBsetChannelVoltage) << "[" << getDeviceID() << "] "
-namespace own = driver::gibcontrol;
 namespace c_data =  chaos::common::data;
 namespace chaos_batch = chaos::common::batch_command;
 using namespace chaos::cu::control_manager;
 using namespace ::common::gibcontrol ;
+using namespace ::driver::gibcontrol ;
 BATCH_COMMAND_OPEN_DESCRIPTION_ALIAS(driver::gibcontrol::,CmdGIBsetChannelVoltage,CMD_GIB_SETCHANNELVOLTAGE_ALIAS,
 			"set the voltage to a Channel",
 			"28ab2b93-2c92-455c-b18f-ec91b05bf4ce")
@@ -39,11 +39,11 @@ BATCH_COMMAND_CLOSE_DESCRIPTION()
 
 
 // return the implemented handler
-uint8_t own::CmdGIBsetChannelVoltage::implementedHandler(){
+uint8_t CmdGIBsetChannelVoltage::implementedHandler(){
 	return      AbstractGibControlCommand::implementedHandler()|chaos_batch::HandlerType::HT_Acquisition;
 }
 // empty set handler
-void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
+void CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractGibControlCommand::setHandler(data);
 	
 	inputVoltageResolution= getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"voltage_channel_resolution");
@@ -75,25 +75,7 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	this->chanNum=tmp_channel;
 	this->setValue=tmp_Voltage;
 	//Adding the offset in tmp_Voltage of tmp_channel
-	/*char nums[8];
-	sprintf(nums,"%d",tmp_channel);
-	std::string attrname=(std::string)"OFFSET_CH"+ nums;
-	try
-	{
-		const double *tmp=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,attrname);
-		if (tmp)
-		{
-			if (!std::isnan(*tmp))
-			{
-				tmp_Voltage+=(*tmp);
-			}
-		}
-	}
-	catch ()
-	{
-		
 
-	}*/
 	if (tmp_channel >= (*this->numOfchannels))
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"Channel parameter out of bounds" );
@@ -161,11 +143,11 @@ void own::CmdGIBsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
-void own::CmdGIBsetChannelVoltage::acquireHandler() {
+void CmdGIBsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
 }
 // empty correlation handler
-void own::CmdGIBsetChannelVoltage::ccHandler() {
+void CmdGIBsetChannelVoltage::ccHandler() {
 	int err=0;
 	std::vector<double> readChannels;
 	if ((err=gibcontrol_drv->getVoltages(readChannels)) != 0)
@@ -185,9 +167,11 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		//DPRINT( "checkTimeout now %f SET=%f, resolution=%f",readChannels[chanNum],this->setValue,channelVoltageResolution);
 		if ( std::fabs(readChannels[chanNum] - this->setValue) <= channelVoltageResolution) 
 		{
-			char Num[8];
-			sprintf(Num,"%d",chanNum);
-			std::string chanName=(std::string)"CH"+Num;
+			std::stringstream ss;
+			
+			ss<<"CH"<<chanNum;
+			std::string chanName=ss.str();
+			
 			double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
 			
 			*chan=this->setValue;
@@ -211,9 +195,11 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 		{
 			for (int i=0;i < (*this->numOfchannels);++i)
 			{
-				char Num[8];
-				sprintf(Num,"%d",i);
-				std::string chanName=(std::string)"CH"+Num;
+				
+				std::stringstream ss;
+			
+				ss<<"CH"<<i;
+				std::string chanName=ss.str();
 				double* chan = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, chanName);
 				*chan=this->setValue;
 			}
@@ -225,7 +211,7 @@ void own::CmdGIBsetChannelVoltage::ccHandler() {
 	
 }
 // empty timeout handler
-bool own::CmdGIBsetChannelVoltage::timeoutHandler() {
+bool CmdGIBsetChannelVoltage::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelVoltage ";
 	
 	metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," setPoint not reached");
