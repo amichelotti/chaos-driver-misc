@@ -2181,7 +2181,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
                     res << json_buf;
                 } else if (what == "shutdown"){
-                        sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,node_type);
+                        chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+                        infos->addBoolValue("kill",true);
+                        sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,infos,node_type);
                 }
                 else if (node_type == "us")
                 {
@@ -3814,7 +3816,7 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     return ret;
 
 }
-chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,const std::string& what,bool alive){
+chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,CDWUniquePtr data_pack,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
 
     chaos::common::data::VectorCDWUniquePtr node=getNodeInfo(search,what,alive);
@@ -3827,7 +3829,6 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
             std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
             std::string node_id=(*i)->getStringValue("ndk_uid");
 
-            CDWUniquePtr data_pack;
                
             ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
                                                                                 chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
