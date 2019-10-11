@@ -139,9 +139,9 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
     struct dev_info_status
     {
-        char dev_status[256];
-        char error_status[256];
-        char log_status[256];
+        std::stringstream dev_status;
+        std::stringstream error_status;
+        std::stringstream log_status;
         chaos::common::data::CDataWrapper data_wrapper;
         dev_info_status();
         void status(chaos::CUStateKey::ControlUnitState deviceState);
@@ -344,6 +344,9 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     void releaseQuery(chaos::common::io::QueryCursor *query_cursor);
     int restoreDeviceToTag(const std::string &restore_tag);
     chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
+    
+    chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& search,const std::string&rpcmsg, chaos::common::data::CDWUniquePtr datapack,const std::string& what="agent",bool alive=true);
+
     chaos::common::data::CDWUniquePtr getBuildProcessInfo(const std::string& search,const std::string& what="agent",bool alive=true);
 
     int recoverDeviceFromError(const std::string& cu="");

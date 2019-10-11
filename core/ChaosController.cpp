@@ -2180,6 +2180,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                     EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
                     res << json_buf;
+                } else if (what == "shutdown"){
+                        chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+                        infos->addBoolValue("kill",true);
+                        sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,MOVE(infos),node_type);
                 }
                 else if (node_type == "us")
                 {
@@ -2229,7 +2233,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::NodeOperation, MDS_TIMEOUT, name, chaos::service_common::data::agent::NodeAssociationOperationRestart);
                         res << json_buf;
-                    }
+                    } 
                 }
                 else if (node_type == "cu")
                 {
@@ -2847,9 +2851,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         start_ts = chaos::common::utility::TimingUtil::getLocalTimeStamp();
                     } else {
-                        char stringa[256];
-                        sprintf(stringa,"%lld",start_ts);
-                        start_ts = offsetToTimestamp(stringa);
+                        std::stringstream ss;
+                        ss<<start_ts;
+                        start_ts = offsetToTimestamp(ss.str());
                     }
                 }
             }
@@ -2870,9 +2874,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         end_ts = chaos::common::utility::TimingUtil::getLocalTimeStamp();
                     } else {
-                        char stringa[256];
-                        sprintf(stringa,"%lld",end_ts);
-                        end_ts = offsetToTimestamp(stringa);
+                      
+                        std::stringstream ss;
+                        ss<<end_ts;
+                        end_ts = offsetToTimestamp(ss.str());
                     }
                 }
             }
@@ -3696,53 +3701,55 @@ ChaosController::dev_info_status::dev_info_status()
 
 void ChaosController::dev_info_status::status(chaos::CUStateKey::ControlUnitState deviceState)
 {
+    dev_status.seekg(0);
     if (deviceState == chaos::CUStateKey::DEINIT)
     {
-        strcpy(dev_status, "deinit");
+     dev_status<<   "deinit";
+        
     }
     else if (deviceState == chaos::CUStateKey::INIT)
     {
-        strcpy(dev_status, "init");
+        dev_status<< "init";
     }
     else if (deviceState == chaos::CUStateKey::START)
     {
-        strcpy(dev_status, "start");
+        dev_status<<"start";
     }
     else if (deviceState == chaos::CUStateKey::STOP)
     {
-        strcpy(dev_status, "stop");
+        dev_status<< "stop";
     }
     else if (deviceState == chaos::CUStateKey::FATAL_ERROR)
     {
-        strcpy(dev_status, "fatal error");
+        dev_status<< "fatal error";
     }
     else if (deviceState == chaos::CUStateKey::RECOVERABLE_ERROR)
     {
-        strcpy(dev_status, "recoverable error");
+        dev_status<< "recoverable error";
     }
     else
     {
-        strcpy(dev_status, "uknown");
+        dev_status<< "uknown";
     }
 }
 
 void ChaosController::dev_info_status::append_log(const std::string& log)
 {
     CTRLDBG_ << log;
-    snprintf(log_status, sizeof(log_status), "%s%s;", log_status, log.c_str());
+    log_status<<log;
 }
 
 void ChaosController::dev_info_status::reset()
 {
-    *dev_status = 0;
-    *error_status = 0;
-    *log_status = 0;
+    dev_status.seekg(0);
+    error_status.seekg(0);
+    log_status.seekg(0);
 }
 
 void ChaosController::dev_info_status::append_error(const std::string& log)
 {
     CTRLERR_ << log;
-    snprintf(error_status, sizeof(error_status), "%s%s;", error_status, log.c_str());
+    error_status<<log;
 }
 int ChaosController::getSnapshotsofCU(const std::string &cuname, std::map<uint64_t, std::string> &res)
 {
@@ -3771,10 +3778,12 @@ int ChaosController::getSnapshotsofCU(const std::string &cuname, std::map<uint64
 chaos::common::data::CDataWrapper *ChaosController::dev_info_status::getData()
 {
     data_wrapper.reset();
-    data_wrapper.addStringValue("dev_status", std::string(dev_status));
-    data_wrapper.addStringValue("log_status", std::string(log_status));
-    data_wrapper.addStringValue("error_status", std::string(error_status));
-
+    data_wrapper.addStringValue("dev_status", dev_status.str());
+    data_wrapper.addStringValue("log_status", log_status.str());
+    data_wrapper.addStringValue("error_status", error_status.str());
+    dev_status.seekg(0);
+    log_status.seekg(0);
+    error_status.seekg(0);
     return &data_wrapper;
 }
 chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what){
@@ -3812,6 +3821,48 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     return ret;
 
 }
+chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,CDWUniquePtr data_pack,const std::string& what,bool alive){
+    chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+
+    chaos::common::data::VectorCDWUniquePtr node=getNodeInfo(search,what,alive);
+    auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
+    for (chaos::common::data::VectorCDWUniquePtr::iterator i=node.begin();i!=node.end();i++){
+         DBGET << what << " INFO:" << (*i)->getCompliantJSONString();
+         if((*i)->hasKey(chaos::NodeDefinitionKey::NODE_RPC_ADDR)){
+
+         
+            std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
+            std::string node_id=(*i)->getStringValue("ndk_uid");
+
+               
+            ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
+                                                                                chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
+                                                                                 rpcmsg,
+                                                                                 MOVE(data_pack));
+                if(rpcmsg==chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN){
+                    DBGET << "SENT IMMEDIATE \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                    return infos;
+                }
+                fut->wait(MDS_TIMEOUT);
+                if(fut->getError()==0){
+                    (*i)->addCSDataValue(node_id,*fut->detachResult().get());
+                } else {
+                    DBGET << "Error sending command \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
+                }
+                
+
+                infos->appendCDataWrapperToArray(*i->get());
+
+            }
+    }
+    infos->finalizeArrayForKey("info");
+    NetworkBroker::getInstance()->disposeMessageChannel(message_channel);
+        
+    return infos;
+}
+
 chaos::common::data::CDWUniquePtr ChaosController::getBuildProcessInfo(const std::string& search,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
     chaos::common::data::VectorCDWUniquePtr agent=getNodeInfo(search,what,alive);

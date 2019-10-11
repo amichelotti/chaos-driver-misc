@@ -168,27 +168,19 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()
 		
 	for (int i=0; i < numofchannels; ++i)
 	{
-	   char nums[8];
-       sprintf(nums,"%d",i);
-	   std::string chanName=(std::string)"CH"+ nums;
-	   addAttributeToDataSet(chanName,
+	   std::stringstream ss;
+			
+			ss<<"CH"<<i;
+			std::string attrname=ss.str();
+	   addAttributeToDataSet(attrname,
 							"voltage channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Bidirectional);
 
 	   addHandlerOnInputAttributeName< ::driver::gibcontrol::SCGibControlControlUnit,double>(this,
-		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,chanName) ;
+		&::driver::gibcontrol::SCGibControlControlUnit::myFunc,attrname) ;
 	}
-	/*for (int i=0; i < numofchannels; ++i)
-	{
-	   char nums[8];
-       sprintf(nums,"%d",i);
-	   std::string chanName=(std::string)"OFFSET_CH"+ nums;
-	   addAttributeToDataSet(chanName,
-							"voltage channel",
-							DataType::TYPE_DOUBLE,
-							DataType::Input);
-	}*/
+	
 
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"notified when driver answers not zero");
@@ -231,9 +223,10 @@ void ::driver::gibcontrol::SCGibControlControlUnit::unitStart()  {
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"gib_unreachable",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 		for (int i=0; i < Voltaggi.size(); i++)
 		{
-			char nums[8];
-			sprintf(nums,"%d",i);
-			std::string attrname=(std::string)"CH"+ nums;
+			std::stringstream ss;
+			
+			ss<<"CH"<<i;
+			std::string attrname=ss.str();
 			double *tmp=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,attrname);
 			double *tmpI=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,attrname);
 			*tmp=Voltaggi[i];
@@ -302,9 +295,10 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos:
 			chaos::common::data::cache::SharedCacheDomain restoreDomain=DOMAIN_INPUT;
 			for (int i=0;i < nums; ++i)
 			{
-				char chVal[8];
-       			sprintf(chVal,"%d",i);
-				std::string chanToRestore=(std::string)"CH"+ chVal ;
+				std::stringstream ss;
+			
+			ss<<"CH"<<i;
+			std::string chanToRestore=ss.str();
 				if (!snapshot_cache->getSharedDomain(restoreDomain).hasAttribute(chanToRestore))
 				{
 					RESTORE_LERR << " missing "<<chanToRestore <<" to restore";
