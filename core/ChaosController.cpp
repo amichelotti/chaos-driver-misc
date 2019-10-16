@@ -2651,6 +2651,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
          */
         if (wostate && (cmd == "status"))
         {
+                bundle_state.reset();
+
             bundle_state.status(chaos::CUStateKey::START);
             state = chaos::CUStateKey::START;
             bundle_state.append_log("stateless device");
@@ -2949,6 +2951,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     res << "{\"data\":[";
                     boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+                    uint32_t reduction_factor=1;
+                    if(p.hasKey("reduction")){
+                        reduction_factor=p.getInt32Value("reduction");
+                    }
+                    
+
                     if (query_cursor->hasNext())
                     {
                         uint32_t elems = query_cursor->size();
@@ -2962,7 +2970,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             }
                             else
                             {
-                                res << data->getCompliantJSONString();
+                                if( ((cnt-1) == elems) || (reduction_factor==1) || ((cnt%reduction_factor)==0)){
+                                    if (p.hasKey("projection")){
+                                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
+                                        std::vector<std::string> keys=*dw;
+                                    
+                                            res<<(data->getCSProjection(keys))->getCompliantJSONString();
+                                        
+                                        
+                                    } else {
+                                    
+                                            res << data->getCompliantJSONString();
+                                        
+                                    }
+                                }
                             }
                             cnt++;
                             if (cnt < elems)
@@ -3552,6 +3573,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     return CHAOS_DEV_CMD;
                 }
             }
+            bundle_state.reset();
+
             bundle_state.status(state);
             json_buf = bundle_state.getData()->getCompliantJSONString();
             return CHAOS_DEV_OK;
@@ -3611,6 +3634,7 @@ int ChaosController::updateState()
         state = chaos::CUStateKey::START;
         return -1;
     }
+    bundle_state.reset();
 
     bundle_state.status(state);
 
