@@ -2952,51 +2952,54 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     res << "{\"data\":[";
                     boost::shared_ptr<chaos::common::data::CDataWrapper> data;
                     uint32_t reduction_factor=1;
+                    uint32_t count_items=0;
                     if(p.hasKey("reduction")){
                         reduction_factor=p.getInt32Value("reduction");
                     }
-                    
-
+                    if(p.hasKey("count")){
+                        count_items=p.getInt32Value("count");
+                    }
+                    std::vector<std::string> keys;
+                    if (p.hasKey("projection")){
+                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
+                        keys=*dw;
+                    }
                     if (query_cursor->hasNext())
                     {
                         uint32_t elems = query_cursor->size();
+                        int cntt=0;
                         while (cnt < elems)
                         {
                             ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
                             data = normalizeToJson(q_result.get(), binaryToTranslate);
-                            if (var_name.size() && data->hasKey(var_name))
-                            {
+                            if( /*((cnt+1)==elems) || */(reduction_factor==1) || ((count_items%reduction_factor)==0)){
+                                if(cntt>0){
+                                    res<<",";
+                                }
+                                cntt++;
+                            if (var_name.size() && data->hasKey(var_name)){
                                 res << dataset2Var(data.get(), var_name);
                             }
-                            else
-                            {
-                                if( ((cnt-1) == elems) || (reduction_factor==1) || ((cnt%reduction_factor)==0)){
-                                    if (p.hasKey("projection")){
-                                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
-                                        std::vector<std::string> keys=*dw;
-                                    
-                                            res<<(data->getCSProjection(keys))->getCompliantJSONString();
-                                        
-                                        
+                            else{
+                                    if (keys.size()){
+                                        res<<(data->getCSProjection(keys))->getCompliantJSONString();          
                                     } else {
-                                    
-                                            res << data->getCompliantJSONString();
-                                        
+                                        res << data->getCompliantJSONString();
+    
                                     }
+                                   
                                 }
                             }
                             cnt++;
-                            if (cnt < elems)
-                            {
-                                res << ",";
-                            }
+                            count_items++;
+                           
                         }
                     }
                     res << "]";
 
                     query_cursor->getIndexes(runid, seqid);
-                    res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
-
+                    res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"count\":"<<count_items<<",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
+                    //DBGET <<" returned:"<<res.str();
                     releaseQuery(query_cursor);
                     json_buf = res.str();
                     return CHAOS_DEV_OK;
