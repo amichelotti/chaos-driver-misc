@@ -3728,7 +3728,7 @@ ChaosController::dev_info_status::dev_info_status()
 
 void ChaosController::dev_info_status::status(chaos::CUStateKey::ControlUnitState deviceState)
 {
-    dev_status.seekg(0);
+    dev_status.str("");
     if (deviceState == chaos::CUStateKey::DEINIT)
     {
      dev_status<<   "deinit";
@@ -3768,9 +3768,9 @@ void ChaosController::dev_info_status::append_log(const std::string& log)
 
 void ChaosController::dev_info_status::reset()
 {
-    dev_status.seekg(0);
-    error_status.seekg(0);
-    log_status.seekg(0);
+    dev_status.str("");
+    error_status.str("");
+    log_status.str("");
 }
 
 void ChaosController::dev_info_status::append_error(const std::string& log)
@@ -3808,9 +3808,9 @@ chaos::common::data::CDataWrapper *ChaosController::dev_info_status::getData()
     data_wrapper.addStringValue("dev_status", dev_status.str());
     data_wrapper.addStringValue("log_status", log_status.str());
     data_wrapper.addStringValue("error_status", error_status.str());
-    dev_status.seekg(0);
-    log_status.seekg(0);
-    error_status.seekg(0);
+    dev_status.str("");
+    log_status.str("");
+    error_status.str("");
     return &data_wrapper;
 }
 chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what){
