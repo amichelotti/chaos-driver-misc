@@ -1343,9 +1343,9 @@ int ChaosController::unloadDevice(const std::string& dev){
     EXECUTE_CHAOS_RET_API(ret,api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
     return ret;
 }
-int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
+int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res,  const ChaosStringSet& projection,int page){
     std::vector<std::string> tags;
-    return queryHistory(start,end,0,0,tags,channel,res, page);
+    return queryHistory(start,end,0,0,tags,channel,res,projection, page);
 }
 
 void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
@@ -1353,6 +1353,7 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                              uint64_t      end_ts,
                                              QueryCursor** query_cursor,
                                             const std::string&name,
+
                                              uint32_t      page) {
   executeTimeIntervalQuery(
       domain,
@@ -1360,6 +1361,8 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
       end_ts,
       ChaosStringSet(),
       query_cursor,
+        ChaosStringSet(),
+
       name,
       page);
 }
@@ -1368,7 +1371,10 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                              uint64_t end_ts,
                                              const ChaosStringSet& meta_tags,
                                              QueryCursor **query_cursor,
+                                             const ChaosStringSet& projection,
+
                                              const std::string&name,
+
                                              uint32_t page) {
     if((domain>=0) && (domain<=DPCK_LAST_DATASET_INDEX)){
         std::string n=(name=="")?path:name;
@@ -1378,7 +1384,7 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                                        start_ts,
                                                        end_ts,
                                                        meta_tags,
-                                                       
+                                                       projection,
                                                        page);
     }
 }
@@ -1392,6 +1398,8 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
                                             const uint64_t runid,
                                             const ChaosStringSet& meta_tags,
                                             chaos::common::io::QueryCursor **query_cursor,
+                                            const ChaosStringSet& projection,
+
                                             const std::string&name,
 
                                             const uint32_t page_len){
@@ -1405,13 +1413,14 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
                                                        seqid,
                                                        runid,
                                                        meta_tags,
+                                                       projection,
                                                        page_len);
     }
     
 }
 
 
-int32_t ChaosController::queryHistory(const std::string& start,const std::string& end, uint64_t runid,uint64_t seqid,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page){
+int32_t ChaosController::queryHistory(const std::string& start,const std::string& end, uint64_t runid,uint64_t seqid,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, const ChaosStringSet& projection,int page){
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
     int32_t ret = 0, err = 0;
@@ -1419,7 +1428,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     if (page == 0)
     {
         std::set<std::string> tagsv(tags.begin(),tags.end());
-        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid,tagsv, &query_cursor);
+        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid,tagsv, &query_cursor,projection);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1436,7 +1445,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     else
     {
         int cnt = 0;
-        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid, ChaosStringSet(),&query_cursor, path,page);
+        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid, ChaosStringSet(),&query_cursor, projection,path,page);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -2926,23 +2935,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 // perform a query without cursor.
                 uint64_t seqid = p.getInt64Value("seq");
                 uint64_t runid = 0;
-                std::set<std::string> tags;
+                std::set<std::string> tags,projection;
                 if (p.hasKey("runid")){
                     runid = p.getInt64Value("runid");
                 }
                 if (p.hasKey("tags")){
                     if(p.isVector("tags")){
                         ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("tags");
-                        for(int cnt=0;cnt<dw->size();cnt++){
-                            tags.insert(dw->getStringElementAtIndex(cnt));
-                        }
+                        tags=*dw;
+                        
                     } else if(p.isStringValue("tags")){
                         tags.insert(p.getStringValue("tags"));
                     }
                 }
+                if (p.hasKey("projection")){
+                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
+                        projection=*dw;
+                    }
                 DBGET << "START SEQ QUERY :" << std::dec << start_ts << " end:" << end_ts << "seq id " << seqid << " run id:" << runid << " page:" << page;
 
-                executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, path,page);
+                executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, projection,path,page);
                 if (query_cursor)
                 {
                     cnt = 0;

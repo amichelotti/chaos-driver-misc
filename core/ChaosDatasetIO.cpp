@@ -526,7 +526,7 @@ uint64_t ChaosDatasetIO::queryHistoryDatasets(
            << "ntags:" << meta_tags.size() << " page:" << page;
 
   chaos::common::io::QueryCursor *pnt = ioLiveDataDriver->performQuery(
-      dst, ms_start, ms_end, sequid, runid, meta_tags, page);
+      dst, ms_start, ms_end, sequid, runid, meta_tags, ChaosStringSet(),page);
   if (pnt == NULL) {
     DPD_LERR << "NO CURSOR";
 

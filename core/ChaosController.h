@@ -243,7 +243,10 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
                                    uint64_t end_ts,
                                    const ChaosStringSet &meta_tags,
                                    chaos::common::io::QueryCursor **query_cursor,
+                                   const ChaosStringSet &projection=ChaosStringSet(),
+
                                    const std::string&name="",
+
                                    uint32_t page= DEFAULT_PAGE_LEN);
     void executeTimeIntervalQuery(const DatasetDomain domain,
                                                    const uint64_t start_ts,
@@ -260,8 +263,12 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
                                   const uint64_t seqid,
                                   const uint64_t runid,
                                   const ChaosStringSet &meta_tags,
+
                                   chaos::common::io::QueryCursor **query_cursor,
+                                  const ChaosStringSet &projection=ChaosStringSet(),
+
                                   const std::string&name="",
+
                                   const uint32_t page_len= DEFAULT_PAGE_LEN);
     //! restore from a tag a dataset associated to a key
     int createNewSnapshot(const std::string &snapshot_tag,
@@ -314,8 +321,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      *  @param[in]  page page len =o if full search
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
-    int32_t queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res, int page = 0);
-    int32_t queryHistory(const std::string &start, const std::string &end, uint64_t runid,uint64_t seqid,const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res, int page = 0);
+    int32_t queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > &res,  const ChaosStringSet& projection=ChaosStringSet(),int page = 0);
+    int32_t queryHistory(const std::string &start, const std::string &end, uint64_t runid,uint64_t seqid,const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
 
     int32_t queryNext(int32_t id, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res);
     bool queryHasNext(int32_t id);
