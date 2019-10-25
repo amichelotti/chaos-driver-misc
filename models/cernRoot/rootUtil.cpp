@@ -332,7 +332,7 @@ static TTree* query_int(TTree* tree_ret, const std::string&chaosNode,
 */
         ctrl = new ChaosController(chaosNode);
 
-        int32_t ret = ctrl->queryHistory(start, end, runid,pckid,tags,channel, res, pageLen);
+        int32_t ret = ctrl->queryHistory(start, end, runid,pckid,tags,channel, res, ChaosStringSet(),pageLen);
         int cnt = 0;
         if (res.size() > 0) {
             ROOTDBG<<"Query result size with pagelen "<<pageLen<<" is "<<res.size()<<" elements";
