@@ -2486,7 +2486,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         }
         else if (cmd == "log")
         {
-            PARSE_QUERY_PARMS(args, true, true);
+            PARSE_QUERY_PARMS(args, false, false);
             if (what == "search")
             {
                 std::vector<std::string> domains;
