@@ -1169,6 +1169,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "|" << #api_name << " " << apires->getErrorMessage();   \
         bundle_state.append_error(ss.str());                                                                              \
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      \
+        execute_chaos_api_error++;                                                                                          \
     } else {chaos::common::data::CDWUniquePtr r=apires->detachResult();if((r.get()!=NULL)) json_buf=r->getCompliantJSONString();}
 
 
@@ -1596,6 +1597,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
     try
     {
         // global commands
+        int execute_chaos_api_error=0;
         if (cmd == "search")
         {
             std::stringstream res;
@@ -1832,7 +1834,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             else if (what == "script")
             {
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name);
-                return CHAOS_DEV_OK;
+                return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
             }
             else
             {
@@ -2006,7 +2008,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode, MDS_TIMEOUT, name, uid, datasets);
                     }
                     CALC_EXEC_TIME
-                    return CHAOS_DEV_OK;
+                    return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+;
                 }
                 bundle_state.append_error(serr.str());
                 json_buf = bundle_state.getData()->getCompliantJSONString();
@@ -2478,11 +2481,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (names.get() && (names->size() > 0))
             {
                 res << "]";
-                ret = CHAOS_DEV_OK;
+                ret = (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+;
 
             }
             json_buf = res.str();
-            return ret;
+            return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;;
         }
         else if (cmd == "log")
         {
@@ -2502,12 +2506,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry, MDS_TIMEOUT, name, domains, start_ts, end_ts, seq_id, page);
                 //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
                 //chaos::common::data::CDWUniquePtr r = apires->detachResult();
-                if (apires->getError())
-                {
-                    return CHAOS_DEV_CMD;
-                }
-                
-                return CHAOS_DEV_OK;
+               
+                return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+
             }
             serr << cmd << " bad command format";
             bundle_state.append_error(serr.str());
