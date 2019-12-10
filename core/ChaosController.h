@@ -181,7 +181,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
     virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
-
+    std::vector<std::string> searchAllAlive(const std::string& what="cu");
     int initDevice(const std::string &dev = "");
     int stopDevice(const std::string &dev = "");
     int startDevice(const std::string &dev = "");
