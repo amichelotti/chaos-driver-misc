@@ -112,7 +112,7 @@ static branchAlloc_t* createBranch(TTree* tr,treeQuery& q,chaos::common::data::C
 
                 }
             }
-            //	ROOTDBG<<" BELE "<<varname<<" tot size:"<<query[branch_counter].size;
+            ROOTDBG<<" BELE Vector "<<varname.str()<<" tot size:"<<query[branch_counter].size;
 
         } else {
               type_size = cd->getValueType(*it);
@@ -292,7 +292,8 @@ static int addTree(treeQuery_t& q, chaos::common::data::CDataWrapper*cd) {
             case chaos::DataType::TYPE_DOUBLE:
             case chaos::DataType::TYPE_INT64:
             case chaos::DataType::TYPE_BOOLEAN:
-            case chaos::DataType::TYPE_INT32:{
+            case chaos::DataType::TYPE_INT32:
+            case chaos::DataType::TYPE_BYTEARRAY:{
                 memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
                 ptr+=cd->getValueSize(*it);
                 break;
