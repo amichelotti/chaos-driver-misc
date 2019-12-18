@@ -1169,6 +1169,7 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "|" << #api_name << " " << apires->getErrorMessage();   \
         bundle_state.append_error(ss.str());                                                                              \
         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      \
+        execute_chaos_api_error++;                                                                                          \
     } else {chaos::common::data::CDWUniquePtr r=apires->detachResult();if((r.get()!=NULL)) json_buf=r->getCompliantJSONString();}
 
 
@@ -1343,9 +1344,9 @@ int ChaosController::unloadDevice(const std::string& dev){
     EXECUTE_CHAOS_RET_API(ret,api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
     return ret;
 }
-int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res, int page){
+int32_t ChaosController::queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<CDataWrapper> > &res,  const ChaosStringSet& projection,int page){
     std::vector<std::string> tags;
-    return queryHistory(start,end,0,0,tags,channel,res, page);
+    return queryHistory(start,end,0,0,tags,channel,res,projection, page);
 }
 
 void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
@@ -1353,6 +1354,7 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                              uint64_t      end_ts,
                                              QueryCursor** query_cursor,
                                             const std::string&name,
+
                                              uint32_t      page) {
   executeTimeIntervalQuery(
       domain,
@@ -1360,6 +1362,8 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
       end_ts,
       ChaosStringSet(),
       query_cursor,
+        ChaosStringSet(),
+
       name,
       page);
 }
@@ -1368,7 +1372,10 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                              uint64_t end_ts,
                                              const ChaosStringSet& meta_tags,
                                              QueryCursor **query_cursor,
+                                             const ChaosStringSet& projection,
+
                                              const std::string&name,
+
                                              uint32_t page) {
     if((domain>=0) && (domain<=DPCK_LAST_DATASET_INDEX)){
         std::string n=(name=="")?path:name;
@@ -1378,7 +1385,7 @@ void ChaosController::executeTimeIntervalQuery(DatasetDomain domain,
                                                        start_ts,
                                                        end_ts,
                                                        meta_tags,
-                                                       
+                                                       projection,
                                                        page);
     }
 }
@@ -1392,6 +1399,8 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
                                             const uint64_t runid,
                                             const ChaosStringSet& meta_tags,
                                             chaos::common::io::QueryCursor **query_cursor,
+                                            const ChaosStringSet& projection,
+
                                             const std::string&name,
 
                                             const uint32_t page_len){
@@ -1405,13 +1414,14 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain domain,
                                                        seqid,
                                                        runid,
                                                        meta_tags,
+                                                       projection,
                                                        page_len);
     }
     
 }
 
 
-int32_t ChaosController::queryHistory(const std::string& start,const std::string& end, uint64_t runid,uint64_t seqid,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, int page){
+int32_t ChaosController::queryHistory(const std::string& start,const std::string& end, uint64_t runid,uint64_t seqid,const std::vector<std::string>& tags, int channel,std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >&res, const ChaosStringSet& projection,int page){
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts = offsetToTimestamp(end);
     int32_t ret = 0, err = 0;
@@ -1419,7 +1429,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     if (page == 0)
     {
         std::set<std::string> tagsv(tags.begin(),tags.end());
-        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid,tagsv, &query_cursor);
+        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid,tagsv, &query_cursor,projection);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1436,7 +1446,7 @@ int32_t ChaosController::queryHistory(const std::string& start,const std::string
     else
     {
         int cnt = 0;
-        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid, ChaosStringSet(),&query_cursor, path,page);
+        executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,seqid,runid, ChaosStringSet(),&query_cursor, projection,path,page);
         if (query_cursor == NULL)
         {
             CTRLERR_ << " error during intervall query, no cursor available";
@@ -1571,7 +1581,13 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,cons
    mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
    return res; 
 }
+std::vector<std::string> ChaosController::searchAllAlive(const std::string& what){
+            ChaosStringVector node_found;
+            chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
+            mdsChannel->searchNode("",node_type,true,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT);
+            return node_found;
+}
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string &cmd, char *args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf)
 {
     int err;
@@ -1587,6 +1603,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
     try
     {
         // global commands
+        int execute_chaos_api_error=0;
         if (cmd == "search")
         {
             std::stringstream res;
@@ -1823,7 +1840,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             else if (what == "script")
             {
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name);
-                return CHAOS_DEV_OK;
+                return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
             }
             else
             {
@@ -1997,7 +2014,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode, MDS_TIMEOUT, name, uid, datasets);
                     }
                     CALC_EXEC_TIME
-                    return CHAOS_DEV_OK;
+                    return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+;
                 }
                 bundle_state.append_error(serr.str());
                 json_buf = bundle_state.getData()->getCompliantJSONString();
@@ -2469,15 +2487,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (names.get() && (names->size() > 0))
             {
                 res << "]";
-                ret = CHAOS_DEV_OK;
+                ret = (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+;
 
             }
             json_buf = res.str();
-            return ret;
+            return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;;
         }
         else if (cmd == "log")
         {
-            PARSE_QUERY_PARMS(args, true, true);
+            PARSE_QUERY_PARMS(args, false, false);
             if (what == "search")
             {
                 std::vector<std::string> domains;
@@ -2493,12 +2512,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry, MDS_TIMEOUT, name, domains, start_ts, end_ts, seq_id, page);
                 //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
                 //chaos::common::data::CDWUniquePtr r = apires->detachResult();
-                if (apires->getError())
-                {
-                    return CHAOS_DEV_CMD;
-                }
-                
-                return CHAOS_DEV_OK;
+               
+                return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+
             }
             serr << cmd << " bad command format";
             bundle_state.append_error(serr.str());
@@ -2651,6 +2667,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
          */
         if (wostate && (cmd == "status"))
         {
+                bundle_state.reset();
+
             bundle_state.status(chaos::CUStateKey::START);
             state = chaos::CUStateKey::START;
             bundle_state.append_log("stateless device");
@@ -2924,23 +2942,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 // perform a query without cursor.
                 uint64_t seqid = p.getInt64Value("seq");
                 uint64_t runid = 0;
-                std::set<std::string> tags;
+                std::set<std::string> tags,projection;
                 if (p.hasKey("runid")){
                     runid = p.getInt64Value("runid");
                 }
                 if (p.hasKey("tags")){
                     if(p.isVector("tags")){
                         ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("tags");
-                        for(int cnt=0;cnt<dw->size();cnt++){
-                            tags.insert(dw->getStringElementAtIndex(cnt));
-                        }
+                        tags=*dw;
+                        
                     } else if(p.isStringValue("tags")){
                         tags.insert(p.getStringValue("tags"));
                     }
                 }
+                if (p.hasKey("projection")){
+                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
+                        projection=*dw;
+                    }
                 DBGET << "START SEQ QUERY :" << std::dec << start_ts << " end:" << end_ts << "seq id " << seqid << " run id:" << runid << " page:" << page;
 
-                executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, path,page);
+                executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags,&query_cursor, projection,path,page);
                 if (query_cursor)
                 {
                     cnt = 0;
@@ -2949,33 +2970,55 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     res << "{\"data\":[";
                     boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+                    uint32_t reduction_factor=1;
+                    uint32_t count_items=0;
+                    if(p.hasKey("reduction")){
+                        reduction_factor=p.getInt32Value("reduction");
+                    }
+                    if(p.hasKey("count")){
+                        count_items=p.getInt32Value("count");
+                    }
+                    std::vector<std::string> keys;
+                    if (p.hasKey("projection")){
+                        ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
+                        keys=*dw;
+                    }
                     if (query_cursor->hasNext())
                     {
                         uint32_t elems = query_cursor->size();
+                        int cntt=0;
                         while (cnt < elems)
                         {
                             ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
                             data = normalizeToJson(q_result.get(), binaryToTranslate);
-                            if (var_name.size() && data->hasKey(var_name))
-                            {
+                            if( /*((cnt+1)==elems) || */(reduction_factor==1) || ((count_items%reduction_factor)==0)){
+                                if(cntt>0){
+                                    res<<",";
+                                }
+                                cntt++;
+                            if (var_name.size() && data->hasKey(var_name)){
                                 res << dataset2Var(data.get(), var_name);
                             }
-                            else
-                            {
-                                res << data->getCompliantJSONString();
+                            else{
+                                    if (keys.size()){
+                                        res<<(data->getCSProjection(keys))->getCompliantJSONString();          
+                                    } else {
+                                        res << data->getCompliantJSONString();
+    
+                                    }
+                                   
+                                }
                             }
                             cnt++;
-                            if (cnt < elems)
-                            {
-                                res << ",";
-                            }
+                            count_items++;
+                           
                         }
                     }
                     res << "]";
 
                     query_cursor->getIndexes(runid, seqid);
-                    res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
-
+                    res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"count\":"<<count_items<<",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
+                    //DBGET <<" returned:"<<res.str();
                     releaseQuery(query_cursor);
                     json_buf = res.str();
                     return CHAOS_DEV_OK;
@@ -3552,6 +3595,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     return CHAOS_DEV_CMD;
                 }
             }
+            bundle_state.reset();
+
             bundle_state.status(state);
             json_buf = bundle_state.getData()->getCompliantJSONString();
             return CHAOS_DEV_OK;
@@ -3611,6 +3656,7 @@ int ChaosController::updateState()
         state = chaos::CUStateKey::START;
         return -1;
     }
+    bundle_state.reset();
 
     bundle_state.status(state);
 
@@ -3701,7 +3747,7 @@ ChaosController::dev_info_status::dev_info_status()
 
 void ChaosController::dev_info_status::status(chaos::CUStateKey::ControlUnitState deviceState)
 {
-    dev_status.seekg(0);
+    dev_status.str("");
     if (deviceState == chaos::CUStateKey::DEINIT)
     {
      dev_status<<   "deinit";
@@ -3741,9 +3787,9 @@ void ChaosController::dev_info_status::append_log(const std::string& log)
 
 void ChaosController::dev_info_status::reset()
 {
-    dev_status.seekg(0);
-    error_status.seekg(0);
-    log_status.seekg(0);
+    dev_status.str("");
+    error_status.str("");
+    log_status.str("");
 }
 
 void ChaosController::dev_info_status::append_error(const std::string& log)
@@ -3781,9 +3827,9 @@ chaos::common::data::CDataWrapper *ChaosController::dev_info_status::getData()
     data_wrapper.addStringValue("dev_status", dev_status.str());
     data_wrapper.addStringValue("log_status", log_status.str());
     data_wrapper.addStringValue("error_status", error_status.str());
-    dev_status.seekg(0);
-    log_status.seekg(0);
-    error_status.seekg(0);
+    dev_status.str("");
+    log_status.str("");
+    error_status.str("");
     return &data_wrapper;
 }
 chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what){

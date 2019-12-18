@@ -5,7 +5,6 @@
  * Created on September 10, 2015, 11:24 AM
  */
 
-
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <driver/misc/core/ChaosController.h>
 using namespace std;
@@ -17,45 +16,79 @@ using namespace std;
  */
 using namespace driver::misc;
 using namespace chaos::metadata_service_client;
-class ChaosRoot:public TRint {
+class ChaosRoot : public TRint, public chaos::ChaosCommon<ChaosRoot>,public chaos::ServerDelegator {
+            friend class chaos::common::utility::Singleton<ChaosRoot>;
+
 public:
-    ChaosRoot(const char* appClassName, int* argc, char** argv, void* options = 0, int numOptions = 0, Bool_t noLogo = kFALSE):TRint(appClassName, argc, argv, options , numOptions, noLogo){
+    ChaosRoot(const char *appClassName, int *argc, char **argv, void *options = 0, int numOptions = 0, Bool_t noLogo = kFALSE) : TRint(appClassName, argc, argv, options, numOptions, noLogo)
+    {
     }
-    ~ChaosRoot(){
-
-
+    ~ChaosRoot()
+    {
     }
-    void Terminate(int status){
-        std::cout<<"Deinitializing ChaosRoot..."<<std::endl;
+    void Terminate(int status)
+    {
+        std::cout << "Deinitializing ChaosRoot..." << std::endl;
         ChaosMetadataServiceClient::getInstance()->stop();
         ChaosMetadataServiceClient::getInstance()->deinit();
-        std::cout<<"...done"<<std::endl;
+        std::cout << "...done" << std::endl;
+        stop();
+        deinit();
         exit(status);
+    }
+    void init(int argc, const char *argv[])
+    {
+        chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
+    }
+
+    void init(istringstream &initStringStream)
+    {
+        chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
+    }
+    void start()
+    {
+        chaos::ChaosCommon<ChaosRoot>::start();
+    }
+
+    void deinit()
+    {
+        chaos::ChaosCommon<ChaosRoot>::deinit();
+    }
+    void stop()
+    {
+        chaos::ChaosCommon<ChaosRoot>::stop();
+    }
+    void init(void *init_data)  {
+                chaos::ChaosCommon<ChaosRoot>::init(init_data);
+
     }
 };
 static ChaosRoot *rootapp;
-int main(int argc, const char** argv) {
-	std::string rootopt;
-    const char* root_opts[120];
-	int nroot_opts=0;
-	std::string buf;
-	ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
-	ChaosMetadataServiceClient::getInstance()->init(argc,argv);
-	ChaosMetadataServiceClient::getInstance()->start();
+int main(int argc, const char **argv)
+{
+    std::string rootopt;
+    const char *root_opts[120];
+    int nroot_opts = 0;
+    std::string buf;
+    ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<string>(&rootopt), "Options to give to CERN ROOT interpreter ");
+    ChaosMetadataServiceClient::getInstance()->init(argc, argv);
+    ChaosMetadataServiceClient::getInstance()->start();
     initChaosRoot();
-	 root_opts[nroot_opts++]=argv[0];
+    root_opts[nroot_opts++] = argv[0];
 
-	 stringstream ss(rootopt);
-	 while (ss >> buf){
-         root_opts[nroot_opts++]=buf.c_str();
-	 }
+    stringstream ss(rootopt);
+    while (ss >> buf)
+    {
+        root_opts[nroot_opts++] = buf.c_str();
+    }
 
-
-    rootapp = new ChaosRoot("Rint", &nroot_opts, (char**)root_opts);
-	rootapp->SetPrompt("chaosRoot[%d]>");
-	rootapp->Run();
-  //  ChaosMetadataServiceClient::getInstance()->stop();
-  //  ChaosMetadataServiceClient::getInstance()->deinit();
+    rootapp = new ChaosRoot("Rint", &nroot_opts, (char **)root_opts);
+    
+    //rootapp->init(NULL);
+    //rootapp->start();
+    rootapp->SetPrompt("chaosRoot[%d]>");
+    rootapp->Run();
+    //  ChaosMetadataServiceClient::getInstance()->stop();
+    //  ChaosMetadataServiceClient::getInstance()->deinit();
     return 0;
 }
-
