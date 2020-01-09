@@ -600,9 +600,7 @@ uint64_t ChaosController::sched(uint64_t ts)
         //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
         if(cached_channels[cnt].get()){
             std::string tmp= cached_channels[cnt]->getCompliantJSONString();
-            if(tmp.size()<2){
-                cachedJsonChannels[cnt] ="{}";
-            } else {
+            if(tmp.size()>2){
                 cachedJsonChannels[cnt] =tmp;
                 all.addCSDataValue(chaos::datasetTypeToHuman(cnt), *(cached_channels[cnt].get()));
 
