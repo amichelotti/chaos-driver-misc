@@ -43,6 +43,8 @@ namespace driver {
 
 
 			private:
+			std::string GraphicsAddress;
+			std::string GraphicsPort;
 			chaos::common::data::CDWShrdPtr  VUGImporterDataset;
 			chaos::common::data::CDWShrdPtr  CCALTLumiDataset;
 			uint64_t pastTimestamp;
@@ -51,6 +53,7 @@ namespace driver {
 			const char* dafnestatPathPointer;
 			const char* vugNamePointer;
 			const char* CalLumiNamePointer;
+			const char* graphicServerAddressPointer;
 			const char* outfilePointer;
 			const char* siddhartaPathPointer;
 			const char* beamFileElectronPathPointer;
