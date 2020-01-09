@@ -316,7 +316,7 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 	*/
 	::general::utility::HTTPResponse resp;
-	::general::utility::HTTPClient   Sender("192.168.198.52","80");
+	::general::utility::HTTPClient   Sender("192.168.192.107","80");
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
 	SCLDBG_ << "ALEDEBUG: Sending data for graphics returned " << resp.ReturnCode; 
 	if (resp.ReturnCode != 201)
