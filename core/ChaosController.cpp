@@ -397,6 +397,7 @@ int ChaosController::sendMDSCmd(command_t& cmd){
     */    
     //err = deviceChannel->setAttributeValue(local_command_pack, false, millisecToWait);
     local_command_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, path);
+    CTRLDBG_ << "sending command through MDS \"" << cmd->alias << "\" params:" << cmd->param.getJSONString()<< " full msg:"<<local_command_pack->getJSONString();
 
     //chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(local_command_pack); 
     chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(
@@ -424,7 +425,7 @@ int ChaosController::sendCmd(command_t &cmd, bool wait, uint64_t perform_at, uin
         cmd->param.addInt64Value("wait_for", wait_for);
         DBGET << "command will be performed in " << wait_for << " us";
     }
-    CTRLAPP_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getCompliantJSONString();
+    CTRLAPP_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getJSONString();
     if ((err = controller->submitSlowControlCommand(cmd->alias, cmd->sub_rule, cmd->priority, cmd->command_id, 0, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, &cmd->param)) != 0)
     {
         CTRLERR_ << "[" << getPath() << "] error submitting: err:" << err << " timeout set to:" << controller->getRequestTimeWaith();
