@@ -51,6 +51,7 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 	this->loadedBeamElectronPath="";
 	this->loadedBeamPositronPath="";
 	this->loadedCCALTLUMICUName="";
+	this->loadedGraphicServerAddress = "";
 	if (!json_reader.parse(_control_unit_param, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << _control_unit_param;
@@ -75,6 +76,7 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 			std::string BeamPPath= json_parameter["BeamPositronFilePath"].asString();
 			this->loadedBeamPositronPath=BeamPPath;
 			this->loadedCCALTLUMICUName=json_parameter["CCALTLumiName"].asString();
+			this->loadedGraphicServerAddress = json_parameter["GraphicServerAddress"].asString();
 		}
 		catch(...)
 		{
@@ -366,6 +368,9 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttr
 
 	getAttributeCache()->addCustomAttribute("CULuminometerCCALT", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("CULuminometerCCALT",(char*) this->loadedCCALTLUMICUName.c_str(), sizeof(char)*256);
+
+	getAttributeCache()->addCustomAttribute("GraphicsDataServerAddress", sizeof(char) * 256, chaos::DataType::TYPE_STRING);
+	getAttributeCache()->setCustomAttributeValue("GraphicsDataServerAddress", (char*)this->loadedGraphicServerAddress.c_str(), sizeof(char) * 256);
 }
 // Abstract method for the initialization of the control unit
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitInit() {

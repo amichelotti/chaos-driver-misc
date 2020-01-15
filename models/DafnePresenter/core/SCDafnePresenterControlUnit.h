@@ -57,6 +57,7 @@ namespace driver {
 			std::string loadedSiddPath;
 			std::string loadedBeamElectronPath;
 			std::string loadedBeamPositronPath;
+			std::string loadedGraphicServerAddress;
 		};
 	}
 }

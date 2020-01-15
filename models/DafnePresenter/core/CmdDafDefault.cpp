@@ -24,6 +24,7 @@ limitations under the License.
 #include <common/misc/utility/HttpSender.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <iostream>
 #include <sstream>
 #define SCLAPP_ INFO_LOG(CmdDafDefault) << "[" << getDeviceID() << "] "
 #define SCLDBG_ DBG_LOG(CmdDafDefault) << "[" << getDeviceID() << "] "
@@ -74,7 +75,24 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	siddhartaPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"siddhartaPath");
 	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
 	CalLumiNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CULuminometerCCALT");
+	graphicServerAddressPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM, "GraphicsDataServerAddress");
 	
+	std::string toSplit(graphicServerAddressPointer);
+	std::istringstream ss(toSplit);
+	std::string splitted;
+	this->GraphicsAddress = "";
+	this->GraphicsPort = "";
+	int cnt = 0;
+	
+	while (std::getline(ss, splitted, ':')) {
+		if (cnt == 0)
+			this->GraphicsAddress = splitted;
+		if (cnt == 1)
+			this->GraphicsPort = splitted;
+		cnt++;
+	}
+
+
 	
 	p_timestamp = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "timestamp");
 	p_dafne_status = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "dafne_status");
@@ -316,7 +334,8 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 	*/
 	::general::utility::HTTPResponse resp;
-	::general::utility::HTTPClient   Sender("192.168.198.52","80");
+	
+	::general::utility::HTTPClient   Sender(GraphicsAddress, GraphicsPort);
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
 	SCLDBG_ << "ALEDEBUG: Sending data for graphics returned " << resp.ReturnCode; 
 	if (resp.ReturnCode != 201)
