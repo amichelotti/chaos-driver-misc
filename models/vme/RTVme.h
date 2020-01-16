@@ -46,6 +46,8 @@ protected:
     bool vme_master;
     uint32_t vme_options;
     vmewrap_vme_handle_t vme;
+    vmewrap_window_t window;
+
     std::vector<uint64_t> vme_offs;
 public:
     void unitDefineActionAndDataset() throw(chaos::CException);
