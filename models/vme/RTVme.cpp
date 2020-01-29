@@ -126,11 +126,12 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 	 		 throw CException(-1,__PRETTY_FUNCTION__,"cannot initialize VME DRIVER");
 	 }
 	 if(vme_master){
-		 ret=vmewrap_vme_open_master(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+           
+		 window=vmewrap_vme_open_master(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
 	 } else {
-		 ret=vmewrap_vme_open_slave(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
+		 window=vmewrap_vme_open_slave(vme,vme_base_address,vme_base_size,(vme_addressing_t)vme_addressing,(vme_access_t)vme_data_access,(vme_opt_t)0);
 	 }
-	if(ret!=0){
+	if(window==0){
 		std::stringstream ss;
 		ss<<"cannot map vme address 0x"<<std::hex<<vme_base_address;
 		 throw CException(-1,__PRETTY_FUNCTION__,ss.str());
@@ -142,7 +143,7 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 	 int cnt;
 	 for(cnt=0;cnt<vme_offs.size();cnt++){
 		 uint32_t data=0;
-		 vmewrap_read32(vme,vme_offs[cnt],&data,1);
+		 vmewrap_read32(window,vme_offs[cnt],&data,1);
 		 getAttributeCache()->setOutputAttributeValue(cnt,&data,sizeof(data));
 	 }
 	if(vme_offs.size()){
@@ -154,10 +155,14 @@ void RTVme::unitDefineActionAndDataset() throw(chaos::CException) {
 
  }
  void RTVme::unitDeinit() throw(chaos::CException){
-	 if(vme){
-		 vmewrap_vme_close(vme);
-		 vme=NULL;
+	 if(window){
+		 vmewrap_vme_close(window);
+		 window=NULL;
 	 }
+      if(vme){
+           vmewrap_deinit_driver(vme);
+           vme=NULL;
+      }
  }
  void RTVme::unitRun() throw(chaos::CException){}
  
