@@ -1613,7 +1613,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="webui")
+            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="webui" || what=="variable" || what=="tag")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
@@ -3843,6 +3843,10 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
                 node_type = chaos::NodeType::NodeSearchType::node_type_wan;
             if (what == "mds")
                 node_type = chaos::NodeType::NodeSearchType::node_type_cds;
+            if (what == "variable")
+                node_type = chaos::NodeType::NodeSearchType::node_type_variable;
+            if (what == "tag")
+                node_type = chaos::NodeType::NodeSearchType::node_type_tag;
     return node_type;
 }
 chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::string& search,const std::string& what,bool alive){
