@@ -1580,11 +1580,11 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,cons
    mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
    return res; 
 }
-std::vector<std::string> ChaosController::searchAllAlive(const std::string& what){
+std::vector<std::string> ChaosController::searchAlive(const std::string name,const std::string& what){
             ChaosStringVector node_found;
             chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
-            mdsChannel->searchNode("",node_type,true,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT);
+            mdsChannel->searchNode(name,node_type,true,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT);
             return node_found;
 }
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string &cmd, char *args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf)
@@ -2820,6 +2820,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             //chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
             //json_buf = data->getCompliantJSONString();
             std::string ret = fetchJson(atoi((char *)args));
+            if(ret.size()==0){
+                uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
+                this->sched(t);
+                ret = fetchJson(atoi((char *)args));
+            }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }
