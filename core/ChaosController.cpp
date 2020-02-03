@@ -1617,8 +1617,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
-
-              
+                uint32_t maxpage=MAX_QUERY_ELEMENTS;
+                uint32_t page_start=0;
+                bool pageaccess=false;
+                uint32_t npages=0;
+                if(p.hasKey("pagelen")){
+                    maxpage=p.getInt32Value("pagelen");
+                }
+                if(p.hasKey("pagestart")){
+                    page_start=p.getInt32Value("pagestart");
+                }
+                if(p.hasKey("pagestart")&&p.hasKey("pagelen")){
+                    pageaccess=true;
+                }
                 if ((names.get()) && names->size())
                 {
                     DBGET << "list nodes of type:" << node_type << "(" << what << ")";
@@ -1628,12 +1639,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         ChaosStringVector node_tmp;
 
                         const std::string domain = names->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain, node_type, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
-                        {
-                            node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                        if(pageaccess){
+                            if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT) == 0){
+                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                            }
+                        } else {
+                            if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT) == 0){
+                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                            }
                         }
                     }
-                    json_buf = vector2Json(node_found);
+                    if(pageaccess){
+                        std::stringstream ss;
+                        ss<<"{\"pages\":"<<npages<<",\"list\":"<<vector2Json(node_found)<<"}";
+                        json_buf=ss.str();
+                    } else {
+                        json_buf = vector2Json(node_found);
+                    }
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 }
@@ -1641,23 +1663,42 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     int err;
                     DBGET << "searching node \"" << name << "\" type:" << node_type << " (" << what << ")";
+                    if(pageaccess){
+                        if ((err = mdsChannel->searchNode(name,
+                                                        node_type,
+                                                        alive,
+                                                        page_start,
+                                                        maxpage,
+                                                        npages,
+                                                        node_found,
+                                                        MDS_TIMEOUT)) == 0)
+                        {
+                        std::stringstream ss;
+                        ss<<"{\"pages\":"<<npages<<",\"list\":"<<vector2Json(node_found)<<"}";
+                       
+                        json_buf=ss.str();
+                            CALC_EXEC_TIME;
+                            return CHAOS_DEV_OK;
+                        }else{
+                            serr << "searching node: \"" << name << "\" err:" << err;
+                        }
+                    } else {
 
-                    if ((err = mdsChannel->searchNode(name,
-                                                      node_type,
-                                                      alive,
-                                                      0,
-                                                      MAX_QUERY_ELEMENTS,
-                                                      node_found,
-                                                      MDS_TIMEOUT)) == 0)
-                    {
+                        if ((err = mdsChannel->searchNode(name,
+                                                        node_type,
+                                                        alive,
+                                                        0,
+                                                        maxpage,
+                                                        node_found,
+                                                        MDS_TIMEOUT)) == 0)
+                        {
 
-                        json_buf = vector2Json(node_found);
-                        CALC_EXEC_TIME;
-                        return CHAOS_DEV_OK;
-                    }
-                    else
-                    {
-                        serr << "searching node: \"" << name << "\" err:" << err;
+                            json_buf = vector2Json(node_found);
+                            CALC_EXEC_TIME;
+                            return CHAOS_DEV_OK;
+                        }else{
+                            serr << "searching node: \"" << name << "\" err:" << err;
+                        }
                     }
                 }
             }
