@@ -1621,6 +1621,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 uint32_t page_start=0;
                 bool pageaccess=false;
                 uint32_t npages=0;
+                std::string impl;
                 if(p.hasKey("pagelen")){
                     maxpage=p.getInt32Value("pagelen");
                 }
@@ -1629,6 +1630,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 if(p.hasKey("pagestart")&&p.hasKey("pagelen")){
                     pageaccess=true;
+                }
+                if(p.hasKey("impl")){
+                    impl=p.getStringValue("impl");
                 }
                 if ((names.get()) && names->size())
                 {
@@ -1640,11 +1644,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                         const std::string domain = names->getStringElementAtIndex(idx);
                         if(pageaccess){
-                            if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT) == 0){
+                            if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT,impl) == 0){
                                 node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                             }
                         } else {
-                            if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT) == 0){
+                            if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT,impl) == 0){
                                 node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                             }
                         }
@@ -1671,7 +1675,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                                         maxpage,
                                                         npages,
                                                         node_found,
-                                                        MDS_TIMEOUT)) == 0)
+                                                        MDS_TIMEOUT,impl)) == 0)
                         {
                         std::stringstream ss;
                         ss<<"{\"pages\":"<<npages<<",\"list\":"<<vector2Json(node_found)<<"}";
@@ -1690,7 +1694,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                                         0,
                                                         maxpage,
                                                         node_found,
-                                                        MDS_TIMEOUT)) == 0)
+                                                        MDS_TIMEOUT,impl)) == 0)
                         {
 
                             json_buf = vector2Json(node_found);
