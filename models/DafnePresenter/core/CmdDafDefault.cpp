@@ -156,7 +156,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdDafDefault::acquireHandler() {
-	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)15000000);
+	//setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_SCHEDULER_DELAY, (uint64_t)15000000);
 	DafneData::DafneDataToShow  DATO;
 	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
