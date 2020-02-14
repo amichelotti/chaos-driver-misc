@@ -103,7 +103,6 @@ bool queryHasNextChaosTree(TTree*tree);
  */
 bool queryFree(TTree*tree);
 
-
 void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const TTree* val);
 
 void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string& key,const TTree* val);
@@ -116,4 +115,17 @@ void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string
                  */
 TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name,bool multiple=true);
 void initChaosRoot();
+
+struct branchAlloc;
+class ChaosToTree{
+    TTree*root;
+    const std::string tname;
+    struct branchAlloc*branch_desc;
+    public:
+        ChaosToTree(const::std::string& treename);
+        ~ChaosToTree();
+
+        int addData(const chaos::common::data::CDataWrapper&);
+        TTree*getTree();
+};
 #endif
