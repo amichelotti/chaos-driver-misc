@@ -86,7 +86,7 @@ int main(int argc, const char **argv) {
 
     if(ret){
       //std::string dir=p.parent().string();
-      std::string tname=treename+std::string(".tree");
+      std::string tname=treename+std::string(".root");
       TFile*tdir=new TFile(tname.c_str(),"RECREATE");
 
       //ret->SetDirectory(tdir);
@@ -103,7 +103,7 @@ int main(int argc, const char **argv) {
   } else if(boost::filesystem::is_directory(p)){
     int count=0;
     std::vector<boost::filesystem::path> fils;
-    std::string name=treename+".tree";
+    std::string name=treename+".root";
     TFile* fout = new TFile(name.c_str(),"RECREATE");
 
 
@@ -113,8 +113,8 @@ int main(int argc, const char **argv) {
     std::sort(fils.begin(), fils.end());
    // TList *list = new TList; 
     ChaosToTree ti(name);
-    for(std::vector<boost::filesystem::path>::iterator i=fils.begin();(i!=fils.end())&&(count<100);i++){
-      cout<<"converting "<<*i<<" count:"<<count<<std::endl;
+    for(std::vector<boost::filesystem::path>::iterator i=fils.begin();(i!=fils.end())/*&&(count<100)*/;i++){
+      cout<<"converting "<<*i<<" count:"<<count++<<std::endl;
       chaos::common::data::CDWShrdPtr cd=file2CD(*i);
       if(cd.get()){
         ti.addData(*cd.get());
@@ -124,12 +124,12 @@ int main(int argc, const char **argv) {
   
     if(count){
       TTree *newtree = ti.getTree();
-      newtree->Write();
       fout->Write();
 
-    }
+    
       cout<<"converted:"<<count<<" files into:"<<name<<std::endl;
       fout->Close();
+}
       return 0;
     
     }

@@ -12,6 +12,7 @@ using namespace std;
 using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
+#include <algorithm>    // std::min
 
 #define ROOTDBG LDBG_<<"["<<__PRETTY_FUNCTION__<<"] "
 using namespace chaos::common::data;
@@ -42,7 +43,7 @@ typedef struct treeQuery{
 
 
 ChaosToTree::~ChaosToTree(){
-    delete root;
+   // delete root; //removed by tfile
 }
 
 static std::map<TTree*, treeQuery_t> queries;
@@ -269,6 +270,8 @@ static int addTree(treeQuery_t& q, const chaos::common::data::CDataWrapper*cd) {
     int ptr=0;
     for (std::vector<std::string>::iterator it = contained_key.begin();
          it != contained_key.end(); it++) {
+        int maxsize=query[branch_counter].size;
+
         if (cd->isVector(*it)) {
             int size = 0;
             ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd->getVectorValue(*it);
@@ -278,19 +281,24 @@ static int addTree(treeQuery_t& q, const chaos::common::data::CDataWrapper*cd) {
                     double tmp=da->getDoubleElementAtIndex(cnt);
                     memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
                     ptr+=sizeof(tmp);
+                    maxsize-=sizeof(tmp);;
                 } else if (da->isInt32ElementAtIndex(cnt)) {
                     int32_t tmp=da->getInt32ElementAtIndex(cnt);
                     memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
                     ptr+=sizeof(tmp);
+                    maxsize-=sizeof(tmp);;
+
                 } else if (da->isInt64ElementAtIndex(cnt)) {
                     int64_t tmp=da->getInt64ElementAtIndex(cnt);
                     memcpy(query[branch_counter].branchBuffer+ptr,static_cast<void*>(&tmp),sizeof(tmp));
                     ptr+=sizeof(tmp);
+                    maxsize-=sizeof(tmp);;
 
                 } else if (da->isStringElementAtIndex(cnt)) {
                     std::string tmp=da->getStringElementAtIndex(cnt);
-                    memcpy(query[branch_counter].branchBuffer+ptr,(void*)(tmp.c_str()),tmp.size());
+                    memcpy(query[branch_counter].branchBuffer+ptr,(void*)(tmp.c_str()),std::min((int)tmp.size(),maxsize));
                     ptr+=tmp.size();
+                    maxsize-=sizeof(tmp);;
 
                 }
             }
@@ -302,13 +310,18 @@ static int addTree(treeQuery_t& q, const chaos::common::data::CDataWrapper*cd) {
             case chaos::DataType::TYPE_BOOLEAN:
             case chaos::DataType::TYPE_INT32:
             case chaos::DataType::TYPE_BYTEARRAY:{
-                memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
+                memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),std::min((int)cd->getValueSize(*it),maxsize));
                 ptr+=cd->getValueSize(*it);
+                maxsize-=cd->getValueSize(*it);;
+
                 break;
             }
             }
             //memcpy(query[branch_counter].branchBuffer+ptr,cd->getRawValuePtr(*it),cd->getValueSize(*it));
             //ptr+=cd->getValueSize(*it);
+        }
+        if(maxsize<0){
+            cout<<maxsize<<" corrupt:"<<cd->getJSONString()<<std::endl;
         }
         if((branch_counter+1)<q.nbranch){
             // if multiple branch buffer is different, offset to zero
