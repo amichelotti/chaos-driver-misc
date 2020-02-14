@@ -113,19 +113,46 @@ void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string
                  \param multiple creates a branch for each key, otherwise creates just on branch with all keys
                  \return NULL if error, an allocated and initialized Tree otherwise
                  */
-TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name,bool multiple=true);
+TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name);
 void initChaosRoot();
 
 struct branchAlloc;
+
+
+struct chaosBranch{
+    std::string name;
+    std::string rootType;
+    bool is_vector;
+    chaos::DataType::DataType chaosType;
+    int data_element_size;
+    chaos::DataType::DataType chaosSubType;
+    Int_t vector_size;
+    void*ptr;
+    int size;
+    TTree*parent;
+    chaosBranch(TTree* par,const std::string&key,const chaos::common::data::CDataWrapper& cd,const std::string&brsuffix="");
+    int realloc(int newsize);
+    ~chaosBranch();
+    bool add(const chaos::common::data::CDataWrapper& cd);
+};
+
+
 class ChaosToTree{
     TTree*root;
+    const std::string brsuffix;
     const std::string tname;
-    struct branchAlloc*branch_desc;
+
+    typedef std::map<std::string,ChaosSharedPtr<chaosBranch> > branch_map_t;
+    branch_map_t branches;
+
     public:
-        ChaosToTree(const::std::string& treename);
+        ChaosToTree(TTree*root,const std::string&brsuffix="");
+
+        ChaosToTree(const::std::string& treename,const std::string&brsuffix="");
         ~ChaosToTree();
 
         int addData(const chaos::common::data::CDataWrapper&);
         TTree*getTree();
 };
+
 #endif
