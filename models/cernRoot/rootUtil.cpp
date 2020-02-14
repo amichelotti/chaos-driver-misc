@@ -133,6 +133,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
         break;
         //! Integer char bit length
       case chaos::DataType::SUB_TYPE_CHAR:
+      case chaos::DataType::SUB_TYPE_MIME:
         varname << "[__" << key << "__]/B";
         vector_size = size / sizeof(char);
         data_element_size = sizeof(char);
