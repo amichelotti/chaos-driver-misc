@@ -271,7 +271,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       }
       std::cout << "[" << name
                 << "] retriving data... from:" << query_time_start
-                << " to:" << query_time_end << " runID:" << test->getRunID()
+                << "["<<chaos::common::utility::TimingUtil::toString(query_time_start)<<"] to:" << query_time_end << "["<<chaos::common::utility::TimingUtil::toString(query_time_end)<<"] runID:" << test->getRunID()
                 << " pagelen:" << pagelen << std::endl;
       start_time = chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
       int retry = 2;
