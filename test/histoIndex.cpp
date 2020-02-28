@@ -35,7 +35,7 @@ void histo2Test(boost::filesystem::path &p, const std::string &treename) {
     ofstream fout(name);
     uint32_t document_len = 0;
     const uint8_t *document = NULL;
-    fout << "count,mdsts,runid,seqid,hwts" << std::endl;
+    fout << "count,mdsts,runid,seqid,hwts,size" << std::endl;
 
     while (((b = bson_reader_read(src, &eof)) != NULL) && (eof == false)) {
       bson_iter_t iter;
@@ -44,7 +44,7 @@ void histo2Test(boost::filesystem::path &p, const std::string &treename) {
         fout << countele << ",--"
              << ",--"
              << ",--"
-             << ",--" << std::endl;
+             << ",--,--,--" << std::endl;
 
         countele++;
         continue;
@@ -54,7 +54,7 @@ void histo2Test(boost::filesystem::path &p, const std::string &treename) {
         fout << countele << ",--"
              << ",--"
              << ",--"
-             << ",--" << std::endl;
+             << ",--,--" << std::endl;
         countele++;
         continue;
       }
@@ -114,7 +114,7 @@ void histo2Test(boost::filesystem::path &p, const std::string &treename) {
       oldseq = iseq;
       countele++;
       fout << countele << "," << tim << "," << irunid << "," << iseq << ","
-           << hwts << std::endl;
+           << hwts << ","<<cd.getBSONRawSize()<<std::endl;
     }
 
     if (countele > 0) {
