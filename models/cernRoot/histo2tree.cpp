@@ -38,12 +38,23 @@ void histo2Tree(boost::filesystem::path& p,const std::string& treename){
     int64_t oldrunid=-1;
     int64_t oldtime=-1;
     ChaosToTree ti(name);
+     uint32_t       document_len = 0;
+    const uint8_t* document     = NULL;
     while (((b = bson_reader_read(src, &eof)) != NULL)&&(eof==false)) {
         bson_iter_t iter;
-        bson_iter_init(&iter, b);
-        bson_iter_next(&iter);
-        uint32_t       document_len = 0;
-        const uint8_t* document     = NULL;
+
+        if(bson_iter_init(&iter, b)==false){
+             cout<<countele<<" invalid iterator"<<std::endl;
+             countele++;
+             continue;
+
+        }
+        if(bson_iter_next(&iter)==false){
+             cout<<countele<<" invalid next iterator"<<std::endl;
+             countele++;
+             continue;
+        }
+       
         bson_iter_document(&iter,
                              &document_len,
                              &document);
