@@ -2393,8 +2393,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     else if (what == "del")
                     {
-                        int ret,ret1;
-                        CHECK_PARENT;
+                        int ret=0,ret1=0;
+                        if(!parent.empty())
                         {
                             EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
                         }
