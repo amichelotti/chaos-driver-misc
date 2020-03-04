@@ -121,6 +121,7 @@ struct branchAlloc;
 
 struct chaosBranch{
     std::string name;
+    std::string cdkey;
     std::string rootType;
     bool is_vector;
     chaos::DataType::DataType chaosType;

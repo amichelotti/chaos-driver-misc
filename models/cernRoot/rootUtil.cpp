@@ -38,6 +38,7 @@ using namespace driver::misc;
 /***************/
 chaosBranch::chaosBranch(TTree *par, const std::string &key,
                          const chaos::common::data::CDataWrapper &cd,const std::string& brsuffix) {
+  cdkey=key;
   name = (brsuffix.size())?(brsuffix + "."+ key):key;
   is_vector = false;
   size = 0;
@@ -55,7 +56,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
     ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd.getVectorValue(key);
     // if(!multiple)
 
-    varname << key << "[__" << key << "__]"; // array lenght must be dynamic
+    varname << name << "[__" << key << "__]"; // array lenght must be dynamic
     if (da->size()) {
       vector_size = da->size();
       if (da->isDoubleElementAtIndex(0)) {
@@ -108,68 +109,68 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
 
     case chaos::DataType::TYPE_BOOLEAN:
 
-      varname << key << "/O";
+      varname << name << "/O";
 
       break;
     case chaos::DataType::TYPE_INT32:
-      varname << key << "/I";
+      varname << name << "/I";
 
       break;
     case chaos::DataType::TYPE_INT64:
-      varname << key << "/L";
+      varname << name << "/L";
       break;
     case chaos::DataType::TYPE_DOUBLE:
-      varname << key << "/D";
+      varname << name << "/D";
 
       break;
     case chaos::DataType::TYPE_BYTEARRAY: {
-      varname << key;
+      varname << name;
       is_vector = true;
       switch (cd.getBinarySubtype(key)) {
       case (chaos::DataType::SUB_TYPE_BOOLEAN):
-        varname << "[__" << key << "__]/O";
+        varname << "[__" << name << "__]/O";
         vector_size = size / sizeof(bool);
         data_element_size = sizeof(bool);
         break;
         //! Integer char bit length
       case chaos::DataType::SUB_TYPE_CHAR:
       case chaos::DataType::SUB_TYPE_MIME:
-        varname << "[__" << key << "__]/B";
+        varname << "[__" << name << "__]/B";
         vector_size = size / sizeof(char);
         data_element_size = sizeof(char);
 
         break;
         //! Integer 8 bit length
       case chaos::DataType::SUB_TYPE_INT8:
-        varname << "[__" << key << "__]/b";
+        varname << "[__" << name << "__]/b";
         vector_size = size / sizeof(int8_t);
         data_element_size = sizeof(int8_t);
 
         break;
         //! Integer 16 bit length
       case chaos::DataType::SUB_TYPE_INT16:
-        varname << "[__" << key << "__]/s";
+        varname << "[__" << name << "__]/s";
         vector_size = size / sizeof(int16_t);
         data_element_size = sizeof(int16_t);
 
         break;
         //! Integer 32 bit length
       case chaos::DataType::SUB_TYPE_INT32:
-        varname << "[__" << key << "__]/I";
+        varname << "[__" << name << "__]/I";
         vector_size = size / sizeof(int32_t);
         data_element_size = sizeof(int32_t);
 
         break;
         //! Integer 64 bit length
       case chaos::DataType::SUB_TYPE_INT64:
-        varname << "[__" << key << "__]/L";
+        varname << "[__" << name << "__]/L";
         vector_size = size / sizeof(int64_t);
         data_element_size = sizeof(int64_t);
 
         break;
         //! Double 64 bit length
       case chaos::DataType::SUB_TYPE_DOUBLE:
-        varname << "[__" << key << "__]/D";
+        varname << "[__" << name << "__]/D";
         vector_size = size / sizeof(double);
         data_element_size = sizeof(double);
 
@@ -179,7 +180,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
     }
 
     case chaos::DataType::TYPE_STRING:
-      varname << key << "/C";
+      varname << name << "/C";
 
       break;
 
@@ -198,10 +199,15 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
       if(parent->Branch(lenname.c_str(), &vector_size, lentype.c_str())==NULL){
               throw chaos::CException(-1, "cannot create vector branch len key:" + lenname, __PRETTY_FUNCTION__);
 
-      };
+      } else {
+         ROOTDBG << "create ROOT  BRANCH \"" << lenname << "\""
+              << " vect size:" << vector_size << " " << lentype << " ptr:0x"
+              << std::hex << &vector_size << " of size:" << std::dec << size
+              << " element size:" << sizeof(int32_t);
+      }
       
       if(parent->Branch(name.c_str(), ptr, rootType.c_str())==NULL){
-        throw chaos::CException(-1, "cannot create vector branch key:" + name, __PRETTY_FUNCTION__);
+        throw chaos::CException(-1, "cannot create vector branch key:" + name + "rootType:"+rootType, __PRETTY_FUNCTION__);
 
       }
 
@@ -222,7 +228,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
     }
 
   } else {
-    throw chaos::CException(-2, "zero size for key:" + key,
+    throw chaos::CException(-2, "zero size for key:" + name,
                             __PRETTY_FUNCTION__);
   }
 }
@@ -237,11 +243,12 @@ int chaosBranch::realloc(int newsize) {
 }
 chaosBranch::~chaosBranch() { free(ptr); }
 bool chaosBranch::add(const chaos::common::data::CDataWrapper &cd) {
-  if (!cd.hasKey(name)) {
-    throw chaos::CException(-1, "not found key:" + name, __PRETTY_FUNCTION__);
+  if (!cd.hasKey(cdkey)) {
+    LERR_<<"branch:"<<name<<" cannot process key '"<<cdkey<<"' not present in:"<<cd.getJSONString();
+   return -1;
   }
-  if (cd.isVector(name)) {
-    ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd.getVectorValue(name);
+  if (cd.isVector(cdkey)) {
+    ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd.getVectorValue(cdkey);
     if (da->size()) {
       if (da->size() > vector_size) {
         realloc(data_element_size * da->size());
@@ -255,10 +262,10 @@ bool chaosBranch::add(const chaos::common::data::CDataWrapper &cd) {
              (void *)da->getRawValueAtIndex(cnt, siz), data_element_size);
     }
   } else {
-    if (cd.getValueSize(name) > size) {
-      realloc(cd.getValueSize(name));
+    if (cd.getValueSize(cdkey) > size) {
+      realloc(cd.getValueSize(cdkey));
     }
-    memcpy(ptr, (void *)cd.getRawValuePtr(name), cd.getValueSize(name));
+    memcpy(ptr, (void *)cd.getRawValuePtr(cdkey), cd.getValueSize(cdkey));
   }
   return 0;
 }
@@ -275,12 +282,18 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     cd.getAllKey(contained_key);
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
-      chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
-      branches[*i] = ChaosSharedPtr<chaosBranch>(br);
+      try {
+        chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
+        branches[*i] = ChaosSharedPtr<chaosBranch>(br);
+      } catch (chaos::CException&e) {
+        LERR_<<"creating branch:"<<*i<<" error:"<<e.errorDomain<< " msg:"<<e.errorMessage;
+      }
     }
   }
   for (branch_map_t::iterator i = branches.begin(); i != branches.end(); i++) {
-    i->second->add(cd);
+    if(i->second->add(cd)<0){
+      LERR_<<"Error adding "+i->first;
+    }
   }
  root->Fill();
 
