@@ -280,6 +280,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       payloadKB = my_ouput->getBSONRawSize();
       push_avg = loops * 1000000.0 / push_time;
       bandwithMB = (payloadKB / (1024.0 * 1024)) * push_avg;
+      boost::chrono::duration<double> dursec = boost::chrono::system_clock::now() - start;
       end = boost::chrono::system_clock::now();
       LOG << " [" << chaos::common::utility::TimingUtil::toString(
                        query_time_start)
@@ -291,7 +292,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 << " push/s, tot us: " << push_time << " points:" << point_cnt
                 << " bandwith (MB/s):" << bandwithMB
                 << " overhead:" << overhead_tot
-                << " Total time:" << (end - start).count() << " s" << std::endl;
+                << " Total time:" << dursec.count() << " s" << std::endl;
       if (wait_retrive) {
         std::cout << "[" << name << "] waiting " << wait_retrive
                   << " s before retrive data" << std::endl;
@@ -432,9 +433,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
       } else {
 
         boost::mutex::scoped_lock lock(mutex_thread);
-        std::cout << "[" << name << "] waiting:" << thread_done
+        LOG << "[" << name << "] waiting:" << thread_done
                   << "points:" << point_cnt << std::endl;
-        cond.wait(mutex_thread);
+        cond.wait_for(mutex_thread,boost::chrono::seconds(120));
+        
         // std::cout <<"["<<name<<"] restart:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;
       }
