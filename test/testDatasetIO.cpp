@@ -19,6 +19,9 @@ static int exit_after_nerror = 1;
 /*
  *
  */
+#define LOG std::cout<<"-"<<chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeStamp())<<"- [" << name << "]"
+//#define ERR LOG <<"##"std::cout<<"-"<<chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeStamp())<<"- [" << name << "]
+
 using namespace driver::misc;
 static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
                      std::vector<ChaosDataSet> &res, uint64_t &pcktmissing,
@@ -131,7 +134,7 @@ static uint32_t npoints = 15000;
 static uint32_t waitloops, wait_retrive;
 static uint32_t pagelen = 0;
 static const double PI = 3.141592653589793238463;
-static int thread_done = 0;
+static boost::atomic<int> thread_done;
 static uint32_t nthreads = 1;
 static ofstream fs;
 static boost::mutex mutex_sync;
@@ -158,10 +161,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
                    : (point_cnt = (pow(pointincr, incr))),
                 incr++) {
     std::vector<double> val;
-    mutex_sync.lock();
     ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
+
     test->setAgeing(7200);
-    mutex_sync.unlock();
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
     ChaosDataSet my_ouput = test->allocateDataset(
@@ -200,6 +202,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     my_input->addInt32Value("icounter32", 0);
     my_input->addStringValue("istringa", "hello input dataset");
     my_input->addDoubleValue("idoublevar", 0.0);
+    LOG<<" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops<<std::endl;
 
     int tenpercent = loops / 10;
     if (test->registerDataset() == 0) {
@@ -278,8 +281,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       push_avg = loops * 1000000.0 / push_time;
       bandwithMB = (payloadKB / (1024.0 * 1024)) * push_avg;
       end = boost::chrono::system_clock::now();
-      std::cout << "[" << name << ","
-                << chaos::common::utility::TimingUtil::toString(
+      LOG << " [" << chaos::common::utility::TimingUtil::toString(
                        query_time_start)
                 << "] to:" << query_time_end << "["
                 << chaos::common::utility::TimingUtil::toString(query_time_end)
@@ -298,11 +300,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
       query_time_end += 1000; // consider time errors
       query_time_start -= 1000;
- uint32_t total = 0;
- uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0,badid = 0, pckt = 0;
+      uint32_t total = 0;
+      uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
+               pckt = 0;
 
-      std::cout << "[" << name
-                << "] retriving data... from:" << query_time_start << "["
+      LOG << " retriving data... from:" << query_time_start << "["
                 << chaos::common::utility::TimingUtil::toString(
                        query_time_start)
                 << "] to:" << query_time_end << "["
@@ -321,7 +323,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
         pull_time = (end_time - start_time);
 
         pull_avg = res.size() * 1000000.0 / pull_time;
-        std::cout << "[" << name << "] retrived:" << res.size()
+        LOG<< " retrived:" << res.size()
                   << " items, items/s:" << pull_avg << " time:" << pull_time
                   << std::endl;
         total = res.size();
@@ -330,236 +332,229 @@ int performTest(const std::string &name, testparam_t &tparam) {
         countErr += checkErr;
       } else {
 
-        
-          uint32_t uid = test->queryHistoryDatasets(query_time_start,
-                                                    query_time_end, pagelen);
-         
+        uint32_t uid = test->queryHistoryDatasets(query_time_start,
+                                                  query_time_end, pagelen);
 
-          
-          while (test->queryHasNext(uid)) {
-            std::vector<ChaosDataSet> res = test->getNextPage(uid);
-            total += res.size();
-            end_time = chaos::common::utility::TimingUtil::
-                getLocalTimeStampInMicroseconds();
-            pull_time = (end_time - start_time);
-            pull_avg = total * 1000000.0 / pull_time;
-            end = boost::chrono::system_clock::now();
+        while (test->queryHasNext(uid)) {
+          std::vector<ChaosDataSet> res = test->getNextPage(uid);
+          total += res.size();
+          end_time = chaos::common::utility::TimingUtil::
+              getLocalTimeStampInMicroseconds();
+          pull_time = (end_time - start_time);
+          pull_avg = total * 1000000.0 / pull_time;
+          end = boost::chrono::system_clock::now();
 
-            std::cout << "[" << name << "] retrived:" << res.size() << "/"
-                      << total << " items , items/s:" << pull_avg
-                      << " pull time:" << pull_time
-                      << " Total Time:" << (end - start).count() << " s"
-                      << std::endl;
-            checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
-                                 pckmalformed, badid);
-            countErr += checkErr;
-          }
-      }
-          if (total != loops) {
-            std::cout << "[" << name << "] # number of data retrived " << total
-                      << " different from expected:" << loops << std::endl;
-            countErr++;
-            checkErr++;
-            pckmissing++;
-          }
-          if(pckmissing==0 && pcktreplicated==0 && pckmalformed==0 && badid==0){
-            std::cout << "[" << name << "] check ok" << std::endl;
-          }
-          if (countErr != 0) {
-            std::cout << "[" << name << "] ## Total errors:" << countErr
-                      << " missing packets:" << pckmissing
-                      << " replicated:" << pcktreplicated
-                      << " pcktmalformed:" << pckmalformed
-                      << " badrunid:" << badid << std::endl;
-          } 
-
-        tparam.points = point_cnt;
-        tparam.payload = payloadKB;
-        tparam.push_sec = push_avg;
-        tparam.pull_sec = pull_avg;
-        tparam.push_time = push_time;
-        tparam.pull_time = pull_time;
-        tparam.bandwith = bandwithMB;
-        tparam.overhead = overhead_tot;
-        tparam.errors = countErr;
-      
-    } else {
-        LERR_ << "[" << name << "] cannot register!:";
-        countErr++;
-      }
-
-      {
-        mutex_sync.lock();
-        test->deinit();
-        if (++thread_done == nthreads) {
-          // std::cout <<"["<<name<<"] restart all:" << thread_done<<"
-          // points:"<<point_cnt<<std::endl;
-          thread_done = 0;
-          params_common.points = point_cnt;
-          params_common.payload = payloadKB * nthreads;
-          params_common.push_sec = 0;
-          params_common.pull_sec = 0;
-          params_common.push_time = 0;
-          params_common.pull_time = 0;
-          params_common.bandwith = 0;
-          params_common.overhead = 0;
-          params_common.errors = 0;
-          for (int cnt = 0; cnt < nthreads; cnt++) {
-            params_common.push_sec += params[cnt].push_sec;
-            params_common.pull_sec += params[cnt].pull_sec;
-            params_common.push_time += params[cnt].push_time;
-            params_common.pull_time += params[cnt].pull_time;
-            params_common.bandwith += params[cnt].bandwith;
-            params_common.overhead += params[cnt].overhead;
-            params_common.errors += params[cnt].errors;
-          }
-          params_common.push_time /= nthreads;
-          params_common.pull_time /= nthreads;
-          params_common.overhead /= nthreads;
-          fs << point_cnt << "," << payloadKB << "," << params_common.push_sec
-             << "," << params_common.pull_sec << "," << loops << ","
-             << params_common.push_time << "," << params_common.pull_time << ","
-             << params_common.bandwith << "," << params_common.overhead << ","
-             << params_common.errors << "," << nthreads << std::endl;
-          std::cout << point_cnt << "," << payloadKB << ","
-                    << params_common.push_sec << "," << params_common.pull_sec
-                    << "," << loops << "," << params_common.push_time << ","
-                    << params_common.pull_time << "," << params_common.bandwith
-                    << "," << params_common.overhead << ","
-                    << params_common.errors << "," << nthreads << std::endl;
-
-          mutex_sync.unlock();
-          cond.notify_all();
-
-        } else {
-          mutex_sync.unlock();
-
-          boost::unique_lock<boost::mutex> lock(mutex_thread);
-          // std::cout <<"["<<name<<"] waiting:" << thread_done<<"
-          // points:"<<point_cnt<<std::endl;
-          cond.wait(mutex_thread);
-          cond.notify_all();
-          // std::cout <<"["<<name<<"] restart:" << thread_done<<"
-          // points:"<<point_cnt<<std::endl;
+          LOG << " retrived:" << res.size() << "/"
+                    << total << " items , items/s:" << pull_avg
+                    << " pull time:" << pull_time
+                    << " Total Time:" << (end - start).count() << " s"
+                    << std::endl;
+          checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
+                               pckmalformed, badid);
+          countErr += checkErr;
         }
       }
-      cond.notify_all();
+      if (total != loops) {
+        LOG << " # number of data retrived " << total
+                  << " different from expected:" << loops << std::endl;
+        countErr++;
+        checkErr++;
+        pckmissing++;
+      }
+      if (pckmissing == 0 && pcktreplicated == 0 && pckmalformed == 0 &&
+          badid == 0) {
+        std::cout << "[" << name << "] check ok" << std::endl;
+      }
+      if (countErr != 0) {
+        std::cout << "[" << name << "] ## Total errors:" << countErr
+                  << " missing packets:" << pckmissing
+                  << " replicated:" << pcktreplicated
+                  << " pcktmalformed:" << pckmalformed << " badrunid:" << badid
+                  << std::endl;
+      }
+
+      tparam.points = point_cnt;
+      tparam.payload = payloadKB;
+      tparam.push_sec = push_avg;
+      tparam.pull_sec = pull_avg;
+      tparam.push_time = push_time;
+      tparam.pull_time = pull_time;
+      tparam.bandwith = bandwithMB;
+      tparam.overhead = overhead_tot;
+      tparam.errors = countErr;
+
+    } else {
+      LERR_ << "[" << name << "] cannot register!:";
+      countErr++;
     }
-    tot_error += countErr;
-    return countErr;
+
+    {
+      test->deinit();
+      if (++thread_done == nthreads) {
+        // std::cout <<"["<<name<<"] restart all:" << thread_done<<"
+        // points:"<<point_cnt<<std::endl;
+        thread_done = 0;
+        params_common.points = point_cnt;
+        params_common.payload = payloadKB * nthreads;
+        params_common.push_sec = 0;
+        params_common.pull_sec = 0;
+        params_common.push_time = 0;
+        params_common.pull_time = 0;
+        params_common.bandwith = 0;
+        params_common.overhead = 0;
+        params_common.errors = 0;
+        for (int cnt = 0; cnt < nthreads; cnt++) {
+          params_common.push_sec += params[cnt].push_sec;
+          params_common.pull_sec += params[cnt].pull_sec;
+          params_common.push_time += params[cnt].push_time;
+          params_common.pull_time += params[cnt].pull_time;
+          params_common.bandwith += params[cnt].bandwith;
+          params_common.overhead += params[cnt].overhead;
+          params_common.errors += params[cnt].errors;
+        }
+        params_common.push_time /= nthreads;
+        params_common.pull_time /= nthreads;
+        params_common.overhead /= nthreads;
+        fs << point_cnt << "," << payloadKB << "," << params_common.push_sec
+           << "," << params_common.pull_sec << "," << loops << ","
+           << params_common.push_time << "," << params_common.pull_time << ","
+           << params_common.bandwith << "," << params_common.overhead << ","
+           << params_common.errors << "," << nthreads << std::endl;
+        std::cout << point_cnt << "," << payloadKB << ","
+                  << params_common.push_sec << "," << params_common.pull_sec
+                  << "," << loops << "," << params_common.push_time << ","
+                  << params_common.pull_time << "," << params_common.bandwith
+                  << "," << params_common.overhead << ","
+                  << params_common.errors << "," << nthreads << std::endl;
+
+        cond.notify_all();
+
+      } else {
+
+        boost::mutex::scoped_lock lock(mutex_thread);
+        std::cout << "[" << name << "] waiting:" << thread_done
+                  << "points:" << point_cnt << std::endl;
+        cond.wait(mutex_thread);
+        // std::cout <<"["<<name<<"] restart:" << thread_done<<"
+        // points:"<<point_cnt<<std::endl;
+      }
+    }
   }
-  int main(int argc, const char **argv) {
-    std::string name, group;
+  cond.notify_all();
 
-    std::string reportName(argv[0]);
-    reportName = reportName + ".csv";
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("nerror",
-                    po::value<int32_t>(&exit_after_nerror)
-                        ->default_value(exit_after_nerror),
-                    "Exit after an amout of errors (0=not exit)");
+  tot_error += countErr;
+  return countErr;
+}
+int main(int argc, const char **argv) {
+  std::string name, group;
 
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),
-                    "Page len to recover data");
+  std::string reportName(argv[0]);
+  reportName = reportName + ".csv";
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("nerror",
+                  po::value<int32_t>(&exit_after_nerror)
+                      ->default_value(exit_after_nerror),
+                  "Exit after an amout of errors (0=not exit)");
 
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption(
-            "dsname",
-            po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),
-            "name of the dataset (CU)");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("dsgroup",
-                    po::value<std::string>(&group)->default_value("DATASETIO"),
-                    "name of the group (US)");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),
+                  "Page len to recover data");
 
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),
-                    "number of push/loop");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("waitloop",
-                    po::value<uint32_t>(&waitloops)->default_value(0),
-                    "us waits bewteen loops");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("wait",
-                    po::value<uint32_t>(&wait_retrive)->default_value(5),
-                    "seconds to wait to retrive data after pushing");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("points",
-                    po::value<uint32_t>(&npoints)->default_value(npoints),
-                    "Number of sin points, 0 = no wave");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("freqshift",
-                    po::value<double>(&freqshift)->default_value(0.001),
-                    "Modify freq Hz every loop, 0= no modify");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("ampshift",
-                    po::value<double>(&ampshift)->default_value(0.9999),
-                    "Modify amplitude every loop, 0= no modify");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("binary", po::value<bool>(&binary)->default_value(false),
-                    "The wave is in binary");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption(
-            "report",
-            po::value<std::string>(&reportName)->default_value(reportName),
-            "The report file name");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("pointincr",
-                    po::value<uint32_t>(&pointincr)->default_value(pointincr),
-                    "Increment points by 2^number, from points to pointmaz");
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("pointmax",
-                    po::value<uint32_t>(&pointmax)->default_value(pointmax),
-                    "Max point");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption(
+          "dsname",
+          po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),
+          "name of the dataset (CU)");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("dsgroup",
+                  po::value<std::string>(&group)->default_value("DATASETIO"),
+                  "name of the group (US)");
 
-    ChaosMetadataServiceClient::getInstance()
-        ->getGlobalConfigurationInstance()
-        ->addOption("nthreads",
-                    po::value<uint32_t>(&nthreads)->default_value(nthreads),
-                    "Number of concurrent accesses");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),
+                  "number of push/loop");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),
+                  "us waits bewteen loops");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),
+                  "seconds to wait to retrive data after pushing");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("points",
+                  po::value<uint32_t>(&npoints)->default_value(npoints),
+                  "Number of sin points, 0 = no wave");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("freqshift",
+                  po::value<double>(&freqshift)->default_value(0.001),
+                  "Modify freq Hz every loop, 0= no modify");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("ampshift",
+                  po::value<double>(&ampshift)->default_value(0.9999),
+                  "Modify amplitude every loop, 0= no modify");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("binary", po::value<bool>(&binary)->default_value(false),
+                  "The wave is in binary");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption(
+          "report",
+          po::value<std::string>(&reportName)->default_value(reportName),
+          "The report file name");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("pointincr",
+                  po::value<uint32_t>(&pointincr)->default_value(pointincr),
+                  "Increment points by 2^number, from points to pointmaz");
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("pointmax",
+                  po::value<uint32_t>(&pointmax)->default_value(pointmax),
+                  "Max point");
 
-    ChaosMetadataServiceClient::getInstance()->init(argc, argv);
-    ChaosMetadataServiceClient::getInstance()->start();
-    if (pointmax == 0) {
-      pointmax = npoints;
-    }
-    fs.open(reportName);
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("nthreads",
+                  po::value<uint32_t>(&nthreads)->default_value(nthreads),
+                  "Number of concurrent accesses");
 
-    boost::thread *workers[nthreads];
-    params = new testparam_t[nthreads];
-    fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
-          "time(us),bandwith(MB/s),overhead(us),errors,threads"
-       << std::endl;
-
-    for (int cnt = 0; cnt < nthreads; cnt++) {
-      std::stringstream ss;
-      ss << name << "_" << cnt;
-      params[cnt].thid = cnt;
-      workers[cnt] = new boost::thread(
-          boost::bind(&performTest, ss.str(), boost::ref(params[cnt])));
-    }
-    sleep(5);
-    for (int cnt = 0; cnt < nthreads; cnt++) {
-      workers[cnt]->join();
-      delete (workers[cnt]);
-    }
-    delete[] params;
-    ChaosMetadataServiceClient::getInstance()->stop();
-    //    ChaosMetadataServiceClient::getInstance()->deinit();
-    return tot_error;
+  ChaosMetadataServiceClient::getInstance()->init(argc, argv);
+  ChaosMetadataServiceClient::getInstance()->start();
+  if (pointmax == 0) {
+    pointmax = npoints;
   }
+  fs.open(reportName);
+
+  boost::thread *workers[nthreads];
+  params = new testparam_t[nthreads];
+  fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
+        "time(us),bandwith(MB/s),overhead(us),errors,threads"
+     << std::endl;
+  thread_done = 0;
+  for (int cnt = 0; cnt < nthreads; cnt++) {
+    std::stringstream ss;
+    ss << name << "_" << cnt;
+    params[cnt].thid = cnt;
+    workers[cnt] = new boost::thread(
+        boost::bind(&performTest, ss.str(), boost::ref(params[cnt])));
+  }
+  sleep(5);
+  for (int cnt = 0; cnt < nthreads; cnt++) {
+    workers[cnt]->join();
+    delete (workers[cnt]);
+  }
+  delete[] params;
+  ChaosMetadataServiceClient::getInstance()->stop();
+  //    ChaosMetadataServiceClient::getInstance()->deinit();
+  return tot_error;
+}
