@@ -294,8 +294,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 << " overhead:" << overhead_tot
                 << " Total time:" << dursec.count() << " s" << std::endl;
       if (wait_retrive) {
-        std::cout << "[" << name << "] waiting " << wait_retrive
-                  << " s before retrive data" << std::endl;
+        LOG << " waiting " << wait_retrive << " s before retrive data" << std::endl;
         sleep(wait_retrive);
       }
 
@@ -364,10 +363,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
       }
       if (pckmissing == 0 && pcktreplicated == 0 && pckmalformed == 0 &&
           badid == 0) {
-        std::cout << "[" << name << "] check ok" << std::endl;
+        LOG<<" check ok" << std::endl;
       }
       if (countErr != 0) {
-        std::cout << "[" << name << "] ## Total errors:" << countErr
+        LOG<<"## Total errors:" << countErr
                   << " missing packets:" << pckmissing
                   << " replicated:" << pcktreplicated
                   << " pcktmalformed:" << pckmalformed << " badrunid:" << badid
@@ -421,12 +420,12 @@ int performTest(const std::string &name, testparam_t &tparam) {
            << params_common.push_time << "," << params_common.pull_time << ","
            << params_common.bandwith << "," << params_common.overhead << ","
            << params_common.errors << "," << nthreads << std::endl;
-        std::cout << point_cnt << "," << payloadKB << ","
+     /*   std::cout << point_cnt << "," << payloadKB << ","
                   << params_common.push_sec << "," << params_common.pull_sec
                   << "," << loops << "," << params_common.push_time << ","
                   << params_common.pull_time << "," << params_common.bandwith
                   << "," << params_common.overhead << ","
-                  << params_common.errors << "," << nthreads << std::endl;
+                  << params_common.errors << "," << nthreads << std::endl;*/
 
         cond.notify_all();
 
