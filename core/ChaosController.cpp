@@ -853,8 +853,35 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
         }
 
 #endif
-        }
-        else if (channel == 255)
+        } else if(channel==128){
+            std::shared_ptr<chaos::common::data::CDataWrapper> custom=getLiveChannel(path,KeyDataStorageDomainHealth);
+            if(custom->hasKey("cudk_load_param")){
+                CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
+                if(cudk_load_param->hasKey("poi")){
+                    std::shared_ptr<chaos::common::data::CDataWrapper> poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
+
+                    CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
+                    retdata->addCSDataValue("poilist",*poi.get());
+                    if(poiv->hasKey("POI")){
+                        retdata->addStringValue("poivalue",poiv->getStringValue("POI"));
+
+                    } else {
+                        retdata->addStringValue("poivalue","");
+
+                    }
+
+                } else {
+                    // empty
+                    retdata->addCSDataValue("poilist",CDataWrapper());
+
+                }
+            } else {
+                    retdata->addCSDataValue("poilist",CDataWrapper());
+            }
+            std::shared_ptr<chaos::common::data::CDataWrapper> system=getLiveChannel(path,KeyDataStorageDomainSystem);
+            retdata->addCSDataValue("system",*system.get());
+            return retdata;
+        } else if (channel == 255)
         {
            
             std::vector<std::string> channels;
