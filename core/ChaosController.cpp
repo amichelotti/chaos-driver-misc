@@ -194,7 +194,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
 {
     uint64_t ret = 0;
     std::string name=(dev=="")?path:dev;
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
+    chaos::common::data::CDWShrdPtr tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
     stat = chaos::CUStateKey::UNDEFINED;
     if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
@@ -660,7 +660,7 @@ uint64_t ChaosController::sched(uint64_t ts)
     return delta_update;
 }
 
-ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChannel(const std::string &key, int domain)
+CDWShrdPtr ChaosController::getLiveChannel(const std::string &key, int domain)
 {
     size_t value_len = 0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
@@ -854,7 +854,7 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 
 #endif
         } else if(channel==128){
-            std::shared_ptr<chaos::common::data::CDataWrapper> custom=getLiveChannel(path,KeyDataStorageDomainHealth);
+            CDWShrdPtr custom=getLiveChannel(path,KeyDataStorageDomainCustom);
             if(custom->hasKey("cudk_load_param")){
                 CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
                 if(cudk_load_param->hasKey("poi")){
@@ -878,8 +878,13 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
             } else {
                     retdata->addCSDataValue("poilist",CDataWrapper());
             }
-            std::shared_ptr<chaos::common::data::CDataWrapper> system=getLiveChannel(path,KeyDataStorageDomainSystem);
-            retdata->addCSDataValue("system",*system.get());
+            CDWShrdPtr system=getLiveChannel(path,KeyDataStorageDomainSystem);
+            if(system.get()){
+                retdata->addCSDataValue("system",*system.get());
+            } else {
+                retdata->addCSDataValue("system",CDataWrapper());
+
+            }
             return retdata;
         } else if (channel == 255)
         {
@@ -2891,11 +2896,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             // bundle_state.append_log("return channel :" + parm);
             //chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
             //json_buf = data->getCompliantJSONString();
-            std::string ret = fetchJson(atoi((char *)args));
+            int channel=atoi((char *)args);
+            if(channel==128){
+                json_buf =fetch(channel)->getCompliantJSONString();
+                return CHAOS_DEV_OK;
+            }
+            std::string ret = fetchJson(channel);
+
             if(ret.size()==0){
                 uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
                 this->sched(t);
-                ret = fetchJson(atoi((char *)args));
+                ret = fetchJson(channel);
             }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
