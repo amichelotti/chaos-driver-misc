@@ -858,7 +858,7 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
             if(custom->hasKey("cudk_load_param")){
                 CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
                 if(cudk_load_param->hasKey("poi")){
-                    std::shared_ptr<chaos::common::data::CDataWrapper> poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
+                    CDWUniquePtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
 
                     CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
                     retdata->addCSDataValue("poilist",*poi.get());
