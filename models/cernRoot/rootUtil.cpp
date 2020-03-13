@@ -161,6 +161,13 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
         data_element_size = sizeof(int32_t);
 
         break;
+      case chaos::DataType::SUB_TYPE_UNSIGNED:
+        varname << "[__" << name << "__]/i";
+        vector_size = size / sizeof(int32_t);
+        data_element_size = sizeof(int32_t);
+
+        break;
+      
         //! Integer 64 bit length
       case chaos::DataType::SUB_TYPE_INT64:
         varname << "[__" << name << "__]/L";
@@ -257,8 +264,9 @@ bool chaosBranch::add(const chaos::common::data::CDataWrapper &cd) {
     }
     for (int cnt = 0; cnt < da->size(); cnt++) {
       uint32_t siz;
-
-      memcpy(ptr + (data_element_size * cnt),
+      uint64_t addr=(uint64_t)ptr;
+      addr+=(data_element_size * cnt);
+      memcpy((void*)addr ,
              (void *)da->getRawValueAtIndex(cnt, siz), data_element_size);
     }
   } else {
@@ -291,7 +299,7 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     }
   }
   for (branch_map_t::iterator i = branches.begin(); i != branches.end(); i++) {
-    if(i->second->add(cd)<0){
+    if(i->second->add(cd)==false){
       LERR_<<"Error adding "+i->first;
     }
   }
