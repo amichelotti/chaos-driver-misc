@@ -13,8 +13,9 @@ using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
 #include <algorithm> // std::min
+#define ROOTERR LERR_ << "[" << __PRETTY_FUNCTION__ << "] "
 
-#define ROOTDBG LDBG_ << "[" << __PRETTY_FUNCTION__ << "] "
+#define ROOTDBG LDBG_ << "[" << __FUNCTION__ << "] "
 using namespace chaos::common::data;
 using namespace driver::misc;
 /*typedef struct branchAlloc {
@@ -252,7 +253,7 @@ chaosBranch::~chaosBranch() { free(ptr); }
 bool chaosBranch::add(const chaos::common::data::CDataWrapper &cd) {
   if (!cd.hasKey(cdkey)) {
     LERR_<<"branch:"<<name<<" cannot process key '"<<cdkey<<"' not present in:"<<cd.getJSONString();
-   return -1;
+   return false;
   }
   if (cd.isVector(cdkey)) {
     ChaosSharedPtr<CMultiTypeDataArrayWrapper> da = cd.getVectorValue(cdkey);
@@ -275,7 +276,7 @@ bool chaosBranch::add(const chaos::common::data::CDataWrapper &cd) {
     }
     memcpy(ptr, (void *)cd.getRawValuePtr(cdkey), cd.getValueSize(cdkey));
   }
-  return 0;
+  return true;
 }
 
 ChaosToTree::ChaosToTree(TTree *rot,const std::string&_brsuffix) : root(rot),brsuffix(_brsuffix) {}
@@ -294,13 +295,13 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
         chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
         branches[*i] = ChaosSharedPtr<chaosBranch>(br);
       } catch (chaos::CException&e) {
-        LERR_<<"creating branch:"<<*i<<" error:"<<e.errorDomain<< " msg:"<<e.errorMessage;
+        ROOTERR<<"creating branch:"<<*i<<" error:"<<e.errorDomain<< " msg:"<<e.errorMessage;
       }
     }
   }
   for (branch_map_t::iterator i = branches.begin(); i != branches.end(); i++) {
     if(i->second->add(cd)==false){
-      LERR_<<"Error adding "+i->first;
+      ROOTERR<<"Error adding "+i->first;
     }
   }
  root->Fill();
@@ -343,7 +344,7 @@ static TTree *buildTree(const std::string &name, const std::string &desc) {
   // tree:"<<std::hex<<(void*)tr<<std::dec;
 
   if (tr == NULL) {
-    LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+    ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " cannot create tree  \"" << name << "\"";
 
     return NULL;
@@ -689,7 +690,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
       if(cd.get()){
         branch = new ChaosToTree(tree_ret,brname);
         if (branch == NULL) {
-                LERR_ << "Cannot create branches";
+                ROOTERR << "Cannot create branches";
 
             delete tree_ret;
             return NULL;
@@ -699,7 +700,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
       } else {
           delete branch;
           
-           LERR_ << "Invalid data found";
+           ROOTERR << "Invalid data found";
       return NULL;
       }
       /*createBranch(tree_ret, q, cd.get(),
@@ -712,7 +713,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     }
 
     if (tree_ret == NULL) {
-      LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+      ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
             << " cannot create tree on \"" << chaosNode;
       return tree_ret;
     }
@@ -736,18 +737,18 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
 
     return tree_ret;
   } catch (chaos::CException e) {
-    LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+    ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << "Exception on \"" << chaosNode << "\""
           << " errn:" << e.errorCode << " domain:" << e.errorDomain
           << " what:" << e.what();
     return NULL;
   } catch (std::exception ee) {
-    LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+    ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " Library Exception on \"" << chaosNode << "\""
           << " what:" << ee.what();
     return NULL;
   } catch (...) {
-    LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+    ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " Unexpected Exception on \"" << chaosNode;
     return NULL;
   }
@@ -848,15 +849,14 @@ bool queryNextChaosTree(TTree *tree) {
     } else if (uid > 0) {
       return true;
     } else {
-      LERR_ << "ROOT paged query error";
+      ROOTERR << "ROOT paged query error";
       //  delete ctrl;
       // queries.erase(page);
       // queryFree(tree);
       return false;
     }
   }
-  LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
-        << "not paged query found for this TREE";
+  ROOTERR << "not paged query found for this TREE";
   return false;
 }
 bool queryFree(TTree *tree) {
