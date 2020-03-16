@@ -864,9 +864,10 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                     ChaosStringVector s;
                     poi->getAllKey(s);
                     for(ChaosStringVector::iterator i=s.begin();i!=s.end();i++){
-                        CDataWrapper po;
-                        po.addStringValue(*i,poi->getStringValue(*i));
-                        retdata->appendCDataWrapperToArray(po);
+                       // CDataWrapper po;
+                       // po.addStringValue(*i,poi->getStringValue(*i));
+                       // retdata->appendCDataWrapperToArray(po);
+                       retdata->appendStringToArray(*i);
                     }
                     retdata->finalizeArrayForKey("poilist");
                     if(poiv.get()&&poiv->hasKey("POI")){
