@@ -855,14 +855,21 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 #endif
         } else if(channel==128){
             CDWShrdPtr custom=getLiveChannel(path,KeyDataStorageDomainCustom);
-            if(custom->hasKey("cudk_load_param")){
+            if(custom.get()&&custom->hasKey("cudk_load_param")){
                 CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
-                if(cudk_load_param->hasKey("poi")){
+                if(cudk_load_param.get()&&cudk_load_param->hasKey("poi")){
                     CDWShrdPtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
 
                     CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
-                    retdata->addCSDataValue("poilist",*poi.get());
-                    if(poiv->hasKey("POI")){
+                    ChaosStringVector s;
+                    poi->getAllKey(s);
+                    for(ChaosStringVector::iterator i=s.begin();i!=s.end();i++){
+                        CDataWrapper po;
+                        po.addStringValue(*i,poi->getStringValue(*i));
+                        retdata->appendCDataWrapperToArray(po);
+                    }
+                    retdata->finalizeArrayForKey("poilist");
+                    if(poiv.get()&&poiv->hasKey("POI")){
                         retdata->addStringValue("poivalue",poiv->getStringValue("POI"));
 
                     } else {
@@ -872,11 +879,15 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 
                 } else {
                     // empty
-                    retdata->addCSDataValue("poilist",CDataWrapper());
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
 
                 }
             } else {
-                    retdata->addCSDataValue("poilist",CDataWrapper());
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
             }
             CDWShrdPtr system=getLiveChannel(path,KeyDataStorageDomainSystem);
             if(system.get()){
