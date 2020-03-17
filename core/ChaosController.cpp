@@ -878,6 +878,16 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 
                     }
 
+
+                    if(poiv.get()&&poiv->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,poiv->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP));
+
+                    } else {
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
+
+
+                    }
+
                 } else {
                     // empty
                     retdata->finalizeArrayForKey("poilist");
