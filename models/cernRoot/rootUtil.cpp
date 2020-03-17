@@ -48,6 +48,11 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
+  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(boost::regex_match(name,r)){
+      throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
+ 
+   }
   if (!cd.hasKey(key)) {
     throw chaos::CException(-1, "not found key:" + key, __PRETTY_FUNCTION__);
   }
@@ -292,13 +297,14 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
       try {
-        boost::regex r("\\[\\]\\(\\)\\{\\}");
+        boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
         if(boost::regex_match(*i,r)){
                   ROOTERR<<"Skipping creation of:"<<*i<<" contains invalid characters:";
           continue;
+        } else {
+          chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
+          branches[*i] = ChaosSharedPtr<chaosBranch>(br);
         }
-        chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
-        branches[*i] = ChaosSharedPtr<chaosBranch>(br);
       } catch (chaos::CException&e) {
         ROOTERR<<"creating branch:"<<*i<<" error:"<<e.errorDomain<< " msg:"<<e.errorMessage;
       }
