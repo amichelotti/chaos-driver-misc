@@ -292,6 +292,11 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
       try {
+        boost::regex r("\\[\\]\\(\\)\\{\\}");
+        if(boost::regex_match(*i,r)){
+                  ROOTERR<<"Skipping creation of:"<<*i<<" contains invalid characters:";
+          continue;
+        }
         chaosBranch *br = new chaosBranch(root, *i, cd,brsuffix);
         branches[*i] = ChaosSharedPtr<chaosBranch>(br);
       } catch (chaos::CException&e) {
