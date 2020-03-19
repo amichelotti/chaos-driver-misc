@@ -13,9 +13,9 @@ using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
 #include <algorithm> // std::min
-#define ROOTERR LERR_ << "[" << __PRETTY_FUNCTION__ << "] "
+#define ROOTERR ERR_LOG(rootUtil) 
 
-#define ROOTDBG LDBG_ << "[" << __FUNCTION__ << "] "
+#define ROOTDBG DBG_LOG(rootUtil)
 using namespace chaos::common::data;
 using namespace driver::misc;
 /*typedef struct branchAlloc {
@@ -48,7 +48,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  boost::regex r("[\[\]\(\)\{\}]+");
   if(boost::regex_match(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  

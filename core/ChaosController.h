@@ -21,8 +21,8 @@
 
 #include <chaos/common/batch_command/BatchCommandTypes.h>
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
-#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
-#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+//#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
+//#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 10000
 #define MDS_STEP_TIMEOUT 1000

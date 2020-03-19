@@ -40,8 +40,10 @@ using namespace chaos::common::network;
 
 using namespace ::driver::misc;
 
-#define DBGET CTRLDBG_ << "[" << getPath() << "]"
-#define DBGETERR CTRLERR_ << "[" << getPath() << "]"
+#define DBGET DBG_LOG(ChaosController) << "[" << getPath() << "]"
+#define DBGETERR ERR_LOG(ChaosController) << "[" << getPath() << "]"
+#define CTRLDBG_ DBG_LOG(ChaosController) 
+#define CTRLERR_ ERR_LOG(ChaosController)
 
 #define CALC_EXEC_TIME                                                                             \
     tot_us += (reqtime - chaos::common::utility::TimingUtil::getTimeStampInMicroseconds());        \
