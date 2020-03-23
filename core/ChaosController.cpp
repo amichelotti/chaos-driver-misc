@@ -857,10 +857,11 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
 #endif
         } else if(channel==128){
             CDWShrdPtr custom=getLiveChannel(path,KeyDataStorageDomainCustom);
+            CDWShrdPtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
+
             if(custom.get()&&custom->hasKey("cudk_load_param")){
                 CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
                 if(cudk_load_param.get()&&cudk_load_param->hasKey("poi")){
-                    CDWShrdPtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
 
                     CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
                     ChaosStringVector s;
@@ -871,6 +872,10 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                        // retdata->appendCDataWrapperToArray(po);
                        retdata->appendStringToArray(*i);
                     }
+              /*      if(s.size()==0){
+                        retdata->appendStringToArray("");
+
+                    }*/
                     retdata->finalizeArrayForKey("poilist");
                     if(poiv.get()&&poiv->hasKey("POI")){
                         retdata->addStringValue("poivalue",poiv->getStringValue("POI"));
@@ -881,23 +886,21 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                     }
 
 
-                    if(poiv.get()&&poiv->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
-                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,poiv->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP));
-
-                    } else {
-                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
-
-
-                    }
-
+                  
                 } else {
                     // empty
+               //     retdata->appendStringToArray("");
+
                     retdata->finalizeArrayForKey("poilist");
                     retdata->addStringValue("poivalue","");
 
 
                 }
+
+
             } else {
+                 //   retdata->appendStringToArray("");
+
                     retdata->finalizeArrayForKey("poilist");
                     retdata->addStringValue("poivalue","");
 
@@ -909,6 +912,14 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                 retdata->addCSDataValue("system",CDataWrapper());
 
             }
+             if(poiv.get()&&poiv->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,poiv->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP));
+
+                    } else {
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
+
+
+                    }
             return retdata;
         } else if (channel == 255)
         {
