@@ -82,17 +82,16 @@ int main(int argc, const char **argv) {
   }
   boost::filesystem::path p(argv[1]);
   if(boost::filesystem::is_regular_file(p)){
-    TTree* ret=file2Tree(p);
-
-    if(ret){
+    chaos::common::data::CDWShrdPtr cd =file2CD(p);
+   
+    if(cd.get()){
       //std::string dir=p.parent().string();
       std::string tname=treename+std::string(".root");
       TFile*tdir=new TFile(tname.c_str(),"RECREATE");
-
-      //ret->SetDirectory(tdir);
-      ret->Write();
+      ChaosToTree tr(tname);
+      tr.addData(*cd.get());
+      tdir->Write();
       tdir->Close();
-      delete ret;
       delete tdir;
       return 0;
     }
@@ -123,7 +122,6 @@ int main(int argc, const char **argv) {
     }
   
     if(count){
-      TTree *newtree = ti.getTree();
       fout->Write();
 
     

@@ -40,8 +40,10 @@ using namespace chaos::common::network;
 
 using namespace ::driver::misc;
 
-#define DBGET CTRLDBG_ << "[" << getPath() << "]"
-#define DBGETERR CTRLERR_ << "[" << getPath() << "]"
+#define DBGET DBG_LOG(ChaosController) << "[" << getPath() << "]"
+#define DBGETERR ERR_LOG(ChaosController) << "[" << getPath() << "]"
+#define CTRLDBG_ DBG_LOG(ChaosController) 
+#define CTRLERR_ ERR_LOG(ChaosController)
 
 #define CALC_EXEC_TIME                                                                             \
     tot_us += (reqtime - chaos::common::utility::TimingUtil::getTimeStampInMicroseconds());        \
@@ -194,7 +196,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
 {
     uint64_t ret = 0;
     std::string name=(dev=="")?path:dev;
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
+    chaos::common::data::CDWShrdPtr tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
     stat = chaos::CUStateKey::UNDEFINED;
     if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
@@ -660,7 +662,7 @@ uint64_t ChaosController::sched(uint64_t ts)
     return delta_update;
 }
 
-ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChannel(const std::string &key, int domain)
+CDWShrdPtr ChaosController::getLiveChannel(const std::string &key, int domain)
 {
     size_t value_len = 0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
@@ -853,8 +855,73 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
         }
 
 #endif
-        }
-        else if (channel == 255)
+        } else if(channel==128){
+            CDWShrdPtr custom=getLiveChannel(path,KeyDataStorageDomainCustom);
+            CDWShrdPtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
+
+            if(custom.get()&&custom->hasKey("cudk_load_param")){
+                CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
+                if(cudk_load_param.get()&&cudk_load_param->hasKey("poi")){
+
+                    CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
+                    ChaosStringVector s;
+                    poi->getAllKey(s);
+                    for(ChaosStringVector::iterator i=s.begin();i!=s.end();i++){
+                       // CDataWrapper po;
+                       // po.addStringValue(*i,poi->getStringValue(*i));
+                       // retdata->appendCDataWrapperToArray(po);
+                       retdata->appendStringToArray(*i);
+                    }
+              /*      if(s.size()==0){
+                        retdata->appendStringToArray("");
+
+                    }*/
+                    retdata->finalizeArrayForKey("poilist");
+                    if(poiv.get()&&poiv->hasKey("POI")){
+                        retdata->addStringValue("poivalue",poiv->getStringValue("POI"));
+
+                    } else {
+                        retdata->addStringValue("poivalue","");
+
+                    }
+
+
+                  
+                } else {
+                    // empty
+               //     retdata->appendStringToArray("");
+
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
+
+                }
+
+
+            } else {
+                 //   retdata->appendStringToArray("");
+
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
+            }
+            CDWShrdPtr system=getLiveChannel(path,KeyDataStorageDomainSystem);
+            if(system.get()){
+                retdata->addCSDataValue("system",*system.get());
+            } else {
+                retdata->addCSDataValue("system",CDataWrapper());
+
+            }
+             if(poiv.get()&&poiv->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,poiv->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP));
+
+                    } else {
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
+
+
+                    }
+            return retdata;
+        } else if (channel == 255)
         {
            
             std::vector<std::string> channels;
@@ -2393,8 +2460,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     else if (what == "del")
                     {
-                        int ret,ret1;
-                        CHECK_PARENT;
+                        int ret=0,ret1=0;
+                        if(!parent.empty())
                         {
                             EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
                         }
@@ -2864,11 +2931,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             // bundle_state.append_log("return channel :" + parm);
             //chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
             //json_buf = data->getCompliantJSONString();
-            std::string ret = fetchJson(atoi((char *)args));
+            int channel=atoi((char *)args);
+            if(channel==128){
+                json_buf =fetch(channel)->getCompliantJSONString();
+                return CHAOS_DEV_OK;
+            }
+            std::string ret = fetchJson(channel);
+
             if(ret.size()==0){
                 uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
                 this->sched(t);
-                ret = fetchJson(atoi((char *)args));
+                ret = fetchJson(channel);
             }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
