@@ -21,8 +21,8 @@
 
 #include <chaos/common/batch_command/BatchCommandTypes.h>
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
-#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
-#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
+//#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
+//#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
 #define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 10000
 #define MDS_STEP_TIMEOUT 1000
@@ -181,7 +181,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
     virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
-    std::vector<std::string> searchAllAlive(const std::string& what="cu");
+    std::vector<std::string> searchAlive(const std::string name="",const std::string& what="cu");
     int initDevice(const std::string &dev = "");
     int stopDevice(const std::string &dev = "");
     int startDevice(const std::string &dev = "");
@@ -332,7 +332,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     /**
       * Return one live channel corresponding to a CUname and a domain
      */
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> getLiveChannel(const std::string &CUNAME = "", int domain = chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
+    chaos::common::data::CDWShrdPtr getLiveChannel(const std::string &CUNAME = "", int domain = chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
     /**
      * Return an array of live channels referring to an array of keys 
      * */

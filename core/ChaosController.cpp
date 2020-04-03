@@ -40,8 +40,10 @@ using namespace chaos::common::network;
 
 using namespace ::driver::misc;
 
-#define DBGET CTRLDBG_ << "[" << getPath() << "]"
-#define DBGETERR CTRLERR_ << "[" << getPath() << "]"
+#define DBGET DBG_LOG(ChaosController) << "[" << getPath() << "]"
+#define DBGETERR ERR_LOG(ChaosController) << "[" << getPath() << "]"
+#define CTRLDBG_ DBG_LOG(ChaosController) 
+#define CTRLERR_ ERR_LOG(ChaosController)
 
 #define CALC_EXEC_TIME                                                                             \
     tot_us += (reqtime - chaos::common::utility::TimingUtil::getTimeStampInMicroseconds());        \
@@ -194,7 +196,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
 {
     uint64_t ret = 0;
     std::string name=(dev=="")?path:dev;
-    ChaosSharedPtr<chaos::common::data::CDataWrapper> tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
+    chaos::common::data::CDWShrdPtr tmp=getLiveChannel(name,KeyDataStorageDomainHealth);
     stat = chaos::CUStateKey::UNDEFINED;
     if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
@@ -660,7 +662,7 @@ uint64_t ChaosController::sched(uint64_t ts)
     return delta_update;
 }
 
-ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosController::getLiveChannel(const std::string &key, int domain)
+CDWShrdPtr ChaosController::getLiveChannel(const std::string &key, int domain)
 {
     size_t value_len = 0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
@@ -853,8 +855,73 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
         }
 
 #endif
-        }
-        else if (channel == 255)
+        } else if(channel==128){
+            CDWShrdPtr custom=getLiveChannel(path,KeyDataStorageDomainCustom);
+            CDWShrdPtr poiv=getLiveChannel(path,KeyDataStorageDomainOutput);
+
+            if(custom.get()&&custom->hasKey("cudk_load_param")){
+                CDWUniquePtr cudk_load_param=custom->getCSDataValue("cudk_load_param");
+                if(cudk_load_param.get()&&cudk_load_param->hasKey("poi")){
+
+                    CDWUniquePtr poi=cudk_load_param->getCSDataValue("poi");
+                    ChaosStringVector s;
+                    poi->getAllKey(s);
+                    for(ChaosStringVector::iterator i=s.begin();i!=s.end();i++){
+                       // CDataWrapper po;
+                       // po.addStringValue(*i,poi->getStringValue(*i));
+                       // retdata->appendCDataWrapperToArray(po);
+                       retdata->appendStringToArray(*i);
+                    }
+              /*      if(s.size()==0){
+                        retdata->appendStringToArray("");
+
+                    }*/
+                    retdata->finalizeArrayForKey("poilist");
+                    if(poiv.get()&&poiv->hasKey("POI")){
+                        retdata->addStringValue("poivalue",poiv->getStringValue("POI"));
+
+                    } else {
+                        retdata->addStringValue("poivalue","");
+
+                    }
+
+
+                  
+                } else {
+                    // empty
+               //     retdata->appendStringToArray("");
+
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
+
+                }
+
+
+            } else {
+                 //   retdata->appendStringToArray("");
+
+                    retdata->finalizeArrayForKey("poilist");
+                    retdata->addStringValue("poivalue","");
+
+            }
+            CDWShrdPtr system=getLiveChannel(path,KeyDataStorageDomainSystem);
+            if(system.get()){
+                retdata->addCSDataValue("system",*system.get());
+            } else {
+                retdata->addCSDataValue("system",CDataWrapper());
+
+            }
+             if(poiv.get()&&poiv->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,poiv->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP));
+
+                    } else {
+                        retdata->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
+
+
+                    }
+            return retdata;
+        } else if (channel == 255)
         {
            
             std::vector<std::string> channels;
@@ -1580,11 +1647,11 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,cons
    mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
    return res; 
 }
-std::vector<std::string> ChaosController::searchAllAlive(const std::string& what){
+std::vector<std::string> ChaosController::searchAlive(const std::string name,const std::string& what){
             ChaosStringVector node_found;
             chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
-            mdsChannel->searchNode("",node_type,true,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT);
+            mdsChannel->searchNode(name,node_type,true,0,MAX_QUERY_ELEMENTS,node_found,MDS_TIMEOUT);
             return node_found;
 }
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string &cmd, char *args, int timeout, int prio, int sched, int submission_mode, int channel, std::string &json_buf)
@@ -1613,12 +1680,27 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="webui" || what=="variable" || what=="tag")
+            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="server" || what=="webui" || what=="variable" || what=="tag")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
-
-              
+                uint32_t maxpage=MAX_QUERY_ELEMENTS;
+                uint32_t page_start=0;
+                bool pageaccess=false;
+                uint32_t npages=0;
+                std::string impl;
+                if(p.hasKey("pagelen")){
+                    maxpage=p.getInt32Value("pagelen");
+                }
+                if(p.hasKey("pagestart")){
+                    page_start=p.getInt32Value("pagestart");
+                }
+                if(p.hasKey("pagestart")&&p.hasKey("pagelen")){
+                    pageaccess=true;
+                }
+                if(p.hasKey("impl")){
+                    impl=p.getStringValue("impl");
+                }
                 if ((names.get()) && names->size())
                 {
                     DBGET << "list nodes of type:" << node_type << "(" << what << ")";
@@ -1628,12 +1710,23 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         ChaosStringVector node_tmp;
 
                         const std::string domain = names->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain, node_type, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
-                        {
-                            node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                        if(pageaccess){
+                            if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT,impl) == 0){
+                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                            }
+                        } else {
+                            if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT,impl) == 0){
+                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                            }
                         }
                     }
-                    json_buf = vector2Json(node_found);
+                    if(pageaccess){
+                        std::stringstream ss;
+                        ss<<"{\"pages\":"<<npages<<",\"list\":"<<vector2Json(node_found)<<"}";
+                        json_buf=ss.str();
+                    } else {
+                        json_buf = vector2Json(node_found);
+                    }
                     CALC_EXEC_TIME;
                     return CHAOS_DEV_OK;
                 }
@@ -1641,23 +1734,42 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     int err;
                     DBGET << "searching node \"" << name << "\" type:" << node_type << " (" << what << ")";
+                    if(pageaccess){
+                        if ((err = mdsChannel->searchNode(name,
+                                                        node_type,
+                                                        alive,
+                                                        page_start,
+                                                        maxpage,
+                                                        npages,
+                                                        node_found,
+                                                        MDS_TIMEOUT,impl)) == 0)
+                        {
+                        std::stringstream ss;
+                        ss<<"{\"pages\":"<<npages<<",\"list\":"<<vector2Json(node_found)<<"}";
+                       
+                        json_buf=ss.str();
+                            CALC_EXEC_TIME;
+                            return CHAOS_DEV_OK;
+                        }else{
+                            serr << "searching node: \"" << name << "\" err:" << err;
+                        }
+                    } else {
 
-                    if ((err = mdsChannel->searchNode(name,
-                                                      node_type,
-                                                      alive,
-                                                      0,
-                                                      MAX_QUERY_ELEMENTS,
-                                                      node_found,
-                                                      MDS_TIMEOUT)) == 0)
-                    {
+                        if ((err = mdsChannel->searchNode(name,
+                                                        node_type,
+                                                        alive,
+                                                        0,
+                                                        maxpage,
+                                                        node_found,
+                                                        MDS_TIMEOUT,impl)) == 0)
+                        {
 
-                        json_buf = vector2Json(node_found);
-                        CALC_EXEC_TIME;
-                        return CHAOS_DEV_OK;
-                    }
-                    else
-                    {
-                        serr << "searching node: \"" << name << "\" err:" << err;
+                            json_buf = vector2Json(node_found);
+                            CALC_EXEC_TIME;
+                            return CHAOS_DEV_OK;
+                        }else{
+                            serr << "searching node: \"" << name << "\" err:" << err;
+                        }
                     }
                 }
             }
@@ -2348,8 +2460,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                     else if (what == "del")
                     {
-                        int ret,ret1;
-                        CHECK_PARENT;
+                        int ret=0,ret1=0;
+                        if(!parent.empty())
                         {
                             EXECUTE_CHAOS_RET_API(ret,api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
                         }
@@ -2819,7 +2931,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             // bundle_state.append_log("return channel :" + parm);
             //chaos::common::data::CDataWrapper*data = fetch(atoi((char*) args));
             //json_buf = data->getCompliantJSONString();
-            std::string ret = fetchJson(atoi((char *)args));
+            int channel=atoi((char *)args);
+            if(channel==128){
+                json_buf =fetch(channel)->getCompliantJSONString();
+                return CHAOS_DEV_OK;
+            }
+            std::string ret = fetchJson(channel);
+
+            if(ret.size()==0){
+                uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
+                this->sched(t);
+                ret = fetchJson(channel);
+            }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }
@@ -3847,6 +3970,10 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
                 node_type = chaos::NodeType::NodeSearchType::node_type_variable;
             if (what == "tag")
                 node_type = chaos::NodeType::NodeSearchType::node_type_tag;
+            if (what == "server"){
+                node_type = chaos::NodeType::NodeSearchType::node_type_all_server;
+
+            }
     return node_type;
 }
 chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::string& search,const std::string& what,bool alive){

@@ -13,6 +13,8 @@ OPEN_CU_DRIVER_PLUGIN_CLASS_DEFINITION(remoteGroupAccessDriver, 1.0.0, ::driver:
 REGISTER_CU_DRIVER_PLUGIN_CLASS_INIT_ATTRIBUTE(::driver::misc::remoteGroupAccessDriver, http_address / dnsname : port)
 CLOSE_CU_DRIVER_PLUGIN_CLASS_DEFINITION
 
+#define CTRLDBG_ DBG_LOG(remoteGroupAccessDriver) 
+#define CTRLERR_ ERR_LOG(remoteGroupAccessDriver)
 
 remoteGroupAccessDriver::remoteGroupAccessDriver() {
     group = NULL;

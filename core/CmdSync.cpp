@@ -28,6 +28,9 @@ using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
 using namespace chaos::cu::control_manager::slow_command;
 using namespace ::driver::misc;
+#define CTRLDBG_ DBG_LOG(CmdSync) 
+#define CTRLERR_ ERR_LOG(CmdSync)
+
 CmdSync::CmdSync() {
      
     driver=0;
