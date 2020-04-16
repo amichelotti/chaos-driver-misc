@@ -202,8 +202,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
     }
   }
   rootType = varname.str();
-  if (size > 0) {
-    ptr = malloc(size);
+  if (size >= 0) {
+    ptr = malloc((size==0)?1:size);
     if (is_vector) {
       
       std::string lenname = std::string("__") + name + std::string("__");
