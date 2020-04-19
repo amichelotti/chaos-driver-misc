@@ -2482,11 +2482,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         else
                         {
-                            CHECK_PARENT;
+                            std::string par;
+                            if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                par=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_PARENT);
+                            } else {
+                                CHECK_PARENT;
+                                par =parent;
+                            }
                             {
                                 if (json_value->hasKey("control_unit_implementation"))
                                 {
-                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, parent, json_value->getStringValue("control_unit_implementation"), 0);
+                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
                                 }
                             }
                             {
