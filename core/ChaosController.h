@@ -281,7 +281,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     //!return the dataset of the specified cu associated to a given snapshot
     // 
     chaos::common::data::CDataWrapper getSnapshotDataset(const std::string&snapname,const std::string& cuname);
-
+    
     command_t prepareCommand(std::string alias);
     template <typename T>
     void addParameter(command_t &cmd, std::string name, T value)
@@ -353,6 +353,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
     
     chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& search,const std::string&rpcmsg, chaos::common::data::CDWUniquePtr datapack,const std::string& what="agent",bool alive=true);
+
+    chaos::common::data::CDWUniquePtr getNodeDesc(const std::string& search,int&err);
 
     chaos::common::data::CDWUniquePtr getBuildProcessInfo(const std::string& search,const std::string& what="agent",bool alive=true);
 

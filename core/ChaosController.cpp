@@ -1611,6 +1611,36 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
 
     return -1;
 }
+chaos::common::data::CDWUniquePtr ChaosController::getNodeDesc(const std::string& name,int&ret){
+  chaos::common::data::CDWUniquePtr r;
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
+    if(ret == 0){
+        r=apires->detachResult();
+        if(r->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)&&(r->getStringValue(chaos::NodeDefinitionKey::NODE_TYPE)==chaos::NodeType::NODE_TYPE_UNIT_SERVER)){
+            EXECUTE_CHAOS_RET_API(ret,api_proxy::agent::GetAgentForNode, MDS_TIMEOUT, name);
+            if(ret==0){
+                  chaos::common::data::CDWUniquePtr r1=apires->detachResult();
+                  if(r1->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                      r->addStringValue("parent",r1->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
+                  }
+
+            } else {
+                std::stringstream ss;                                                                                             
+                ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "| GetAgentForNode :" << apires->getErrorMessage();  
+                 bundle_state.append_error(ss.str());                                                                              
+                    
+            }
+
+        }
+    } else {
+        std::stringstream ss;                                                                                             
+        ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "| GetNodeDescription :" << apires->getErrorMessage();  
+        bundle_state.append_error(ss.str());                                                                              
+                    
+    }
+    return r;
+}
+
 int ChaosController::createNewSnapshot(const std::string& snapshot_tag,
                                     const std::vector<std::string>& other_snapped_device) {
     
@@ -2306,9 +2336,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 else if (what == "desc")
                 {
+                    int rets;
+                    chaos::common::data::CDWUniquePtr r=getNodeDesc(name,rets);
 
-                    EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
-                    res << json_buf;
+                    if(rets==0){
+                        res<<r->getCompliantJSONString();
+
+                    } else {
+                    json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+                    execute_chaos_api_error++; 
+                    }
+
                 } else if (what == "shutdown"){
                         chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
                         infos->addBoolValue("kill",true);
@@ -2444,11 +2482,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         else
                         {
-                            CHECK_PARENT;
+                            std::string par;
+                            if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                par=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_PARENT);
+                            } else {
+                                CHECK_PARENT;
+                                par =parent;
+                            }
                             {
                                 if (json_value->hasKey("control_unit_implementation"))
                                 {
-                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, parent, json_value->getStringValue("control_unit_implementation"), 0);
+                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
                                 }
                             }
                             {
