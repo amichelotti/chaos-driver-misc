@@ -2982,11 +2982,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             std::string ret = fetchJson(channel);
 
-            if(ret.size()==0){
+           /* if(ret.size()==0){
                 uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
                 this->sched(t);
                 ret = fetchJson(channel);
-            }
+            }*/
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }

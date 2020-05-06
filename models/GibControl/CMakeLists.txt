@@ -14,4 +14,6 @@ ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_cutoolkit ${FrameworkLib})
 FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/models/GibControl/core)
-INSTALL_TARGETS(/lib ${PROJECT_NAME})
+INSTALL(TARGETS ${PROJECT_NAME}
+        DESTINATION "lib"
+        PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
