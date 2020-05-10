@@ -9,8 +9,8 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CERN_ROOT_PREFIX}/include)
 LINK_DIRECTORIES(${CERN_ROOT_PREFIX}/lib)
 
-ADD_LIBRARY(${PROJECT_NAME} SHARED rootUtil.cpp)
-ADD_EXECUTABLE(chaosRoot chaosRoot.cpp )
+ADD_LIBRARY(${PROJECT_NAME} SHARED rootUtil.cpp ChaosRoot.cpp)
+ADD_EXECUTABLE(chaosRoot chaosRootapp.cpp )
 ADD_EXECUTABLE(chaos2tree chaos2tree.cpp)
 ADD_EXECUTABLE(histo2tree histo2tree.cpp)
 
