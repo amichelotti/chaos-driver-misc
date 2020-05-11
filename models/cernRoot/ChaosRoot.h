@@ -7,20 +7,21 @@ namespace driver {
 namespace misc {
 namespace root {
 
-class ChaosRoot : public chaos::ChaosCommon<ChaosRoot> {
-  friend class chaos::common::utility::Singleton<ChaosRoot>;
+class ChaosRoot /*: public chaos::ChaosCommon<ChaosRoot>*/ {
+//  friend class chaos::common::utility::Singleton<ChaosRoot>;
   //	common::utility::StartableServiceContainer<WANProxyRegister>
   // wan_register;
 
-  ChaosRoot();
-  ~ChaosRoot();
-
+  
   TRint *rootApp;
   std::string rootopts;
 //  const char** rootopts;
  // int rootargs;
 
 public:
+  ChaosRoot();
+  ~ChaosRoot();
+
   std::string uid;
 
   //! C and C++ attribute parser

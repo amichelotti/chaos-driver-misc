@@ -47,14 +47,23 @@ ChaosRoot::~ChaosRoot(){
   }
 }
 void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException){
-  chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
+//  chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
+ chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption< std::string >("node-uid",
+                                                                                              "Node Unique Name",
+                                                                                              uid,
+                                                                                              &uid);
+  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<std::string>(&rootopts), "Options to give to CERN ROOT interpreter ");
+   
+  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(argc, argv);
+
   InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
   StartableService::initImplementation(HealtManager::getInstance(), NULL,
                                        "HealthManager", __PRETTY_FUNCTION__);
 }
 void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException) {
-        
-  chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
+//  chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
+  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(initStringStream);
+      
 }
 
 void ChaosRoot::start() throw(chaos::CException){
@@ -110,7 +119,9 @@ void ChaosRoot::start() throw(chaos::CException){
 
   // rootapp->init(NULL);
   // rootapp->start();
-  chaos::ChaosCommon<ChaosRoot>::start();
+//chaos::ChaosCommon<ChaosRoot>::start();
+  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->start();
+
   chaos::common::network::NetworkBroker::getInstance()->disposeMessageChannel(mds_message_channel);
 
   rootApp->SetPrompt("chaosRoot[%d]>");
@@ -129,17 +140,22 @@ void ChaosRoot::setRootOpts( const std::string& opts){
         SharedManagedDirecIoDataDriver::getInstance(),
         "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
-    chaos::ChaosCommon<ChaosRoot>::deinit();
+   // chaos::ChaosCommon<ChaosRoot>::deinit();
+    chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->deinit();
+
   }
   void ChaosRoot::stop()  throw(chaos::CException){
     CHAOS_NOT_THROW(StartableService::stopImplementation(
                         HealtManager::getInstance(), "HealthManager",
                         __PRETTY_FUNCTION__););
+   //chaos::ChaosCommon<ChaosRoot>::stop();
 
-    chaos::ChaosCommon<ChaosRoot>::stop();
+    chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->stop();
+
   }
-  void ChaosRoot::init(void *init_data) throw(chaos::CException) 
-  { chaos::ChaosCommon<ChaosRoot>::init(init_data);
+  void ChaosRoot::init(void *init_data) throw(chaos::CException) { 
+ //   chaos::ChaosCommon<ChaosRoot>::init(init_data);
+    chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(init_data);
    }
 } // namespace cernroot
 } // namespace misc

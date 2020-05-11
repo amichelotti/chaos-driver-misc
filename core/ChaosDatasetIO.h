@@ -2,6 +2,7 @@
 #define CHAOSDATASETIO_H
 
 #include <chaos/common/io/ManagedDirectIODataDriver.h>
+#include <chaos/common/property/property.h>
 
 namespace chaos{
     namespace common{
@@ -30,6 +31,8 @@ namespace driver{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO             :        
         public chaos::DeclareAction,
+        public chaos::common::property::PropertyCollector,
+
         protected chaos::common::async_central::TimerHandler{
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
             static ChaosSharedMutex iomutex;
@@ -51,7 +54,19 @@ namespace driver{
             uint64_t query_index;
             chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         protected:
-            
+            void _initPropertyGroup();
+             //!callback for put a veto on property value change request
+             bool propertyChangeHandler(const std::string&                       group_name,
+                                     const std::string&                       property_name,
+                                     const chaos::common::data::CDataVariant& property_value);
+
+            //!callback ofr updated property value
+            void propertyUpdatedHandler(const std::string&                       group_name,
+                                      const std::string&                       property_name,
+                                      const chaos::common::data::CDataVariant& old_value,
+                                      const chaos::common::data::CDataVariant& new_value);
+
+
             uint64_t runid;
             std::string datasetName; // cu name
             std::string groupName; // US name
@@ -59,6 +74,7 @@ namespace driver{
             uint64_t timeo;
             uint64_t last_seq;
             int storageType;
+            int sched_time;
             std::map<int,ChaosDataSet > datasets;
             uint64_t pkids[16];
             void createMDSEntry();
