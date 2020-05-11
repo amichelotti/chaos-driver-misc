@@ -135,6 +135,10 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL, 0);
   sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL, 0);
   sys->addBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE, false);
+  sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, 0);
+  sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, storageType);
+  sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, ageing);
+  sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME, 0);
 
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
@@ -142,10 +146,16 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
 
 int ChaosDatasetIO::setAgeing(uint64_t secs) {
   ageing = secs;
+  datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
+      chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, (int32_t)ageing);
+  
   return 0;
 }
 int ChaosDatasetIO::setStorage(int st) {
   storageType = st;
+  datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
+      chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, (int32_t)storageType);
+  
   return 0;
 }
 int ChaosDatasetIO::setTimeo(uint64_t t) {
@@ -468,7 +478,11 @@ int ChaosDatasetIO::registerDataset() {
         }
       }
     }
+    NetworkBroker::getInstance()->registerAction(this);
+
   }
+  chaos::DeclareAction::addActionDescritionInstance<ChaosDatasetIO>(this,&ChaosDatasetIO::updateConfiguration,uid,chaos::NodeDomainAndActionRPC::ACTION_UPDATE_PROPERTY,"Update Dataset property");
+
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
   return 0;
 }
@@ -730,6 +744,19 @@ void ChaosDatasetIO::log(const std::string &subject, int log_leve,
     break;
   }
 }
+
+CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
+        //check to see if the device can ben initialized
+        
+       // PropertyGroupVectorSDWrapper pg_sdw;
+        //pg_sdw.serialization_key = "property";
+        //pg_sdw.deserialize(update_pack.get());
+        DPD_LDBG<<"properties "<< update_pack->getJSONString();
+        //update the property
+       // PropertyCollector::applyValue(pg_sdw());
+        
+        return CDWUniquePtr();
+    }
 void ChaosDatasetIO::deinit() {
 
   if (deinitialized) {

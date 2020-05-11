@@ -19,7 +19,6 @@ class ChaosRoot : public chaos::ChaosCommon<ChaosRoot> {
   std::string rootopts;
 //  const char** rootopts;
  // int rootargs;
- chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
 
 public:
   std::string uid;

@@ -28,7 +28,9 @@ namespace chaos{
 namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
-        class ChaosDatasetIO             :protected chaos::common::async_central::TimerHandler{
+        class ChaosDatasetIO             :        
+        public chaos::DeclareAction,
+        protected chaos::common::async_central::TimerHandler{
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
             static ChaosSharedMutex iomutex;
 
@@ -53,7 +55,7 @@ namespace driver{
             uint64_t runid;
             std::string datasetName; // cu name
             std::string groupName; // US name
-            uint64_t ageing;
+            uint32_t ageing;
             uint64_t timeo;
             uint64_t last_seq;
             int storageType;
@@ -73,6 +75,9 @@ namespace driver{
             uint8_t dev_alarm_lvl;
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
+
+            chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
+
         public:
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");

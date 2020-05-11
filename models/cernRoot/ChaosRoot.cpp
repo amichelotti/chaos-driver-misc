@@ -53,7 +53,6 @@ void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException){
                                        "HealthManager", __PRETTY_FUNCTION__);
 }
 void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException) {
-  chaos::DeclareAction::addActionDescritionInstance<ChaosRoot>(this,&ChaosRoot::updateConfiguration,"chaosroot",NodeDomainAndActionRPC::ACTION_UPDATE_PROPERTY,"Update Root property");
         
   chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
 }
@@ -121,18 +120,7 @@ void ChaosRoot::start() throw(chaos::CException){
 void ChaosRoot::setRootOpts( const std::string& opts){
     rootopts=opts;
 }
-CDWUniquePtr ChaosRoot::updateConfiguration(CDWUniquePtr update_pack) {
-        //check to see if the device can ben initialized
-        
-       // PropertyGroupVectorSDWrapper pg_sdw;
-        //pg_sdw.serialization_key = "property";
-        //pg_sdw.deserialize(update_pack.get());
-        ROOTDBG<<"properties "<< update_pack->getJSONString();
-        //update the property
-       // PropertyCollector::applyValue(pg_sdw());
-        
-        return CDWUniquePtr();
-    }
+
  void ChaosRoot::deinit() throw(chaos::CException){
     CHAOS_NOT_THROW(StartableService::deinitImplementation(
                         HealtManager::getInstance(), "HealthManager",
