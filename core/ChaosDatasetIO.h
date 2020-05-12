@@ -52,7 +52,9 @@ namespace driver{
             typedef std::map<uint64_t,qc_t> query_cursor_map_t;
             query_cursor_map_t query_cursor_map;
             uint64_t query_index;
-            chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            void wrapper2dataset(chaos::common::data::CDataWrapper& dst,const chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
+          //  chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         protected:
             void _initPropertyGroup();
              //!callback for put a veto on property value change request
@@ -91,15 +93,40 @@ namespace driver{
             uint8_t dev_alarm_lvl;
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
-
+            std::vector<chaos::AbstActionDescShrPtr > actions;
             chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
+            chaos::common::data::CDWUniquePtr _setDatasetAttribute(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _registrationAck(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+
 
         public:
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
             ~ChaosDatasetIO();
+            /**
+             * @brief Set the ageing time of the datasets
+             * 
+             * @param secs 
+             * @return 0 if ok 
+             */
             int setAgeing(uint64_t secs);
+            /**
+             * @brief Set the Storage tyepe
+             * 
+             * @param st type (1: permanent storage, 2 : cache live, 16: log(grafana))
+             * @return int 
+             */
             int setStorage(int st);
+            /**
+             * @brief Set the Schedule delay (minimum time between 2 pushes)
+             * 
+             * @param st time in microseconds
+             * @return int 
+             */
+            int setSchedule(int st);
+            
             int setTimeo(uint64_t t);
             ChaosDataSet allocateDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
             /**
