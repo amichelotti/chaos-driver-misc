@@ -3,6 +3,7 @@
 
 #include <chaos/common/io/ManagedDirectIODataDriver.h>
 #include <chaos/common/property/property.h>
+#include <chaos/common/thread/WaitSemaphore.h>
 
 namespace chaos{
     namespace common{
@@ -42,7 +43,7 @@ namespace driver{
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
              //!logging channel
             chaos::common::metadata_logging::StandardLoggingChannel *standard_logging_channel;
-                
+            chaos::CUStateKey::ControlUnitState state;
                 //!control unit alarm group
             chaos::common::metadata_logging::AlarmLoggingChannel    *alarm_logging_channel;
             typedef struct {uint64_t qt;
@@ -56,6 +57,8 @@ namespace driver{
 
           //  chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         protected:
+            chaos::WaitSemaphore waitEU;
+
             void _initPropertyGroup();
              //!callback for put a veto on property value change request
              bool propertyChangeHandler(const std::string&                       group_name,
@@ -74,9 +77,11 @@ namespace driver{
             std::string groupName; // US name
             uint32_t ageing;
             uint64_t timeo;
-            uint64_t last_seq;
+            uint64_t last_seq,last_push_ts;
             int storageType;
             int sched_time;
+            //burst things;
+            uint64_t burst_cycles,burst_time_ts;
             std::map<int,ChaosDataSet > datasets;
             uint64_t pkids[16];
             void createMDSEntry();
@@ -93,12 +98,18 @@ namespace driver{
             uint8_t dev_alarm_lvl;
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
-            std::vector<chaos::AbstActionDescShrPtr > actions;
+            std::map<std::string,chaos::common::data::CDWUniquePtr> attr_desc;
             chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
             chaos::common::data::CDWUniquePtr _setDatasetAttribute(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _registrationAck(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _start(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _stop(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _deinit(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _getInfo(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _submitStorageBurst(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+
 
 
         public:
@@ -133,6 +144,7 @@ namespace driver{
              
              */
             int registerDataset ();
+            int updateSystem();
             int pushDataset(ChaosDataSet&ds, int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
 
             int pushDataset( int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
