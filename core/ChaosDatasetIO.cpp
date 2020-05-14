@@ -243,7 +243,13 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       this, &ChaosDatasetIO::_load,
       UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
       UnitServerNodeDomainAndActionRPC::ACTION_UNIT_SERVER_LOAD_CONTROL_UNIT,
-      "Perform the initialization");
+      "Attempt to load");
+
+addActionDescritionInstance<ChaosDatasetIO>(
+      this, &ChaosDatasetIO::_unload,
+      UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
+      UnitServerNodeDomainAndActionRPC::ACTION_UNIT_SERVER_UNLOAD_CONTROL_UNIT,
+      "Unload");
 
   chaos::DeclareAction::addActionDescritionInstance<ChaosDatasetIO>(
       this, &ChaosDatasetIO::updateConfiguration, uid,
@@ -430,12 +436,14 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
     updateSystem();
     DPD_LDBG << " exit BURST";
   }
+  if ((state == chaos::CUStateKey::START )||(type!=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT)) {
 
   err = ioLiveDataDriver->storeData(
       uid + chaos::datasetTypeToPostfix(type), new_dataset,
       (chaos::DataServiceNodeDefinitionType::DSStorageType)sttype);
 
-  last_push_ts = ts;
+    last_push_ts = ts;
+  }
   if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT) {
 
     if (state == chaos::CUStateKey::STOP) {
@@ -846,7 +854,18 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_load(
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
   DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-  return result;
+  return execute(ACT_LOAD,MOVE(dataset_attribute_values));;
+}
+chaos::common::data::CDWUniquePtr ChaosDatasetIO::_unload(
+    chaos::common::data::CDWUniquePtr dataset_attribute_values) {
+  CDWUniquePtr result;
+  HealtManager::getInstance()->addNodeMetricValue(
+      uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+      chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_UNLOAD, true);
+
+  DPD_LDBG << "UNLOAD: " << dataset_attribute_values->getJSONString();
+  waitEU.notifyAll();
+  return execute(ACT_UNLOAD,MOVE(dataset_attribute_values));;
 }
 
 CDWUniquePtr
@@ -871,7 +890,7 @@ ChaosDatasetIO::_setDatasetAttribute(CDWUniquePtr dataset_attribute_values) {
   if(changed){
     pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
   }
-  return result;
+  return execute(ACT_SET,MOVE(dataset_attribute_values));
 }
 
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_registrationAck(
@@ -890,7 +909,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_start(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);
   waitEU.notifyAll();
-  return result;
+  return execute(ACT_START,MOVE(dataset_attribute_values));
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -900,7 +919,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP, true);
 
-  return result;
+  return execute(ACT_STOP,MOVE(dataset_attribute_values));
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -910,7 +929,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT, true);
 
-  return result;
+  return execute(ACT_DEINIT,MOVE(dataset_attribute_values));
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_getInfo(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -956,7 +975,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
       ControlUnitDatapackSystemKey::BURST_TAG, burst->tag);
 
   updateSystem();
-  return result;
+  return execute(ACT_BURST,MOVE(data));
 }
 
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
@@ -967,7 +986,7 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   if (!dataset_attribute_values->hasKey(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
     DPD_LERR << "NO DATASET PRESENT INPUT: ";
-    return result;
+    return execute(ACT_INIT,MOVE(dataset_attribute_values));
   }
   CDWUniquePtr desc = dataset_attribute_values->getCSDataValue(
       ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
@@ -1017,7 +1036,7 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
 
   updateConfiguration(MOVE(dataset_attribute_values));
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
-  return result;
+  return execute(ACT_INIT,MOVE(dataset_attribute_values));
 }
 CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
   // check to see if the device can ben initialized
@@ -1035,7 +1054,7 @@ CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
   // update the property
   // PropertyCollector::applyValue(pg_sdw());
 
-  return CDWUniquePtr();
+  return execute(ACT_UPDATE,MOVE(update_pack));
 }
 //////
 
@@ -1374,7 +1393,8 @@ void ChaosDatasetIO::_initPropertyGroup() {
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::execute(ActionID r,chaos::common::data::CDWUniquePtr p){
   handler_t::iterator i=handlermap.find(r);
   if(i!=handlermap.end()){
-    return i->second(MOVE(p));
+    actionFunc_t handler=i->second;
+    return handler(MOVE(p),this);
   }
   return chaos::common::data::CDWUniquePtr();
 }
@@ -1387,11 +1407,13 @@ int ChaosDatasetIO::registerAction(actionFunc_t func,ActionID id){
 }
 
 void ChaosDatasetIO::deinit() {
+  waitEU.notifyAll();
 
   if (deinitialized) {
     DEBUG_CODE(DPD_LDBG << "Already deinitialized");
     return;
   }
+
   /*{
     EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid,
                       groupName);

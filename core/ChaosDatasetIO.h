@@ -30,8 +30,8 @@ namespace chaos{
 namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
-
-        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr);
+        class ChaosDatasetIO;
+        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr,ChaosDatasetIO*);
 
         class ChaosDatasetIO             :        
         public chaos::DeclareAction,
@@ -121,6 +121,8 @@ namespace driver{
             chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _registrationAck(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _unload(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+
             chaos::common::data::CDWUniquePtr _start(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _stop(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _deinit(chaos::common::data::CDWUniquePtr dataset_attribute_values);
