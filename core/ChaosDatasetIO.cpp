@@ -853,9 +853,9 @@ ChaosDatasetIO::_setDatasetAttribute(CDWUniquePtr dataset_attribute_values) {
       continue;
     if(dataset_attribute_values->hasKey(*i)){
       DPD_LDBG << "Setting " << *i<<" = "<<dataset_attribute_values->getStringValue(*i);
-      if(attr_desc.find(*i)!=attr_desc.end()){
+     /* if(attr_desc.find(*i)!=attr_desc.end()){
         // check data. boundary TODO
-      }
+      }*/
       changed=true;
       datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT]->setAsString(*i,dataset_attribute_values->getStringValue(*i));
     }
