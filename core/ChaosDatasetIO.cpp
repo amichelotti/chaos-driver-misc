@@ -358,6 +358,7 @@ int ChaosDatasetIO::updateSystem() {
   return pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
 }
 
+
 int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   int err = 0;
 
@@ -480,6 +481,13 @@ ChaosDataSet ChaosDatasetIO::getLiveDataset(int type) {
   }
 
   return tmp;
+}
+
+
+ChaosDataSet ChaosDatasetIO::allocateDataset(const std::string&json,int type){
+  ChaosDataSet ret=allocateDataset(type);
+  ret->setSerializedJsonData(json.c_str());
+  return ret;
 }
 
 void ChaosDatasetIO::wrapper2dataset(
@@ -1363,16 +1371,31 @@ void ChaosDatasetIO::_initPropertyGroup() {
                 ChaosBindPlaceholder(_3), ChaosBindPlaceholder(_4)));
 }
 
+chaos::common::data::CDWUniquePtr ChaosDatasetIO::execute(ActionID r,chaos::common::data::CDWUniquePtr p){
+  handler_t::iterator i=handlermap.find(r);
+  if(i!=handlermap.end()){
+    return i->second(MOVE(p));
+  }
+  return chaos::common::data::CDWUniquePtr();
+}
+
+int ChaosDatasetIO::registerAction(actionFunc_t func,ActionID id){
+  if(id<ACT_LOAD || id>=ACT_NONE)
+    return -1;
+    handlermap[id]=func;
+    return 0;
+}
+
 void ChaosDatasetIO::deinit() {
 
   if (deinitialized) {
     DEBUG_CODE(DPD_LDBG << "Already deinitialized");
     return;
   }
-  {
+  /*{
     EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid,
                       groupName);
-  }
+  }*/
   DEBUG_CODE(DPD_LDBG << "Timer removed");
   CHAOS_NOT_THROW(InizializableService::deinitImplementation(
                       MetadataLoggingManager::getInstance(),
@@ -1395,7 +1418,7 @@ void ChaosDatasetIO::deinit() {
   sleep(2);
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-      chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT, true);
+      chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_UNLOAD, true);
 
   for (std::map<int,
                 ChaosSharedPtr<chaos::common::data::CDataWrapper>>::iterator i =

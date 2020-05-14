@@ -30,11 +30,28 @@ namespace chaos{
 namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
+
+        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr);
+
         class ChaosDatasetIO             :        
         public chaos::DeclareAction,
         public chaos::common::property::PropertyCollector,
 
         protected chaos::common::async_central::TimerHandler{
+            public:
+            enum ActionID{
+                ACT_LOAD,
+                ACT_INIT,
+                ACT_START,
+                ACT_STOP,
+                ACT_DEINIT,
+                ACT_UNLOAD,
+                ACT_UPDATE,
+                ACT_SET,
+                ACT_BURST,
+                ACT_NONE
+            };
+            private:
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
             static ChaosSharedMutex iomutex;
 
@@ -98,7 +115,7 @@ namespace driver{
             uint8_t dev_alarm_lvl;
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
-            std::map<std::string,chaos::common::data::CDWUniquePtr> attr_desc;
+           // std::map<std::string,chaos::common::data::CDWUniquePtr> attr_desc;
             chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
             chaos::common::data::CDWUniquePtr _setDatasetAttribute(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
@@ -110,12 +127,24 @@ namespace driver{
             chaos::common::data::CDWUniquePtr _getInfo(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _submitStorageBurst(chaos::common::data::CDWUniquePtr dataset_attribute_values);
 
-
-
+            typedef std::map<ActionID,actionFunc_t> handler_t; 
+            handler_t handlermap;
+            chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr p);
         public:
+            
             
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
             ~ChaosDatasetIO();
+
+            /**
+             * @brief Register an handler to be called on action
+             * 
+             * @param func handler to call
+             * @param id action id
+             * @return int 0 if ok
+             */
+            int registerAction(actionFunc_t func,ActionID id=ACT_UNLOAD);
+
             /**
              * @brief Set the ageing time of the datasets
              * 
@@ -139,7 +168,23 @@ namespace driver{
             int setSchedule(int st);
             
             int setTimeo(uint64_t t);
+            /**
+             * @brief Allocate an empty dataset that must be filled by the caller
+             * 
+             * @param type type of dataset (output is the default)
+             * @return ChaosDataSet an allocated dataset
+             */
             ChaosDataSet allocateDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            
+            /**
+             * @brief Allocate a dataset from a json
+             * 
+             * @param json json dataset 
+             * @param type type of dataset
+             * @return ChaosDataSet an allocated dataset
+             */
+            ChaosDataSet allocateDataset(const std::string&json,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
             /**
              
              */
@@ -148,6 +193,7 @@ namespace driver{
             int pushDataset(ChaosDataSet&ds, int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
 
             int pushDataset( int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+           
             /**
              Retrieve its own datasets from live
              */
