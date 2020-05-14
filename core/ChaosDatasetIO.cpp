@@ -993,7 +993,9 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
 
       if (datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT]->hasKey(
               attrName)) {
-        attr_desc[attrName] = MOVE(elementDescription);
+       /*  TODO pay attention this is not supported in C98
+       attr_desc[attrName] = MOVE(elementDescription);
+       */
         datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT]
             ->setAsString(attrName, attrValue);
         DPD_LDBG << "SETTING " << attrName << "=" << attrValue;
