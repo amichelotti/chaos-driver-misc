@@ -95,6 +95,7 @@ bool testRange(t v, std::string &minRange, std::string &maxRange) {
 namespace driver {
 namespace misc {
 ChaosSharedMutex ChaosDatasetIO::iomutex;
+ std::string ChaosDatasetIO::ownerApp;
 
 ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                const std::string &group_name)
@@ -106,9 +107,9 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       alarm_logging_channel(NULL), standard_logging_channel(NULL),
       last_push_rate_grap_ts(0), deinitialized(false),
       implementation("datasetIO"), sched_time(0), last_push_ts(0),
-      burst_cycles(0), burst_time_ts(0) {
+      burst_cycles(0), burst_time_ts(0),  state(chaos::CUStateKey::DEINIT)
+ {
   ChaosWriteLock l(iomutex);
-  state = chaos::CUStateKey::DEINIT;
   try {
     if (chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()
             ->getServiceState() == chaos::CUStateKey::DEINIT) {
@@ -156,6 +157,10 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     DPD_LDBG << "best config:" << tmp_data_handler->getJSONString();
     ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
   }
+  
+  if((groupName.size()==0) && ownerApp.size()){
+    groupName=ownerApp;
+  }
   if (groupName == "") {
     uid = datasetName;
   } else {
@@ -163,30 +168,34 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   }
   int err;
   // check if there is some other CU with the same id.
-  int retry=12;
+  int retry = 12;
   do {
     ChaosStringVector node_found;
 
-  if ((err = mds_message_channel->searchNode(
-           name, chaos::NodeType::NodeSearchType::node_type_cu, true, 0, 100,
-           node_found, timeo)) == 0) {
-    if (node_found.size()&&(uid==node_found[0])) {
-      if(retry==0){
-        throw chaos::CException(
-            -1, "another Node with the same uid:\"" + uid + "\" is living",
-            __PRETTY_FUNCTION__);
-      } else {
-          DPD_LDBG << "nodes:"<<node_found.size()<<" found with the same uid:\""<<node_found[0]<<"\" retry check:"<<retry<< " in 5s";
-          std::cout<< "nodes:"<<node_found.size()<<" found with the same uid:\""<<node_found[0]<<"\" retry check:"<<retry<< " in 5s"<<std::endl;
+    if ((err = mds_message_channel->searchNode(
+             name, chaos::NodeType::NodeSearchType::node_type_cu, true, 0, 100,
+             node_found, timeo)) == 0) {
+      if (node_found.size() && (uid == node_found[0])) {
+        if (retry == 0) {
+          throw chaos::CException(
+              -1, "another Node with the same uid:\"" + uid + "\" is living",
+              __PRETTY_FUNCTION__);
+        } else {
+          DPD_LDBG << "nodes:" << node_found.size()
+                   << " found with the same uid:\"" << node_found[0]
+                   << "\" retry check:" << retry << " in 5s";
+          std::cout << "nodes:" << node_found.size()
+                    << " found with the same uid:\"" << node_found[0]
+                    << "\" retry check:" << retry << " in 5s" << std::endl;
           sleep(5);
+        }
       }
-    }
 
-  } else {
-    throw chaos::CException(-10, "cannot check for node liveness:" + uid,
-                            __PRETTY_FUNCTION__);
-  }
-  } while(retry--);
+    } else {
+      throw chaos::CException(-10, "cannot check for node liveness:" + uid,
+                              __PRETTY_FUNCTION__);
+    }
+  } while (retry--);
 
   try {
     if (HealtManager::getInstance()->getServiceState() ==
@@ -471,16 +480,13 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
         (chaos::DataServiceNodeDefinitionType::DSStorageType)sttype);
 
     last_push_ts = ts;
-  }
-  if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT) {
+  } else if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT) {
 
-    if (state == chaos::CUStateKey::STOP) {
-      DPD_LDBG << "STOPPED ";
-      cout << "==== STOP====" << std::endl;
-      waitEU.wait();
-      DPD_LDBG << "RESTARTED ";
-      cout << "==== START ====" << std::endl;
-    }
+    DPD_LDBG << "STOPPED ";
+    cout << "==== STOP====" << std::endl;
+    waitEU.wait();
+    DPD_LDBG << "RESTARTED ";
+    cout << "==== START ====" << std::endl;
   }
   return err;
 }
@@ -700,7 +706,7 @@ void ChaosDatasetIO::createMDSEntry() {
   ChaosStringVector node_found;
 
   if ((error = mds_message_channel->searchNode(
-           groupName, chaos::NodeType::NodeSearchType::node_type_us, false, 0,
+           uid, chaos::NodeType::NodeSearchType::node_type_cu, false, 0,
            100, node_found, timeo)) == 0) {
     if (node_found.size()) {
       for (ChaosStringVector::iterator i = node_found.begin();
@@ -708,7 +714,7 @@ void ChaosDatasetIO::createMDSEntry() {
         DPD_LDBG << "The cointainer " << *i << " exists";
       }
     } else {
-      {
+     /* {
         EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, timeo, groupName);
         error = apires->getError();
       }
@@ -716,6 +722,24 @@ void ChaosDatasetIO::createMDSEntry() {
         EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, timeo,
                           groupName, "datasetIO", 0);
         error = apires->getError();
+      }*/
+      if (error == 0) {
+
+        cud.auto_load = 1;
+        cud.auto_init = 1;
+        cud.auto_start = 1;
+        cud.load_parameter = "";
+        cud.control_unit_uid = uid;
+        cud.default_schedule_delay = 1;
+        cud.unit_server_uid = groupName;
+        cud.control_unit_implementation = implementation;
+        cud.history_ageing = ageing;
+        cud.storage_type =
+            (chaos::DataServiceNodeDefinitionType::DSStorageType)storageType;
+        DPD_LDBG << "Setting CU:" << uid;
+
+        EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,
+                          timeo, cud);
       }
     }
 
@@ -729,24 +753,7 @@ void ChaosDatasetIO::createMDSEntry() {
   } else {
     uid = groupName + "/" + datasetName;
   }
-  if (error == 0) {
 
-    cud.auto_load = 1;
-    cud.auto_init = 1;
-    cud.auto_start = 1;
-    cud.load_parameter = "";
-    cud.control_unit_uid = uid;
-    cud.default_schedule_delay = 1;
-    cud.unit_server_uid = groupName;
-    cud.control_unit_implementation = implementation;
-    cud.history_ageing = ageing;
-    cud.storage_type =
-        (chaos::DataServiceNodeDefinitionType::DSStorageType)storageType;
-    DPD_LDBG << "Setting CU:" << uid;
-
-    EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription, timeo,
-                      cud);
-  }
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNewNode(uid););
   // add push rate metric
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
@@ -881,7 +888,14 @@ int ChaosDatasetIO::registerDataset() {
     EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, timeo, uid,
                       true);
   }
+   DPD_LAPP << "Waiting load ";
+
+  waitEU.wait();
+
   { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); }
+  DPD_LAPP << "Waiting init ";
+
+  waitEU.wait();
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true); }
   DPD_LAPP << "Waiting start ";
@@ -895,11 +909,14 @@ int ChaosDatasetIO::registerDataset() {
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_load(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
+  
+
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
   DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
+  waitEU.notifyAll();
   return execute(ACT_LOAD, MOVE(dataset_attribute_values));
   ;
 }
@@ -1031,6 +1048,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   burst_cycles = burst_time_ts = 0;
+  waitEU.notifyAll();
 
   DPD_LDBG << "INIT INPUT: " << dataset_attribute_values->getJSONString();
   if (!dataset_attribute_values->hasKey(
@@ -1085,6 +1103,7 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT, true);
 
   updateConfiguration(MOVE(dataset_attribute_values));
+
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
   return execute(ACT_INIT, MOVE(dataset_attribute_values));
 }

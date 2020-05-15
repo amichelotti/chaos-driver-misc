@@ -39,6 +39,7 @@ namespace driver{
 
         protected chaos::common::async_central::TimerHandler{
             public:
+            static std::string ownerApp;
             enum ActionID{
                 ACT_LOAD,
                 ACT_INIT,
@@ -135,7 +136,7 @@ namespace driver{
         public:
             
             
-            ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
+            ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="");
             ~ChaosDatasetIO();
 
             /**

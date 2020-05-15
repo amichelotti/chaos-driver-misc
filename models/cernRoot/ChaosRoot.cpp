@@ -101,7 +101,7 @@ void ChaosRoot::start() throw(chaos::CException){
         NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
     HealtManager::getInstance()->publishNodeHealt(uid);
 
-
+  ::driver::misc::ChaosDatasetIO::ownerApp=uid;
   } catch (CException &ex) {
     DECODE_CHAOS_EXCEPTION(ex)
   }
