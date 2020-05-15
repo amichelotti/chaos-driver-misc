@@ -1413,6 +1413,7 @@ void ChaosDatasetIO::deinit() {
     DEBUG_CODE(DPD_LDBG << "Already deinitialized");
     return;
   }
+  NetworkBroker::getInstance()->deregisterAction(this);
 
   /*{
     EXECUTE_CHAOS_API(api_proxy::control_unit::DeleteInstance, timeo, uid,
