@@ -54,7 +54,7 @@ namespace driver{
             };
             private:
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
-            static ChaosSharedMutex iomutex;
+             ChaosSharedMutex iomutex;
 
             ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;

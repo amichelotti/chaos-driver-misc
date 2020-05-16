@@ -94,7 +94,6 @@ bool testRange(t v, std::string &minRange, std::string &maxRange) {
 }
 namespace driver {
 namespace misc {
-ChaosSharedMutex ChaosDatasetIO::iomutex;
  std::string ChaosDatasetIO::ownerApp;
 
 ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
@@ -357,6 +356,8 @@ ChaosDatasetIO::~ChaosDatasetIO() {
   DPD_LDBG << "destroying";
 
   deinit();
+  waitEU.notifyAll();
+
 }
 
 void ChaosDatasetIO::updateHealth() {
