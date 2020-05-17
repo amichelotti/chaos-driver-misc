@@ -94,6 +94,8 @@ bool testRange(t v, std::string &minRange, std::string &maxRange) {
 }
 namespace driver {
 namespace misc {
+  ChaosSharedMutex ChaosDatasetIO::iomutex;
+
  std::string ChaosDatasetIO::ownerApp;
 
 ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
@@ -108,8 +110,9 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       implementation("datasetIO"), sched_time(0), last_push_ts(0),
       burst_cycles(0), burst_time_ts(0),  state(chaos::CUStateKey::DEINIT)
  {
-  ChaosWriteLock l(iomutex);
   try {
+      ChaosWriteLock l(iomutex);
+
     if (chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()
             ->getServiceState() == chaos::CUStateKey::DEINIT) {
       InizializableService::initImplementation(
@@ -128,6 +131,8 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
     DPD_LERR << "cannot initialize SharedManagedDirecIoDataDriver, already "
                 "initialized?";
   }
+  {
+    ChaosWriteLock l(iomutex);
 
   // pool
   ioLiveDataDriver =
@@ -149,6 +154,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   if (mds_message_channel == NULL) {
     throw chaos::CException(-1, "cannot access MDS channel " + name,
                             __PRETTY_FUNCTION__);
+  }
   }
   CDWUniquePtr tmp_data_handler;
   if (!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler,

@@ -399,7 +399,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     }
 
     {
-      test->deinit();
+      test.reset();
       if (++thread_done == nthreads) {
         // std::cout <<"["<<name<<"] restart all:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;
