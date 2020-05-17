@@ -16,7 +16,7 @@ public:
 
     RestCU(const std::string& cuname,const std::string& ds,const std::string& grupname="");
     ~RestCU();
-    int pushJsonDataset(const std::string&json);
+    int pushJsonDataset(const std::string&json,std::string&ans);
 
 };
     }}

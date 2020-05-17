@@ -1,3 +1,4 @@
+#include <chaos/common/chaos_types.h>
 #include <chaos/common/utility/Singleton.h>
 #include <map>
 #ifndef __RESTCU_CONTAINER__
@@ -8,6 +9,7 @@ class RestCU;
 class RestCUContainer : public chaos::common::utility::Singleton<RestCUContainer> {
 
   std::map<std::string, RestCU *> restCUs;
+  ChaosSharedMutex iomutex;
 
 public:
   /**
@@ -31,7 +33,7 @@ public:
    * @param json_answer returns a json answer to send back
    * @return 0 if success
    */
-  int push(const std::string &jsonDataset, std::string &json_answer);
+  int push(const std::string &name,const std::string &jsonDataset, std::string &json_answer);
 };
 } // namespace misc
 } // namespace driver

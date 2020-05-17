@@ -3,6 +3,12 @@
 using namespace chaos::common::data;
 namespace driver {
 namespace misc {
+#define DPD_LOG_HEAD "[RestCU] - "
+
+#define DPD_LAPP LAPP_ << DPD_LOG_HEAD
+#define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
+#define DPD_LERR                                                               \
+  LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "
 
 
 CDWUniquePtr eventHandler(CDWUniquePtr ev,ChaosDatasetIO* p){
@@ -54,20 +60,36 @@ RestCU::RestCU(const std::string &cuname, const std::string &ds,
 void RestCU::processBufferElement(QueueElementShrdPtr element) {
   try {
     pushDataset(element);
-  } catch (...) {
+  } catch(chaos::CException&e){
+    DPD_LERR<<" Chaos Exception pushing dataset:"<<element->getJSONString()<<" error:"<<e.what();
+
+  }
+  catch (...) {
+      DPD_LERR<<" Uknown processing";
   }
 }
 
-int RestCU::pushJsonDataset(const std::string &json) {
+int RestCU::pushJsonDataset(const std::string &json,std::string&ans) {
      try {
     ChaosDataSet ds(new chaos::common::data::CDataWrapper());
     ds->setSerializedJsonData(json.c_str());
     chaos::CObjectProcessingQueue<chaos::common::data::CDataWrapper>::QueueElementShrdPtr a(ds);
     push(a);
+    std::string *ev;
+    if(events.pop(ev)){
+        ans=*ev;
+        delete ev;
+    } else {
+        ans="{}";
+    }
     return 0;
-     } catch (...) {
+     } catch(chaos::CException&e){
+    DPD_LERR<<" Chaos Exception pushing JSON in queue:"<<e.what();
+
   }
- 
+  catch (...) {
+      DPD_LERR<<" Uknown pushing JSON";
+  }
   return -102;
 }
 } // namespace misc

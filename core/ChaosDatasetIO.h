@@ -138,7 +138,7 @@ namespace driver{
             void _initDataset();
         public:
             
-            ChaosDatasetIO(const std::string& dataset_name,bool check=true);
+            ChaosDatasetIO(const std::string& dataset_name,bool check);
 
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="");
             ~ChaosDatasetIO();
