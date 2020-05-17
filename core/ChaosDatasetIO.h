@@ -133,9 +133,13 @@ namespace driver{
             typedef std::map<ActionID,actionFunc_t> handler_t; 
             handler_t handlermap;
             chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr p);
+            bool check_presence;
+
+            void _initDataset();
         public:
             
-            
+            ChaosDatasetIO(const std::string& dataset_name,bool check=true);
+
             ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="");
             ~ChaosDatasetIO();
 

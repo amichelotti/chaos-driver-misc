@@ -97,6 +97,19 @@ namespace misc {
 ChaosSharedMutex ChaosDatasetIO::iomutex;
 
 std::string ChaosDatasetIO::ownerApp;
+ChaosDatasetIO::ChaosDatasetIO(const std::string& dataset_name,bool check):check_presence(check),datasetName(dataset_name), groupName(""), ageing(3600),
+      storageType(
+          (int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory),
+      timeo(5000), entry_created(false), query_index(0), defaultPage(30),
+      last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0),
+      alarm_logging_channel(NULL), standard_logging_channel(NULL),
+      last_push_rate_grap_ts(0), deinitialized(false),
+      implementation("datasetIO"), sched_time(0), last_push_ts(0),
+      burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT){
+        _initDataset();
+
+}
+
 
 ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                const std::string &group_name)
@@ -108,8 +121,12 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       alarm_logging_channel(NULL), standard_logging_channel(NULL),
       last_push_rate_grap_ts(0), deinitialized(false),
       implementation("datasetIO"), sched_time(0), last_push_ts(0),
-      burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT) {
-  try {
+      burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT),check_presence(true) {
+        _initDataset();
+}
+
+void ChaosDatasetIO:: _initDataset(){
+try {
     ChaosWriteLock l(iomutex);
 
     if (chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()
@@ -142,19 +159,19 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   }
 
     if (ioLiveDataDriver.get() == NULL) {
-      throw chaos::CException(-1, "cannot access ioLive driver" + name,
+      throw chaos::CException(-1, "cannot access ioLive driver" + datasetName,
                               __PRETTY_FUNCTION__);
     }
     network_broker = NetworkBroker::getInstance();
 
     if (network_broker == NULL) {
-      throw chaos::CException(-1, "cannot access network broker " + name,
+      throw chaos::CException(-1, "cannot access network broker " + datasetName,
                               __PRETTY_FUNCTION__);
     }
     mds_message_channel = network_broker->getMetadataserverMessageChannel();
 
     if (mds_message_channel == NULL) {
-      throw chaos::CException(-1, "cannot access MDS channel " + name,
+      throw chaos::CException(-1, "cannot access MDS channel " + datasetName,
                               __PRETTY_FUNCTION__);
     }
   
@@ -175,12 +192,13 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   }
   int err;
   // check if there is some other CU with the same id.
+  if(check_presence){
   int retry = 12;
   do {
     ChaosStringVector node_found;
 
     if ((err = mds_message_channel->searchNode(
-             name, chaos::NodeType::NodeSearchType::node_type_cu, true, 0, 100,
+             datasetName, chaos::NodeType::NodeSearchType::node_type_cu, true, 0, 100,
              node_found, timeo)) == 0) {
       if (node_found.size() && (uid == node_found[0])) {
         if (retry == 0) {
@@ -203,7 +221,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                               __PRETTY_FUNCTION__);
     }
   } while (retry--);
-
+  }
   try {
     if (HealtManager::getInstance()->getServiceState() ==
         chaos::CUStateKey::DEINIT) {
@@ -326,6 +344,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
 
   _initPropertyGroup();
 }
+
 
 int ChaosDatasetIO::setAgeing(uint64_t secs) {
   ageing = secs;

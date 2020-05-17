@@ -167,8 +167,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
                    : (point_cnt = (pow(pointincr, incr))),
                 incr++) {
     std::vector<double> val;
-    ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
-
+    ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, false));
     test->setAgeing(7200);
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);

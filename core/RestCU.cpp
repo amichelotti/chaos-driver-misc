@@ -1,13 +1,22 @@
 #include "RestCU.h"
+#define MAX_EVENTS 128
 using namespace chaos::common::data;
 namespace driver {
 namespace misc {
 
+
+CDWUniquePtr eventHandler(CDWUniquePtr ev,ChaosDatasetIO* p){
+    RestCU* ptr=(RestCU*)p;
+    std::string* sptr=new std::string();
+    *sptr=ev->getJSONString();
+    ptr->events.push(sptr);
+    return CDWUniquePtr();
+}
 RestCU::~RestCU() {}
 
 RestCU::RestCU(const std::string &cuname, const std::string &ds,
                const std::string &grupname)
-    : ChaosDatasetIO(cuname, grupname) {
+    : ChaosDatasetIO(cuname, grupname),events(MAX_EVENTS) {
   chaos::common::data::CDataWrapper cw;
   cw.setSerializedJsonData(ds.c_str());
 
@@ -27,6 +36,11 @@ RestCU::RestCU(const std::string &cuname, const std::string &ds,
 
       cw.copyAllTo(*out.get());
   }
+  if(registerDataset()!=0){
+      throw chaos::CException(-1, "Cannot register dataset of " + cuname,
+                              __PRETTY_FUNCTION__);
+  }
+
   init(1);// use one thread
 
 }
