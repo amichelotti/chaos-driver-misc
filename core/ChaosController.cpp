@@ -1677,7 +1677,7 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,cons
    mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
    return res; 
 }
-std::vector<std::string> ChaosController::searchAlive(const std::string name,const std::string& what){
+std::vector<std::string> ChaosController::searchAlive(const std::string& name,const std::string& what){
             ChaosStringVector node_found;
             chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
@@ -3256,7 +3256,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             if ((err = query_cursor->getError()))
                             {
                                 releaseQuery(query_cursor);
-                                bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", % getPath() % err));
+                                bundle_state.append_error(CHAOS_FORMAT("error during query '%1%' with  api error: %2%", % getPath() % err));
                                 json_buf = bundle_state.getData()->getCompliantJSONString();
                                 /// TODO : perche' devo rinizializzare il controller?
                                 //init(path, timeo);
@@ -3453,7 +3453,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         {
                             releaseQuery(query_cursor);
                             query_cursor_map.erase(query_cursor_map.find(uid));
-                            bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", % getPath() % uid % err));
+                            bundle_state.append_error(CHAOS_FORMAT("error during query '%1%' with uid:%2% api error: %3%", % getPath() % uid % err));
                             json_buf = bundle_state.getData()->getCompliantJSONString();
                             CALC_EXEC_TIME;
                             //init(path, timeo);

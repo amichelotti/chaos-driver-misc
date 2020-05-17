@@ -749,13 +749,13 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     }
 
     return tree_ret;
-  } catch (chaos::CException e) {
+  } catch (chaos::CException& e) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << "Exception on \"" << chaosNode << "\""
           << " errn:" << e.errorCode << " domain:" << e.errorDomain
           << " what:" << e.what();
     return NULL;
-  } catch (std::exception ee) {
+  } catch (std::exception& ee) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " Library Exception on \"" << chaosNode << "\""
           << " what:" << ee.what();

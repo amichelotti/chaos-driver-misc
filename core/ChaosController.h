@@ -8,9 +8,7 @@
 #ifndef __ChaosController_H
 #define __ChaosController_H
 
-#include <map>
-#include <string>
-#include <chaos/common/chaos_constants.h>
+//#include <chaos/common/chaos_constants.h>
 #include <chaos/common/data/DatasetDB.h>
 
 #include <chaos/cu_toolkit/data_manager/KeyDataStorage.h>
@@ -181,7 +179,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
     virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
-    std::vector<std::string> searchAlive(const std::string name="",const std::string& what="cu");
+    std::vector<std::string> searchAlive(const std::string& name="",const std::string& what="cu");
     int initDevice(const std::string &dev = "");
     int stopDevice(const std::string &dev = "");
     int startDevice(const std::string &dev = "");
