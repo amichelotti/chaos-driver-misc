@@ -143,7 +143,6 @@ static const double PI = 3.141592653589793238463;
 static boost::atomic<int> thread_done;
 static uint32_t nthreads = 1;
 static ofstream fs;
-static boost::mutex mutex_sync;
 
 static boost::mutex mutex_thread;
 static boost::condition_variable_any cond;
@@ -213,7 +212,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
     int tenpercent = loops / 10;
     if (test->registerDataset() == 0) {
-      LDBG_ << " registration OK";
+      LOG( "registration OK");
       my_input->setValue("icounter64", (int64_t)18);
       my_input->setValue("icounter32", (int32_t)1970);
       my_input->setValue("idoublevar", (double)3.14);
@@ -399,7 +398,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
     }
 
     {
-      test.reset();
+      test->deinit();
       if (++thread_done == nthreads) {
         // std::cout <<"["<<name<<"] restart all:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;
@@ -447,8 +446,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
         boost::mutex::scoped_lock lock(mutex_thread);
         LOG( "[" << name << "] waiting:" << thread_done
-                  << "points:" << point_cnt);
+                  << " points:" << point_cnt);
         cond.wait_for(mutex_thread,boost::chrono::seconds(120));
+        LOG( "[" << name << "] done");
         
         // std::cout <<"["<<name<<"] restart:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;

@@ -94,9 +94,9 @@ bool testRange(t v, std::string &minRange, std::string &maxRange) {
 }
 namespace driver {
 namespace misc {
-  ChaosSharedMutex ChaosDatasetIO::iomutex;
+ChaosSharedMutex ChaosDatasetIO::iomutex;
 
- std::string ChaosDatasetIO::ownerApp;
+std::string ChaosDatasetIO::ownerApp;
 
 ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                const std::string &group_name)
@@ -108,10 +108,9 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       alarm_logging_channel(NULL), standard_logging_channel(NULL),
       last_push_rate_grap_ts(0), deinitialized(false),
       implementation("datasetIO"), sched_time(0), last_push_ts(0),
-      burst_cycles(0), burst_time_ts(0),  state(chaos::CUStateKey::DEINIT)
- {
+      burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT) {
   try {
-      ChaosWriteLock l(iomutex);
+    ChaosWriteLock l(iomutex);
 
     if (chaos::common::io::SharedManagedDirecIoDataDriver::getInstance()
             ->getServiceState() == chaos::CUStateKey::DEINIT) {
@@ -134,37 +133,40 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
   {
     ChaosWriteLock l(iomutex);
 
-  // pool
-  ioLiveDataDriver =
-      chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()
-          ->getDataProxyChannelNewInstance();
+    // pool
+    ioLiveDataDriver = chaos::metadata_service_client::
+                           ChaosMetadataServiceClient::getInstance()
+                               ->getDataProxyChannelNewInstance();
+      DPD_LDBG << "retrived iodata driver";
 
-  if (ioLiveDataDriver.get() == NULL) {
-    throw chaos::CException(-1, "cannot access ioLive driver" + name,
-                            __PRETTY_FUNCTION__);
   }
-  network_broker = NetworkBroker::getInstance();
 
-  if (network_broker == NULL) {
-    throw chaos::CException(-1, "cannot access network broker " + name,
-                            __PRETTY_FUNCTION__);
-  }
-  mds_message_channel = network_broker->getMetadataserverMessageChannel();
+    if (ioLiveDataDriver.get() == NULL) {
+      throw chaos::CException(-1, "cannot access ioLive driver" + name,
+                              __PRETTY_FUNCTION__);
+    }
+    network_broker = NetworkBroker::getInstance();
 
-  if (mds_message_channel == NULL) {
-    throw chaos::CException(-1, "cannot access MDS channel " + name,
-                            __PRETTY_FUNCTION__);
-  }
-  }
+    if (network_broker == NULL) {
+      throw chaos::CException(-1, "cannot access network broker " + name,
+                              __PRETTY_FUNCTION__);
+    }
+    mds_message_channel = network_broker->getMetadataserverMessageChannel();
+
+    if (mds_message_channel == NULL) {
+      throw chaos::CException(-1, "cannot access MDS channel " + name,
+                              __PRETTY_FUNCTION__);
+    }
+  
   CDWUniquePtr tmp_data_handler;
   if (!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler,
                                                            5000)) {
     DPD_LDBG << "best config:" << tmp_data_handler->getJSONString();
     ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
   }
-  
-  if((groupName.size()==0) && ownerApp.size()){
-    groupName=ownerApp;
+
+  if ((groupName.size() == 0) && ownerApp.size()) {
+    groupName = ownerApp;
   }
   if (groupName == "") {
     uid = datasetName;
@@ -363,7 +365,6 @@ ChaosDatasetIO::~ChaosDatasetIO() {
 
   deinit();
   waitEU.notifyAll();
-
 }
 
 void ChaosDatasetIO::updateHealth() {
@@ -628,84 +629,7 @@ void ChaosDatasetIO::wrapper2dataset(
     cu_dataset.appendCDataWrapperToArray(ds);
   }
 }
-/*
-chaos::common::data::CDWUniquePtr
-ChaosDatasetIO::wrapper2dataset(chaos::common::data::CDataWrapper
-&dataset_pack,int dir) { chaos::common::data::CDWUniquePtr
-mds_registration_pack(new CDataWrapper); CDataWrapper cu_dataset;
-  ChaosStringVector all_template_key;
-  dataset_pack.getAllKey(all_template_key);
 
-  for (ChaosStringVectorIterator it = all_template_key.begin();
-       it != all_template_key.end(); it++) {
-    if (dataset_pack.isNullValue(*it)) {
-      DPD_LERR << "Removed from template null value key:" << *it;
-      continue;
-    }
-    CDataWrapper ds;
-    int32_t dstype = 0, subtype = 0;
-    int32_t size = 0;
-    ds.addStringValue(chaos::ControlUnitNodeDefinitionKey::
-                          CONTROL_UNIT_DATASET_ATTRIBUTE_NAME,
-                      *it);
-
-    size = dataset_pack.getValueSize(*it);
-    if (dataset_pack.isDoubleValue(*it)) {
-      dstype |= chaos::DataType::TYPE_DOUBLE;
-      subtype = chaos::DataType::SUB_TYPE_DOUBLE;
-    } else if (dataset_pack.isInt64Value(*it)) {
-      dstype |= chaos::DataType::TYPE_INT64;
-      subtype = chaos::DataType::SUB_TYPE_INT64;
-    } else if (dataset_pack.isInt32Value(*it)) {
-      dstype |= chaos::DataType::TYPE_INT32;
-      subtype = chaos::DataType::SUB_TYPE_INT32;
-    } else if (dataset_pack.isStringValue(*it)) {
-      dstype |= chaos::DataType::TYPE_STRING;
-      subtype = chaos::DataType::SUB_TYPE_STRING;
-    } else if (dataset_pack.isBinaryValue(*it)) {
-      dstype |= chaos::DataType::TYPE_BYTEARRAY;
-    } else {
-      dstype |= chaos::DataType::TYPE_DOUBLE;
-      subtype = chaos::DataType::SUB_TYPE_DOUBLE;
-    }
-    if (dataset_pack.isVector(*it)) {
-      // dstype = chaos::DataType::TYPE_ACCESS_ARRAY;
-      dstype = chaos::DataType::TYPE_BYTEARRAY;
-    }
-    ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::
-                         CONTROL_UNIT_DATASET_BINARY_SUBTYPE,
-                     subtype);
-    ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::
-                         CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE,
-                     dstype);
-    ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::
-                         CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION,
-                     dir);
-    ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::
-                         CONTROL_UNIT_DATASET_VALUE_MAX_SIZE,
-                     size);
-
-    DPD_LDBG << "- ATTRIBUTE \"" << *it << "\" SIZE:" << size
-             << " TYPE:" << dstype << " SUBTYPE:" << subtype;
-    cu_dataset.appendCDataWrapperToArray(ds);
-  }
-  cu_dataset.addInt64Value(
-      chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_TIMESTAMP,
-      chaos::common::utility::TimingUtil::getTimeStamp());
-
-  // close array for all device description
-  cu_dataset.finalizeArrayForKey(
-      chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
-  cu_dataset.addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID, (int64_t)0);
-
-  mds_registration_pack->addCSDataValue(
-      chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION,
-      cu_dataset);
-  mds_registration_pack->addStringValue(
-      chaos::NodeDefinitionKey::NODE_TYPE,
-      chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-  return mds_registration_pack;
-}*/
 void ChaosDatasetIO::createMDSEntry() {
   api_proxy::control_unit::SetInstanceDescriptionHelper cud;
   int error = 0;
@@ -713,23 +637,23 @@ void ChaosDatasetIO::createMDSEntry() {
   ChaosStringVector node_found;
 
   if ((error = mds_message_channel->searchNode(
-           uid, chaos::NodeType::NodeSearchType::node_type_cu, false, 0,
-           100, node_found, timeo)) == 0) {
+           uid, chaos::NodeType::NodeSearchType::node_type_cu, false, 0, 100,
+           node_found, timeo)) == 0) {
     if (node_found.size()) {
       for (ChaosStringVector::iterator i = node_found.begin();
            i != node_found.end(); i++) {
         DPD_LDBG << "The cointainer " << *i << " exists";
       }
     } else {
-     /* {
-        EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, timeo, groupName);
-        error = apires->getError();
-      }
-      if (error == 0) {
-        EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, timeo,
-                          groupName, "datasetIO", 0);
-        error = apires->getError();
-      }*/
+      /* {
+         EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, timeo, groupName);
+         error = apires->getError();
+       }
+       if (error == 0) {
+         EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, timeo,
+                           groupName, "datasetIO", 0);
+         error = apires->getError();
+       }*/
       if (error == 0) {
 
         cud.auto_load = 1;
@@ -895,14 +819,14 @@ int ChaosDatasetIO::registerDataset() {
     EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, timeo, uid,
                       true);
   }
-   DPD_LAPP << "Waiting load ";
+  DPD_LAPP << "Waiting load ";
 
-  waitEU.wait();
+//  waitEU.wait();
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); }
   DPD_LAPP << "Waiting init ";
 
-  waitEU.wait();
+  //waitEU.wait();
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true); }
   DPD_LAPP << "Waiting start ";
@@ -916,14 +840,13 @@ int ChaosDatasetIO::registerDataset() {
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_load(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
-  
 
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
   DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-  waitEU.notifyAll();
+  //waitEU.notifyAll();
   return execute(ACT_LOAD, MOVE(dataset_attribute_values));
   ;
 }
@@ -1055,7 +978,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   burst_cycles = burst_time_ts = 0;
-  waitEU.notifyAll();
+//  waitEU.notifyAll();
 
   DPD_LDBG << "INIT INPUT: " << dataset_attribute_values->getJSONString();
   if (!dataset_attribute_values->hasKey(
