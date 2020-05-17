@@ -12,7 +12,13 @@ CDWUniquePtr eventHandler(CDWUniquePtr ev,ChaosDatasetIO* p){
     ptr->events.push(sptr);
     return CDWUniquePtr();
 }
-RestCU::~RestCU() {}
+RestCU::~RestCU() {
+    events.consume_all([this](std::string* i) {
+    delete i;
+  });
+  chaos::CObjectProcessingQueue<chaos::common::data::CDataWrapper>::deinit();
+    ChaosDatasetIO::deinit();
+}
 
 RestCU::RestCU(const std::string &cuname, const std::string &ds,
                const std::string &grupname)
