@@ -793,45 +793,6 @@ int ChaosDatasetIO::registerDataset() {
 
     return -1;
   }
-  /* for (i = datasets.begin(); i != datasets.end(); i++) {
-    if ((i->second).get()) {
-          wrapper2dataset(*((i->second).get()), i->first);
-      if (mds_registration_pack.get()) {
-        DEBUG_CODE(DPD_LDBG << mds_registration_pack->getJSONString());
-
-        int ret;
-
-
-        DPD_LDBG << "registering " << i->first << " registration pack:"
-                 << mds_registration_pack->getCompliantJSONString();
-
-        CDWUniquePtr tmp(new CDataWrapper());
-        this->getActionDescrionsInDataWrapper(*tmp, true);
-
-        mds_registration_pack->appendCDataWrapperToArray(*tmp);
-        mds_registration_pack->finalizeArrayForKey(RpcActionDefinitionKey::CS_CMDM_ACTION_DESC);
-
-        if ((ret = mds_message_channel->sendNodeRegistration(
-                 MOVE(mds_registration_pack), true, 10000)) == 0) {
-          CDWUniquePtr mdsPack(new CDataWrapper());
-          mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID,
-                                  uid);
-          mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE,
-                                  chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-          ret = mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true,
-                                                            10000);
-
-          chaos::common::async_central::AsyncCentralManager::getInstance()
-              ->addTimer(this, chaos::common::constants::CUTimersTimeoutinMSec,
-                         chaos::common::constants::CUTimersTimeoutinMSec);
-        } else {
-          DPD_LERR << " cannot register dataset " << i->first;
-
-          return -1;
-        }
-      }
-    }
-  }*/
 
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
   {
@@ -840,12 +801,11 @@ int ChaosDatasetIO::registerDataset() {
   }
   DPD_LAPP << "Waiting load ";
 
-//  waitEU.wait();
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); }
   DPD_LAPP << "Waiting init ";
 
-  //waitEU.wait();
+  waitEU.wait();
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true); }
   DPD_LAPP << "Waiting start ";
@@ -865,7 +825,6 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_load(
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
   DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-  //waitEU.notifyAll();
   return execute(ACT_LOAD, MOVE(dataset_attribute_values));
   ;
 }
@@ -997,12 +956,13 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   burst_cycles = burst_time_ts = 0;
-//  waitEU.notifyAll();
 
   DPD_LDBG << "INIT INPUT: " << dataset_attribute_values->getJSONString();
   if (!dataset_attribute_values->hasKey(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
     DPD_LERR << "NO DATASET PRESENT INPUT: ";
+      waitEU.notifyAll();
+
     return execute(ACT_INIT, MOVE(dataset_attribute_values));
   }
   CDWUniquePtr desc = dataset_attribute_values->getCSDataValue(
@@ -1054,6 +1014,8 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   updateConfiguration(MOVE(dataset_attribute_values));
 
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
+  waitEU.notifyAll();
+
   return execute(ACT_INIT, MOVE(dataset_attribute_values));
 }
 CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
