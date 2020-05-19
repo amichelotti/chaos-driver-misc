@@ -7,16 +7,15 @@ namespace driver {
 namespace misc {
 namespace root {
 
-class ChaosRoot /*: public chaos::ChaosCommon<ChaosRoot>*/ {
-//  friend class chaos::common::utility::Singleton<ChaosRoot>;
-  //	common::utility::StartableServiceContainer<WANProxyRegister>
-  // wan_register;
-
+class ChaosRoot :public chaos::DeclareAction{
   
   TRint *rootApp;
   std::string rootopts;
 //  const char** rootopts;
  // int rootargs;
+
+
+  chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
 
 public:
   ChaosRoot();
@@ -41,6 +40,7 @@ public:
   void start() throw(chaos::CException);
   void stop() throw(chaos::CException);
   void deinit() throw(chaos::CException);
+
 };
 } // namespace cernroot
 } // namespace misc

@@ -48,8 +48,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\[\]\(\)\{\}]+");
-  if(boost::regex_match(name,r)){
+  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(boost::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }

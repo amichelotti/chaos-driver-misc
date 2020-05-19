@@ -30,14 +30,34 @@ using namespace chaos::common::data;
 
 #define ROOTDBG DBG_LOG(ChaosRoot)
 
+#define EXECUTE_CHAOS_API(api_name, time_out, ...)                             \
+  ROOTDBG << " "                                                              \
+           << " Executing Api:\"" << #api_name << "\" ptr:0x" << std::hex      \
+           << GET_CHAOS_API_PTR(api_name).get();                               \
+  if (GET_CHAOS_API_PTR(api_name).get() == NULL) {                             \
+    throw chaos::CException(-1, "Cannot retrieve API:" #api_name,              \
+                            __PRETTY_FUNCTION__);                              \
+  }                                                                            \
+  chaos::metadata_service_client::api_proxy::ApiProxyResult apires =           \
+      GET_CHAOS_API_PTR(api_name)->execute(__VA_ARGS__);                       \
+  apires->setTimeout(time_out);                                                \
+  apires->wait();                                                              \
+  if (apires->getError()) {                                                    \
+    std::stringstream ss;                                                      \
+    ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "|" << #api_name \
+       << " " << apires->getErrorMessage();                                    \
+    ROOTERR << ss.str();                                                      \
+  }
+
 namespace driver {
 namespace misc {
 namespace root {
 
 ChaosRoot::ChaosRoot(){
-  int id=boost::this_process::get_id();
-  uid=std::to_string(id);
-  ROOTDBG<<" ChaosRoot Process ID:"<<uid;
+ // int id=boost::this_process::get_id();
+ // uid=std::to_string(id);
+ // ROOTDBG<<" ChaosRoot Process ID:"<<uid;
+  uid="";
   rootApp=NULL;
 }
 ChaosRoot::~ChaosRoot(){
@@ -65,6 +85,11 @@ void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException) {
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(initStringStream);
       
 }
+chaos::common::data::CDWUniquePtr ChaosRoot::_load(chaos::common::data::CDWUniquePtr dataset_attribute_values){
+    ROOTDBG<<" CHAOSROOT LOAD:"<<uid<<dataset_attribute_values->getJSONString();
+
+  return chaos::common::data::CDWUniquePtr();
+}
 
 void ChaosRoot::start() throw(chaos::CException){
   chaos::common::message::MDSMessageChannel *mds_message_channel;
@@ -73,7 +98,34 @@ void ChaosRoot::start() throw(chaos::CException){
 
   ChaosUniquePtr<chaos::common::data::CDataWrapper> result(
       new chaos::common::data::CDataWrapper());
-  ROOTDBG<<" ChaosRoot UID:"<<uid;
+  const char *root_opts[120];
+   int nroot_opts = 1;
+   // root_opts[nroot_opts++] = uid.c_str();
+    std::string buf;
+
+    std::stringstream ss(rootopts);
+    while (ss >> buf)
+    {
+        ROOTDBG<<"options["<<root_opts<<"]="<<buf;
+
+        root_opts[nroot_opts++] = strdup(buf.c_str());
+    }
+  if(uid.size()==0){
+    // if uid not given, use the name of function
+    for(int cnt=1;cnt<nroot_opts;cnt++){
+      if(*root_opts[cnt]!='-'){
+        std::string path=root_opts[cnt];
+        boost::regex reg("([-\\.\\w]+)\\({0,1}[-,\\.\\w]*\\){0,1}$");
+        boost::smatch m;
+        uid=path;
+        if(boost::regex_search(path,m,reg)){
+          uid=m[1];
+        }
+      }
+    }
+  }
+  root_opts[0]=uid.c_str();
+  ROOTDBG<<" ChaosRoot UID:\""<<uid<<"\"";
 
   result->addStringValue(NodeDefinitionKey::NODE_UNIQUE_ID, uid);
   result->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE,
@@ -94,6 +146,15 @@ void ChaosRoot::start() throw(chaos::CException){
 
     ROOTDBG << "Publishing as:" << uid
               << " registration:" << result->getCompliantJSONString();
+
+
+    addActionDescritionInstance<ChaosRoot>(
+      this, &ChaosRoot::_load,
+      UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
+      UnitServerNodeDomainAndActionRPC::ACTION_UNIT_SERVER_LOAD_CONTROL_UNIT,
+      "Attempt to load");
+   chaos::common::network::NetworkBroker::getInstance()->registerAction(this);
+
     mds_message_channel->sendNodeRegistration(MOVE(result));
     HealtManager::getInstance()->addNewNode(uid);
     HealtManager::getInstance()->addNodeMetricValue(
@@ -102,21 +163,17 @@ void ChaosRoot::start() throw(chaos::CException){
     HealtManager::getInstance()->publishNodeHealt(uid);
 
   ::driver::misc::ChaosDatasetIO::ownerApp=uid;
+  {
+    EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, 5000, uid,
+                      true);
+  }
+
   } catch (CException &ex) {
     DECODE_CHAOS_EXCEPTION(ex)
   }
-    const char *root_opts[120];
-    int nroot_opts = 0;
-    root_opts[nroot_opts++] = uid.c_str();
-    std::string buf;
-
-    std::stringstream ss(rootopts);
-    while (ss >> buf)
-    {
-        root_opts[nroot_opts++] = buf.c_str();
-    }
+    
     rootApp = new TRint("Rint", &nroot_opts, (char **)root_opts,0,0, kFALSE);
-
+ 
   // rootapp->init(NULL);
   // rootapp->start();
 //chaos::ChaosCommon<ChaosRoot>::start();

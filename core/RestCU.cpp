@@ -59,7 +59,7 @@ RestCU::RestCU(const std::string &cuname, const std::string &ds,
 
 void RestCU::processBufferElement(QueueElementShrdPtr element) {
   try {
-    pushDataset(element);
+    ChaosDatasetIO::pushDataset(element);
   } catch(chaos::CException&e){
     DPD_LERR<<" Chaos Exception pushing dataset:"<<element->getJSONString()<<" error:"<<e.what();
 
@@ -67,6 +67,20 @@ void RestCU::processBufferElement(QueueElementShrdPtr element) {
   catch (...) {
       DPD_LERR<<" Uknown processing";
   }
+}
+
+int RestCU::pushDataset(const ChaosDataSet&ds,std::string&ans){
+    chaos::CObjectProcessingQueue<chaos::common::data::CDataWrapper>::QueueElementShrdPtr a(ds);
+    push(a);
+    std::string *ev;
+    if(events.pop(ev)){
+        ans=*ev;
+        delete ev;
+    } else {
+        ans="{}";
+    }
+    return 0;
+
 }
 
 int RestCU::pushJsonDataset(const std::string &json,std::string&ans) {

@@ -795,12 +795,7 @@ int ChaosDatasetIO::registerDataset() {
   }
 
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
-  {
-    EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, timeo, uid,
-                      true);
-  }
-  DPD_LAPP << "Waiting load ";
-
+  
 
   { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); }
   DPD_LAPP << "Waiting init ";

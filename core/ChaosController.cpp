@@ -1222,7 +1222,6 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
     apires->setTimeout(time_out);                                                                                         \
     if(apires->wait()){ret= apires->getError();} else {ret =-1;}                                                                                
 
-
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
           << " Executing Api:\"" << #api_name << "\" name:"<<name;                                                                    \
@@ -1238,6 +1237,23 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         execute_chaos_api_error++;                                                                                          \
     } else {chaos::common::data::CDWUniquePtr r=apires->detachResult();if((r.get()!=NULL)) json_buf=r->getCompliantJSONString();}
 
+
+
+chaos::common::data::CDWUniquePtr ChaosController::executeAPI(const std::string&group,const std::string&name,CDWUniquePtr& msg,int& err){
+    
+     err = 0;
+    ChaosUniquePtr<MultiAddressMessageRequestFuture> request_future = mdsChannel->sendRequestWithFuture(group,
+                                                                                            name,
+                                                                                            MOVE(msg));
+    request_future->setTimeout(timeo);
+    if(request_future->wait()) {
+        err = request_future->getError();
+    } else {
+        err = -1;
+    }
+    return request_future->detachResult();
+
+}
 
 static uint64_t getMSSince1970Until(const std::string& dateAndHour ) {
 
@@ -2351,8 +2367,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
                         infos->addBoolValue("kill",true);
                         sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,MOVE(infos),node_type);
+                } else if (what == "del"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeDelete",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
                 }
-                else if (node_type == "us")
+                else if (node_type == "us" || node_type == "root")
                 {
 
                     if (what == "set")
@@ -2360,11 +2397,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer, MDS_TIMEOUT, name, 0, json_value.get());
                         res << json_buf;
                     }
-                    else if (what == "del")
-                    {
-                        EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
-                        res << json_buf;
-                    }
+                   
                     else if (what == "create")
                     {
                         EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);

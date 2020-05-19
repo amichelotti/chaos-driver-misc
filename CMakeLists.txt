@@ -5,7 +5,7 @@ find_package(chaos MODULE REQUIRED)
 include_directories(../../ ${chaos_INCLUDE_DIRS})
 include(${CMAKE_INSTALL_PREFIX}/CMakeMacroUtils.txt)
 
-SET(src core/ChaosDatasetAttribute.cpp core/RestCU.cpp core/RestCUContainer.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/ChaosDatasetIO.cpp ${optional_src})
+SET(src core/ChaosDatasetAttribute.cpp core/RestCU.cpp core/RestCUContainer.cpp  core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/ChaosDatasetIO.cpp ${optional_src})
 
 add_subdirectory(models)
 FILE(WRITE generators/UnitServerIgnore "disabled ${PROJECT_NAME}")
@@ -24,6 +24,7 @@ ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
 ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
 ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
+ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
 
 ADD_EXECUTABLE(UnitServerLite test/UnitServerLite.cpp)
 
@@ -32,6 +33,7 @@ TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_c
 TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(testWriteAndRead ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(histoIndex ${PROJECT_NAME}  chaos_common  common_misc_data common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(UnitServerLite ${FrameworkLib})
 
@@ -57,7 +59,11 @@ INSTALL(TARGETS testWriteAndRead
 INSTALL(TARGETS histoIndex
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
+        
+        
+INSTALL(TARGETS restCUServer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 
 #INSTALL_TARGETS(/lib ${PROJECT_NAME})

@@ -188,6 +188,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     int unloadDevice(const std::string &dev = "");
     int setAttributeToValue(const char *attributeName, const char *attributeValue, const std::string &cuname = "");
 
+    chaos::common::data::CDWUniquePtr executeAPI(const std::string&group,const std::string&name,chaos::common::data::CDWUniquePtr& msg,int&err);
+
     int init(const std::string &p, uint64_t timeo);
     virtual int init(int force = 0);
     virtual int stop(int force = 0);
