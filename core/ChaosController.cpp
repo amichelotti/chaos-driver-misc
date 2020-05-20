@@ -2373,8 +2373,31 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
 
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        p->addBoolValue("reset",true);
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
 
-                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeDelete",p,err);
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
+                } else if (what == "new"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
                             std::stringstream ss;                                                                                             
@@ -2750,6 +2773,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
+                return CHAOS_DEV_OK;
+            }
+            else if (what == "fload") // fast load
+            {   
+                chaos::common::data::CDWUniquePtr res;
+                if(mdsChannel->getScriptDesc(name,res,MDS_TIMEOUT)!=0){
+                    serr << cmd << " Error retriving script :"<<name;
+                    bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    return CHAOS_DEV_CMD;
+                } 
+                json_buf = res->getCompliantJSONString();
+
                 return CHAOS_DEV_OK;
             }
             else if (what == "load")

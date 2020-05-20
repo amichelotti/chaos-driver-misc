@@ -24,8 +24,13 @@ ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
 ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
 ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
-ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
-
+IF(NOT CHAOS_TARGET)
+        ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
+        TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
+        INSTALL(TARGETS restCUServer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
 ADD_EXECUTABLE(UnitServerLite test/UnitServerLite.cpp)
 
 
@@ -33,7 +38,6 @@ TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_c
 TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(testWriteAndRead ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(histoIndex ${PROJECT_NAME}  chaos_common  common_misc_data common_debug ${FrameworkLib})
-TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(UnitServerLite ${FrameworkLib})
 
@@ -61,9 +65,6 @@ INSTALL(TARGETS histoIndex
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
         
         
-INSTALL(TARGETS restCUServer
-        DESTINATION "bin"
-        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 
 #INSTALL_TARGETS(/lib ${PROJECT_NAME})
