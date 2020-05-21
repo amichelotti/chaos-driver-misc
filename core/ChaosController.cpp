@@ -2367,7 +2367,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
                         infos->addBoolValue("kill",true);
                         sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,MOVE(infos),node_type);
-                } else if (what == "del"){
+                } else if (what == "deletenode"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
@@ -2388,11 +2388,38 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
                         res << json_buf;
+                } else if (what == "nodeupdate"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"setNodeDescription",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
                 } else if (what == "new"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
-
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
@@ -2539,6 +2566,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         else
                         {
                             std::string par;
+                            std::string sub_type;
+                            if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_SUB_TYPE)){
+                                sub_type=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_SUB_TYPE);
+                            }
+
                             if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
                                 par=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_PARENT);
                             } else {
@@ -2546,7 +2578,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                                 par =parent;
                             }
                             {
-                                if (json_value->hasKey("control_unit_implementation"))
+                                if (json_value->hasKey("control_unit_implementation")&&(sub_type!="nt_script_eu"))
                                 {
                                     EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
                                 }

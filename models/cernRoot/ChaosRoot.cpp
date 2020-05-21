@@ -68,10 +68,11 @@ ChaosRoot::~ChaosRoot(){
 }
 void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException){
 //  chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
- chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption< std::string >("node-uid",
+  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption< std::string >("unit-server-alias",
                                                                                               "Node Unique Name",
                                                                                               uid,
                                                                                               &uid);
+ 
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<std::string>(&rootopts), "Options to give to CERN ROOT interpreter ");
    
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(argc, argv);
