@@ -1632,12 +1632,15 @@ chaos::common::data::CDWUniquePtr ChaosController::getNodeDesc(const std::string
     EXECUTE_CHAOS_RET_API(ret,api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
     if(ret == 0){
         r=apires->detachResult();
-        if(r->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)&&(r->getStringValue(chaos::NodeDefinitionKey::NODE_TYPE)==chaos::NodeType::NODE_TYPE_UNIT_SERVER)){
+        /*if(r->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)&&(r->getStringValue(chaos::NodeDefinitionKey::NODE_TYPE)==chaos::NodeType::NODE_TYPE_UNIT_SERVER)){
             EXECUTE_CHAOS_RET_API(ret,api_proxy::agent::GetAgentForNode, MDS_TIMEOUT, name);
             if(ret==0){
                   chaos::common::data::CDWUniquePtr r1=apires->detachResult();
                   if(r1->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
-                      r->addStringValue("parent",r1->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
+                      if(!r->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                        r->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,r1->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
+
+                      }
                   }
 
             } else {
@@ -1647,7 +1650,7 @@ chaos::common::data::CDWUniquePtr ChaosController::getNodeDesc(const std::string
                     
             }
 
-        }
+        }*/
     } else {
         std::stringstream ss;                                                                                             
         ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "| GetNodeDescription :" << apires->getErrorMessage();  
