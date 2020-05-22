@@ -24,10 +24,19 @@ ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
 ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
 ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
+
 IF(NOT CHAOS_TARGET)
         ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
         TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
         INSTALL(TARGETS restCUServer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
+
+IF (CERN_ROOT)
+ADD_EXECUTABLE(chaosHisto2tree test/chaosHisto2tree.cpp)
+TARGET_LINK_LIBRARIES(chaosHisto2tree ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data  common_debug chaos_driver_misc_cernroot Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib})
+INSTALL(TARGETS chaosHisto2tree
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 ENDIF()
@@ -49,6 +58,8 @@ INSTALL(TARGETS testSumOperatorUI
 INSTALL(TARGETS testDataSetIO
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+
 #INSTALL_TARGETS(/bin UnitServerLite)
 INSTALL(TARGETS UnitServerLite
         DESTINATION "bin"
