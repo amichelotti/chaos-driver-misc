@@ -39,7 +39,7 @@ int main(int argc, const char **argv) {
   int64_t tot_ele = 0, errors = 0, warning = 0;
 
   std::string qstart, qend;
-  uint32_t pagelen = 1000;
+  uint32_t pagelen = 2000;
   uint32_t maxele = 0;
   uint64_t now = chaos::common::utility::TimingUtil::getTimeStamp();
   bool checkseq = true;
@@ -50,19 +50,26 @@ int main(int argc, const char **argv) {
 
   ChaosStringVector meta_tags, projection_key_vec;
   //"%d-%m-%Y %H:%M:%S"
-  qend = chaos::common::utility::TimingUtil::toString(end_ts, "%d%m%Y%H%M%S");
+  qend = chaos::common::utility::TimingUtil::toString(end_ts,"%d-%m-%Y %H:%M:%S");
   qstart =
-      chaos::common::utility::TimingUtil::toString(start_ts, "%d%m%Y%H%M%S");
+      chaos::common::utility::TimingUtil::toString(start_ts,"%d-%m-%Y %H:%M:%S");
+
+/*std::cout << nodeid << " Query fronm: "
+              << qstart
+              << "("<<start_ts<<") from:"
+              << qend
+              << "("<<end_ts<<") page:" << pagelen << std::endl;
+*/
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("start",
                   po::value<std::string>(&qstart)->default_value(qstart),
-                  "start of the wuery format :%d%m%Y%H%M%S");
+                  "start of the wuery format :%d-%m-%Y %H:%M:%S");
 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("end", po::value<std::string>(&qend)->default_value(qend),
-                  "end of the wuery format :%d%m%Y%H%M%S");
+                  "end of the wuery format :%d-%m-%Y %H:%M:%S");
 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -108,8 +115,10 @@ int main(int argc, const char **argv) {
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
 
-  start_ts = chaos::common::utility::TimingUtil::getTimestampFromString(qstart);
-  end_ts = chaos::common::utility::TimingUtil::getTimestampFromString(qend);
+
+  start_ts = chaos::common::utility::TimingUtil::getTimestampFromString(qstart,"%d-%m-%Y %H:%M:%S",false);
+  end_ts = chaos::common::utility::TimingUtil::getTimestampFromString(qend,"%d-%m-%Y %H:%M:%S",false);
+ 
   CUController *controller = NULL;
   if (nodeid == "") {
     std::cerr << " must specify a nodeid" << std::endl;
@@ -136,16 +145,17 @@ int main(int argc, const char **argv) {
          it != end; it++) {
       projection_keys.insert(*it);
     }
-    controller->executeTimeIntervallQuery(
-        chaos::cu::data_manager::KeyDataStorageDomainOutput, start_ts, end_ts,
-        search_tags, projection_keys, &query_cursor, pagelen);
-
-    std::cout << nodeid << " Query fronm: "
+    std::cout << nodeid << " Query from: "
               << chaos::common::utility::TimingUtil::toString(start_ts)
               << " from:"
               << chaos::common::utility::TimingUtil::toString(end_ts)
               << " page:" << pagelen << std::endl;
 
+    controller->executeTimeIntervallQuery(
+        chaos::cu::data_manager::KeyDataStorageDomainOutput, start_ts, end_ts,
+        search_tags, projection_keys, &query_cursor, pagelen);
+
+   
     std::string name = std::string(argv[0]) + ".root";
     TFile *fout;
     ChaosToTree ti(name);
@@ -158,8 +168,12 @@ int main(int argc, const char **argv) {
     uint64_t tot_ms = 0;
     if (query_cursor) {
       std::cout << "Exporting... " << std::endl;
-      while (query_cursor->hasNext()) {
+      int found=1;
+      while (found) {
         uint64_t st = chaos::common::utility::TimingUtil::getTimeStamp();
+        found=query_cursor->hasNext();
+        if(!found)
+          break;
         ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
         if (q_result.get()) {
           if (q_result->hasKey(
@@ -198,27 +212,33 @@ int main(int argc, const char **argv) {
             last_rid = rid;
             tot_ele++;
             bytes += q_result->getBSONRawSize();
-            tot_ms += chaos::common::utility::TimingUtil::getTimeStamp() - st;
+            tot_ms += (chaos::common::utility::TimingUtil::getTimeStamp() - st);
             if (!dontout) {
               ti.addData(*q_result.get());
             }
+          } else {
+                std::cout << "[" << tot_ele<<"] ## invalid packet, missing indexing key"<<std::endl;
+                errors++;
           }
 
           // write the data
+        } else {
+            std::cout << "[" << tot_ele<<"] ## empty packet"<<std::endl;
+              errors++;
         }
-      }
+      } //while
       if (!dontout) {
         fout->Write();
       }
       double mb = (double)bytes / 1024 * 1024.0;
-      std::cout << " retrived " << tot_ele << " in " << tot_ms << " MB:" << mb
-                << " bandwith MB/s:" << mb * 1000.0 / tot_ms
-                << " errors:" << errors << " warning:" << warning << std::endl;
+      std::cout <<" retrived " << tot_ele << " in " << tot_ms << "ms, MB:" << mb
+                << "MB bandwith MB/s:" <<( (tot_ms)?(mb * 1000.0 / tot_ms):0)
+                << " errors:" << errors << " warning:" << warning << " other elements:"<<found<<std::endl;
       controller->releaseQuery(query_cursor);
     }
 
-    std::cout << "Releasing controller" << std::endl;
-    ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
+  //  std::cout << "Releasing controller" << std::endl;
+  //  ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
     return errors;
   } catch (chaos::CException &e) {
     std::cout << "\x1B[?25h";
