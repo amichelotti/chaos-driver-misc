@@ -165,12 +165,12 @@ int main(int argc, const char **argv) {
     int64_t last_rid = 0;
     int64_t last_sid = 0;
     uint64_t bytes = 0;
-    uint64_t tot_ms = 0;
+    uint64_t tot_us = 0;
     if (query_cursor) {
       std::cout << "Exporting... " << std::endl;
       int found=1;
       while (found) {
-        uint64_t st = chaos::common::utility::TimingUtil::getTimeStamp();
+        uint64_t st = chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
         found=query_cursor->hasNext();
         if(!found)
           break;
@@ -191,8 +191,8 @@ int main(int argc, const char **argv) {
                           << " got:" << rid << std::endl;
                 errors++;
               } else if ((last_rid != rid)) {
-                std::cout << "[" << tot_ele << "] %% run id changed" << last_rid
-                          << " to:" << rid << std::endl;
+                std::cout << "[" << tot_ele << "] %% run id changed " << last_rid
+                          << " to:" << rid <<std::endl;
                 last_sid = 0;
                 warning++;
               }
@@ -212,7 +212,7 @@ int main(int argc, const char **argv) {
             last_rid = rid;
             tot_ele++;
             bytes += q_result->getBSONRawSize();
-            tot_ms += (chaos::common::utility::TimingUtil::getTimeStamp() - st);
+            tot_us += (chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st);
             if (!dontout) {
               ti.addData(*q_result.get());
             }
@@ -230,15 +230,15 @@ int main(int argc, const char **argv) {
       if (!dontout) {
         fout->Write();
       }
-      double mb = (double)bytes / 1024 * 1024.0;
-      std::cout <<" retrived " << tot_ele << " in " << tot_ms << "ms, MB:" << mb
-                << "MB bandwith MB/s:" <<( (tot_ms)?(mb * 1000.0 / tot_ms):0)
-                << " errors:" << errors << " warning:" << warning << " other elements:"<<found<<std::endl;
+      double mb = (double)bytes / (1024 * 1024.0);
+      std::cout <<" retrived " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
+                << "MB bandwith MB/s:" <<( (tot_us)?(mb * 1000000.0 / tot_us):0)
+                << " errors:" << errors << " warning:" << warning <<std::endl;
       controller->releaseQuery(query_cursor);
     }
 
   //  std::cout << "Releasing controller" << std::endl;
-  //  ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
+    ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
     return errors;
   } catch (chaos::CException &e) {
     std::cout << "\x1B[?25h";
