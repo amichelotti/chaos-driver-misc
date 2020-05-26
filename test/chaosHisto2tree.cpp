@@ -156,12 +156,14 @@ int main(int argc, const char **argv) {
         search_tags, projection_keys, &query_cursor, pagelen);
 
    
-    std::string name = std::string(argv[0]) + ".root";
+    std::string name = "chaosHisto2tree.root";
     TFile *fout;
-    ChaosToTree ti(name);
-
-    fout = new TFile(name.c_str(), "RECREATE");
-
+    ChaosToTree* ti;
+    if (!dontout) {
+      std::cout<<"* tree file out:"<<name<<std::endl;
+      fout = new TFile(name.c_str(), "RECREATE");
+      ti=new ChaosToTree(name);
+    }
     int64_t last_rid = 0;
     int64_t last_sid = 0;
     uint64_t bytes = 0;
@@ -186,13 +188,19 @@ int main(int argc, const char **argv) {
 
             if (checkrunid) {
               if ((last_rid != 0) && (last_rid > rid)) {
+                  int64_t ts =
+                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
                 std::cout << "[" << tot_ele
                           << "] ## run id inversion:" << last_rid
-                          << " got:" << rid << std::endl;
+                          << " got:" << rid <<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
                 errors++;
               } else if ((last_rid != rid)) {
+                  int64_t ts =
+                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
                 std::cout << "[" << tot_ele << "] %% run id changed " << last_rid
-                          << " to:" << rid <<std::endl;
+                          << " to:" << rid <<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
                 last_sid = 0;
                 warning++;
               }
@@ -201,10 +209,13 @@ int main(int argc, const char **argv) {
             if (checkseq) {
               if ((last_sid != 0) && (last_rid == rid) &&
                   (last_sid + 1) != sid) {
+                    int64_t ts =
+                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
                 std::cout << "[" << tot_ele
                           << "] ## bad sequence expected:" << (last_sid + 1)
                           << " got:" << sid
-                          << " missing:" << (sid - last_sid - 1) << std::endl;
+                          << " missing:" << (sid - last_sid - 1) << " packets"<<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
                 errors++;
               }
             }
@@ -214,7 +225,7 @@ int main(int argc, const char **argv) {
             bytes += q_result->getBSONRawSize();
             tot_us += (chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st);
             if (!dontout) {
-              ti.addData(*q_result.get());
+              ti->addData(*q_result.get());
             }
           } else {
                 std::cout << "[" << tot_ele<<"] ## invalid packet, missing indexing key"<<std::endl;
@@ -229,6 +240,9 @@ int main(int argc, const char **argv) {
       } //while
       if (!dontout) {
         fout->Write();
+        fout->Close();
+        delete fout;
+        delete ti;
       }
       double mb = (double)bytes / (1024 * 1024.0);
       std::cout <<" retrived " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
@@ -236,9 +250,10 @@ int main(int argc, const char **argv) {
                 << " errors:" << errors << " warning:" << warning <<std::endl;
       controller->releaseQuery(query_cursor);
     }
-
-  //  std::cout << "Releasing controller" << std::endl;
     ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
+
+    exit(errors);
+  //  std::cout << "Releasing controller" << std::endl;
     return errors;
   } catch (chaos::CException &e) {
     std::cout << "\x1B[?25h";

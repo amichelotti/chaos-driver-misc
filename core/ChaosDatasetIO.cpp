@@ -104,7 +104,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string& dataset_name,bool check):check
       last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0),
       alarm_logging_channel(NULL), standard_logging_channel(NULL),
       last_push_rate_grap_ts(0), deinitialized(false),
-      implementation("datasetIO"), sched_time(0), last_push_ts(0),
+      implementation("datasetIO"), sched_time(0), last_push_ts(0),push_errors(0),packet_lost(0),packet_tot_size(0),
       burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT){
         _initDataset();
 
@@ -120,7 +120,7 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0),
       alarm_logging_channel(NULL), standard_logging_channel(NULL),
       last_push_rate_grap_ts(0), deinitialized(false),
-      implementation("datasetIO"), sched_time(0), last_push_ts(0),
+      implementation("datasetIO"), sched_time(0), last_push_ts(0),push_errors(0),packet_lost(0),packet_tot_size(0),
       burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT),check_presence(true) {
         _initDataset();
 }
@@ -282,6 +282,8 @@ try {
 
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
+  allocateCUAlarm("packet_lost");
+  allocateCUAlarm("packet_send_error");
   /// register actions
   DeclareAction::addActionDescritionInstance<ChaosDatasetIO>(
       this, &ChaosDatasetIO::_registrationAck,
@@ -405,6 +407,18 @@ void ChaosDatasetIO::updateHealth() {
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
       output_ds_size, true);
+  HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_ERROR,
+                                                  (int32_t)push_errors);
+
+HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_LOST,
+                                                  (int32_t)packet_lost);
+
+HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_TOT_PUSH_KSIZE,
+                                                  (int32_t)packet_tot_size);
+
   // keep track of acquire timestamp
   last_push_rate_grap_ts = rate_acq_ts;
   packet_size = 0;
@@ -470,7 +484,9 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE,
                                type);
   }
-  packet_size += new_dataset->getBSONRawSize();
+  int psize=new_dataset->getBSONRawSize();
+  packet_size += psize;
+
   // ChaosUniquePtr<SerializationBuffer>
   // serialization(new_dataset->getBSONData());
   //    DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
@@ -502,10 +518,26 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   if ((state == chaos::CUStateKey::START) ||
       (type != chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT)) {
 
+    int retry=10;
+    packet_tot_size+=psize;
+    do{
     err = ioLiveDataDriver->storeData(
         uid + chaos::datasetTypeToPostfix(type), new_dataset,
         (chaos::DataServiceNodeDefinitionType::DSStorageType)sttype);
+    if(err!=0){
+      push_errors++;
+      DPD_LERR<<push_errors<<"] ERROR pushing runid:"<<runid<<" seq:"<<new_dataset->getInt64Value(DataPackCommonKey::DPCK_SEQ_ID);
+      usleep(10000);
+      setCUAlarmLevel("packet_send_error",1);
 
+    }
+    } while((err!=0) && (retry--));
+    if(retry<0){
+      packet_lost++;
+
+      setCUAlarmLevel("packet_lost",packet_lost);
+
+    }
     last_push_ts = ts;
   } else if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT) {
 
@@ -713,6 +745,19 @@ void ChaosDatasetIO::createMDSEntry() {
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+      chaos::DataType::TYPE_INT32););
+ CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_ERROR,
+      chaos::DataType::TYPE_INT32););
+CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_LOST,
+      chaos::DataType::TYPE_INT32););
+
+CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_TOT_PUSH_KSIZE,
       chaos::DataType::TYPE_INT32););
 
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(
@@ -951,7 +996,9 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   burst_cycles = burst_time_ts = 0;
-
+  push_errors=0;
+  packet_lost=0;
+  packet_tot_size=0;
   DPD_LDBG << "INIT INPUT: " << dataset_attribute_values->getJSONString();
   if (!dataset_attribute_values->hasKey(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
@@ -1007,8 +1054,11 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT, true);
 
   updateConfiguration(MOVE(dataset_attribute_values));
+  setCUAlarmLevel("packet_send_error",0);
+  setCUAlarmLevel("packet_lost",0);
 
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
+
   waitEU.notifyAll();
 
   return execute(ACT_INIT, MOVE(dataset_attribute_values));

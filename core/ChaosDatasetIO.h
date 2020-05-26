@@ -93,7 +93,7 @@ namespace driver{
             uint64_t runid;
             std::string datasetName; // cu name
             std::string groupName; // US name
-            uint32_t ageing;
+            uint32_t ageing,push_errors,packet_lost,packet_tot_size;
             uint64_t timeo;
             uint64_t last_seq,last_push_ts;
             int storageType;
