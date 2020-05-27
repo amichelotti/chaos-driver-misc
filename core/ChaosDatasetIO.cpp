@@ -417,7 +417,7 @@ HealtManager::getInstance()->addNodeMetricValue(uid,
 
 HealtManager::getInstance()->addNodeMetricValue(uid,
                                                   ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_TOT_PUSH_KSIZE,
-                                                  (int32_t)packet_tot_size);
+                                                  (int32_t)(packet_tot_size/1024.0));
 
   // keep track of acquire timestamp
   last_push_rate_grap_ts = rate_acq_ts;

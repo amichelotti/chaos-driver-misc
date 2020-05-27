@@ -47,6 +47,7 @@ int main(int argc, const char **argv) {
   bool dontout = false;
   uint64_t start_ts = now - (1000 * 3600), end_ts = now;
   std::string nodeid;
+  uint64_t lost_pckt=0;
 
   ChaosStringVector meta_tags, projection_key_vec;
   //"%d-%m-%Y %H:%M:%S"
@@ -146,9 +147,8 @@ int main(int argc, const char **argv) {
       projection_keys.insert(*it);
     }
     std::cout << nodeid << " Query from: "
-              << chaos::common::utility::TimingUtil::toString(start_ts)
-              << " from:"
-              << chaos::common::utility::TimingUtil::toString(end_ts)
+              << start_ts<< "["<<qstart<<"]"
+              << " to:"<<end_ts<<"["<<qend<<"]"
               << " page:" << pagelen << std::endl;
 
     controller->executeTimeIntervallQuery(
@@ -216,6 +216,7 @@ int main(int argc, const char **argv) {
                           << "] ## bad sequence expected:" << (last_sid + 1)
                           << " got:" << sid
                           << " missing:" << (sid - last_sid - 1) << " packets"<<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
+                lost_pckt+=(sid - last_sid - 1);
                 errors++;
               }
             }
@@ -247,7 +248,7 @@ int main(int argc, const char **argv) {
       double mb = (double)bytes / (1024 * 1024.0);
       std::cout <<" retrived " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
                 << "MB bandwith MB/s:" <<( (tot_us)?(mb * 1000000.0 / tot_us):0)
-                << " errors:" << errors << " warning:" << warning <<std::endl;
+                << " errors:" << errors << " warning:" << warning << "lost percent:"<<lost_pckt*100.0/tot_ele<<std::endl;
       controller->releaseQuery(query_cursor);
     }
     ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
