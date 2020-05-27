@@ -80,13 +80,13 @@ void histo2Test(boost::filesystem::path &p, const std::string &treename) {
       } else {
         if ((oldrunid == irunid) && (oldseq + 1) != iseq) {
           cout << countele << ",s:" << iseq << ",t:" << tim
-               << "] seq discontinuity ["<<(iseq-oldseq)<<"] old:" << oldseq << " new:" << iseq
+               << "] seq discontinuity ["<<(iseq-oldseq-1)<<"] old:" << oldseq << " new:" << iseq
                << std::endl;
         }
       }
       if (oldrunid != irunid) {
         cout << countele << ",s:" << iseq << ",t:" << tim
-             << "] change in run id ["<<(irunid-oldrunid)<<"], old:" << oldrunid << " new:" << irunid
+             << "] change in run id ["<<(irunid-oldrunid-1)<<"], old:" << oldrunid << " new:" << irunid
              << std::endl;
         oldrunid = irunid;
       }
