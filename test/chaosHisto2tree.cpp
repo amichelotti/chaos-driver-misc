@@ -246,9 +246,9 @@ int main(int argc, const char **argv) {
         delete ti;
       }
       double mb = (double)bytes / (1024 * 1024.0);
-      std::cout <<" retrived " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
+      std::cout <<" retrieved " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
                 << "MB bandwith MB/s:" <<( (tot_us)?(mb * 1000000.0 / tot_us):0)
-                << " errors:" << errors << " warning:" << warning << "lost percent:"<<lost_pckt*100.0/tot_ele<<std::endl;
+                << " errors:" << errors << ", warning:" << warning << ", lost percent:"<<lost_pckt*100.0/tot_ele<<std::endl;
       controller->releaseQuery(query_cursor);
     }
     ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
