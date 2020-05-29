@@ -42,7 +42,11 @@ static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
   for (std::vector<ChaosDataSet>::iterator i = res.begin(); i != res.end();
        i++, cnt++) {
     uint64_t runid = 0, timestamp = 0, seq = 0;
-
+    if(i->get()==NULL){
+            std::cout << "\t  " << cnt << " packet empty "<<std::endl;
+            continue;
+    }
+      continue;
     if (!(*i)->hasKey(
             chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID) ||
         !(*i)->hasKey(
@@ -330,6 +334,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
         pull_time = (end_time - start_time);
 
         pull_avg = res.size() * 1000000.0 / pull_time;
+
         double mb=res.size()*res[0]->getBSONRawSize()/(1024.0*1024);
         LOG(" retrived:" << res.size()
                   << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
