@@ -59,6 +59,7 @@ void ChaosController::setTimeout(uint64_t timeo_us)
     timeo = timeo_us;
 }
 
+
 int ChaosController::forceState(int dstState)
 {
     chaos::CUStateKey::ControlUnitState currState, oldstate;
@@ -2370,7 +2371,37 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
                         infos->addBoolValue("kill",true);
                         sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,MOVE(infos),node_type);
-                } else if (what == "deletenode"){
+                } else if (what == "deletedata"){
+                    CHECK_VALUE_PARAM;
+
+                    if(json_value->hasKey("start")&&json_value->hasKey("end")&&
+                     json_value->isStringValue("start")&&("remove")&&json_value->isStringValue("end")){
+                //remove data
+                        uint64_t start_ts,end_ts;
+                        int err=0;
+                        start_ts=offsetToTimestamp(json_value->getStringValue("start"));
+                        end_ts=offsetToTimestamp(json_value->getStringValue("end"));
+                        for(int cnt=0;cnt<=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM;cnt++){
+                            err+=live_driver->removeData(name+chaos::datasetTypeToPostfix(cnt),start_ts,end_ts);
+                        }
+                        if(err==0){
+                            json_buf = "{}";
+                            return CHAOS_DEV_OK;
+                        } 
+                        bundle_state.append_error("An error occurred removing data of:"+name);
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_CMD;
+                    
+                     } else {
+                        bundle_state.append_error("API must specify start and end delete inteval:"+name);
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_CMD;
+                     
+                     }
+
+                }else if (what == "deletenode"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
@@ -3169,6 +3200,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                 }
             }
+            
             if (p.hasKey("page"))
             {
                 page = p.getInt32Value("page");
