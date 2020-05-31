@@ -126,13 +126,13 @@ int main(int argc, const char **argv) {
     return -1;
   }
   try {
-    ChaosMetadataServiceClient::getInstance()->getNewCUController(nodeid,
+   /* ChaosMetadataServiceClient::getInstance()->getNewCUController(nodeid,
                                                                   &controller);
 
     if (!controller) {
       std::cerr << " cannot allocate controller for:" << nodeid;
       return -1;
-    }
+    }*/
     ChaosStringSet search_tags;
     chaos::common::io::QueryCursor *query_cursor = NULL;
     for (ChaosStringVectorIterator it = meta_tags.begin(),
@@ -150,11 +150,41 @@ int main(int argc, const char **argv) {
               << start_ts<< "["<<qstart<<"]"
               << " to:"<<end_ts<<"["<<qend<<"]"
               << " page:" << pagelen << std::endl;
+  auto network_broker = chaos::common::network::NetworkBroker::getInstance();
 
-    controller->executeTimeIntervallQuery(
+    if (network_broker == NULL) {
+      throw chaos::CException(-1, "cannot access network broker ",
+                              __PRETTY_FUNCTION__);
+    }
+    auto mds_message_channel = network_broker->getMetadataserverMessageChannel();
+
+    if (mds_message_channel == NULL) {
+      throw chaos::CException(-1, "cannot access MDS channel ",
+                              __PRETTY_FUNCTION__);
+    }
+  
+  chaos::common::data::CDWUniquePtr tmp_data_handler;
+
+  chaos::common::io::IODataDriverShrdPtr iodrv=ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
+
+    if(!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler, 5000)){
+        LDBG_ << tmp_data_handler->getJSONString();
+        iodrv->updateConfiguration(tmp_data_handler.get());
+    }
+    
+  std::string ds=nodeid + chaos::DataPackPrefixID::OUTPUT_DATASET_POSTFIX;
+   query_cursor = iodrv->performQuery(ds,
+                                                       start_ts,
+                                                       end_ts,
+                                                       search_tags,
+                                                       projection_keys,
+                                                       pagelen);
+
+  
+  /*  controller->executeTimeIntervallQuery(
         chaos::cu::data_manager::KeyDataStorageDomainOutput, start_ts, end_ts,
         search_tags, projection_keys, &query_cursor, pagelen);
-
+*/
    
     std::string name = "chaosHisto2tree.root";
     TFile *fout;
@@ -246,14 +276,22 @@ int main(int argc, const char **argv) {
         delete ti;
       }
       double mb = (double)bytes / (1024 * 1024.0);
+      if(tot_ele>0){
       std::cout <<" retrieved " << tot_ele << " in " << (double)tot_us*1.0/1000000.0 << "s , MB:" << mb
                 << "MB bandwith MB/s:" <<( (tot_us)?(mb * 1000000.0 / tot_us):0)
                 << " errors:" << errors << ", warning:" << warning << ", lost percent:"<<lost_pckt*100.0/tot_ele<<std::endl;
-      controller->releaseQuery(query_cursor);
-    }
-    ChaosMetadataServiceClient::getInstance()->deleteCUController(controller);
+      } else {
+        std::cout<<" NOTHING FOUND"<<std::endl;
+      }
+      iodrv->releaseQuery(query_cursor);
 
-    exit(errors);
+    }
+    iodrv->deinit();
+    
+    ChaosMetadataServiceClient::getInstance()->stop();
+
+
+
   //  std::cout << "Releasing controller" << std::endl;
     return errors;
   } catch (chaos::CException &e) {

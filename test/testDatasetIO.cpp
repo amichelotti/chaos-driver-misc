@@ -334,14 +334,21 @@ int performTest(const std::string &name, testparam_t &tparam) {
         pull_time = (end_time - start_time);
 
         pull_avg = res.size() * 1000000.0 / pull_time;
-
-        double mb=res.size()*res[0]->getBSONRawSize()/(1024.0*1024);
-        LOG(" retrived:" << res.size()
-                  << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
-        total = res.size();
-        checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
-                             pckmalformed, badid);
-        countErr += checkErr;
+        double mb=0;
+        if(res.size()){
+          mb=res.size()*res[0]->getBSONRawSize()/(1024.0*1024);
+          LOG(" retrived:" << res.size()
+                    << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
+          total = res.size();
+          checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
+                              pckmalformed, badid);
+        } else {
+          LOG(" NOTHING RETRIVED :" << res.size()
+                    << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
+            countErr++;
+          
+        }
+          countErr += checkErr;
       } else {
 
         uint32_t uid = test->queryHistoryDatasets(query_time_start,
