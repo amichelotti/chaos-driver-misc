@@ -289,6 +289,7 @@ int main(int argc, const char **argv) {
     iodrv->deinit();
     
     ChaosMetadataServiceClient::getInstance()->stop();
+    ChaosMetadataServiceClient::getInstance()->deinit();
 
 
 

@@ -33,6 +33,15 @@ IF(NOT CHAOS_TARGET)
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 ENDIF()
 
+IF(KAFKA_ENABLE)
+ADD_EXECUTABLE(testKafkaProducer test/testKafkaProducer.cpp)
+TARGET_LINK_LIBRARIES(testKafkaProducer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
+
+INSTALL(TARGETS testKafkaProducer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF(KAFKA_ENABLE)
+
 IF (CERN_ROOT)
 ADD_EXECUTABLE(chaosHisto2tree test/chaosHisto2tree.cpp)
 TARGET_LINK_LIBRARIES(chaosHisto2tree ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data  common_debug chaos_driver_misc_cernroot Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib})
