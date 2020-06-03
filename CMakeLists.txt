@@ -5,7 +5,7 @@ find_package(chaos MODULE REQUIRED)
 include_directories(../../ ${chaos_INCLUDE_DIRS})
 include(${CMAKE_INSTALL_PREFIX}/CMakeMacroUtils.txt)
 
-SET(src core/ChaosDatasetAttribute.cpp core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/ChaosDatasetIO.cpp ${optional_src})
+SET(src core/ChaosDatasetAttribute.cpp core/RestCU.cpp core/RestCUContainer.cpp  core/ChaosDatasetAttributeGroup.cpp core/ChaosDatasetAttributeSinchronizer.cpp core/ChaosController.cpp core/CmdSync.cpp core/RTDataSync.cpp core/SCDataSync.cpp core/remoteGroupAccessDriver.cpp core/remoteGroupAccessInterface.cpp core/ChaosDatasetIO.cpp ${optional_src})
 
 add_subdirectory(models)
 FILE(WRITE generators/UnitServerIgnore "disabled ${PROJECT_NAME}")
@@ -25,6 +25,30 @@ ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
 ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
 ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
 
+IF(NOT CHAOS_TARGET)
+        ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
+        TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
+        INSTALL(TARGETS restCUServer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
+
+IF(KAFKA_ENABLE)
+ADD_EXECUTABLE(testKafkaProducer test/testKafkaProducer.cpp)
+TARGET_LINK_LIBRARIES(testKafkaProducer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
+
+INSTALL(TARGETS testKafkaProducer
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF(KAFKA_ENABLE)
+
+IF (CERN_ROOT)
+ADD_EXECUTABLE(chaosHisto2tree test/chaosHisto2tree.cpp)
+TARGET_LINK_LIBRARIES(chaosHisto2tree ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data  common_debug chaos_driver_misc_cernroot Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib})
+INSTALL(TARGETS chaosHisto2tree
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
 ADD_EXECUTABLE(UnitServerLite test/UnitServerLite.cpp)
 
 
@@ -35,15 +59,38 @@ TARGET_LINK_LIBRARIES(histoIndex ${PROJECT_NAME}  chaos_common  common_misc_data
 
 TARGET_LINK_LIBRARIES(UnitServerLite ${FrameworkLib})
 
-INSTALL_TARGETS(/bin/misc testSumOperatorUI)
-INSTALL_TARGETS(/bin testDataSetIO)
-INSTALL_TARGETS(/bin UnitServerLite)
-INSTALL_TARGETS(/bin testWriteAndRead)
-INSTALL_TARGETS(/bin histoIndex)
+#INSTALL_TARGETS(/bin/misc testSumOperatorUI)
+INSTALL(TARGETS testSumOperatorUI
+        DESTINATION "bin/misc"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+#INSTALL_TARGETS(/bin testDataSetIO)
+INSTALL(TARGETS testDataSetIO
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 
+#INSTALL_TARGETS(/bin UnitServerLite)
+INSTALL(TARGETS UnitServerLite
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-INSTALL_TARGETS(/lib ${PROJECT_NAME})
+#INSTALL_TARGETS(/bin testWriteAndRead)
+INSTALL(TARGETS testWriteAndRead
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+#INSTALL_TARGETS(/bin histoIndex)
+INSTALL(TARGETS histoIndex
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        
+        
+
+
+#INSTALL_TARGETS(/lib ${PROJECT_NAME})
+INSTALL(TARGETS ${PROJECT_NAME}
+        DESTINATION "lib"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/core)

@@ -19,10 +19,15 @@ static int exit_after_nerror = 1;
 /*
  *
  */
-#define LOG std::cout<<"-"<<chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeStamp())<<"- [" << name << "]"
+#define PREFIX_LOG "-"<<chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeStamp())<<"- [" << name << "] "
+#define LOG(x) \
+std::cout<<PREFIX_LOG<<x<<std::endl;\
+LDBG_<<x;
+
 //#define ERR LOG <<"##"std::cout<<"-"<<chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeStamp())<<"- [" << name << "]
 
 using namespace driver::misc;
+
 static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
                      std::vector<ChaosDataSet> &res, uint64_t &pcktmissing,
                      uint64_t &pckt, uint64_t &pcktreplicated,
@@ -37,7 +42,11 @@ static int checkData(ChaosUniquePtr<ChaosDatasetIO> &test,
   for (std::vector<ChaosDataSet>::iterator i = res.begin(); i != res.end();
        i++, cnt++) {
     uint64_t runid = 0, timestamp = 0, seq = 0;
-
+    if(i->get()==NULL){
+            std::cout << "\t  " << cnt << " packet empty "<<std::endl;
+            continue;
+    }
+      continue;
     if (!(*i)->hasKey(
             chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID) ||
         !(*i)->hasKey(
@@ -122,6 +131,7 @@ typedef struct _testParams {
   float bandwith;
   float overhead;
   uint32_t errors;
+  uint32_t werrors;
 } testparam_t;
 static testparam_t *params;
 static testparam_t params_common;
@@ -137,7 +147,6 @@ static const double PI = 3.141592653589793238463;
 static boost::atomic<int> thread_done;
 static uint32_t nthreads = 1;
 static ofstream fs;
-static boost::mutex mutex_sync;
 
 static boost::mutex mutex_thread;
 static boost::condition_variable_any cond;
@@ -146,6 +155,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
   double freq = 1, phase = 0, amp = 1, afreq, aamp;
   double delta;
   int countErr = 0;
+  int writeErr=0;
   auto start = boost::chrono::system_clock::now();
   // Some computation here
   auto end = boost::chrono::system_clock::now();
@@ -161,8 +171,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
                    : (point_cnt = (pow(pointincr, incr))),
                 incr++) {
     std::vector<double> val;
-    ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, ""));
-
+    ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, false));
     test->setAgeing(7200);
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
@@ -202,11 +211,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
     my_input->addInt32Value("icounter32", 0);
     my_input->addStringValue("istringa", "hello input dataset");
     my_input->addDoubleValue("idoublevar", 0.0);
-    LOG<<" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops<<std::endl;
+    LOG(" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops);
 
     int tenpercent = loops / 10;
     if (test->registerDataset() == 0) {
-      LDBG_ << " registration OK";
+      LOG( "registration OK");
       my_input->setValue("icounter64", (int64_t)18);
       my_input->setValue("icounter32", (int32_t)1970);
       my_input->setValue("idoublevar", (double)3.14);
@@ -214,6 +223,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
               chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT) != 0) {
         LERR_ << " cannot push:" << my_input->getJSONString();
         countErr++;
+        writeErr++;
       } else {
         //  LDBG_<<"pushing:"<<my_input->getJSONString();
       }
@@ -255,8 +265,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
             chaos::common::utility::TimingUtil::getTimeStamp() - start_overhead;
         // LDBG_<<"int32 value:"<<my_ouput->getInt32Value("counter32");
         if (test->pushDataset() != 0) {
-          LERR_ << " cannot push:" << my_ouput->getJSONString();
-          countErr++;
+          LERR_ << "## cannot push:" << my_ouput->getJSONString();
+          writeErr++;
+          LOG(  "# error writing ["<<writeErr<<"]");
+
         }
         if (waitloops) {
           usleep(waitloops);
@@ -282,7 +294,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
       bandwithMB = (payloadKB / (1024.0 * 1024)) * push_avg;
       boost::chrono::duration<double> dursec = boost::chrono::system_clock::now() - start;
       end = boost::chrono::system_clock::now();
-      LOG << " [" << chaos::common::utility::TimingUtil::toString(
+      LOG (" [" << chaos::common::utility::TimingUtil::toString(
                        query_time_start)
                 << "] to:" << query_time_end << "["
                 << chaos::common::utility::TimingUtil::toString(query_time_end)
@@ -292,9 +304,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 << " push/s, tot us: " << push_time << " points:" << point_cnt
                 << " bandwith (MB/s):" << bandwithMB
                 << " overhead:" << overhead_tot
-                << " Total time:" << dursec.count() << " s" << std::endl;
+                << " Total time:" << dursec.count() << " s");
       if (wait_retrive) {
-        LOG << " waiting " << wait_retrive << " s before retrive data" << std::endl;
+        LOG( " waiting " << wait_retrive << " s before retrive data");
         sleep(wait_retrive);
       }
 
@@ -304,13 +316,12 @@ int performTest(const std::string &name, testparam_t &tparam) {
       uint64_t pckmissing = 0, pcktreplicated = 0, pckmalformed = 0, badid = 0,
                pckt = 0;
 
-      LOG << " retriving data... from:" << query_time_start << "["
+      LOG(" retriving data... from:" << query_time_start << "["
                 << chaos::common::utility::TimingUtil::toString(
                        query_time_start)
                 << "] to:" << query_time_end << "["
                 << chaos::common::utility::TimingUtil::toString(query_time_end)
-                << "] runID:" << test->getRunID() << " pagelen:" << pagelen
-                << std::endl;
+                << "] runID:" << test->getRunID() << " pagelen:" << pagelen);
       start_time =
           chaos::common::utility::TimingUtil::getLocalTimeStampInMicroseconds();
       int retry = 2;
@@ -323,13 +334,21 @@ int performTest(const std::string &name, testparam_t &tparam) {
         pull_time = (end_time - start_time);
 
         pull_avg = res.size() * 1000000.0 / pull_time;
-        LOG<< " retrived:" << res.size()
-                  << " items, items/s:" << pull_avg << " time:" << pull_time
-                  << std::endl;
-        total = res.size();
-        checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
-                             pckmalformed, badid);
-        countErr += checkErr;
+        double mb=0;
+        if(res.size()){
+          mb=res.size()*res[0]->getBSONRawSize()/(1024.0*1024);
+          LOG(" retrived:" << res.size()
+                    << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
+          total = res.size();
+          checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
+                              pckmalformed, badid);
+        } else {
+          LOG(" NOTHING RETRIVED :" << res.size()
+                    << " items, items/s:" << pull_avg << " time:" << pull_time<< " tot:"<<mb<< "MB "<<(mb* 1000000.0 / pull_time)<<" MB/s");
+            countErr++;
+          
+        }
+          countErr += checkErr;
       } else {
 
         uint32_t uid = test->queryHistoryDatasets(query_time_start,
@@ -344,33 +363,32 @@ int performTest(const std::string &name, testparam_t &tparam) {
           pull_avg = total * 1000000.0 / pull_time;
           end = boost::chrono::system_clock::now();
 
-          LOG << " retrived:" << res.size() << "/"
+          LOG(" retrived:" << res.size() << "/"
                     << total << " items , items/s:" << pull_avg
                     << " pull time:" << pull_time
-                    << " Total Time:" << (end - start).count() << " s"
-                    << std::endl;
+                    << " Total Time:" << (end - start).count() << " s");
           checkErr = checkData(test, res, pckmissing, pckt, pcktreplicated,
                                pckmalformed, badid);
           countErr += checkErr;
         }
       }
       if (total != loops) {
-        LOG << " # number of data retrived " << total
-                  << " different from expected:" << loops << std::endl;
+        LOG(" # number of data retrived " << total
+                  << " different from expected:" << loops);
         countErr++;
         checkErr++;
         pckmissing++;
       }
       if (pckmissing == 0 && pcktreplicated == 0 && pckmalformed == 0 &&
           badid == 0) {
-        LOG<<" check ok" << std::endl;
+        LOG(" check ok");
       }
-      if (countErr != 0) {
-        LOG<<"## Total errors:" << countErr
+      if ((countErr != 0) || (writeErr!=0)) {
+        LOG("## Total errors:" << (countErr+writeErr)
+                  << " write error:" << writeErr
                   << " missing packets:" << pckmissing
                   << " replicated:" << pcktreplicated
-                  << " pcktmalformed:" << pckmalformed << " badrunid:" << badid
-                  << std::endl;
+                  << " pcktmalformed:" << pckmalformed << " badrunid:" << badid);
       }
 
       tparam.points = point_cnt;
@@ -381,10 +399,12 @@ int performTest(const std::string &name, testparam_t &tparam) {
       tparam.pull_time = pull_time;
       tparam.bandwith = bandwithMB;
       tparam.overhead = overhead_tot;
-      tparam.errors = countErr;
+      tparam.errors = countErr+writeErr;
+      tparam.werrors = writeErr;
+
 
     } else {
-      LERR_ << "[" << name << "] cannot register!:";
+      LOG("## [" << name << "] cannot register!:");
       countErr++;
     }
 
@@ -403,6 +423,8 @@ int performTest(const std::string &name, testparam_t &tparam) {
         params_common.bandwith = 0;
         params_common.overhead = 0;
         params_common.errors = 0;
+        params_common.werrors = 0;
+
         for (int cnt = 0; cnt < nthreads; cnt++) {
           params_common.push_sec += params[cnt].push_sec;
           params_common.pull_sec += params[cnt].pull_sec;
@@ -411,6 +433,8 @@ int performTest(const std::string &name, testparam_t &tparam) {
           params_common.bandwith += params[cnt].bandwith;
           params_common.overhead += params[cnt].overhead;
           params_common.errors += params[cnt].errors;
+          params_common.werrors += params[cnt].werrors;
+
         }
         params_common.push_time /= nthreads;
         params_common.pull_time /= nthreads;
@@ -419,7 +443,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
            << "," << params_common.pull_sec << "," << loops << ","
            << params_common.push_time << "," << params_common.pull_time << ","
            << params_common.bandwith << "," << params_common.overhead << ","
-           << params_common.errors << "," << nthreads << std::endl;
+           << params_common.errors << "," << nthreads << ","<< params_common.werrors<<std::endl;
      /*   std::cout << point_cnt << "," << payloadKB << ","
                   << params_common.push_sec << "," << params_common.pull_sec
                   << "," << loops << "," << params_common.push_time << ","
@@ -432,9 +456,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
       } else {
 
         boost::mutex::scoped_lock lock(mutex_thread);
-        LOG << "[" << name << "] waiting:" << thread_done
-                  << "points:" << point_cnt << std::endl;
+        LOG( "[" << name << "] waiting:" << thread_done
+                  << " points:" << point_cnt);
         cond.wait_for(mutex_thread,boost::chrono::seconds(120));
+        LOG( "[" << name << "] done");
         
         // std::cout <<"["<<name<<"] restart:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;
@@ -539,7 +564,7 @@ int main(int argc, const char **argv) {
   boost::thread *workers[nthreads];
   params = new testparam_t[nthreads];
   fs << "points,payload size(Bytes),push/s,pull/s,loop,push time(us),pull "
-        "time(us),bandwith(MB/s),overhead(us),errors,threads"
+        "time(us),bandwith(MB/s),overhead(us),errors,threads,werrors"
      << std::endl;
   thread_done = 0;
   for (int cnt = 0; cnt < nthreads; cnt++) {

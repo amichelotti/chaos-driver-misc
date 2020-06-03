@@ -48,8 +48,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\[\]\(\)\{\}]+");
-  if(boost::regex_match(name,r)){
+  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(boost::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }
@@ -202,8 +202,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
     }
   }
   rootType = varname.str();
-  if (size > 0) {
-    ptr = malloc(size);
+  if (size >= 0) {
+    ptr = malloc((size==0)?1:size);
     if (is_vector) {
       
       std::string lenname = std::string("__") + name + std::string("__");
@@ -213,10 +213,11 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
               throw chaos::CException(-1, "cannot create vector branch len key:" + lenname, __PRETTY_FUNCTION__);
 
       } else {
-         ROOTDBG << "create ROOT  BRANCH \"" << lenname << "\""
+     /*    ROOTDBG << "create ROOT  BRANCH \"" << lenname << "\""
               << " vect size:" << vector_size << " " << lentype << " ptr:0x"
               << std::hex << &vector_size << " of size:" << std::dec << size
               << " element size:" << sizeof(int32_t);
+              */
       }
       
       if(parent->Branch(name.c_str(), ptr, rootType.c_str())==NULL){
@@ -224,16 +225,17 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
 
       }
 
-      ROOTDBG << "create ROOT Vector BRANCH \"" << name << "\""
+     /* ROOTDBG << "create ROOT Vector BRANCH \"" << name << "\""
               << " vect size:" << vector_size << " " << rootType << " ptr:0x"
               << std::hex << ptr << " of size:" << std::dec << size
               << " element size:" << data_element_size;
-
+  */
     } else {
       parent->Branch(name.c_str(), ptr, rootType.c_str());
-      ROOTDBG << "create ROOT  BRANCH \"" << name << "\""
+    /*  ROOTDBG << "create ROOT  BRANCH \"" << name << "\""
               << " " << rootType << " ptr:0x" << std::hex << ptr
               << " of size:" << size << " element size:" << data_element_size;
+              */
      if(parent->Branch(name.c_str(), ptr, rootType.c_str())==NULL){
         throw chaos::CException(-1, "cannot create branch key:" + name, __PRETTY_FUNCTION__);
 
@@ -747,13 +749,13 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     }
 
     return tree_ret;
-  } catch (chaos::CException e) {
+  } catch (chaos::CException& e) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << "Exception on \"" << chaosNode << "\""
           << " errn:" << e.errorCode << " domain:" << e.errorDomain
           << " what:" << e.what();
     return NULL;
-  } catch (std::exception ee) {
+  } catch (std::exception& ee) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " Library Exception on \"" << chaosNode << "\""
           << " what:" << ee.what();

@@ -59,6 +59,7 @@ void ChaosController::setTimeout(uint64_t timeo_us)
     timeo = timeo_us;
 }
 
+
 int ChaosController::forceState(int dstState)
 {
     chaos::CUStateKey::ControlUnitState currState, oldstate;
@@ -1222,7 +1223,6 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
     apires->setTimeout(time_out);                                                                                         \
     if(apires->wait()){ret= apires->getError();} else {ret =-1;}                                                                                
 
-
 #define EXECUTE_CHAOS_API(api_name, time_out, ...)                                                                        \
     DBGET << " "                                                                                                          \
           << " Executing Api:\"" << #api_name << "\" name:"<<name;                                                                    \
@@ -1238,6 +1238,23 @@ void ChaosController::parseClassZone(ChaosStringVector &v)
         execute_chaos_api_error++;                                                                                          \
     } else {chaos::common::data::CDWUniquePtr r=apires->detachResult();if((r.get()!=NULL)) json_buf=r->getCompliantJSONString();}
 
+
+
+chaos::common::data::CDWUniquePtr ChaosController::executeAPI(const std::string&group,const std::string&name,CDWUniquePtr& msg,int& err){
+    
+     err = 0;
+    ChaosUniquePtr<MultiAddressMessageRequestFuture> request_future = mdsChannel->sendRequestWithFuture(group,
+                                                                                            name,
+                                                                                            MOVE(msg));
+    request_future->setTimeout(timeo);
+    if(request_future->wait()) {
+        err = request_future->getError();
+    } else {
+        err = -1;
+    }
+    return request_future->detachResult();
+
+}
 
 static uint64_t getMSSince1970Until(const std::string& dateAndHour ) {
 
@@ -1611,6 +1628,39 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
 
     return -1;
 }
+chaos::common::data::CDWUniquePtr ChaosController::getNodeDesc(const std::string& name,int&ret){
+  chaos::common::data::CDWUniquePtr r;
+    EXECUTE_CHAOS_RET_API(ret,api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
+    if(ret == 0){
+        r=apires->detachResult();
+        /*if(r->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)&&(r->getStringValue(chaos::NodeDefinitionKey::NODE_TYPE)==chaos::NodeType::NODE_TYPE_UNIT_SERVER)){
+            EXECUTE_CHAOS_RET_API(ret,api_proxy::agent::GetAgentForNode, MDS_TIMEOUT, name);
+            if(ret==0){
+                  chaos::common::data::CDWUniquePtr r1=apires->detachResult();
+                  if(r1->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                      if(!r->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                        r->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,r1->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
+
+                      }
+                  }
+
+            } else {
+                std::stringstream ss;                                                                                             
+                ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "| GetAgentForNode :" << apires->getErrorMessage();  
+                 bundle_state.append_error(ss.str());                                                                              
+                    
+            }
+
+        }*/
+    } else {
+        std::stringstream ss;                                                                                             
+        ss << " error in :" << __FUNCTION__ << "|" << __LINE__ << "| GetNodeDescription :" << apires->getErrorMessage();  
+        bundle_state.append_error(ss.str());                                                                              
+                    
+    }
+    return r;
+}
+
 int ChaosController::createNewSnapshot(const std::string& snapshot_tag,
                                     const std::vector<std::string>& other_snapped_device) {
     
@@ -1647,7 +1697,7 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string&snapname,cons
    mdsChannel->loadSnapshotNodeDataset(snapname, cuname, res, MDS_TIMEOUT);
    return res; 
 }
-std::vector<std::string> ChaosController::searchAlive(const std::string name,const std::string& what){
+std::vector<std::string> ChaosController::searchAlive(const std::string& name,const std::string& what){
             ChaosStringVector node_found;
             chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
 
@@ -1680,7 +1730,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="server" || what=="webui" || what=="variable" || what=="tag")
+            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="server" || what=="root"|| what=="webui" || what=="variable" || what=="tag")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
@@ -2306,15 +2356,124 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 else if (what == "desc")
                 {
+                    int rets;
+                    chaos::common::data::CDWUniquePtr r=getNodeDesc(name,rets);
 
-                    EXECUTE_CHAOS_API(api_proxy::node::GetNodeDescription, MDS_TIMEOUT, name);
-                    res << json_buf;
+                    if(rets==0){
+                        res<<r->getCompliantJSONString();
+
+                    } else {
+                    json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+                    execute_chaos_api_error++; 
+                    }
+
                 } else if (what == "shutdown"){
                         chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
                         infos->addBoolValue("kill",true);
                         sendRPCMsg(name,chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN,MOVE(infos),node_type);
+                } else if (what == "deletedata"){
+                    CHECK_VALUE_PARAM;
+
+                    if(json_value->hasKey("start")&&json_value->hasKey("end")&&
+                     json_value->isStringValue("start")&&("remove")&&json_value->isStringValue("end")){
+                //remove data
+                        uint64_t start_ts,end_ts;
+                        int err=0;
+                        start_ts=offsetToTimestamp(json_value->getStringValue("start"));
+                        end_ts=offsetToTimestamp(json_value->getStringValue("end"));
+                        for(int cnt=0;cnt<=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM;cnt++){
+                            err+=live_driver->removeData(name+chaos::datasetTypeToPostfix(cnt),start_ts,end_ts);
+                        }
+                        if(err==0){
+                            json_buf = "{}";
+                            return CHAOS_DEV_OK;
+                        } 
+                        bundle_state.append_error("An error occurred removing data of:"+name);
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_CMD;
+                    
+                     } else {
+                        bundle_state.append_error("API must specify start and end delete inteval:"+name);
+                        json_buf = bundle_state.getData()->getCompliantJSONString();
+                        CALC_EXEC_TIME;
+                        return CHAOS_DEV_CMD;
+                     
+                     }
+
+                }else if (what == "deletenode"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        p->addBoolValue("reset",true);
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
+                } else if (what == "nodeupdate"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"setNodeDescription",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
+                } else if (what == "new"){
+                        int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
                 }
-                else if (node_type == "us")
+                else if (node_type == "us" || node_type == "root")
                 {
 
                     if (what == "set")
@@ -2322,11 +2481,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         EXECUTE_CHAOS_API(api_proxy::unit_server::GetSetFullUnitServer, MDS_TIMEOUT, name, 0, json_value.get());
                         res << json_buf;
                     }
-                    else if (what == "del")
-                    {
-                        EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
-                        res << json_buf;
-                    }
+                   
                     else if (what == "create")
                     {
                         EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);
@@ -2444,11 +2599,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         else
                         {
-                            CHECK_PARENT;
+                            std::string par;
+                            std::string sub_type;
+                            if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_SUB_TYPE)){
+                                sub_type=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_SUB_TYPE);
+                            }
+
+                            if(json_value->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                par=json_value->getStringValue(chaos::NodeDefinitionKey::NODE_PARENT);
+                            } else {
+                                CHECK_PARENT;
+                                par =parent;
+                            }
                             {
-                                if (json_value->hasKey("control_unit_implementation"))
+                                if (json_value->hasKey("control_unit_implementation")&&(sub_type!="nt_script_eu"))
                                 {
-                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, parent, json_value->getStringValue("control_unit_implementation"), 0);
+                                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
                                 }
                             }
                             {
@@ -2673,6 +2839,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
                 CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
                 json_buf = "{}";
+                return CHAOS_DEV_OK;
+            }
+            else if (what == "fload") // fast load
+            {   
+                chaos::common::data::CDWUniquePtr res;
+                if(mdsChannel->getScriptDesc(name,res,MDS_TIMEOUT)!=0){
+                    serr << cmd << " Error retriving script :"<<name;
+                    bundle_state.append_error(serr.str());
+                    json_buf = bundle_state.getData()->getCompliantJSONString();
+                    return CHAOS_DEV_CMD;
+                } 
+                json_buf = res->getCompliantJSONString();
+
                 return CHAOS_DEV_OK;
             }
             else if (what == "load")
@@ -2938,11 +3117,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             std::string ret = fetchJson(channel);
 
-            if(ret.size()==0){
+           /* if(ret.size()==0){
                 uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
                 this->sched(t);
                 ret = fetchJson(channel);
-            }
+            }*/
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }
@@ -3021,6 +3200,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     }
                 }
             }
+            
             if (p.hasKey("page"))
             {
                 page = p.getInt32Value("page");
@@ -3212,7 +3392,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             if ((err = query_cursor->getError()))
                             {
                                 releaseQuery(query_cursor);
-                                bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with  api error: %2%", % getPath() % err));
+                                bundle_state.append_error(CHAOS_FORMAT("error during query '%1%' with  api error: %2%", % getPath() % err));
                                 json_buf = bundle_state.getData()->getCompliantJSONString();
                                 /// TODO : perche' devo rinizializzare il controller?
                                 //init(path, timeo);
@@ -3409,7 +3589,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         {
                             releaseQuery(query_cursor);
                             query_cursor_map.erase(query_cursor_map.find(uid));
-                            bundle_state.append_error(CHAOS_FORMAT("error during query '%1' with uid:%2% api error: %3%", % getPath() % uid % err));
+                            bundle_state.append_error(CHAOS_FORMAT("error during query '%1%' with uid:%2% api error: %3%", % getPath() % uid % err));
                             json_buf = bundle_state.getData()->getCompliantJSONString();
                             CALC_EXEC_TIME;
                             //init(path, timeo);
@@ -3956,7 +4136,7 @@ chaos::common::data::CDataWrapper *ChaosController::dev_info_status::getData()
 }
 chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what){
         chaos::NodeType::NodeSearchType node_type=chaos::NodeType::NodeSearchType::node_type_cu;
-;
+
 
             if (what == "agent")
                 node_type = chaos::NodeType::NodeSearchType::node_type_agent;
@@ -3970,10 +4150,12 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
                 node_type = chaos::NodeType::NodeSearchType::node_type_variable;
             if (what == "tag")
                 node_type = chaos::NodeType::NodeSearchType::node_type_tag;
-            if (what == "server"){
+            if (what == "server")
                 node_type = chaos::NodeType::NodeSearchType::node_type_all_server;
+            if (what == "root")
+                node_type = chaos::NodeType::NodeSearchType::node_type_root;
 
-            }
+            
     return node_type;
 }
 chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::string& search,const std::string& what,bool alive){

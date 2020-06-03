@@ -8,9 +8,7 @@
 #ifndef __ChaosController_H
 #define __ChaosController_H
 
-#include <map>
-#include <string>
-#include <chaos/common/chaos_constants.h>
+//#include <chaos/common/chaos_constants.h>
 #include <chaos/common/data/DatasetDB.h>
 
 #include <chaos/cu_toolkit/data_manager/KeyDataStorage.h>
@@ -181,7 +179,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
     virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
-    std::vector<std::string> searchAlive(const std::string name="",const std::string& what="cu");
+    std::vector<std::string> searchAlive(const std::string& name="",const std::string& what="cu");
     int initDevice(const std::string &dev = "");
     int stopDevice(const std::string &dev = "");
     int startDevice(const std::string &dev = "");
@@ -189,6 +187,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     int loadDevice(const std::string &dev = "");
     int unloadDevice(const std::string &dev = "");
     int setAttributeToValue(const char *attributeName, const char *attributeValue, const std::string &cuname = "");
+
+    chaos::common::data::CDWUniquePtr executeAPI(const std::string&group,const std::string&name,chaos::common::data::CDWUniquePtr& msg,int&err);
 
     int init(const std::string &p, uint64_t timeo);
     virtual int init(int force = 0);
@@ -275,13 +275,14 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
                           const std::vector<std::string> &other_snapped_device);
     //!delete the snapshot
     int deleteSnapshot(const std::string &snapshot_tag);
+
     //!return the snapshot list for device controlled by this isntance
     int getSnapshotList(ChaosStringVector &snapshot_list);
 
     //!return the dataset of the specified cu associated to a given snapshot
     // 
     chaos::common::data::CDataWrapper getSnapshotDataset(const std::string&snapname,const std::string& cuname);
-
+    
     command_t prepareCommand(std::string alias);
     template <typename T>
     void addParameter(command_t &cmd, std::string name, T value)
@@ -353,6 +354,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
     
     chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& search,const std::string&rpcmsg, chaos::common::data::CDWUniquePtr datapack,const std::string& what="agent",bool alive=true);
+
+    chaos::common::data::CDWUniquePtr getNodeDesc(const std::string& search,int&err);
 
     chaos::common::data::CDWUniquePtr getBuildProcessInfo(const std::string& search,const std::string& what="agent",bool alive=true);
 
