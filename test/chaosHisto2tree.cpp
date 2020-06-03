@@ -287,7 +287,11 @@ int main(int argc, const char **argv) {
 
     }
     iodrv->deinit();
-    
+    if(errors>0){
+      std::cout<<"### ERROR"<<std::endl;
+    } else {
+      std::cout<<"* OK"<<std::endl;
+    }
     ChaosMetadataServiceClient::getInstance()->stop();
     ChaosMetadataServiceClient::getInstance()->deinit();
 
