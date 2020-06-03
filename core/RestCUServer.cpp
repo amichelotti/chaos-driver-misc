@@ -7,7 +7,7 @@ namespace driver{
 #define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
 #define DPD_LERR LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "
 
-RestCUServer::RestCUServer(int port,int nthread){
+RestCUServer::RestCUServer(uint32_t port,uint32_t _nthread):nthread(_nthread){
     std::stringstream ss;
     ss<<port;
     std::string sport;
@@ -53,6 +53,7 @@ int RestCUServer::start(){
             res << "{}";
 
 		});
+    DPD_LDBG<<"Starting server with:"<<nthread<<" threads";
 	server->run(nthread);
 
     return 0;
