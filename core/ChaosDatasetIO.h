@@ -2,6 +2,8 @@
 #define CHAOSDATASETIO_H
 
 #include <chaos/common/io/ManagedDirectIODataDriver.h>
+#include <chaos/common/property/property.h>
+#include <chaos/common/thread/WaitSemaphore.h>
 
 namespace chaos{
     namespace common{
@@ -28,16 +30,38 @@ namespace chaos{
 namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
-        class ChaosDatasetIO             :protected chaos::common::async_central::TimerHandler{
+        class ChaosDatasetIO;
+        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr,ChaosDatasetIO*);
+
+        class ChaosDatasetIO             :        
+        public chaos::DeclareAction,
+        public chaos::common::property::PropertyCollector,
+
+        protected chaos::common::async_central::TimerHandler{
+            public:
+            static std::string ownerApp;
+            enum ActionID{
+                ACT_LOAD,
+                ACT_INIT,
+                ACT_START,
+                ACT_STOP,
+                ACT_DEINIT,
+                ACT_UNLOAD,
+                ACT_UPDATE,
+                ACT_SET,
+                ACT_BURST,
+                ACT_NONE
+            };
+            private:
              chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
-            static ChaosSharedMutex iomutex;
+             static ChaosSharedMutex iomutex;
 
             ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
              //!logging channel
             chaos::common::metadata_logging::StandardLoggingChannel *standard_logging_channel;
-                
+            chaos::CUStateKey::ControlUnitState state;
                 //!control unit alarm group
             chaos::common::metadata_logging::AlarmLoggingChannel    *alarm_logging_channel;
             typedef struct {uint64_t qt;
@@ -47,16 +71,35 @@ namespace driver{
             typedef std::map<uint64_t,qc_t> query_cursor_map_t;
             query_cursor_map_t query_cursor_map;
             uint64_t query_index;
-            chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            void wrapper2dataset(chaos::common::data::CDataWrapper& dst,const chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
+          //  chaos::common::data::CDWUniquePtr wrapper2dataset(chaos::common::data::CDataWrapper& in,int dir=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
         protected:
-            
+            chaos::WaitSemaphore waitEU;
+
+            void _initPropertyGroup();
+             //!callback for put a veto on property value change request
+             bool propertyChangeHandler(const std::string&                       group_name,
+                                     const std::string&                       property_name,
+                                     const chaos::common::data::CDataVariant& property_value);
+
+            //!callback ofr updated property value
+            void propertyUpdatedHandler(const std::string&                       group_name,
+                                      const std::string&                       property_name,
+                                      const chaos::common::data::CDataVariant& old_value,
+                                      const chaos::common::data::CDataVariant& new_value);
+
+
             uint64_t runid;
             std::string datasetName; // cu name
             std::string groupName; // US name
-            uint64_t ageing;
+            uint32_t ageing,push_errors,packet_lost,packet_tot_size;
             uint64_t timeo;
-            uint64_t last_seq;
+            uint64_t last_seq,last_push_ts;
             int storageType;
+            int sched_time;
+            //burst things;
+            uint64_t burst_cycles,burst_time_ts;
             std::map<int,ChaosDataSet > datasets;
             uint64_t pkids[16];
             void createMDSEntry();
@@ -73,21 +116,91 @@ namespace driver{
             uint8_t dev_alarm_lvl;
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
+           // std::map<std::string,chaos::common::data::CDWUniquePtr> attr_desc;
+            chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
+            chaos::common::data::CDWUniquePtr _setDatasetAttribute(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _registrationAck(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _unload(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+
+            chaos::common::data::CDWUniquePtr _start(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _stop(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _deinit(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _getInfo(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+            chaos::common::data::CDWUniquePtr _submitStorageBurst(chaos::common::data::CDWUniquePtr dataset_attribute_values);
+
+            typedef std::map<ActionID,actionFunc_t> handler_t; 
+            handler_t handlermap;
+            chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr p);
+            bool check_presence;
+
+            void _initDataset();
         public:
             
-            ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="DATASETIO");
+            ChaosDatasetIO(const std::string& dataset_name,bool check);
+
+            ChaosDatasetIO(const std::string& dataset_name,const std::string &group_name="");
             ~ChaosDatasetIO();
+
+            /**
+             * @brief Register an handler to be called on action
+             * 
+             * @param func handler to call
+             * @param id action id
+             * @return int 0 if ok
+             */
+            int registerAction(actionFunc_t func,ActionID id=ACT_UNLOAD);
+
+            /**
+             * @brief Set the ageing time of the datasets
+             * 
+             * @param secs 
+             * @return 0 if ok 
+             */
             int setAgeing(uint64_t secs);
+            /**
+             * @brief Set the Storage tyepe
+             * 
+             * @param st type (1: permanent storage, 2 : cache live, 16: log(grafana))
+             * @return int 
+             */
             int setStorage(int st);
+            /**
+             * @brief Set the Schedule delay (minimum time between 2 pushes)
+             * 
+             * @param st time in microseconds
+             * @return int 
+             */
+            int setSchedule(int st);
+            
             int setTimeo(uint64_t t);
+            /**
+             * @brief Allocate an empty dataset that must be filled by the caller
+             * 
+             * @param type type of dataset (output is the default)
+             * @return ChaosDataSet an allocated dataset
+             */
             ChaosDataSet allocateDataset(int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+            
+            /**
+             * @brief Allocate a dataset from a json
+             * 
+             * @param json json dataset 
+             * @param type type of dataset
+             * @return ChaosDataSet an allocated dataset
+             */
+            ChaosDataSet allocateDataset(const std::string&json,int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+
             /**
              
              */
             int registerDataset ();
+            int updateSystem();
             int pushDataset(ChaosDataSet&ds, int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
 
             int pushDataset( int type=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+           
             /**
              Retrieve its own datasets from live
              */

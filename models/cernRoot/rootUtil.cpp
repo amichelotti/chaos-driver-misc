@@ -48,8 +48,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\[\]\(\)\{\}]+");
-  if(boost::regex_match(name,r)){
+  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(boost::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }
@@ -749,13 +749,13 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     }
 
     return tree_ret;
-  } catch (chaos::CException e) {
+  } catch (chaos::CException& e) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << "Exception on \"" << chaosNode << "\""
           << " errn:" << e.errorCode << " domain:" << e.errorDomain
           << " what:" << e.what();
     return NULL;
-  } catch (std::exception ee) {
+  } catch (std::exception& ee) {
     ROOTERR << "[ " << __PRETTY_FUNCTION__ << "]"
           << " Library Exception on \"" << chaosNode << "\""
           << " what:" << ee.what();
