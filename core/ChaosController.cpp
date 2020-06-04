@@ -711,7 +711,9 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const 
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data for:"<<CUNAME;
+    }
     return results;
 }
 
@@ -723,7 +725,10 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     {
         channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
     }
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data";
+ 
+    }
     return results;
 }
 

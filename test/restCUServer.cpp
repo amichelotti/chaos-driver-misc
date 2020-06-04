@@ -44,7 +44,7 @@ int main(int argc, const char **argv) {
   ChaosMetadataServiceClient::getInstance()->start();
   try{
   RestCUServer server(port,thn);
-
+  std::cout<<"listening on port:"<<port<<std::endl;
   server.start();
   } catch(const boost::exception& ex) {
     // error handling
