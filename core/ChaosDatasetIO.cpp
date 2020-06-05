@@ -508,7 +508,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
       usleep((sched_time - diff));
     }
   }
-  if ((burst_cycles > 0) && (--burst_cycles == 0) ||
+  if (((burst_cycles > 0) && (--burst_cycles == 0)) ||
       ((burst_time_ts > 0) && (burst_time_ts >= ts))) {
     datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
         ControlUnitDatapackSystemKey::BURST_STATE, false);
