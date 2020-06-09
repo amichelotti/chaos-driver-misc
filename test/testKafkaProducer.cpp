@@ -74,8 +74,12 @@ ChaosMetadataServiceClient::getInstance()
     CDataWrapper p;
     p.addBinaryValue("payload",buffer,paylod_size);
     int cnt=loop;
+    p.addInt32Value("counter",cnt);
+
     uint64_t st=chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
     while(cnt--){
+      p.setValue("counter",cnt);
+
       if(k.pushMsgAsync(p,dsname)!=0){
         errors++;
       }
