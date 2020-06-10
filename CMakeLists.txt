@@ -44,10 +44,10 @@ IF(NOT CHAOS_TARGET)
 ENDIF()
 
 IF(KAFKA_ASIO_ENABLE OR KAFKA_RDK_ENABLE)
-ADD_EXECUTABLE(testKafkaProducer test/testKafkaProducer.cpp)
-TARGET_LINK_LIBRARIES(testKafkaProducer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
+ADD_EXECUTABLE(kafkaChaosTest test/kafkaChaosTest.cpp)
+TARGET_LINK_LIBRARIES(kafkaChaosTest ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
 
-INSTALL(TARGETS testKafkaProducer
+INSTALL(TARGETS kafkaChaosTest
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 ENDIF()
