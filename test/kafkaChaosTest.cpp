@@ -101,13 +101,14 @@ stats_t readTest(chaos::common::message::MessagePSConsumer &k,
   return ret;
 }
 
-#define FIELDS "payload size,total size,tot time (us), bandwith (MB/s),errors"
+#define FIELDS "payload size,total size,tot time (us), bandwith (KB/s),op/s"
 using namespace chaos::metadata_service_client::node_controller;
 using namespace chaos::common::data;
 int main(int argc, const char **argv) {
   int errors = 0;
   std::string server = "localhost:9092";
   std::string dsname = "CHAOS/KAFKA/CU";
+  std::string csvname="benchmark";
   std::string kafkadriver = "asio";
   bool deleteKey = false;
   uint32_t paylod_size = 0;
@@ -115,9 +116,7 @@ int main(int argc, const char **argv) {
   bool writeenable = true;
   bool readenable = false;
   uint32_t maxpayload = 1024 * 1024;
-  std::ofstream wfile("benchmark_write.csv");
-  std::ofstream rfile("benchmark_read.csv");
-
+ 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("server",
@@ -172,6 +171,12 @@ int main(int argc, const char **argv) {
                   po::value<bool>(&readenable)->default_value(readenable),
                   "Perform Read");
 
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("csvprefix",
+                  po::value<std::string>(&csvname)->default_value(csvname),
+                  "CSV prefix");
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   //  ChaosMetadataServiceClient::getInstance()->start();
 
@@ -180,22 +185,28 @@ int main(int argc, const char **argv) {
   }
   chaos::common::message::MessagePSProducer *prod = NULL;
   chaos::common::message::MessagePSConsumer *cons = NULL;
-  if (writeenable) {
-    wfile << FIELDS << std::endl;
-
-    prod = new chaos::common::message::MessagePSProducer(kafkadriver);
-    prod->addServer(server);
-    if (prod->applyConfiguration() == 0) {
+  prod = new chaos::common::message::MessagePSProducer(kafkadriver);
+  prod->addServer(server);
+  if (prod->applyConfiguration() == 0) {
       std::cout << "* production configuration ok" << std::endl;
       if (deleteKey) {
         std::cout << "* deleting " << dsname << std::endl;
-
-        prod->deleteKey(dsname);
-        if (prod->waitCompletion(10000) != 0) {
-          std::cout << "## timeout deleting " << dsname << std::endl;
+        if (prod->deleteKey(dsname) != 0) {
+          std::cout << "## error deleting " << dsname << std::endl;
+          return -1;
         }
       }
+  }
+  std::ofstream wfile(csvname+"_write.csv");
+  std::ofstream rfile(csvname+"_read.csv");
+
+  if (writeenable) {
+    wfile << FIELDS << std::endl;
+    if(prod->createKey(dsname)!=0){
+       std::cout << "## cannot create  " << dsname << std::endl;
+          return -2;
     }
+
   }
   uint32_t start_seq = 0;
   if (readenable) {
@@ -214,10 +225,12 @@ int main(int argc, const char **argv) {
       if (writeenable) {
         std::stringstream ss;
         wstat = writeTest(*prod, dsname, start_seq, loop, cnt);
+        if(wstat.tot_err==0){
         ss << wstat.payload_size << "," << wstat.tot_bytes << ","
            << wstat.tot_us << ","
-           << (wstat.tot_bytes * 1000000.0 / (1024.0 * 1024.0 * wstat.tot_us))
-           << "," << wstat.tot_err;
+           << (wstat.tot_bytes * 1000000.0 / ( 1024.0 * wstat.tot_us))
+           << "," << ((loop * 1000000.0)/wstat.tot_us);
+        }
         wfile << ss.str() << std::endl;
         LOG(ss.str());
         errors += wstat.tot_err;
@@ -225,11 +238,12 @@ int main(int argc, const char **argv) {
       if (readenable) {
         rstat = readTest(*cons, dsname, start_seq, loop);
         std::stringstream ss;
-
+        if(rstat.tot_err==0){
         ss << rstat.payload_size << "," << rstat.tot_bytes << ","
            << rstat.tot_us << ","
-           << (rstat.tot_bytes * 1000000.0 / (1024.0 * 1024.0 * rstat.tot_us))
-           << "," << rstat.tot_err;
+           << (rstat.tot_bytes * 1000000.0 / (1024.0 * rstat.tot_us))
+           << "," << ((loop * 1000000.0)/rstat.tot_us);
+        }
         rfile << ss.str() << std::endl;
         LOG(ss.str());
 

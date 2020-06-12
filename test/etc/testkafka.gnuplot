@@ -6,9 +6,9 @@ set xlabel 'Bytes'
 set xlabel 'MB/s'
 
 set terminal png size 1024,768 enhanced font 'Verdana,10'
-set output 'ksfka_benchmark.png'
+set output 'kafka_benchmark.png'
 
-plot 'benchmark_write.csv' using 1:4 lc rgb "green" with lines title 'Write bandwith (MB/s)','benchmark_write.csv' using 1:5 lc rgb "red" with lines title 'errors'
-plot 'benchmark_read.csv' using 1:4 lc rgb "blue" with lines title 'Read bandwith (MB/s)','benchmark_read.csv' using 1:5 lc rgb "orange" with lines title 'errors'
+plot 'benchmark_write.csv' using 1:4 lc rgb "green" with lines title 'Write bandwith (KB/s)','benchmark_write.csv' using 1:5 lc rgb "orange" with lines title 'put (HZ)'
+plot 'benchmark_read.csv' using 1:4 lc rgb "blue" with lines title 'Read bandwith (KB/s)','benchmark_read.csv' using 1:5 lc rgb "yellow" with lines title 'get (HZ)'
 
 
