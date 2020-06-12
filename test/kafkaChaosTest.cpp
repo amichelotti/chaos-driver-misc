@@ -87,7 +87,7 @@ stats_t readTest(chaos::common::message::MessagePSConsumer &k,
         chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st;
 
     for (int cnt = 0; cnt < k.msgInQueue(); cnt++) {
-      chaos::common::data::CDWUniquePtr p = k.getMsg(cnt);
+      chaos::common::data::CDWShrdPtr p = k.getMsg(cnt);
       LDBG_ << cnt << "] id:" << p->getInt32Value("counter");
       ret.tot_bytes += p->getBSONRawSize();
       ret.payload_size = p->getBSONRawSize();
@@ -207,7 +207,6 @@ int main(int argc, const char **argv) {
       std::cout << "* consumer configuration ok" << std::endl;
     }
   }
-  if (paylod_size == 0) {
 
     for (int cnt = ((paylod_size > 2) ? paylod_size : 2); cnt <= maxpayload;
          cnt <<= 1) {
@@ -238,7 +237,7 @@ int main(int argc, const char **argv) {
       }
       start_seq += loop;
     }
-  }
+  
   if (cons) {
     delete cons;
   }
