@@ -48,6 +48,8 @@ stats_t writeTest(chaos::common::message::MessagePSProducer &k,
   p.addBinaryValue("payload", buffer, payload_size);
   int cnt = loop;
   p.addInt32Value("counter", start_seq);
+  p.addInt32Value("ts",(int32_t) time(NULL));
+
   int size = p.getBSONRawSize();
   ret.payload_size = size;
   uint64_t st =
@@ -81,7 +83,7 @@ stats_t readTest(chaos::common::message::MessagePSConsumer &k,
   uint64_t st =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
 
-  k.getMsgAsync(dsname, start_seq);
+  k.getMsgAsync(dsname,start_seq);
   if (k.waitCompletion() == 0) {
     ret.tot_us =
         chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st;
