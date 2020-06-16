@@ -3,8 +3,7 @@
  * Author: michelo
 
  */
-#include <chaos/common/message/MessagePSConsumer.h>
-#include <chaos/common/message/MessagePSProducer.h>
+#include <chaos/common/message/MessagePSDriver.h>
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 
 #include <cstdlib>
@@ -37,14 +36,26 @@ typedef struct stats {
   stats() : tot_bytes(0), payload_size(0), tot_us(0), tot_err(0) {}
 } stats_t;
 
-stats_t writeTest(chaos::common::message::MessagePSProducer &k,
+stats_t writeTest(chaos::common::message::producer_uptr_t &k,
                   const std::string &dsname, int32_t start_seq, int loop,
                   int payload_size) {
 
   stats_t ret;
   char buffer[payload_size];
-  chaos::common::data::CDataWrapper p;
+  chaos::common::data::CDataWrapper p,r;
   int errors = 0;
+  // calculate packet size;
+  r.addBinaryValue("payload", buffer, 0);
+  r.addInt32Value("counter", start_seq);
+  r.addInt32Value("ts",(int32_t) time(NULL));
+  if(r.getBSONRawSize()<payload_size){
+    if(payload_size==1024*1024){
+      payload_size--;
+    }
+    payload_size=(payload_size-r.getBSONRawSize());
+    
+  }
+  
   p.addBinaryValue("payload", buffer, payload_size);
   int cnt = loop;
   p.addInt32Value("counter", start_seq);
@@ -59,18 +70,22 @@ stats_t writeTest(chaos::common::message::MessagePSProducer &k,
   while (cnt--) {
     p.setValue("counter", start_seq++);
 
-    if (k.pushMsgAsync(p, dsname) != 0) {
+    if (k->pushMsgAsync(p, dsname) != 0) {
       errors++;
     } else {
       ret.tot_bytes += size;
     }
   }
+  if(k->flush()!=0){
+    LOG("Error flushing all data");
+  }
   ret.tot_us =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st;
   ret.tot_err = errors;
+  
   return ret;
 }
-stats_t readTest(chaos::common::message::MessagePSConsumer &k,
+stats_t readTest(chaos::common::message::consumer_uptr_t &k,
                  const std::string &dsname, uint32_t start_seq, int loop) {
 
   stats_t ret;
@@ -82,28 +97,34 @@ stats_t readTest(chaos::common::message::MessagePSConsumer &k,
 
   uint64_t st =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
-
-  k.getMsgAsync(dsname,start_seq);
-  if (k.waitCompletion() == 0) {
+  k->start();
+    for (int cnt = 0; cnt < loop; cnt++) {
+            chaos::common::message::ele_uptr_t p = k->getMsg();
+      if(p.get()){
+        chaos::common::data::CDWShrdPtr cd=p->cd;
+        if(cd.get()){
+          uint32_t ts=0;
+          if(cd->hasKey("ts")){
+            ts=cd->getInt32Value("ts");
+          }
+          LDBG_ << cnt << "] id:" << cd->getInt32Value("counter")<<" ts:"<<ts<<" off:"<<p->off<<" par:"<<p->par<<" in queue:"<<k->msgInQueue();
+          ret.tot_bytes += cd->getBSONRawSize();
+          ret.payload_size = cd->getBSONRawSize();
+        }
+      }
+    }
     ret.tot_us =
         chaos::common::utility::TimingUtil::getTimeStampInMicroseconds() - st;
 
-    for (int cnt = 0; cnt < k.msgInQueue(); cnt++) {
-      chaos::common::data::CDWShrdPtr p = k.getMsg(cnt);
-      LDBG_ << cnt << "] id:" << p->getInt32Value("counter");
-      ret.tot_bytes += p->getBSONRawSize();
-      ret.payload_size = p->getBSONRawSize();
-    }
+    k->stop();
 
-  } else {
-    errors++;
-  }
+  
 
   ret.tot_err = errors;
   return ret;
 }
 
-#define FIELDS "payload size,total size,tot time (us), bandwith (KB/s),op/s"
+#define FIELDS "payload size,total size,tot time (us), bandwith (MB/s),op/s"
 using namespace chaos::metadata_service_client::node_controller;
 using namespace chaos::common::data;
 int main(int argc, const char **argv) {
@@ -118,7 +139,7 @@ int main(int argc, const char **argv) {
   bool writeenable = true;
   bool readenable = false;
   uint32_t maxpayload = 1024 * 1024;
- 
+  std::string off_type="latest";
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("server",
@@ -179,15 +200,20 @@ ChaosMetadataServiceClient::getInstance()
                   po::value<std::string>(&csvname)->default_value(csvname),
                   "CSV prefix");
 
+ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("offtype",
+                  po::value<std::string>(&off_type)->default_value(off_type),
+                  "Offset Strategy 'earliest' or 'latest'");
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   //  ChaosMetadataServiceClient::getInstance()->start();
 
   if (paylod_size > 0) {
     maxpayload = paylod_size;
   }
-  chaos::common::message::MessagePSProducer *prod = NULL;
-  chaos::common::message::MessagePSConsumer *cons = NULL;
-  prod = new chaos::common::message::MessagePSProducer(kafkadriver);
+  chaos::common::message::consumer_uptr_t cons = chaos::common::message::MessagePSDriver::getConsumerDriver(kafkadriver,"miogruppo");
+  chaos::common::message::producer_uptr_t prod = chaos::common::message::MessagePSDriver::getProducerDriver(kafkadriver);
   prod->addServer(server);
   if (prod->applyConfiguration() == 0) {
       std::cout << "* production configuration ok" << std::endl;
@@ -199,11 +225,12 @@ ChaosMetadataServiceClient::getInstance()
         }
       }
   }
-  std::ofstream wfile(csvname+"_write.csv");
-  std::ofstream rfile(csvname+"_read.csv");
+  std::ofstream wfile(csvname+"_"+kafkadriver+"_"+"write.csv");
+  std::ofstream rfile(csvname+"_"+kafkadriver+"_"+"read.csv");
 
   if (writeenable) {
     wfile << FIELDS << std::endl;
+   // prod->setMaxMsgSize(1024*1024);
     if(prod->createKey(dsname)!=0){
        std::cout << "## cannot create  " << dsname << std::endl;
           return -2;
@@ -214,10 +241,23 @@ ChaosMetadataServiceClient::getInstance()
   if (readenable) {
     rfile << FIELDS << std::endl;
 
-    cons = new chaos::common::message::MessagePSConsumer(kafkadriver);
     cons->addServer(server);
+
+    
+    if(cons->setOption("auto.offset.reset", off_type)!=0){
+      std::cerr << "## cannot apply configuration configuration:" <<cons->getLastError()<< std::endl;
+
+    }
     if (cons->applyConfiguration() == 0) {
       std::cout << "* consumer configuration ok" << std::endl;
+      if(cons->subscribe(dsname)!=0){
+       std::cerr << "## error consumer subscribe:" <<cons->getLastError()<< std::endl;
+        return -7;
+      }
+
+    } else {
+      std::cerr << "## error consumer configuration:" <<cons->getLastError()<< std::endl;
+      return -5;
     }
   }
 
@@ -226,25 +266,25 @@ ChaosMetadataServiceClient::getInstance()
       stats_t wstat, rstat;
       if (writeenable) {
         std::stringstream ss;
-        wstat = writeTest(*prod, dsname, start_seq, loop, cnt);
+        wstat = writeTest(prod, dsname, start_seq, loop, cnt);
         if(wstat.tot_err==0){
         ss << wstat.payload_size << "," << wstat.tot_bytes << ","
            << wstat.tot_us << ","
-           << (wstat.tot_bytes * 1000000.0 / ( 1024.0 * wstat.tot_us))
-           << "," << ((loop * 1000000.0)/wstat.tot_us);
+           << (wstat.tot_bytes * 1000000.0 / ( 1024.0 *1024.0* wstat.tot_us))
+           << "," << ((loop * 1000000.0)/wstat.tot_us)<<","<<wstat.tot_err;
         }
         wfile << ss.str() << std::endl;
         LOG(ss.str());
         errors += wstat.tot_err;
       }
       if (readenable) {
-        rstat = readTest(*cons, dsname, start_seq, loop);
+        rstat = readTest(cons, dsname, start_seq, loop);
         std::stringstream ss;
         if(rstat.tot_err==0){
         ss << rstat.payload_size << "," << rstat.tot_bytes << ","
            << rstat.tot_us << ","
-           << (rstat.tot_bytes * 1000000.0 / (1024.0 * rstat.tot_us))
-           << "," << ((loop * 1000000.0)/rstat.tot_us);
+           << (rstat.tot_bytes * 1000000.0 / (1024.0 * 1024.0* rstat.tot_us))
+           << "," << ((loop * 1000000.0)/rstat.tot_us)<<","<<rstat.tot_err;
         }
         rfile << ss.str() << std::endl;
         LOG(ss.str());
@@ -254,12 +294,6 @@ ChaosMetadataServiceClient::getInstance()
       start_seq += loop;
     }
   
-  if (cons) {
-    delete cons;
-  }
-  if (prod) {
-    delete prod;
-  }
-
+  
   return errors;
 }
