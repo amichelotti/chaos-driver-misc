@@ -92,6 +92,7 @@ stats_t readTest(chaos::common::message::consumer_uptr_t &k,
   memset(&ret, sizeof(ret), 0);
   int errors = 0;
   int cnt = loop;
+  int size;
   LOG("Perform read test payload loops:" << loop << " topic:" << dsname
                                          << " start seq:" << start_seq);
 
@@ -107,9 +108,10 @@ stats_t readTest(chaos::common::message::consumer_uptr_t &k,
           if(cd->hasKey("ts")){
             ts=cd->getInt32Value("ts");
           }
-          LDBG_ << cnt << "] id:" << cd->getInt32Value("counter")<<" ts:"<<ts<<" off:"<<p->off<<" par:"<<p->par<<" in queue:"<<k->msgInQueue();
-          ret.tot_bytes += cd->getBSONRawSize();
-          ret.payload_size = cd->getBSONRawSize();
+          size= cd->getBSONRawSize();
+          LDBG_ << cnt << "] id:" << cd->getInt32Value("counter")<<" ts:"<<ts<<"size:"<<size<<" off:"<<p->off<<" par:"<<p->par<<" in queue:"<<k->msgInQueue();
+          ret.tot_bytes +=size;
+          ret.payload_size = size;
         }
       }
     }
@@ -132,7 +134,7 @@ int main(int argc, const char **argv) {
   std::string server = "localhost:9092";
   std::string dsname = "CHAOS/KAFKA/CU";
   std::string csvname="benchmark";
-  std::string kafkadriver = "asio";
+  std::string kafkadriver = "kafka-rdk";
   bool deleteKey = false;
   uint32_t paylod_size = 0;
   uint32_t loop = 1000;
@@ -175,7 +177,7 @@ int main(int argc, const char **argv) {
       ->addOption(
           "driver",
           po::value<std::string>(&kafkadriver)->default_value(kafkadriver),
-          "Kafka driver");
+          "Kafka driver (kafka-rdk | kafka-asio)");
 
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -261,38 +263,56 @@ ChaosMetadataServiceClient::getInstance()
     }
   }
 
-    for (int cnt = ((paylod_size > 2) ? paylod_size : 2); cnt <= maxpayload;
-         cnt <<= 1) {
-      stats_t wstat, rstat;
-      if (writeenable) {
-        std::stringstream ss;
-        wstat = writeTest(prod, dsname, start_seq, loop, cnt);
-        if(wstat.tot_err==0){
-        ss << wstat.payload_size << "," << wstat.tot_bytes << ","
-           << wstat.tot_us << ","
-           << (wstat.tot_bytes * 1000000.0 / ( 1024.0 *1024.0* wstat.tot_us))
-           << "," << ((loop * 1000000.0)/wstat.tot_us)<<","<<wstat.tot_err;
-        }
-        wfile << ss.str() << std::endl;
-        LOG(ss.str());
-        errors += wstat.tot_err;
-      }
-      if (readenable) {
-        rstat = readTest(cons, dsname, start_seq, loop);
-        std::stringstream ss;
-        if(rstat.tot_err==0){
-        ss << rstat.payload_size << "," << rstat.tot_bytes << ","
-           << rstat.tot_us << ","
-           << (rstat.tot_bytes * 1000000.0 / (1024.0 * 1024.0* rstat.tot_us))
-           << "," << ((loop * 1000000.0)/rstat.tot_us)<<","<<rstat.tot_err;
-        }
-        rfile << ss.str() << std::endl;
-        LOG(ss.str());
+    
+      if(writeenable){
+          stats_t wstat;
 
-        errors += rstat.tot_err;
+          for (int cnt = ((paylod_size > 2) ? paylod_size : 2); cnt <= maxpayload;
+            cnt <<= 1) {
+               std::stringstream ss;
+                wstat = writeTest(prod, dsname, start_seq, loop, cnt);
+                if(wstat.tot_err==0){
+                ss << wstat.payload_size << "," << wstat.tot_bytes << ","
+                  << wstat.tot_us << ","
+                  << (wstat.tot_bytes * 1000000.0 / ( 1024.0 *1024.0* wstat.tot_us))
+                  << "," << ((loop * 1000000.0)/wstat.tot_us)<<","<<wstat.tot_err;
+                }
+                wfile << ss.str() << std::endl;
+                LOG(ss.str());
+                errors += wstat.tot_err;
+                 start_seq += loop;
+
+          }
       }
-      start_seq += loop;
-    }
+
+      start_seq=0;
+      if (readenable) {
+        stats_t rstat;
+        if(writeenable){
+          LOG("sleeping 10s before read");
+          sleep(10);
+        }
+
+        for (int cnt = ((paylod_size > 2) ? paylod_size : 2); cnt <= maxpayload;
+            cnt <<= 1) {
+               rstat = readTest(cons, dsname, start_seq, loop);
+              std::stringstream ss;
+              if(rstat.tot_err==0){
+              ss << rstat.payload_size << "," << rstat.tot_bytes << ","
+                << rstat.tot_us << ","
+                << (rstat.tot_bytes * 1000000.0 / (1024.0 * 1024.0* rstat.tot_us))
+                << "," << ((loop * 1000000.0)/rstat.tot_us)<<","<<rstat.tot_err;
+              }
+              rfile << ss.str() << std::endl;
+              LOG(ss.str());
+
+              errors += rstat.tot_err;
+              start_seq += loop;
+
+            }
+      }
+
+    
   
   
   return errors;
