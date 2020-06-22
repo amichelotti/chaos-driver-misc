@@ -448,7 +448,11 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
   uint64_t tsh =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
+  if(new_dataset.get()==NULL){
+        DPD_LERR << "attempting to psuh a non valid dataset";
+        return -1;
 
+  }
   if (!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_TIMESTAMP))) {
     // add timestamp of the datapack
     new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, ts);
@@ -504,7 +508,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
       usleep((sched_time - diff));
     }
   }
-  if ((burst_cycles > 0) && (--burst_cycles == 0) ||
+  if (((burst_cycles > 0) && (--burst_cycles == 0)) ||
       ((burst_time_ts > 0) && (burst_time_ts >= ts))) {
     datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
         ControlUnitDatapackSystemKey::BURST_STATE, false);
@@ -1009,11 +1013,12 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   }
   CDWUniquePtr desc = dataset_attribute_values->getCSDataValue(
       ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
-  if (desc->isVector(
+  if ((datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT].get())&&desc->isVector(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
 
     CMultiTypeDataArrayWrapperSPtr elementsDescriptions = desc->getVectorValue(
         ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
+    
     for (int idx = 0; idx < elementsDescriptions->size(); idx++) {
       CDWUniquePtr elementDescription =
           elementsDescriptions->getCDataWrapperElementAtIndex(idx);
@@ -1028,7 +1033,7 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
                                           CONTROL_UNIT_DATASET_DEFAULT_VALUE)) {
         continue;
       }
-
+      
       string attrName = elementDescription->getStringValue(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_NAME);
       string attrValue = elementDescription->getStringValue(
@@ -1056,9 +1061,9 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   updateConfiguration(MOVE(dataset_attribute_values));
   setCUAlarmLevel("packet_send_error",0);
   setCUAlarmLevel("packet_lost",0);
-
-  pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
-
+  if(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT].get()){
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
+  }
   waitEU.notifyAll();
 
   return execute(ACT_INIT, MOVE(dataset_attribute_values));

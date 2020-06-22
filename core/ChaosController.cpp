@@ -229,8 +229,8 @@ uint64_t ChaosController::getTimeStamp(const std::string& dev,int domain)
 {
     uint64_t ret=0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> obj=getLiveChannel(dev,domain);
-    if(obj.get()){
-      ret= obj->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP)*1000;
+    if(obj.get()&&obj->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+      ret= obj->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
     }
     return ret;
 }
@@ -317,11 +317,12 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
 
     setUid(path);
 
-    for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
+  /*  for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
         last_ts[cnt] = 0;
         last_pckid[cnt] = 0;
-    }
+    }*/
+    last_health_ts=0;
     delta_update = 0;
     if (getState(state) == 0)
     {
@@ -645,14 +646,15 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
     double rate;
-    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()&& cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
+    if(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()){
+        last_health_ts=(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)?cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP):0);
+        if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
         ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)) > 0))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
-       
-        
     }
-    else if ((cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get())&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)&& (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)>0))
+        
+    } else if ((cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get())&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)&& (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)>0))
     {
 
         delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
@@ -709,7 +711,9 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const 
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data for:"<<CUNAME;
+    }
     return results;
 }
 
@@ -721,7 +725,10 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     {
         channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
     }
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data";
+ 
+    }
     return results;
 }
 

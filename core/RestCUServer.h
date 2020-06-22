@@ -9,9 +9,9 @@ class RestCUServer{
     //RestCUContainer* container;
     served::multiplexer mux;
     served::net::server* server;
-    int nthread,port;
+    uint32_t nthread,port;
     public:
-    RestCUServer(int port,int nthread=4);
+    RestCUServer(uint32_t port,uint32_t nthread=4);
 
     ~RestCUServer();
     
