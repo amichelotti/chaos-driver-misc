@@ -174,12 +174,16 @@ try {
       throw chaos::CException(-1, "cannot access MDS channel " + datasetName,
                               __PRETTY_FUNCTION__);
     }
-  
+  sleep(5);
   CDWUniquePtr tmp_data_handler;
   if (!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler,
                                                            5000)) {
     DPD_LDBG << "best config:" << tmp_data_handler->getJSONString();
     ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
+  } else {
+    throw chaos::CException(-1, "cannot retrieve server information ",
+                              __PRETTY_FUNCTION__);
+    
   }
 
   if ((groupName.size() == 0) && ownerApp.size()) {
