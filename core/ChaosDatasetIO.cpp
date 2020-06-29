@@ -174,7 +174,6 @@ try {
       throw chaos::CException(-1, "cannot access MDS channel " + datasetName,
                               __PRETTY_FUNCTION__);
     }
-  sleep(5);
   CDWUniquePtr tmp_data_handler;
   if (!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler,
                                                            5000)) {
