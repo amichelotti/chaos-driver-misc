@@ -211,7 +211,6 @@ int performTest(const std::string &name, testparam_t &tparam) {
     my_input->addInt32Value("icounter32", 0);
     my_input->addStringValue("istringa", "hello input dataset");
     my_input->addDoubleValue("idoublevar", 0.0);
-    LOG(" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops);
 
     int tenpercent = loops / 10;
     if (test->registerDataset() == 0) {
@@ -227,6 +226,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
       } else {
         //  LDBG_<<"pushing:"<<my_input->getJSONString();
       }
+      
+      sleep(5);
+      LOG(" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops);
 
       uint64_t query_time_start =
           chaos::common::utility::TimingUtil::getTimeStamp();

@@ -448,7 +448,7 @@ int ChaosDatasetIO::updateSystem() {
 int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   int err = 0;
 
-  uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
+  uint64_t ts = chaos::common::utility::TimingUtil::getTimeCorStamp();
   uint64_t tsh =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
   if(new_dataset.get()==NULL){
@@ -838,7 +838,7 @@ int ChaosDatasetIO::registerDataset() {
         mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
 
     chaos::common::async_central::AsyncCentralManager::getInstance()->addTimer(
-        this, chaos::common::constants::CUTimersTimeoutinMSec,
+        this, 0,
         chaos::common::constants::CUTimersTimeoutinMSec);
   } else {
     DPD_LERR << " cannot register dataset " << i->first;
