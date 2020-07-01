@@ -45,18 +45,19 @@ ENDIF()
 
 IF(KAFKA_ASIO_ENABLE OR KAFKA_RDK_ENABLE)
 ADD_EXECUTABLE(kafkaChaosTest test/kafkaChaosTest.cpp)
+IF(NOT CHAOS_TARGET)
 ADD_EXECUTABLE(chaosKafkaExport test/chaosKafkaExport.cpp)
-
-TARGET_LINK_LIBRARIES(kafkaChaosTest ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
 TARGET_LINK_LIBRARIES(chaosKafkaExport ${PROJECT_NAME} chaos_metadata_service_client chaos_common chaos_driver_misc_cernroot Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib})
+INSTALL(TARGETS chaosKafkaExport
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
+TARGET_LINK_LIBRARIES(kafkaChaosTest ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
 
 INSTALL(TARGETS kafkaChaosTest
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
         
-INSTALL(TARGETS chaosKafkaExport
-        DESTINATION "bin"
-        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 ENDIF()
 
