@@ -11,7 +11,7 @@
 #include <driver/misc/models/cernRoot/rootUtil.h>
 #include <fstream>
 #include <iostream>
-
+#include <chaos/common/global.h>
 using namespace std;
 using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
@@ -44,6 +44,7 @@ using namespace chaos::metadata_service_client::node_controller;
 using namespace chaos::common::data;
 int main(int argc, const char **argv) {
   int64_t tot_ele = 0, errors = 0, warning = 0;
+  try {
 
   std::string qstart, qend;
   int32_t pagelen = -1;
@@ -51,7 +52,7 @@ int main(int argc, const char **argv) {
   uint64_t now = chaos::common::utility::TimingUtil::getTimeStamp();
   bool checkseq = true;
   bool checkrunid = true;
-  bool dontout = false;
+  bool rooten = false;
   bool bsonen = false;
   bool jsonen = false;
   bool pngen = false;
@@ -89,9 +90,6 @@ int main(int argc, const char **argv) {
 */
 
   chaos::GlobalConfiguration::getInstance()->addOption(
-      "server", po::value<std::string>(&server)->default_value(server),
-      "A kafka server");
-  chaos::GlobalConfiguration::getInstance()->addOption(
       "page", po::value<int32_t>(&pagelen)->default_value(pagelen),
       "Page len to recover data (number of data), -1 retrive continuosly)");
 
@@ -105,17 +103,17 @@ int main(int argc, const char **argv) {
 #ifdef CERN_ROOT
 
   chaos::GlobalConfiguration::getInstance()->addOption(
-      "root", po::value<bool>(&dontout)->default_value(dontout),
+      "root", po::value<bool>(&rooten)->default_value(rooten),
       "Write root file");
 #endif
   chaos::GlobalConfiguration::getInstance()->addOption(
-      "json", po::value<bool>(&dontout)->default_value(jsonen),
+      "json", po::value<bool>(&jsonen)->default_value(jsonen),
       "Write json file");
   chaos::GlobalConfiguration::getInstance()->addOption(
-      "bson", po::value<bool>(&dontout)->default_value(bsonen),
+      "bson", po::value<bool>(&bsonen)->default_value(bsonen),
       "Write bson file");
   chaos::GlobalConfiguration::getInstance()->addOption(
-      "image", po::value<bool>(&dontout)->default_value(pngen),
+      "image", po::value<bool>(&pngen)->default_value(pngen),
       "Write image files if FRAMEBUFFER present");
   chaos::GlobalConfiguration::getInstance()->addOption(
       "nodeid", po::value<std::string>(&nodeid)->default_value(""),
@@ -134,10 +132,18 @@ int main(int argc, const char **argv) {
       "Offset Strategy 'earliest' or 'latest'");
   chaos::GlobalConfiguration::getInstance()->preParseStartupParameters();
 
-  chaos::GlobalConfiguration::getInstance()->loadStartupParameterFromEnv();
+
+
+
+ chaos::GlobalConfiguration::getInstance()->loadStartupParameterFromEnv();
   chaos::GlobalConfiguration::getInstance()->loadStartupParameter(argc, argv);
   chaos::GlobalConfiguration::getInstance()->scanOption();
-
+  chaos::GlobalConfiguration::getInstance()->checkDefaultOption();
+  
+  
+  chaos::common::log::LogManager::getInstance()->init();
+  server = chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_MSG_BROKER_SERVER);
+  std::string driver= chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_MSG_BROKER_DRIVER);
   //  chaos::GlobalConfiguration::getInstance()->start();
 
   // start_ts =
@@ -150,10 +156,9 @@ int main(int argc, const char **argv) {
     std::cerr << " must specify a nodeid" << std::endl;
     return -1;
   }
-  try {
 
     chaos::common::message::consumer_uptr_t cons =
-        chaos::common::message::MessagePSDriver::getConsumerDriver("kafka-rdk",
+        chaos::common::message::MessagePSDriver::getConsumerDriver(driver,
                                                                    groupid);
 
     /* chaos::GlobalConfiguration::getInstance()->getNewCUController(nodeid,
@@ -177,7 +182,7 @@ int main(int argc, const char **argv) {
     }
 
     std::string ds = nodeid + chaos::DataPackPrefixID::OUTPUT_DATASET_POSTFIX;
-
+    double lat_average=0;
     cons->addServer(server);
 
     if (cons->setOption("auto.offset.reset", off_type) != 0) {
@@ -211,7 +216,7 @@ int main(int argc, const char **argv) {
 
     TFile *fout;
     ChaosToTree *ti;
-    if (!dontout) {
+    if (rooten) {
       std::cout << "* tree file out:" << rootname << std::endl;
       fout = new TFile(rootname.c_str(), "RECREATE");
       ti = new ChaosToTree(rootname);
@@ -293,16 +298,25 @@ int main(int argc, const char **argv) {
             tot_us += (chaos::common::utility::TimingUtil::
                            getTimeStampInMicroseconds() -
                        st);
+            if(q_result->hasKey(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP)){
+
+              uint64_t now =
+          chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
+
+              lat_average=1.0*(now-q_result->getInt64Value(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP))/1000.0;
+            } else {
+              lat_average=0;
+            }
             if ((tot_ele % (((pagelen > 0) ? pagelen / 10 : 100))) == 0) {
               double mb = (double)bytes / (1024 * 1024.0);
 
-              std::cout << " retrieved " << tot_ele << " in "
+              std::cout << "["<<rid<<","<<sid<<"] retrieved " << tot_ele << " in "
                         << (double)tot_us * 1.0 / 1000000.0 << "s , MB:" << mb
                         << "MB bandwith MB/s:"
                         << ((tot_us) ? (mb * 1000000.0 / tot_us) : 0)
                         << " errors:" << errors << ", warning:" << warning
                         << ", lost percent:" << lost_pckt * 100.0 / tot_ele
-                        << std::endl;
+                        << " latency (ms):"<<lat_average<<std::endl;
             }
             if (pngen) {
               if (q_result->hasKey("FRAMEBUFFER") &&
@@ -310,10 +324,12 @@ int main(int argc, const char **argv) {
                 std::string name = q_result->getStringValue("ndk_uid");
                 std::string ext = q_result->getStringValue("FMT");
                 std::string tag;
+                std::string dat=chaos::common::utility::TimingUtil::toString(ts,(std::string)("%d-%m-%Y"));
 
                 if(q_result->hasKey("dsndk_tag")){
                   tag=q_result->getStringValue("dsndk_tag");
                 }
+                name+="/"+dat;
                 boost::filesystem::path p(name);
                 if ((boost::filesystem::exists(p) == false)) {
                   try {
@@ -328,16 +344,19 @@ int main(int argc, const char **argv) {
                               << std::endl;
                   }
                 }
+                std::string hd=chaos::common::utility::TimingUtil::toString(ts,(std::string)("%H-%M-%S"));
                 std::stringstream fname;
                 if(tag.size()>0){
-                  fname << name << "/" << tag<<"/"<<rid << "_" << sid << "." << ext;
+                  fname << name << "/" << tag<<"/"<<rid << "_" << hd<<"_"<<sid << ext;
 
                 } else {
-                  fname << name << "/" << rid << "_" << sid << "." << ext;
+                  fname << name << "/" << rid << "_" << hd<<"_"<< sid  << ext;
                 }
-                fstream f(fname.str());
+                fstream f(fname.str(),ios::out | ios::binary);
                 uint32_t siz = 0;
                 const char *ptr = q_result->getBinaryValue("FRAMEBUFFER", siz);
+                LDBG_<<"writing "<<fname.str()<<" size:"<<siz<<std::endl;
+
                 f.write(ptr, siz);
                 f.close();
               }
@@ -349,7 +368,7 @@ int main(int argc, const char **argv) {
               }
             }
 #ifdef CERN_ROOT
-            if (!dontout) {
+            if (rooten) {
               ti->addData(*q_result.get());
             }
 #endif
@@ -369,7 +388,7 @@ int main(int argc, const char **argv) {
     } // while
 #ifdef CERN_ROOT
 
-    if (!dontout) {
+    if (rooten) {
       fout->Write();
       fout->Close();
       delete fout;
@@ -391,7 +410,7 @@ int main(int argc, const char **argv) {
                 << ((tot_us) ? (mb * 1000000.0 / tot_us) : 0)
                 << " errors:" << errors << ", warning:" << warning
                 << ", lost percent:" << lost_pckt * 100.0 / tot_ele
-                << std::endl;
+                << " latency (ms):"<<lat_average<< std::endl;
     } else {
       std::cout << " NOTHING FOUND" << std::endl;
     }
@@ -401,6 +420,7 @@ int main(int argc, const char **argv) {
 
     // chaos::GlobalConfiguration::getInstance()->stop();
     // chaos::GlobalConfiguration::getInstance()->deinit();
+  chaos::common::log::LogManager::getInstance()->deinit();
 
     //  std::cout << "Releasing controller" << std::endl;
     return errors;
@@ -409,6 +429,9 @@ int main(int argc, const char **argv) {
     std::cerr << e.errorCode << " - " << e.errorDomain << " - "
               << e.errorMessage << std::endl;
     return -1;
+  } catch (boost::exception &e){
+    std::cerr << "exception error: " <<diagnostic_information(e) <<std::endl;
+    return -2;
   } catch (...) {
     std::cout << "\x1B[?25h";
     std::cerr << "General error " << std::endl;
