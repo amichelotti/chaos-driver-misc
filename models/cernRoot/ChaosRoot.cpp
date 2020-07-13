@@ -68,12 +68,14 @@ ChaosRoot::~ChaosRoot(){
 }
 void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException){
 //  chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
-  uid=GlobalConfiguration::getInstance()->getOption<std::string>(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS);
- 
+  
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<std::string>(&rootopts), "Options to give to CERN ROOT interpreter ");
    
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(argc, argv);
-
+if(GlobalConfiguration::getInstance()->hasOption(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS)){
+    uid=GlobalConfiguration::getInstance()->getOption<std::string>(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS);
+  }
+ 
   InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
   StartableService::initImplementation(HealtManager::getInstance(), NULL,
                                        "HealthManager", __PRETTY_FUNCTION__);
