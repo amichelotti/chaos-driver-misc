@@ -272,6 +272,29 @@ namespace driver{
             void setRunID(uint64_t ru){runid=ru;}
             std::vector<ChaosDataSet> getNextPage(uint64_t uid);
             void deinit();
+            /**
+             * @brief subscribe to some key
+             * 
+             * @param key key to subscribe
+             * @return int 0 on success
+             */
+            int subscribe(const std::string& key);
+            /**
+             * @brief add a handler to a subscribed key
+             * 
+             * @param key association key
+             * @param cb handler to associate to the key
+             * @return int 0 on success
+             */
+            int addHandler(const std::string& key,chaos::common::message::msgHandler cb);
+
+            /**
+             * @brief add a handler to all subscribed key
+             * 
+             * @param cb handler to associate to the key
+             * @return int 0 on success
+             */
+            int addHandler(chaos::common::message::msgHandler cb);
             
         };
     }}

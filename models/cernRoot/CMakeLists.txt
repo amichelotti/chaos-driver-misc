@@ -13,8 +13,14 @@ ADD_LIBRARY(${PROJECT_NAME} SHARED rootUtil.cpp ChaosRoot.cpp)
 ADD_EXECUTABLE(chaosRoot chaosRootapp.cpp )
 ADD_EXECUTABLE(chaos2tree chaos2tree.cpp)
 ADD_EXECUTABLE(histo2tree histo2tree.cpp)
+SET(ADDITIONAL_LIBS)
+IF(OPENCV)
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}  chaos_driver_misc chaos_metadata_service_client  chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ) 
+  SET(ADDITIONAL_LIBS opencv_core  opencv_highgui opencv_imgproc opencv_imgcodecs)
+
+ENDIF()
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}  chaos_driver_misc chaos_metadata_service_client  chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ${ADDITIONAL_LIBS} ) 
 #TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ) 
 TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME}) 
 TARGET_LINK_LIBRARIES(chaos2tree ${PROJECT_NAME}) 
