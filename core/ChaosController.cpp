@@ -201,6 +201,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
     stat = chaos::CUStateKey::UNDEFINED;
     if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
+        cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]=tmp;
         std::string state = tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
         if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
             stat = chaos::CUStateKey::START;
@@ -540,10 +541,10 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
      } else {
      ERR("cannot connect to cassandra");
      }*/
-    for (int cnt = -1; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
+    /*for (int cnt = -1; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
-        cachedJsonChannels[cnt] = "{}";
-    }
+        cachedJsonChannels[cnt] = fetch(cnt);
+    }*/
 }
 
 void ChaosController::initializeClient()
@@ -647,7 +648,7 @@ uint64_t ChaosController::sched(uint64_t ts)
     }
     double rate;
     if(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()){
-        last_health_ts=(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)?cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP):0);
+        last_health_ts=(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)?cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP):last_health_ts);
         if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
         ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)) > 0))
     {
@@ -3124,11 +3125,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             std::string ret = fetchJson(channel);
 
-           /* if(ret.size()==0){
-                uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
-                this->sched(t);
-                ret = fetchJson(channel);
-            }*/
+            if(ret.size()<4){
+                ret = fetch(channel)->getCompliantJSONString();
+                DBGET << "cache not valid retrieved :\"" << ret << "\"";
+
+            }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }
