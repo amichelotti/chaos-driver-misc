@@ -2307,7 +2307,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int idx;
             chaos_controller_error_t ret = CHAOS_DEV_OK;
             PARSE_QUERY_PARMS(args, true, true);
-            if (node_type.empty())
+            if (node_type.empty()&&(what!="health")&&(what!="command"))
             {
                 serr << cmd << " parameters must specify 'type'";
 
@@ -2344,7 +2344,32 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     name = names->getStringElementAtIndex(idx);
                 }
-                if (what == "health")
+                if(what == "command"){
+                     int err;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+        
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
+
+                } else if (what == "health")
                 {
                     ChaosSharedPtr<chaos::common::data::CDataWrapper> dt;
                     dt = getLiveChannel(name);
