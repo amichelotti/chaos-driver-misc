@@ -955,17 +955,19 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                 retdata = combineDataSets(set);
             }
 #else
-            if(res[0].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
-            }
-            if(res[1].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
-            }
-            if(res[2].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
-            }
-            if(res[3].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+            if(res.size()){
+                if(res[0].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
+                }
+                if(res[1].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
+                }
+                if(res[2].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
+                }
+                if(res[3].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+                }
             }
             
 #endif

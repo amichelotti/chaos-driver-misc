@@ -100,6 +100,7 @@ void ChaosRoot::start() throw(chaos::CException){
       new chaos::common::data::CDataWrapper());
   const char *root_opts[120];
    int nroot_opts = 1;
+   int ret;
    // root_opts[nroot_opts++] = uid.c_str();
     std::string buf;
 
@@ -133,13 +134,13 @@ void ChaosRoot::start() throw(chaos::CException){
   result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
                          chaos::GlobalConfiguration::getInstance()
                              ->getLocalServerAddressAnBasePort());
-  result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN, "chaosroot");
+  result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN, UnitServerNodeDomainAndActionRPC::RPC_DOMAIN);
    result->addStringValue(NodeDefinitionKey::NODE_DESC,rootopts);
   result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
                         TimingUtil::getTimeStamp());
 
   // lock o monitor for waith the end
-  try {
+  
     // start all wan interface
     StartableService::startImplementation(HealtManager::getInstance(),
                                           "HealtManager", __PRETTY_FUNCTION__);
@@ -155,7 +156,12 @@ void ChaosRoot::start() throw(chaos::CException){
       "Attempt to load");
    chaos::common::network::NetworkBroker::getInstance()->registerAction(this);
 
-    mds_message_channel->sendNodeRegistration(MOVE(result));
+    if((ret=mds_message_channel->sendNodeRegistration(MOVE(result),true))!=0){
+          ROOTERR << "cannot register:"<<uid;
+          throw chaos::CException(ret,"cannot register "+uid,__PRETTY_FUNCTION__);
+
+    }
+  try {
     HealtManager::getInstance()->addNewNode(uid);
     HealtManager::getInstance()->addNodeMetricValue(
         uid, NodeHealtDefinitionKey::NODE_HEALT_STATUS,
