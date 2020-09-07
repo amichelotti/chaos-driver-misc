@@ -1256,7 +1256,7 @@ chaos::common::data::CDWUniquePtr ChaosController::executeAPI(const std::string&
     ChaosUniquePtr<MultiAddressMessageRequestFuture> request_future = mdsChannel->sendRequestWithFuture(group,
                                                                                             name,
                                                                                             MOVE(msg));
-    request_future->setTimeout(timeo);
+        request_future->setTimeout(timeo);
     if(request_future->wait()) {
         err = request_future->getError();
     } else {
@@ -2348,6 +2348,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }
                 if(what == "command"){
                      int err;
+                     std::string domain=name; //cu
+                     std::string action;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
                         if(parent.size()){
@@ -2355,8 +2357,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         }
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
+                            if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN)){
+                                domain=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN);
+                            }
+                            if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME)){
+                                action=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME);
+                            }
                         }
-                        chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
+                        
+                        chaos::common::data::CDWUniquePtr msg;
+                        if(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN){
+                            msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
+                        } else {
+                            msg=sendRPCMsg(name,domain,action,p);
+
+                        }
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
                             std::stringstream ss;                                                                                             
@@ -4214,6 +4229,43 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     return ret;
 
 }
+chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& uid,const std::string& domain,const std::string&rpcmsg,CDWUniquePtr& data_pack){
+    chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+
+    chaos::common::data::VectorCDWUniquePtr node=getNodeInfo(uid,"cu",false);
+    auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
+    for (chaos::common::data::VectorCDWUniquePtr::iterator i=node.begin();i!=node.end();i++){
+         if((*i)->hasKey(chaos::NodeDefinitionKey::NODE_RPC_ADDR)){
+
+         
+            std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
+            std::string node_id=(*i)->getStringValue("ndk_uid");
+
+               
+            ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
+                                                                                domain,
+                                                                                 rpcmsg,
+                                                                                 MOVE(data_pack));
+                if(rpcmsg==chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN){
+                    DBGET << "SENT IMMEDIATE \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                    return infos;
+                }
+                fut->wait(MDS_TIMEOUT);
+                if(fut->getError()==0){
+                    return fut->detachResult();
+                } else {
+                    DBGET << "Error sending command \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
+                }
+                
+
+
+            }
+    }
+    return infos; 
+}
+
 chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,CDWUniquePtr data_pack,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
 
