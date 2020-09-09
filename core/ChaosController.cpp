@@ -2369,7 +2369,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         if(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN){
                             msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
                         } else {
-                            msg=sendRPCMsg(name,domain,action,p);
+                            chaos::common::data::CDWUniquePtr payload;
+                            if(p->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE)&&p->isCDataWrapperValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE)){
+                                payload=p->getCSDataValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE);
+                            } else {
+                                payload.reset(new CDataWrapper());
+                            }
+                            msg=sendRPCMsg(name,domain,action,payload);
                             if(msg.get()==NULL){
                                 err=-1;
                             }
