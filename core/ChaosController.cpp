@@ -2378,7 +2378,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             msg=sendRPCMsg(name,domain,action,payload);
                             if(msg.get()==NULL){
                                 err=-1;
-                            }
+                            } 
                         }
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
@@ -2386,10 +2386,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
                         bundle_state.append_error(ss.str());                                                                              
                         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
-        
+                                ret = CHAOS_DEV_CMD;
 
                         } else {
                             json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                            ret = CHAOS_DEV_OK;
+
                         }
                         //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
                         res << json_buf;
