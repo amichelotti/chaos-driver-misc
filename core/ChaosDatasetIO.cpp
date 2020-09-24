@@ -277,14 +277,12 @@ try {
   sys->addBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE, false);
   sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY,
                      0);
-  sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,
-                     storageType);
   sys->addInt32Value(
       chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, ageing);
   sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME,
                      0);
   sys->addBoolValue(ControlUnitDatapackSystemKey::BURST_STATE, false);
-  sys->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "", 256);
+  sys->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "", 80);
 
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
@@ -365,10 +363,9 @@ int ChaosDatasetIO::setAgeing(uint64_t secs) {
 }
 int ChaosDatasetIO::setStorage(int st) {
   storageType = st;
-  datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
-      chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,
-      (int32_t)storageType);
-  DPD_LDBG << "Set Storage:" << st;
+  ChaosDataSet sys=datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM];
+  sys->setValue(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,(int32_t)storageType);
+  DPD_LDBG << "Set Storage:" << storageType<<" json:"<<sys->getJSONString();
 
   return 0;
 }
@@ -548,7 +545,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
     do{
     err = ioLiveDataDriver->storeData(
         uid + chaos::datasetTypeToPostfix(type), new_dataset,
-        (chaos::DataServiceNodeDefinitionType::DSStorageType)sttype);
+        (chaos::DataServiceNodeDefinitionType::DSStorageType)(sttype |((type!= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT)?0x2:0x0)));
     if(err!=0){
       push_errors++;
       DPD_LERR<<push_errors<<"] ERROR pushing runid:"<<runid<<" seq:"<<new_dataset->getInt64Value(DataPackCommonKey::DPCK_SEQ_ID);
@@ -1017,6 +1014,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
   DPD_LDBG << "Enabling burst:" << data->getCompliantJSONString();
   datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
       ControlUnitDatapackSystemKey::BURST_STATE, true);
+  
   datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
       ControlUnitDatapackSystemKey::BURST_TAG, burst->tag);
 
