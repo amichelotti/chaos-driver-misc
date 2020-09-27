@@ -2378,12 +2378,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             msg=sendRPCMsg(name,domain,action,payload);
                             if(msg.get()==NULL){
                                 err=-1;
-                            } 
+                            }  else {
+                                err=0;
+                            }
                         }
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
                             std::stringstream ss;                                                                                             
-                            ss << " error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                            ss <<"action:"<<action<<"domain:"<<domain<<" error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
                         bundle_state.append_error(ss.str());                                                                              
                         json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
                                 ret = CHAOS_DEV_CMD;
@@ -4263,9 +4265,16 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                 }
                 fut->wait(MDS_TIMEOUT);
                 if(fut->getError()==0){
-                    return fut->detachResult();
+                    chaos::common::data::CDWUniquePtr rew=fut->detachResult();
+                    if(rew.get()==NULL){
+                        DBGET << "Empty result \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                        return chaos::common::data::CDWUniquePtr(new CDataWrapper());
+                    }
+                    return rew;
                 } else {
                     DBGET << "Error sending command \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
 
                 }
                 
@@ -4274,6 +4283,7 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
             }
     }
     return chaos::common::data::CDWUniquePtr();
+
 
 }
 
