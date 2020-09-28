@@ -2466,9 +2466,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }else if (what == "deletenode"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                if(parent.size()){
+                                    p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                                }
+                         }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
 
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+
+                        }
                         p->addBoolValue("reset",true);
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
@@ -2487,14 +2500,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else if (what == "nodeupdate"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
-                        if(parent.size()){
-                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
-                        }
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                     
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
                         }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                if(parent.size()){
+                                    p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                                }
+                         }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+
+                        }
+
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"setNodeDescription",p,err);
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
@@ -2512,13 +2535,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else if (what == "new"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
-                        if(parent.size()){
-                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
-                        }
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                       
+                        
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
+                        }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+
+                             if(parent.size()){
+                                p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                            }
+
+                        }
+
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
                         }
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
