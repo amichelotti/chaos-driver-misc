@@ -2309,7 +2309,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int idx;
             chaos_controller_error_t ret = CHAOS_DEV_OK;
             PARSE_QUERY_PARMS(args, true, true);
-            if (node_type.empty()&&(what!="health")&&(what!="command"))
+            if (node_type.empty()&&(what!="health")&&(what!="command")&&(what!="deletenode"))
             {
                 serr << cmd << " parameters must specify 'type'";
 
@@ -2478,10 +2478,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
 
                         }
-                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                        /*if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
                             p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
 
-                        }
+                        }*/
                         p->addBoolValue("reset",true);
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
