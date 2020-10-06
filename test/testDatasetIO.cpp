@@ -197,7 +197,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
           buf[cnt] = data;
         }
         my_ouput->addBinaryValue("wave", chaos::DataType::SUB_TYPE_DOUBLE,
-                                 (const char *)buf, point_cnt * sizeof(double));
+                                 (const char *)buf, sizeof(buf));
       } else {
         for (int cnt = 0; cnt < point_cnt; cnt++) {
           double data = sin(2 * PI * freq * (delta * cnt) + phase) * amp;
@@ -211,7 +211,6 @@ int performTest(const std::string &name, testparam_t &tparam) {
     my_input->addInt32Value("icounter32", 0);
     my_input->addStringValue("istringa", "hello input dataset");
     my_input->addDoubleValue("idoublevar", 0.0);
-    LOG(" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops);
 
     int tenpercent = loops / 10;
     if (test->registerDataset() == 0) {
@@ -227,6 +226,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
       } else {
         //  LDBG_<<"pushing:"<<my_input->getJSONString();
       }
+      
+      sleep(5);
+      LOG(" Starting write test payload output:"<<my_ouput->getBSONRawSize()<< "B, input:"<<my_input->getBSONRawSize()<<" B loops:"<<loops);
 
       uint64_t query_time_start =
           chaos::common::utility::TimingUtil::getTimeStamp();
@@ -256,7 +258,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
             }
           }
           if (binary) {
-            my_ouput->setValue("wave", (const void *)buf);
+            my_ouput->setValue("wave", (const void *)buf,sizeof(buf));
           } else {
             my_ouput->setValue("wave", val);
           }

@@ -68,15 +68,14 @@ ChaosRoot::~ChaosRoot(){
 }
 void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException){
 //  chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
-  chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption< std::string >("unit-server-alias",
-                                                                                              "Node Unique Name",
-                                                                                              uid,
-                                                                                              &uid);
- 
+  
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getGlobalConfigurationInstance()->addOption("rootopt", po::value<std::string>(&rootopts), "Options to give to CERN ROOT interpreter ");
    
   chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->init(argc, argv);
-
+if(GlobalConfiguration::getInstance()->hasOption(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS)){
+    uid=GlobalConfiguration::getInstance()->getOption<std::string>(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS);
+  }
+ 
   InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
   StartableService::initImplementation(HealtManager::getInstance(), NULL,
                                        "HealthManager", __PRETTY_FUNCTION__);
@@ -101,6 +100,7 @@ void ChaosRoot::start() throw(chaos::CException){
       new chaos::common::data::CDataWrapper());
   const char *root_opts[120];
    int nroot_opts = 1;
+   int ret;
    // root_opts[nroot_opts++] = uid.c_str();
     std::string buf;
 
@@ -134,13 +134,13 @@ void ChaosRoot::start() throw(chaos::CException){
   result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
                          chaos::GlobalConfiguration::getInstance()
                              ->getLocalServerAddressAnBasePort());
-  result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN, "chaosroot");
+  result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN, UnitServerNodeDomainAndActionRPC::RPC_DOMAIN);
    result->addStringValue(NodeDefinitionKey::NODE_DESC,rootopts);
   result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
                         TimingUtil::getTimeStamp());
 
   // lock o monitor for waith the end
-  try {
+  
     // start all wan interface
     StartableService::startImplementation(HealtManager::getInstance(),
                                           "HealtManager", __PRETTY_FUNCTION__);
@@ -156,7 +156,12 @@ void ChaosRoot::start() throw(chaos::CException){
       "Attempt to load");
    chaos::common::network::NetworkBroker::getInstance()->registerAction(this);
 
-    mds_message_channel->sendNodeRegistration(MOVE(result));
+    if((ret=mds_message_channel->sendNodeRegistration(MOVE(result),true))!=0){
+          ROOTERR << "cannot register:"<<uid;
+          throw chaos::CException(ret,"cannot register "+uid,__PRETTY_FUNCTION__);
+
+    }
+  try {
     HealtManager::getInstance()->addNewNode(uid);
     HealtManager::getInstance()->addNodeMetricValue(
         uid, NodeHealtDefinitionKey::NODE_HEALT_STATUS,
