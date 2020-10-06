@@ -201,6 +201,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState &stat,con
     stat = chaos::CUStateKey::UNDEFINED;
     if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS))
     {
+        cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]=tmp;
         std::string state = tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
         if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
             stat = chaos::CUStateKey::START;
@@ -229,8 +230,8 @@ uint64_t ChaosController::getTimeStamp(const std::string& dev,int domain)
 {
     uint64_t ret=0;
     ChaosSharedPtr<chaos::common::data::CDataWrapper> obj=getLiveChannel(dev,domain);
-    if(obj.get()){
-      ret= obj->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP)*1000;
+    if(obj.get()&&obj->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+      ret= obj->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
     }
     return ret;
 }
@@ -317,11 +318,12 @@ int ChaosController::init(const std::string& p, uint64_t timeo_)
 
     setUid(path);
 
-    for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
+  /*  for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
         last_ts[cnt] = 0;
         last_pckid[cnt] = 0;
-    }
+    }*/
+    last_health_ts=0;
     delta_update = 0;
     if (getState(state) == 0)
     {
@@ -539,10 +541,10 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_) : ::common::mis
      } else {
      ERR("cannot connect to cassandra");
      }*/
-    for (int cnt = -1; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
+    /*for (int cnt = -1; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
-        cachedJsonChannels[cnt] = "{}";
-    }
+        cachedJsonChannels[cnt] = fetch(cnt);
+    }*/
 }
 
 void ChaosController::initializeClient()
@@ -645,14 +647,15 @@ uint64_t ChaosController::sched(uint64_t ts)
         cachedJsonChannels[255] = common.getCompliantJSONString();
     }
     double rate;
-    if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()&& cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
+    if(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()){
+        last_health_ts=(cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)?cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP):last_health_ts);
+        if (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE) &&
         ((rate = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH]->getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)) > 0))
     {
         delta_update = (1000 * 1000.0) / (2 * rate);
-       
-        
     }
-    else if ((cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get())&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)&& (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)>0))
+        
+    } else if ((cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM].get())&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->hasKey(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)&& (cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY)>0))
     {
 
         delta_update = cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->getDoubleValue(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY) / 2.0;
@@ -709,7 +712,9 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const 
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
     channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data for:"<<CUNAME;
+    }
     return results;
 }
 
@@ -721,7 +726,10 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
     {
         channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
     }
-    live_driver->retriveMultipleData(channels, results);
+    if(live_driver->retriveMultipleData(channels, results)!=0){
+        CTRLERR_<<"Error retriving multiple data";
+ 
+    }
     return results;
 }
 
@@ -947,17 +955,19 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel)
                 retdata = combineDataSets(set);
             }
 #else
-            if(res[0].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
-            }
-            if(res[1].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
-            }
-            if(res[2].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
-            }
-            if(res[3].get()){
-                retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+            if(res.size()){
+                if(res[0].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
+                }
+                if(res[1].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
+                }
+                if(res[2].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
+                }
+                if(res[3].get()){
+                    retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
+                }
             }
             
 #endif
@@ -1246,7 +1256,7 @@ chaos::common::data::CDWUniquePtr ChaosController::executeAPI(const std::string&
     ChaosUniquePtr<MultiAddressMessageRequestFuture> request_future = mdsChannel->sendRequestWithFuture(group,
                                                                                             name,
                                                                                             MOVE(msg));
-    request_future->setTimeout(timeo);
+        request_future->setTimeout(timeo);
     if(request_future->wait()) {
         err = request_future->getError();
     } else {
@@ -2299,7 +2309,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int idx;
             chaos_controller_error_t ret = CHAOS_DEV_OK;
             PARSE_QUERY_PARMS(args, true, true);
-            if (node_type.empty())
+            if (node_type.empty()&&(what!="health")&&(what!="command")&&(what!="deletenode"))
             {
                 serr << cmd << " parameters must specify 'type'";
 
@@ -2336,7 +2346,59 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 {
                     name = names->getStringElementAtIndex(idx);
                 }
-                if (what == "health")
+                if(what == "command"){
+                     int err=0;
+                     std::string domain=name; //cu
+                     std::string action;
+                        chaos::common::data::CDWUniquePtr p(new CDataWrapper());
+                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(parent.size()){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                        }
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                            if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN)){
+                                domain=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN);
+                            }
+                            if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME)){
+                                action=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME);
+                            }
+                        }
+                        
+                        chaos::common::data::CDWUniquePtr msg;
+                        if(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN){
+                            msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
+                        } else {
+                            chaos::common::data::CDWUniquePtr payload;
+                            if(p->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE)&&p->isCDataWrapperValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE)){
+                                payload=p->getCSDataValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_MESSAGE);
+                            } else {
+                                payload.reset(new CDataWrapper());
+                            }
+                            msg=sendRPCMsg(name,domain,action,payload);
+                            if(msg.get()==NULL){
+                                err=-1;
+                            }  else {
+                                err=0;
+                            }
+                        }
+                        if(err!=0){
+                            execute_chaos_api_error++;                                                                                          
+                            std::stringstream ss;                                                                                             
+                            ss <<"action:"<<action<<"domain:"<<domain<<" error in :" << __FUNCTION__ << "|" << __LINE__ ;;   
+                        bundle_state.append_error(ss.str());                                                                              
+                        json_buf = bundle_state.getData()->getCompliantJSONString();                                                      
+                                ret = CHAOS_DEV_CMD;
+
+                        } else {
+                            json_buf=(msg.get())?msg->getCompliantJSONString():"{}";
+                            ret = CHAOS_DEV_OK;
+
+                        }
+                        //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
+                        res << json_buf;
+
+                } else if (what == "health")
                 {
                     ChaosSharedPtr<chaos::common::data::CDataWrapper> dt;
                     dt = getLiveChannel(name);
@@ -2404,9 +2466,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 }else if (what == "deletenode"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+                        if(json_value.get()){
+                            json_value->copyAllTo(*p);
+                        }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                if(parent.size()){
+                                    p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                                }
+                         }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
 
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                        }
+                        /*if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+
+                        }*/
                         p->addBoolValue("reset",true);
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
@@ -2425,14 +2500,24 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else if (what == "nodeupdate"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
-                        if(parent.size()){
-                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
-                        }
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                     
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
                         }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+                                if(parent.size()){
+                                    p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                                }
+                         }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+
+                        }
+
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"setNodeDescription",p,err);
                         if(err!=0){
                             execute_chaos_api_error++;                                                                                          
@@ -2450,13 +2535,25 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 } else if (what == "new"){
                         int err;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
-                        if(parent.size()){
-                            p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
-                        }
-                        p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                       
+                        
                         if(json_value.get()){
                             json_value->copyAllTo(*p);
+                        }
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
+
+                        }
+                         if(!p->hasKey(chaos::NodeDefinitionKey::NODE_PARENT)){
+
+                             if(parent.size()){
+                                p->addStringValue(chaos::NodeDefinitionKey::NODE_PARENT,parent);
+                            }
+
+                        }
+
+                        if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
                         }
                         chaos::common::data::CDWUniquePtr msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"nodeNewDelete",p,err);
                         if(err!=0){
@@ -3117,11 +3214,11 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             std::string ret = fetchJson(channel);
 
-           /* if(ret.size()==0){
-                uint64_t t=chaos::common::utility::TimingUtil::getTimeStamp();
-                this->sched(t);
-                ret = fetchJson(channel);
-            }*/
+            if(ret.size()<4){
+                ret = fetch(channel)->getCompliantJSONString();
+                DBGET << "cache not valid retrieved :\"" << ret << "\"";
+
+            }
             json_buf = (ret.size() == 0) ? "{}" : ret;
             return CHAOS_DEV_OK;
         }
@@ -4179,6 +4276,52 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
     return ret;
 
 }
+chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& uid,const std::string& domain,const std::string&rpcmsg,CDWUniquePtr& data_pack){
+
+    chaos::common::data::VectorCDWUniquePtr node=getNodeInfo(uid,"cu",false);
+    auto message_channel=NetworkBroker::getInstance()->getRawMessageChannel();
+    for (chaos::common::data::VectorCDWUniquePtr::iterator i=node.begin();i!=node.end();i++){
+         if((*i)->hasKey(chaos::NodeDefinitionKey::NODE_RPC_ADDR)){
+
+         
+            std::string remote_host=(*i)->getStringValue("ndk_rpc_addr");
+            std::string node_id=(*i)->getStringValue("ndk_uid");
+
+            DBGET << "sending domain:"<<domain<<"action:"<< rpcmsg<<" to:" << remote_host<<" uid:"<<node_id;
+  
+            ChaosUniquePtr<MessageRequestFuture>  fut=message_channel->sendRequestWithFuture(remote_host,
+                                                                                domain,
+                                                                                 rpcmsg,
+                                                                                 MOVE(data_pack));
+                if(rpcmsg==chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN){
+                    DBGET << "SENT IMMEDIATE \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                    return chaos::common::data::CDWUniquePtr();
+                }
+                fut->wait(MDS_TIMEOUT);
+                if(fut->getError()==0){
+                    chaos::common::data::CDWUniquePtr rew=fut->detachResult();
+                    if(rew.get()==NULL){
+                        DBGET << "Empty result \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id;
+
+                        return chaos::common::data::CDWUniquePtr(new CDataWrapper());
+                    }
+                    return rew;
+                } else {
+                    DBGET << "Error sending command \""<< rpcmsg<<"\" to:" << remote_host<<" uid:"<<node_id << " error:"<<fut->getError();
+
+
+                }
+                
+
+
+            }
+    }
+    return chaos::common::data::CDWUniquePtr();
+
+
+}
+
 chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string& search,const std::string&rpcmsg,CDWUniquePtr data_pack,const std::string& what,bool alive){
     chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
 

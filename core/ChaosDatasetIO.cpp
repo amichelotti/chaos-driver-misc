@@ -122,7 +122,10 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       last_push_rate_grap_ts(0), deinitialized(false),
       implementation("datasetIO"), sched_time(0), last_push_ts(0),push_errors(0),packet_lost(0),packet_tot_size(0),
       burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT),check_presence(true) {
+          runid = time(NULL);
+
         _initDataset();
+
 }
 
 void ChaosDatasetIO:: _initDataset(){
@@ -174,12 +177,16 @@ try {
       throw chaos::CException(-1, "cannot access MDS channel " + datasetName,
                               __PRETTY_FUNCTION__);
     }
-  
   CDWUniquePtr tmp_data_handler;
+
   if (!mds_message_channel->getDataDriverBestConfiguration(tmp_data_handler,
                                                            5000)) {
     DPD_LDBG << "best config:" << tmp_data_handler->getJSONString();
     ioLiveDataDriver->updateConfiguration(tmp_data_handler.get());
+  } else {
+    throw chaos::CException(-1, "cannot retrieve server information ",
+                              __PRETTY_FUNCTION__);
+    
   }
 
   if ((groupName.size() == 0) && ownerApp.size()) {
@@ -237,7 +244,6 @@ try {
     DPD_LERR
         << "cannot initialize HealtManager/logmanager, already initialized?";
   }
-  runid = time(NULL);
   for (int cnt = 0; cnt < sizeof(pkids) / sizeof(uint64_t); cnt++) {
     pkids[cnt] = 0;
   }
@@ -271,14 +277,12 @@ try {
   sys->addBoolValue(chaos::ControlUnitDatapackSystemKey::BYPASS_STATE, false);
   sys->addInt32Value(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY,
                      0);
-  sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,
-                     storageType);
   sys->addInt32Value(
       chaos::DataServiceNodeDefinitionKey::DS_STORAGE_HISTORY_TIME, ageing);
   sys->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME,
                      0);
   sys->addBoolValue(ControlUnitDatapackSystemKey::BURST_STATE, false);
-  sys->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "", 256);
+  sys->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "", 80);
 
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_DEV_ALARM);
   allocateDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM);
@@ -359,10 +363,9 @@ int ChaosDatasetIO::setAgeing(uint64_t secs) {
 }
 int ChaosDatasetIO::setStorage(int st) {
   storageType = st;
-  datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
-      chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,
-      (int32_t)storageType);
-  DPD_LDBG << "Set Storage:" << st;
+  ChaosDataSet sys=datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM];
+  sys->setValue(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE,(int32_t)storageType);
+  DPD_LDBG << "Set Storage:" << storageType<<" json:"<<sys->getJSONString();
 
   return 0;
 }
@@ -428,11 +431,18 @@ HealtManager::getInstance()->addNodeMetricValue(uid,
 ChaosDataSet ChaosDatasetIO::allocateDataset(int type) {
   std::map<int, ChaosDataSet>::iterator i = datasets.find(type);
   if (i == datasets.end()) {
-    ChaosDataSet tmp(new chaos::common::data::CDataWrapper);
-    datasets[type] = tmp;
+    ChaosDataSet new_dataset(new chaos::common::data::CDataWrapper);
+    datasets[type] = new_dataset;
     DPD_LDBG << " allocated dataset:" << type;
+    new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,(int64_t)0);
+    new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP,(int64_t) 0);
+    new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,(int64_t)0);
+    new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID, (int64_t)runid);
+    new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, uid);
+    new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE,type);
+    new_dataset->addInt32Value(DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, storageType);
 
-    return tmp;
+    return new_dataset;
   }
   DPD_LDBG << " returning already allocated dataset:" << type;
 
@@ -445,10 +455,14 @@ int ChaosDatasetIO::updateSystem() {
 int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   int err = 0;
 
-  uint64_t ts = chaos::common::utility::TimingUtil::getTimeStamp();
+  uint64_t ts = chaos::common::utility::TimingUtil::getTimeCorStamp();
   uint64_t tsh =
       chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
+  if(new_dataset.get()==NULL){
+        DPD_LERR << "attempting to psuh a non valid dataset";
+        return -1;
 
+  }
   if (!new_dataset->hasKey((chaos::DataPackCommonKey::DPCK_TIMESTAMP))) {
     // add timestamp of the datapack
     new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, ts);
@@ -484,6 +498,17 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE,
                                type);
   }
+   int sttype = ((type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM)
+                   ? ((int)(0x2 | storageType))
+                   : storageType);
+
+    if (!new_dataset->hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)) {
+      new_dataset->addInt32Value(DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, sttype);
+
+    } else {
+      new_dataset->setValue(DataServiceNodeDefinitionKey::DS_STORAGE_TYPE, sttype);
+
+    }
   int psize=new_dataset->getBSONRawSize();
   packet_size += psize;
 
@@ -493,10 +518,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   // DirectIOChannelsInfo    *next_client =
   // static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
   // serialization->disposeOnDelete = !next_client;
-  int sttype = (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM)
-                   ? (int)(0x2 | storageType)
-                   : storageType;
-
+ 
   if ((type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT) &&
       (sched_time > 0)) {
     int64_t diff = ts - last_push_ts;
@@ -504,7 +526,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
       usleep((sched_time - diff));
     }
   }
-  if ((burst_cycles > 0) && (--burst_cycles == 0) ||
+  if (((burst_cycles > 0) && (--burst_cycles == 0)) ||
       ((burst_time_ts > 0) && (burst_time_ts >= ts))) {
     datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
         ControlUnitDatapackSystemKey::BURST_STATE, false);
@@ -523,7 +545,7 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
     do{
     err = ioLiveDataDriver->storeData(
         uid + chaos::datasetTypeToPostfix(type), new_dataset,
-        (chaos::DataServiceNodeDefinitionType::DSStorageType)sttype);
+        (chaos::DataServiceNodeDefinitionType::DSStorageType)(sttype |((type!= chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT)?0x2:0x0)));
     if(err!=0){
       push_errors++;
       DPD_LERR<<push_errors<<"] ERROR pushing runid:"<<runid<<" seq:"<<new_dataset->getInt64Value(DataPackCommonKey::DPCK_SEQ_ID);
@@ -831,7 +853,7 @@ int ChaosDatasetIO::registerDataset() {
         mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
 
     chaos::common::async_central::AsyncCentralManager::getInstance()->addTimer(
-        this, chaos::common::constants::CUTimersTimeoutinMSec,
+        this, 0,
         chaos::common::constants::CUTimersTimeoutinMSec);
   } else {
     DPD_LERR << " cannot register dataset " << i->first;
@@ -920,6 +942,8 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_start(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   state = chaos::CUStateKey::START;
+  DPD_LDBG << "Start";
+
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);
@@ -930,6 +954,8 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   state = chaos::CUStateKey::STOP;
+  DPD_LDBG << "Stop";
+
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP, true);
@@ -940,6 +966,8 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
   CDWUniquePtr result;
   state = chaos::CUStateKey::DEINIT;
+  DPD_LDBG << "Deinit";
+
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT, true);
@@ -986,6 +1014,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
   DPD_LDBG << "Enabling burst:" << data->getCompliantJSONString();
   datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
       ControlUnitDatapackSystemKey::BURST_STATE, true);
+  
   datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM]->setValue(
       ControlUnitDatapackSystemKey::BURST_TAG, burst->tag);
 
@@ -1009,11 +1038,12 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   }
   CDWUniquePtr desc = dataset_attribute_values->getCSDataValue(
       ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
-  if (desc->isVector(
+  if ((datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT].get())&&desc->isVector(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
 
     CMultiTypeDataArrayWrapperSPtr elementsDescriptions = desc->getVectorValue(
         ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
+    
     for (int idx = 0; idx < elementsDescriptions->size(); idx++) {
       CDWUniquePtr elementDescription =
           elementsDescriptions->getCDataWrapperElementAtIndex(idx);
@@ -1028,7 +1058,7 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
                                           CONTROL_UNIT_DATASET_DEFAULT_VALUE)) {
         continue;
       }
-
+      
       string attrName = elementDescription->getStringValue(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_NAME);
       string attrValue = elementDescription->getStringValue(
@@ -1056,9 +1086,9 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   updateConfiguration(MOVE(dataset_attribute_values));
   setCUAlarmLevel("packet_send_error",0);
   setCUAlarmLevel("packet_lost",0);
-
-  pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
-
+  if(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT].get()){
+    pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
+  }
   waitEU.notifyAll();
 
   return execute(ACT_INIT, MOVE(dataset_attribute_values));
@@ -1424,6 +1454,21 @@ ChaosDatasetIO::execute(ActionID r, chaos::common::data::CDWUniquePtr p) {
   }
   return chaos::common::data::CDWUniquePtr();
 }
+
+int ChaosDatasetIO::subscribe(const std::string& key){
+  ioLiveDataDriver->subscribe(key);
+  return 0;
+}
+         
+int ChaosDatasetIO::addHandler(const std::string& key,chaos::common::message::msgHandler cb){
+  return ioLiveDataDriver->addHandler(key,cb);
+
+}
+int ChaosDatasetIO::addHandler(chaos::common::message::msgHandler cb){
+  return ioLiveDataDriver->addHandler(cb);
+
+}
+
 
 int ChaosDatasetIO::registerAction(actionFunc_t func, ActionID id) {
   if (id < ACT_LOAD || id >= ACT_NONE)

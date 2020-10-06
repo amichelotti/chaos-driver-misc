@@ -33,7 +33,7 @@ int main(int argc, const char **argv) {
   uint32_t thn=16;
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
-      ->addOption("port", po::value<uint32_t>(&port)->default_value(8091),
+      ->addOption("port", po::value<uint32_t>(&port)->default_value(8018),
                   "server listen port");
   ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
@@ -42,9 +42,13 @@ int main(int argc, const char **argv) {
   
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
   ChaosMetadataServiceClient::getInstance()->start();
+  try{
   RestCUServer server(port,thn);
-
+  std::cout<<"listening on port:"<<port<<std::endl;
   server.start();
-  
+  } catch(const boost::exception& ex) {
+    // error handling
+    std::cout <<"## exception:"<< boost::diagnostic_information(ex);
+}
   return 0;
 }

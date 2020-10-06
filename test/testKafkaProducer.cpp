@@ -34,6 +34,7 @@ int main(int argc, const char **argv) {
 
   std::string server="localhost:9092";
   std::string dsname="CHAOS/KAFKA/CU";
+  std::string kafkadriver="asio";
   uint32_t paylod_size=1024;
   uint32_t loop=1000;
   ChaosMetadataServiceClient::getInstance()
@@ -55,10 +56,16 @@ ChaosMetadataServiceClient::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("loop", po::value<uint32_t>(&loop)->default_value(loop),
                   "Number of loops");
+
+  ChaosMetadataServiceClient::getInstance()
+      ->getGlobalConfigurationInstance()
+      ->addOption("driver", po::value<std::string>(&kafkadriver)->default_value(kafkadriver),
+                  "Kafka driver");
+
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
 //  ChaosMetadataServiceClient::getInstance()->start();
 
-  chaos::common::message::MessagePSProducer k("RDK");
+  chaos::common::message::MessagePSProducer k(kafkadriver);
   k.addServer(server);
   int errors=0;
   if(k.applyConfiguration()==0){
@@ -67,8 +74,12 @@ ChaosMetadataServiceClient::getInstance()
     CDataWrapper p;
     p.addBinaryValue("payload",buffer,paylod_size);
     int cnt=loop;
+    p.addInt32Value("counter",cnt);
+
     uint64_t st=chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
     while(cnt--){
+      p.setValue("counter",cnt);
+
       if(k.pushMsgAsync(p,dsname)!=0){
         errors++;
       }

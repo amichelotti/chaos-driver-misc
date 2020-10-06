@@ -37,6 +37,15 @@ public:
    * @return 0 if success
    */
   int push(const std::string &jsonDataset, std::string &json_answer);
+    /**
+   * @brief push
+   * @param name node name
+   * @param jsonDataset dataset to push
+   * @param json_answer returns a json answer to send back
+   * @return 0 if success
+   */
+  int push(const std::string &jsonDataset, const std::string& name, std::string &json_answer);
+
 };
 } // namespace misc
 } // namespace driver

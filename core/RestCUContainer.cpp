@@ -15,48 +15,56 @@ ChaosDataSet RestCUContainer::retriveDS(const std::string &json,
                                         std::string &cuname) {
   ChaosDataSet cd(new chaos::common::data::CDataWrapper());
   cd->setSerializedJsonData(json.c_str());
-  if (cd->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
-    cuname = cd->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
-  } else if (cd->hasKey("output") && cd->isCDataWrapperValue("output")) {
-    CDWUniquePtr cdo = cd->getCSDataValue("output");
-    if (cdo->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
-      cuname = cdo->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
-    }
+  bool haskey=cd->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
 
+  if(cuname==""){
+    if (haskey) {
+      cuname = cd->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+    } else if (cd->hasKey("output") && cd->isCDataWrapperValue("output")) {
+      CDWUniquePtr cdo = cd->getCSDataValue("output");
+      if (cdo->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
+        cuname = cdo->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+      }
+
+    } 
   } else {
-    cuname = "";
+    if(!haskey){
+      cd->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID,cuname);
+    }
   }
   return cd;
 }
 
 int RestCUContainer::addCU(const std::string &ds, const std::string &name) {
   ChaosWriteLock l(iomutex);
+  std::string cuname=name;
+  retriveDS(ds, cuname);
+  if(cuname==""){
+      DPD_LERR << "cannot find CU name";
+      return -4;
 
-  std::map<std::string, RestCU *>::iterator f = restCUs.find(name);
-  if (f != restCUs.end()) {
+  } 
+  std::map<std::string, RestCU *>::iterator f = restCUs.find(cuname);
+  if (f == restCUs.end()) {
     try {
-      std::string cuname = name;
-      if (name == "") {
-        retriveDS(ds, cuname);
-      }
-      if (cuname == "") {
-        DPD_LERR << " Not a valid CU name found in ds";
-        return -1;
-      }
-      RestCU *ptr = new RestCU(cuname, ds);
+    
+       RestCU *ptr = new RestCU(cuname, ds);
       if (ptr) {
         DPD_LDBG << " Adding REST CU:" << cuname << " tot:" << restCUs.size();
-        restCUs[name] = ptr;
+        restCUs[cuname] = ptr;
         return 0;
       }
     } catch (chaos::CException &e) {
-      DPD_LERR << " Chaos exception adding REST CU:" << name << ":" << e.what()
+      DPD_LERR << " Chaos exception adding REST CU:" << cuname << ":" << e.what()
                << " tot:" << restCUs.size();
 
     } catch (...) {
-      DPD_LERR << " Uknown exception adding REST CU:" << name
+      DPD_LERR << " Uknown exception adding REST CU:" << cuname
                << " tot:" << restCUs.size();
     }
+  } else {
+    DPD_LDBG << " Already registered" << cuname << " tot:" << restCUs.size();
+    return 0;
   }
 
   return -1;
@@ -67,6 +75,7 @@ int RestCUContainer::removeCU(const std::string &name) {
   std::map<std::string, RestCU *>::iterator f = restCUs.find(name);
   if (f != restCUs.end()) {
     restCUs.erase(f);
+    delete f->second;
   } else {
     DPD_LERR << "REST CU \"" << name << "\" not found";
 
@@ -75,8 +84,8 @@ int RestCUContainer::removeCU(const std::string &name) {
   return 0;
 }
 
-int RestCUContainer::push(const std::string &json, std::string &json_answer) {
-  std::string name;
+int RestCUContainer::push(const std::string &json, const std::string& cname, std::string &json_answer){
+ std::string name=cname;
 
   try {
     ChaosDataSet ds = retriveDS(json, name);
@@ -93,6 +102,10 @@ int RestCUContainer::push(const std::string &json, std::string &json_answer) {
 
     return -10;
 
+}
+
+int RestCUContainer::push(const std::string &json, std::string &json_answer) {
+ return push(json, "", json_answer);
 }
 } // namespace misc
 } // namespace driver

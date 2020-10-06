@@ -107,8 +107,9 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     void cleanUpQuery();
     void initializeClient();
     void deinitializeClient();
-    uint64_t last_ts[DPCK_LAST_DATASET_INDEX + 1], delta_update;
-    uint64_t last_pckid[DPCK_LAST_DATASET_INDEX + 1];
+    uint64_t last_health_ts,delta_update;
+    //uint64_t last_ts[DPCK_LAST_DATASET_INDEX + 1], ;
+    //uint64_t last_pckid[DPCK_LAST_DATASET_INDEX + 1];
     std::map<std::string, chaos::common::data::RangeValueInfo> attributeValueMap;
     std::vector<chaos::common::data::RangeValueInfo> getDeviceValuesInfo();
     void initializeAttributeIndexMap();
@@ -201,6 +202,8 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      *  
      */
     uint64_t getState(chaos::CUStateKey::ControlUnitState &state, const std::string &dev = "");
+
+    uint64_t getCachedHealthTimeStamp(){return last_health_ts;}
     /**
      * Return the timestamp of a given CU and dataset, defaults itself and output
     */
@@ -354,6 +357,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     chaos::common::data::VectorCDWUniquePtr getNodeInfo(const std::string& search,const std::string& what="agent",bool alive=true);
     
     chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& search,const std::string&rpcmsg, chaos::common::data::CDWUniquePtr datapack,const std::string& what="agent",bool alive=true);
+chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& uid,const std::string& domain,const std::string&rpcmsg,chaos::common::data::CDWUniquePtr& data_pack);
 
     chaos::common::data::CDWUniquePtr getNodeDesc(const std::string& search,int&err);
 

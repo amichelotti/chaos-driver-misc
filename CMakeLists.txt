@@ -22,25 +22,44 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_cli
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
-ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
-ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
 
 IF(NOT CHAOS_TARGET)
+        ADD_EXECUTABLE(testDataSetIO test/testDatasetIO.cpp)
+        ADD_EXECUTABLE(histoIndex test/histoIndex.cpp)
+
         ADD_EXECUTABLE(restCUServer test/restCUServer.cpp core/RestCUServer.cpp)
         TARGET_LINK_LIBRARIES(restCUServer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug served ${FrameworkLib})
         INSTALL(TARGETS restCUServer
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-ENDIF()
-
-IF(KAFKA_ENABLE)
-ADD_EXECUTABLE(testKafkaProducer test/testKafkaProducer.cpp)
-TARGET_LINK_LIBRARIES(testKafkaProducer ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
-
-INSTALL(TARGETS testKafkaProducer
+        TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
+        TARGET_LINK_LIBRARIES(histoIndex ${PROJECT_NAME}  chaos_common  common_misc_data common_debug ${FrameworkLib})
+        INSTALL(TARGETS testDataSetIO
         DESTINATION "bin"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-ENDIF(KAFKA_ENABLE)
+        INSTALL(TARGETS histoIndex
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        
+ENDIF()
+
+IF(KAFKA_ASIO_ENABLE OR KAFKA_RDK_ENABLE)
+ADD_EXECUTABLE(kafkaChaosTest test/kafkaChaosTest.cpp)
+IF(NOT CHAOS_TARGET)
+ADD_EXECUTABLE(chaosKafkaExport test/chaosKafkaExport.cpp)
+TARGET_LINK_LIBRARIES(chaosKafkaExport ${PROJECT_NAME} chaos_metadata_service_client chaos_common chaos_driver_misc_cernroot Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib})
+INSTALL(TARGETS chaosKafkaExport
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ENDIF()
+TARGET_LINK_LIBRARIES(kafkaChaosTest ${PROJECT_NAME} chaos_metadata_service_client chaos_common  ${FrameworkLib})
+
+INSTALL(TARGETS kafkaChaosTest
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        
+
+ENDIF()
 
 IF (CERN_ROOT)
 ADD_EXECUTABLE(chaosHisto2tree test/chaosHisto2tree.cpp)
@@ -53,9 +72,7 @@ ADD_EXECUTABLE(UnitServerLite test/UnitServerLite.cpp)
 
 
 TARGET_LINK_LIBRARIES(testSumOperatorUI ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
-TARGET_LINK_LIBRARIES(testDataSetIO ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
 TARGET_LINK_LIBRARIES(testWriteAndRead ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug ${FrameworkLib})
-TARGET_LINK_LIBRARIES(histoIndex ${PROJECT_NAME}  chaos_common  common_misc_data common_debug ${FrameworkLib})
 
 TARGET_LINK_LIBRARIES(UnitServerLite ${FrameworkLib})
 
@@ -64,9 +81,6 @@ INSTALL(TARGETS testSumOperatorUI
         DESTINATION "bin/misc"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 #INSTALL_TARGETS(/bin testDataSetIO)
-INSTALL(TARGETS testDataSetIO
-        DESTINATION "bin"
-        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 
 #INSTALL_TARGETS(/bin UnitServerLite)
@@ -80,10 +94,6 @@ INSTALL(TARGETS testWriteAndRead
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 #INSTALL_TARGETS(/bin histoIndex)
-INSTALL(TARGETS histoIndex
-        DESTINATION "bin"
-        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-        
         
 
 
