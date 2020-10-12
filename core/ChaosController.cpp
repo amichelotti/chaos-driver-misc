@@ -2350,6 +2350,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                      int err=0;
                      std::string domain=name; //cu
                      std::string action;
+                     bool direct=false;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
                         if(parent.size()){
@@ -2360,13 +2361,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN)){
                                 domain=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN);
                             }
+                            if(json_value->hasKey("direct")){
+                                direct=true;
+                            }
                             if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME)){
                                 action=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME);
                             }
                         }
                         
                         chaos::common::data::CDWUniquePtr msg;
-                        if(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN){
+                        if((direct==false) &&(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN)){
                             msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
                         } else {
                             chaos::common::data::CDWUniquePtr payload;
