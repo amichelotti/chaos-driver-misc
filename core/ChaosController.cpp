@@ -1772,11 +1772,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         const std::string domain = names->getStringElementAtIndex(idx);
                         if(pageaccess){
                             if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT,impl) == 0){
-                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                               std::copy_if (node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i){return (i!="");} );
+
+                               // node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                             }
                         } else {
                             if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT,impl) == 0){
-                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                              //  node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                                std::copy_if (node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string&i){return (i!="");} );
+
                             }
                         }
                     }
@@ -1841,7 +1845,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
                                            chaos::NodeType::NodeSearchType::node_type_cu,
-                                           false,
+                                           alive,
                                            0,
                                            MAX_QUERY_ELEMENTS,
                                            node_found,
@@ -1876,7 +1880,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         ChaosStringVector node_tmp;
                         const std::string domain = names->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
+                        if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
                         {
                             node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                         }
@@ -2865,8 +2869,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (names.get() && (names->size() > 0))
             {
                 res << "]";
-                ret = (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
-;
+                ret = (execute_chaos_api_error<names->size())?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+                json_buf = res.str();
+                return ret;
 
             }
             json_buf = res.str();
