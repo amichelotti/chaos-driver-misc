@@ -138,7 +138,8 @@ void ChaosRoot::start() throw(chaos::CException){
    result->addStringValue(NodeDefinitionKey::NODE_DESC,rootopts);
   result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
                         TimingUtil::getTimeStamp());
-
+result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
+                           chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->getBuildInfo(chaos::common::data::CDWUniquePtr ())->getJSONString());
   // lock o monitor for waith the end
   
     // start all wan interface
