@@ -2889,6 +2889,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     domains.push_back("warning");
                     domains.push_back("Info");
                     domains.push_back("log");
+                    domains.push_back("alarm");
                     domains.push_back("command");
                 }
                 domains.push_back(node_type);
