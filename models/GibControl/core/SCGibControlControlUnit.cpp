@@ -68,9 +68,7 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::myFunc(const std::string &na
         0,
         50,
         SubmissionRuleType::SUBMIT_NORMAL);
-        return (ret==chaos::ErrorCode::EC_NO_ERROR);
-
-        return true;
+        return (chaos::ErrorCode::EC_NO_ERROR);
 }
 //end handlers
 void ::driver::gibcontrol::SCGibControlControlUnit::unitDefineActionAndDataset()  {
@@ -307,12 +305,8 @@ bool ::driver::gibcontrol::SCGibControlControlUnit::unitRestoreToSnapshot(chaos:
 				else
 				{
 					double restore_channel_value= *snapshot_cache->getAttributeValue(restoreDomain, chanToRestore)->getValuePtr<double>();
-					int ok=myFunc(chanToRestore,restore_channel_value,5);
-					if (!ok)
-					{
-						RESTORE_LERR << " Failed to restore channel "<<chanToRestore << "restore Abort";
-						return false;
-					}
+					myFunc(chanToRestore,restore_channel_value,5);
+					
 				}
 				//sleep(1);//
 
