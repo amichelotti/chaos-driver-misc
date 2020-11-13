@@ -3979,6 +3979,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             {
                 command->param.setSerializedJsonData(args);
             }
+            command->scheduler_steps_delay = sched;
             command->priority = prio;
             command->sub_rule = (submission_mode == 1) ? chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL : chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 #ifndef CMD_BY_MDS           
