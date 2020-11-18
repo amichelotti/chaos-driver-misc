@@ -166,7 +166,7 @@ result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
     HealtManager::getInstance()->addNewNode(uid);
     HealtManager::getInstance()->addNodeMetricValue(
         uid, NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-        NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
+        NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
     HealtManager::getInstance()->publishNodeHealt(uid);
 
   ::driver::misc::ChaosDatasetIO::ownerApp=uid;
