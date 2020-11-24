@@ -1078,13 +1078,11 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
     for (int idx = 0; idx < elementsDescriptions->size(); idx++) {
       CDWUniquePtr elementDescription =
           elementsDescriptions->getCDataWrapperElementAtIndex(idx);
+          DPD_LDBG << "LOOKING " <<elementDescription->getJSONString();
       // attribute name
       if (!elementDescription->hasKey(
               ControlUnitNodeDefinitionKey::
                   CONTROL_UNIT_DATASET_ATTRIBUTE_NAME) ||
-          !elementDescription->hasKey(
-              ControlUnitNodeDefinitionKey::
-                  CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE) ||
           !elementDescription->hasKey(ControlUnitNodeDefinitionKey::
                                           CONTROL_UNIT_DATASET_DEFAULT_VALUE)) {
         continue;
