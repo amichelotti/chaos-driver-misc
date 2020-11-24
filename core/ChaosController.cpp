@@ -1740,7 +1740,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="server" || what=="root"|| what=="webui" || what=="variable" || what=="tag")
+            if (what == "cu" || what == "us" || what=="ceu" || what == "agent" || what=="mds" || what=="server" || what=="root"|| what=="webui" || what=="variable" || what=="tag")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
@@ -2014,7 +2014,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             else if (what == "script")
             {
-                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name);
+                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name,0,page);
                 return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
             }
             else
@@ -4262,6 +4262,9 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
                 node_type = chaos::NodeType::NodeSearchType::node_type_all_server;
             if (what == "root")
                 node_type = chaos::NodeType::NodeSearchType::node_type_root;
+             if (what == "ceu")
+                node_type = chaos::NodeType::NodeSearchType::node_type_ceu;
+
 
             
     return node_type;

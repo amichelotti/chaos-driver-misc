@@ -12,7 +12,7 @@ using namespace std;
 #include "TROOT.h"
 #include "TRint.h"
 #include <chaos/common/healt_system/HealtManager.h>
-#include <chaos/common/io/SharedManagedDirecIoDataDriver.h>
+//#include <chaos/common/io/SharedManagedDirecIoDataDriver.h>
 #include <driver/misc/models/cernRoot/rootUtil.h>
 #include <boost/process/environment.hpp>
 #include <string>
@@ -76,9 +76,10 @@ if(GlobalConfiguration::getInstance()->hasOption(InitOption::CONTROL_MANAGER_UNI
     uid=GlobalConfiguration::getInstance()->getOption<std::string>(InitOption::CONTROL_MANAGER_UNIT_SERVER_ALIAS);
   }
  
-  InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+  /*InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
   StartableService::initImplementation(HealtManager::getInstance(), NULL,
                                        "HealthManager", __PRETTY_FUNCTION__);
+  */
 }
 void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException) {
 //  chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
@@ -126,6 +127,7 @@ void ChaosRoot::start() throw(chaos::CException){
     }
   }
   root_opts[0]=uid.c_str();
+  /*
   ROOTDBG<<" ChaosRoot UID:\""<<uid<<"\"";
 
   result->addStringValue(NodeDefinitionKey::NODE_UNIQUE_ID, uid);
@@ -169,7 +171,6 @@ result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
         NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
     HealtManager::getInstance()->publishNodeHealt(uid);
 
-  ::driver::misc::ChaosDatasetIO::ownerApp=uid;
   {
     EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, 5000, uid,
                       true);
@@ -178,7 +179,9 @@ result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
   } catch (CException &ex) {
     DECODE_CHAOS_EXCEPTION(ex)
   }
-    
+    */
+     ::driver::misc::ChaosDatasetIO::ownerApp=uid;
+
     rootApp = new TRint("Rint", &nroot_opts, (char **)root_opts,0,0, kFALSE);
  
   // rootapp->init(NULL);
@@ -197,7 +200,7 @@ void ChaosRoot::setRootOpts( const std::string& opts){
 }
 
  void ChaosRoot::deinit() throw(chaos::CException){
-    CHAOS_NOT_THROW(StartableService::deinitImplementation(
+   /* CHAOS_NOT_THROW(StartableService::deinitImplementation(
                         HealtManager::getInstance(), "HealthManager",
                         __PRETTY_FUNCTION__););
     InizializableService::deinitImplementation(
@@ -205,7 +208,9 @@ void ChaosRoot::setRootOpts( const std::string& opts){
         "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
    // chaos::ChaosCommon<ChaosRoot>::deinit();
+   */
     chaos::metadata_service_client::ChaosMetadataServiceClient::getInstance()->deinit();
+    
 
   }
   void ChaosRoot::stop()  throw(chaos::CException){

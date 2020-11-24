@@ -102,7 +102,7 @@ namespace driver{
             uint64_t burst_cycles,burst_time_ts;
             std::map<int,ChaosDataSet > datasets;
             uint64_t pkids[16];
-            void createMDSEntry();
+            int createMDSEntry();
             bool entry_created;
             uint32_t defaultPage;
             std::string uid;
@@ -268,6 +268,12 @@ namespace driver{
             bool queryHasNext(uint64_t uid);
             std::string getUid(){return uid;}
             uint64_t getRunID(){return runid;}
+            /**
+             * @brief Set the Implementation name to give this programmatic CU/EU, it can be used to inform the higher level (UI)
+             * of the interface. Must be given before registration
+             * 
+             * @param impl implementation name
+             */
             void setImplementation(const std::string &impl);
             void setRunID(uint64_t ru){runid=ru;}
             std::vector<ChaosDataSet> getNextPage(uint64_t uid);
