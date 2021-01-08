@@ -106,6 +106,16 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string& dataset_name,bool check):check
       last_push_rate_grap_ts(0), deinitialized(false),
       implementation("datasetIO"), sched_time(0), last_push_ts(0),push_errors(0),packet_lost(0),packet_tot_size(0),
       burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT){
+       if(ownerApp.size()){
+    uid=ownerApp;
+  } else {
+ 
+  if (groupName == "") {
+    uid = datasetName;
+  } else {
+    uid = groupName + "/" + datasetName;
+  }
+  }
         _initDataset();
 
 }
@@ -123,7 +133,16 @@ ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
       implementation("datasetIO"), sched_time(0), last_push_ts(0),push_errors(0),packet_lost(0),packet_tot_size(0),
       burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT),check_presence(true) {
           runid = time(NULL);
-
+if(ownerApp.size()){
+    uid=ownerApp;
+  } else {
+ 
+  if (groupName == "") {
+    uid = datasetName;
+  } else {
+    uid = groupName + "/" + datasetName;
+  }
+  }
         _initDataset();
 
 }
@@ -189,14 +208,7 @@ try {
     
   }
 
-  if ((groupName.size() == 0) && ownerApp.size()) {
-    groupName = ownerApp;
-  }
-  if (groupName == "") {
-    uid = datasetName;
-  } else {
-    uid = groupName + "/" + datasetName;
-  }
+  
   int err;
   // check if there is some other CU with the same id.
   if(check_presence){
@@ -205,7 +217,7 @@ try {
     ChaosStringVector node_found;
 
     if ((err = mds_message_channel->searchNode(
-             datasetName, chaos::NodeType::NodeSearchType::node_type_cu, true, 0, 100,
+             uid, chaos::NodeType::NodeSearchType::node_type_ceu, true, 0, 100,
              node_found, timeo)) == 0) {
       if (node_found.size() && (uid == node_found[0])) {
         if (retry == 0) {
@@ -229,21 +241,7 @@ try {
     }
   } while (retry--);
   }
-  try {
-    if (HealtManager::getInstance()->getServiceState() ==
-        chaos::CUStateKey::DEINIT) {
-
-      StartableService::initImplementation(HealtManager::getInstance(), NULL,
-                                           "HealtManager", __PRETTY_FUNCTION__);
-    }
-
-    InizializableService::initImplementation(
-        chaos::common::metadata_logging::MetadataLoggingManager::getInstance(),
-        NULL, "MetadataLoggingManager", __PRETTY_FUNCTION__);
-  } catch (...) {
-    DPD_LERR
-        << "cannot initialize HealtManager/logmanager, already initialized?";
-  }
+ 
   for (int cnt = 0; cnt < sizeof(pkids) / sizeof(uint64_t); cnt++) {
     pkids[cnt] = 0;
   }
@@ -702,22 +700,25 @@ void ChaosDatasetIO::wrapper2dataset(
     cu_dataset.appendCDataWrapperToArray(ds);
   }
 }
+void ChaosDatasetIO::setImplementation(const std::string&impl){
+  implementation=impl;
+}
 
-void ChaosDatasetIO::createMDSEntry() {
+int ChaosDatasetIO::createMDSEntry() {
   api_proxy::control_unit::SetInstanceDescriptionHelper cud;
   int error = 0;
 
   ChaosStringVector node_found;
+  error=mds_message_channel->searchNode(uid, chaos::NodeType::NodeSearchType::node_type_ceu, false, 0, 100,node_found, timeo);
 
-  if ((error = mds_message_channel->searchNode(
-           uid, chaos::NodeType::NodeSearchType::node_type_cu, false, 0, 100,
-           node_found, timeo)) == 0) {
+  if (error == 0) {
     if (node_found.size()) {
       for (ChaosStringVector::iterator i = node_found.begin();
            i != node_found.end(); i++) {
-        DPD_LDBG << "The cointainer " << *i << " exists";
+        DPD_LDBG << "The container " << *i << " exists";
       }
     } else {
+
       /* {
          EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, timeo, groupName);
          error = apires->getError();
@@ -727,7 +728,8 @@ void ChaosDatasetIO::createMDSEntry() {
                            groupName, "datasetIO", 0);
          error = apires->getError();
        }*/
-      if (error == 0) {
+     
+     /* if (error == 0) {
 
         cud.auto_load = 1;
         cud.auto_init = 1;
@@ -744,50 +746,18 @@ void ChaosDatasetIO::createMDSEntry() {
 
         EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription,
                           timeo, cud);
-      }
+      }*/
     }
 
   } else {
-    throw chaos::CException(-10, "cannot check for node liveness:" + uid,
-                            __PRETTY_FUNCTION__);
+   /* throw chaos::CException(-10, "cannot check for node liveness:" + uid,
+                            __PRETTY_FUNCTION__);*/
+
+    return -1;
   }
 
-  if (groupName == "") {
-    uid = datasetName;
-  } else {
-    uid = groupName + "/" + datasetName;
-  }
-
-  CHAOS_NOT_THROW(HealtManager::getInstance()->addNewNode(uid););
-  // add push rate metric
-  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
-      chaos::DataType::TYPE_DOUBLE););
-  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
-      chaos::DataType::TYPE_INT32););
- CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_ERROR,
-      chaos::DataType::TYPE_INT32););
-CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_LOST,
-      chaos::DataType::TYPE_INT32););
-
-CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_TOT_PUSH_KSIZE,
-      chaos::DataType::TYPE_INT32););
-
-  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(
-      uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-      chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);)
-  CHAOS_NOT_THROW(
-      StartableService::startImplementation(
-          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+  
+ return error;
 }
 
 //! register the dataset of ap roducer
@@ -800,7 +770,9 @@ int ChaosDatasetIO::registerDataset() {
     return -3;
   }
   if (entry_created == false) {
-    createMDSEntry();
+    if ((ret=createMDSEntry())<0){
+      return ret;
+    }
     entry_created = true;
   }
   CDWUniquePtr mds_registration_pack = CDWUniquePtr(new CDataWrapper());
@@ -811,12 +783,14 @@ int ChaosDatasetIO::registerDataset() {
   mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR,
                                         network_broker->getRPCUrl());
   mds_registration_pack->addStringValue("mds_control_key", "none");
+  
   mds_registration_pack->addStringValue(
       chaos::NodeDefinitionKey::NODE_TYPE,
-      chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+      chaos::NodeType::NODE_TYPE_ROOT);
   mds_registration_pack->addStringValue(
       NodeDefinitionKey::NODE_SUB_TYPE,
       chaos::NodeType::NODE_SUBTYPE_SCRIPTABLE_EXECUTION_UNIT);
+  mds_registration_pack->addStringValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_VIEW,implementation);
   std::map<int, ChaosSharedPtr<chaos::common::data::CDataWrapper>>::iterator i;
   CDataWrapper ds;
   ds.addInt64Value(ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_TIMESTAMP,
@@ -848,7 +822,8 @@ int ChaosDatasetIO::registerDataset() {
     CDWUniquePtr mdsPack(new CDataWrapper());
     mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, uid);
     mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE,
-                            chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+                            chaos::NodeType::NODE_TYPE_ROOT);
+        
     ret =
         mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
 
@@ -861,15 +836,71 @@ int ChaosDatasetIO::registerDataset() {
     return -1;
   }
 
+  try {
+    if (HealtManager::getInstance()->getServiceState() ==
+        chaos::CUStateKey::DEINIT) {
+
+      StartableService::initImplementation(HealtManager::getInstance(), NULL,
+                                           "HealtManager", __PRETTY_FUNCTION__);
+    }
+
+    InizializableService::initImplementation(
+        chaos::common::metadata_logging::MetadataLoggingManager::getInstance(),
+        NULL, "MetadataLoggingManager", __PRETTY_FUNCTION__);
+  } catch (...) {
+    DPD_LERR
+        << "cannot initialize HealtManager/logmanager, already initialized?";
+  }
+  CHAOS_NOT_THROW(HealtManager::getInstance()->addNewNode(uid););
+  // add push rate metric
+  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
+      chaos::DataType::TYPE_DOUBLE););
+  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+      chaos::DataType::TYPE_INT32););
+ CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_ERROR,
+      chaos::DataType::TYPE_INT32););
+CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_LOST,
+      chaos::DataType::TYPE_INT32););
+
+CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_TOT_PUSH_KSIZE,
+      chaos::DataType::TYPE_INT32););
+
+  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(
+      uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+      chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);)
+ CHAOS_NOT_THROW(
+      StartableService::startImplementation(
+          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+
+
+
   pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
   
 
-  { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); }
+  { EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, timeo, uid, true); 
+    if(apires->getError()){
+      return apires->getError();
+    }
+  }
   DPD_LAPP << "Waiting init ";
 
   waitEU.wait();
 
-  { EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true); }
+  { EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true);
+  if(apires->getError()){
+      return apires->getError();
+    }
+   }
   DPD_LAPP << "Waiting start ";
 
   waitEU.wait();
@@ -1047,13 +1078,11 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
     for (int idx = 0; idx < elementsDescriptions->size(); idx++) {
       CDWUniquePtr elementDescription =
           elementsDescriptions->getCDataWrapperElementAtIndex(idx);
+          DPD_LDBG << "LOOKING " <<elementDescription->getJSONString();
       // attribute name
       if (!elementDescription->hasKey(
               ControlUnitNodeDefinitionKey::
                   CONTROL_UNIT_DATASET_ATTRIBUTE_NAME) ||
-          !elementDescription->hasKey(
-              ControlUnitNodeDefinitionKey::
-                  CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE) ||
           !elementDescription->hasKey(ControlUnitNodeDefinitionKey::
                                           CONTROL_UNIT_DATASET_DEFAULT_VALUE)) {
         continue;
@@ -1221,9 +1250,6 @@ std::vector<ChaosDataSet> ChaosDatasetIO::getNextPage(uint64_t uid) {
     query_cursor_map.erase(i);
   }
   return ret;
-}
-void ChaosDatasetIO::setImplementation(const std::string &impl) {
-  implementation = impl;
 }
 
 std::vector<ChaosDataSet> ChaosDatasetIO::queryHistoryDatasets(

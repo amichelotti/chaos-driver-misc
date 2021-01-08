@@ -1740,7 +1740,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             DBGET << "searching what " << what;
             ChaosStringVector node_found;
-            if (what == "cu" || what == "us" || what == "agent" || what=="mds" || what=="server" || what=="root"|| what=="webui" || what=="variable" || what=="tag")
+            if (what == "cu" || what == "us" || what=="ceu" || what == "agent" || what=="mds" || what=="server" || what=="root"|| what=="webui" || what=="variable" || what=="tag")
             {
                 json_buf = "[]";
                 chaos::NodeType::NodeSearchType node_type=human2NodeType(what);
@@ -1772,11 +1772,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                         const std::string domain = names->getStringElementAtIndex(idx);
                         if(pageaccess){
                             if (mdsChannel->searchNode(domain, node_type, alive, page_start, maxpage, npages,node_tmp, MDS_TIMEOUT,impl) == 0){
-                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                               std::copy_if (node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i){return (i!="");} );
+
+                               // node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                             }
                         } else {
                             if (mdsChannel->searchNode(domain, node_type, alive, 0, maxpage, node_tmp, MDS_TIMEOUT,impl) == 0){
-                                node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                              //  node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
+                                std::copy_if (node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string&i){return (i!="");} );
+
                             }
                         }
                     }
@@ -1841,7 +1845,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 ChaosStringVector dev_zone;
                 if (mdsChannel->searchNode(name,
                                            chaos::NodeType::NodeSearchType::node_type_cu,
-                                           false,
+                                           alive,
                                            0,
                                            MAX_QUERY_ELEMENTS,
                                            node_found,
@@ -1876,7 +1880,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     {
                         ChaosStringVector node_tmp;
                         const std::string domain = names->getStringElementAtIndex(idx);
-                        if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, false, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
+                        if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0)
                         {
                             node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                         }
@@ -2010,7 +2014,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             else if (what == "script")
             {
-                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name);
+                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name,0,page);
                 return (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
             }
             else
@@ -2350,6 +2354,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                      int err=0;
                      std::string domain=name; //cu
                      std::string action;
+                     bool direct=false;
                         chaos::common::data::CDWUniquePtr p(new CDataWrapper());
                         p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
                         if(parent.size()){
@@ -2360,13 +2365,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                             if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN)){
                                 domain=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_DOMAIN);
                             }
+                            if(json_value->hasKey("direct")){
+                                direct=true;
+                            }
                             if(json_value->hasKey(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME)){
                                 action=json_value->getStringValue(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_NAME);
                             }
                         }
                         
                         chaos::common::data::CDWUniquePtr msg;
-                        if(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN){
+                        if((direct==false) &&(domain==chaos::NodeDomainAndActionRPC::RPC_DOMAIN)){
                             msg=executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN,"NodeGenericCommand",p,err);
                         } else {
                             chaos::common::data::CDWUniquePtr payload;
@@ -2861,8 +2869,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             if (names.get() && (names->size() > 0))
             {
                 res << "]";
-                ret = (execute_chaos_api_error==0)?CHAOS_DEV_OK:CHAOS_DEV_CMD;
-;
+                ret = (execute_chaos_api_error<names->size())?CHAOS_DEV_OK:CHAOS_DEV_CMD;
+                json_buf = res.str();
+                return ret;
 
             }
             json_buf = res.str();
@@ -2880,6 +2889,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                     domains.push_back("warning");
                     domains.push_back("Info");
                     domains.push_back("log");
+                    domains.push_back("alarm");
                     domains.push_back("command");
                 }
                 domains.push_back(node_type);
@@ -3969,6 +3979,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             {
                 command->param.setSerializedJsonData(args);
             }
+            command->scheduler_steps_delay = sched;
             command->priority = prio;
             command->sub_rule = (submission_mode == 1) ? chaos::common::batch_command::SubmissionRuleType::SUBMIT_AND_KILL : chaos::common::batch_command::SubmissionRuleType::SUBMIT_NORMAL;
 #ifndef CMD_BY_MDS           
@@ -4251,6 +4262,9 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
                 node_type = chaos::NodeType::NodeSearchType::node_type_all_server;
             if (what == "root")
                 node_type = chaos::NodeType::NodeSearchType::node_type_root;
+             if (what == "ceu")
+                node_type = chaos::NodeType::NodeSearchType::node_type_ceu;
+
 
             
     return node_type;
