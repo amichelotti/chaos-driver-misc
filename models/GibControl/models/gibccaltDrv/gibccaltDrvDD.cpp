@@ -54,4 +54,33 @@ void chaos::driver::gibcontrol::gibccaltDrvDD::driverInit(const char* initParame
 	{
 		throw chaos::CException(1,"Cannot allocate resources for gibccaltDrv","gibccaltDrvDD::driverInit");
 	}
+
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state){
+	return devicedriver->setPulse( channel, amplitude, width, state);
+
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::setChannelVoltage(int32_t channel,double Voltage){
+	return devicedriver->setChannelVoltage(channel,Voltage);
+
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::PowerOn(int32_t on_state){
+	return devicedriver->PowerOn(on_state);
+
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::getState(int32_t* state,std::string& desc){
+	return devicedriver->getState(state,desc);
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::getVoltages(std::vector<double>& voltages){
+	return devicedriver->getVoltages(voltages);
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::getNumOfChannels(int32_t* numOfChannels){
+	return devicedriver->getNumOfChannels(numOfChannels);
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels){
+	return devicedriver->getPulsingState(amplitudes,widthChannels);
+}
+int chaos::driver::gibcontrol::gibccaltDrvDD::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V){
+	return devicedriver->getSupplyVoltages(HVSupply,P5V,N5V);
+
 }

@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "ChaosGibControlInterface.h"
+#include "ChaosGibControlDD.h"
 using namespace chaos::driver::gibcontrol;
 #define PREPARE_OP_RET_INT_TIMEOUT(op,tim) \
 gibcontrol_oparams_t ret;\
@@ -95,26 +96,34 @@ int ChaosGibControlInterface::deinit() {
 };
 uint64_t ChaosGibControlInterface::getFeatures() {return 0;};
 int ChaosGibControlInterface::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state) {
-	WRITE_OP_INT32_T_INT32_T_INT32_T_INT32_T_TIM(OP_SETPULSE,channel,amplitude,width,state,0);
+	//WRITE_OP_INT32_T_INT32_T_INT32_T_INT32_T_TIM(OP_SETPULSE,channel,amplitude,width,state,0);
+	return impl->setPulse(channel, amplitude, width, state);
 } 
 int ChaosGibControlInterface::setChannelVoltage(int32_t channel,double Voltage) {
-	WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETCHANNELVOLTAGE,channel,Voltage,0);
+	//WRITE_OP_INT32_T_DOUBLE_TIM(OP_SETCHANNELVOLTAGE,channel,Voltage,0);
+	return impl->setChannelVoltage( channel, Voltage);
 } 
 int ChaosGibControlInterface::PowerOn(int32_t on_state) {
-	WRITE_OP_INT32_T_TIM(OP_POWERON,on_state,0);
+	//WRITE_OP_INT32_T_TIM(OP_POWERON,on_state,0);
+	return impl->PowerOn(on_state);
 } 
 int ChaosGibControlInterface::getState(int32_t* state,std::string& desc) {
-	READ_OP_INT32_T_STRING_TIM(OP_GETSTATE,state,desc,0);
+	//READ_OP_INT32_T_STRING_TIM(OP_GETSTATE,state,desc,0);
+	return impl->getState(state,desc);
 } 
 int ChaosGibControlInterface::getVoltages(std::vector<double>& voltages) {
-	READ_OP_VECTOR_DOUBLE__TIM(OP_GETVOLTAGES,voltages,0);
+	//READ_OP_VECTOR_DOUBLE__TIM(OP_GETVOLTAGES,voltages,0);
+	return impl->getVoltages( voltages) ;
 } 
 int ChaosGibControlInterface::getNumOfChannels(int32_t* numOfChannels) {
-	READ_OP_INT32_T_TIM(OP_GETNUMOFCHANNELS,numOfChannels,0);
+	//READ_OP_INT32_T_TIM(OP_GETNUMOFCHANNELS,numOfChannels,0);
+	return impl->getNumOfChannels(numOfChannels);
 } 
 int ChaosGibControlInterface::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels) {
-	READ_OP_VECTOR_INT32_T__VECTOR_INT32_T__TIM(OP_GETPULSINGSTATE,amplitudes,widthChannels,0);
+	//READ_OP_VECTOR_INT32_T__VECTOR_INT32_T__TIM(OP_GETPULSINGSTATE,amplitudes,widthChannels,0);
+	return impl->getPulsingState( amplitudes,widthChannels) ;
 } 
 int ChaosGibControlInterface::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V) {
-	READ_OP_DOUBLE_DOUBLE_DOUBLE_TIM(OP_GETSUPPLYVOLTAGES,HVSupply,P5V,N5V,0);
+	//READ_OP_DOUBLE_DOUBLE_DOUBLE_TIM(OP_GETSUPPLYVOLTAGES,HVSupply,P5V,N5V,0);
+	return impl->getSupplyVoltages(HVSupply,P5V, N5V);
 } 
