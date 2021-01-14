@@ -34,6 +34,14 @@ namespace chaos {
 			public:
 				gibccaltDrvDD();
 				~gibccaltDrvDD();
+			int setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state);
+			 int setChannelVoltage(int32_t channel,double Voltage);
+			 int PowerOn(int32_t on_state);
+			 int getState(int32_t* state,std::string& desc);
+			 int getVoltages(std::vector<double>& voltages);
+			 int getNumOfChannels(int32_t* numOfChannels);
+			 int getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels);
+			 int getSupplyVoltages(double* HVSupply,double* P5V,double* N5V);
 			};//end class
 		} //namespace gibcontrol
 	} //namespace driver

@@ -20,13 +20,15 @@ limitations under the License.
 #define __driver_ChaosGibControlDD_h__
 #include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>
 #include <common/misc/GibControl/core/AbstractGibControl.h>
+#include <common/misc/GibControl/core/AbstractGibControl.h>
+
 DEFINE_CU_DRIVER_DEFINITION_PROTOTYPE(ChaosGibControlDD)
 namespace cu_driver = chaos::cu::driver_manager::driver;
 namespace chaos {
 	namespace driver {
 		namespace gibcontrol {
 			    /*         driver definition            */ 
-			class ChaosGibControlDD: ADD_CU_DRIVER_PLUGIN_SUPERCLASS{
+			class ChaosGibControlDD: ADD_CU_DRIVER_PLUGIN_SUPERCLASS, public ::common::gibcontrol::AbstractGibControl{
 			protected: 
 				::common::gibcontrol::AbstractGibControl* devicedriver;
 			public: 
@@ -35,6 +37,8 @@ namespace chaos {
 				 //! Execute a command
 				cu_driver::MsgManagmentResultType::MsgManagmentResult execOpcode(cu_driver::DrvMsgPtr cmd);
 				void driverDeinit() ;
+			 
+
 			}; //ChaosGibControlDD
 		} //gibcontrol
 	}
