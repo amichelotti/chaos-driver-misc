@@ -342,7 +342,7 @@ void own::CmdDafDefault::acquireHandler() {
 	
 	::general::utility::HTTPClient   Sender(GraphicsAddress, GraphicsPort);
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
-	SCLDBG_ << "ALEDEBUG: Sending data for graphics returned " << resp.ReturnCode; 
+	SCLDBG_ << "ALEDEBUG: Sending data to:"<<GraphicsAddress<<":"<<GraphicsPort<<"/dsdata/api/pushDafneData, for graphics returned " << resp.ReturnCode; 
 	if (resp.ReturnCode != 201)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
