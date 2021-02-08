@@ -91,8 +91,8 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 			this->GraphicsPort = splitted;
 		if (cnt == 2)
 		{
-			addr += ":" + port;
-			port = splitted;
+			this->GraphicsAddress += ":" + this->GraphicsPort;
+			this->GraphicsPort = splitted;
 		}
 		cnt++;
 	}
