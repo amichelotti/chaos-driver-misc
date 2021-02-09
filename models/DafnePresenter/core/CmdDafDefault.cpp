@@ -76,7 +76,7 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	p_dafne_status_readable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"dafne_status_string");
 	CalLumiNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CULuminometerCCALT");
 	graphicServerAddressPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM, "GraphicsDataServerAddress");
-	
+	graphicsServerAnswer= getAttributeCache()->getRWPtr<int>(DOMAIN_OUTPUT, "GraphicsServer_http_answer");
 	std::string toSplit(graphicServerAddressPointer);
 	std::istringstream ss(toSplit);
 	std::string splitted;
@@ -338,6 +338,7 @@ void own::CmdDafDefault::acquireHandler() {
 	::general::utility::HTTPClient   Sender(GraphicsAddress, GraphicsPort);
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
 	SCLDBG_ << "ALEDEBUG: Sending data for graphics returned " << resp.ReturnCode; 
+	*graphicsServerAnswer = resp.ReturnCode;
 	if (resp.ReturnCode != 201)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelHigh);

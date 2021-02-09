@@ -307,6 +307,13 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 							DataType::TYPE_DOUBLE,
 							DataType::Output);
 
+	addAttributeToDataSet("GraphicsServer_http_answer",
+		"The code returned by the  Graphics Server",
+		DataType::TYPE_INT32,
+		DataType::Output);
+	
+	
+	
 	addAttributeToDataSet("driver_timeout",
 							"custom user timeout in milliseconds for commands",
 							DataType::TYPE_INT32,

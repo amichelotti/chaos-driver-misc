@@ -88,7 +88,7 @@ namespace driver {
 			double *p_Dead_TC;
 			double *p_R1C_ele, *p_R1C_pos;
 			double * p_lum_CCAL;
-
+			int32_t* graphicsServerAnswer;
 
 		};
 	}
