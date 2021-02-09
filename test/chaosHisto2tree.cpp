@@ -207,27 +207,27 @@ int main(int argc, const char **argv) {
         if(!found)
           break;
         ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
+        int64_t ts =0;
+        int64_t rid=0;
         if (q_result.get()) {
           if (q_result->hasKey(
                   chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID) &&
               q_result->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)) {
-            int64_t rid = q_result->getInt64Value(
+            rid = q_result->getInt64Value(
                 chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
             int64_t sid =
                 q_result->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
 
             if (checkrunid) {
               if ((last_rid != 0) && (last_rid > rid)) {
-                  int64_t ts =
-                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+                ts=q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
 
                 std::cout << "[" << tot_ele
                           << "] ## run id inversion:" << last_rid
                           << " got:" << rid <<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
                 errors++;
               } else if ((last_rid != rid)) {
-                  int64_t ts =
-                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+                  ts = q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
 
                 std::cout << "[" << tot_ele << "] %% run id changed " << last_rid
                           << " to:" << rid <<" TS:"<<ts<<"["<<chaos::common::utility::TimingUtil::toString(ts)<<"]"<< std::endl;
@@ -239,8 +239,7 @@ int main(int argc, const char **argv) {
             if (checkseq) {
               if ((last_sid != 0) && (last_rid == rid) &&
                   (last_sid + 1) != sid) {
-                    int64_t ts =
-                q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+                 ts =q_result->getInt64Value(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
 
                 std::cout << "[" << tot_ele
                           << "] ## bad sequence expected:" << (last_sid + 1)
@@ -267,6 +266,12 @@ int main(int argc, const char **argv) {
         } else {
             std::cout << "[" << tot_ele<<"] ## empty packet"<<std::endl;
               errors++;
+        }
+        if((tot_ele%1000)==0){
+                           ts =q_result->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+
+              std::cout << "[" << tot_ele<<"] TS: "<<chaos::common::utility::TimingUtil::toString(ts)<< " RUNID:"<<chaos::common::utility::TimingUtil::toString(rid)<<std::endl;
+
         }
       } //while
       if (!dontout) {

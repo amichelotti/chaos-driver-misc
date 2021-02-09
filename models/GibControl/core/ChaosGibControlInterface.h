@@ -38,6 +38,7 @@ namespace chaos {
 	namespace driver {
 #define MAX_STR_SIZE 256
 		namespace gibcontrol {
+			class ChaosGibControlDD;
 			typedef enum {
 				
 				OP_DEINIT, // deinit low level driver
@@ -75,8 +76,9 @@ namespace chaos {
 			class ChaosGibControlInterface:public ::common::gibcontrol::AbstractGibControl {
 				protected:
 				chaos_driver::DrvMsg message;
+				ChaosGibControlDD*impl;
 				public: 
-				ChaosGibControlInterface(chaos_driver::DriverAccessor*_accessor):accessor(_accessor){};
+				ChaosGibControlInterface(chaos_driver::DriverAccessor*_accessor):accessor(_accessor){impl=(ChaosGibControlDD*)_accessor->getImpl();};
 				chaos_driver::DriverAccessor* accessor;
 				int init(void*);
 				int deinit();
