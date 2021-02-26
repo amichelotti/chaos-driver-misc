@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(chaos_driver_dafnepresenter)
 find_package(chaos MODULE REQUIRED)
-include_directories(../../../ ${chaos_INCLUDE_DIRS})
+include_directories(../../../  ${chaos_INCLUDE_DIRS})
 FILE(GLOB core_src core/*.cpp)
 SET(DRIVERS_LIB )
 MESSAGE(STATUS "Libraries ${DRIVERS_LIB}")
@@ -15,4 +15,12 @@ FILE(GLOB files "core/*.h")
 INSTALL(FILES ${files} DESTINATION include/driver/misc/models/DafnePresenter/core)
 INSTALL(TARGETS ${PROJECT_NAME}
 	DESTINATION "lib"
+PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+
+SET(srctst test/tester.cpp )
+ADD_EXECUTABLE(httpTester ${srctst})
+TARGET_LINK_LIBRARIES(httpTester  common_misc_utility ${FrameworkLib})
+INSTALL(TARGETS httpTester
+DESTINATION "bin"
 PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
