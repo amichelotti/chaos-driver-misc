@@ -115,6 +115,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     void initializeAttributeIndexMap();
 
     void update();
+    std::vector<std::string> filterByState(const std::vector<std::string> &CUNAMEs,const std::string& state) ;
 
   public:
     typedef chaos::cu::data_manager::KeyDataStorageDomain DatasetDomain;
@@ -233,7 +234,14 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      * @return 0 on success
      */
     //int waitCmd();
-
+int searchNode(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive_only,
+                               unsigned int start_page,
+                               unsigned int page_length,
+                               unsigned int& num_of_page,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait=5000,const std::string& impl="",const std::string& state="");
     void executeTimeIntervalQuery(DatasetDomain domain,
                                    uint64_t start_ts,
                                    uint64_t end_ts,
@@ -341,6 +349,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      * Return an array of live channels referring to an array of keys 
      * */
     chaos::common::data::VectorCDWShrdPtr getLiveChannel(const std::vector<std::string> &keys);
+
 
     /**
      * Return an array of live channels referring to an array of CUnames of a particular domain
