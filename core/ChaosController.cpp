@@ -37,7 +37,6 @@ using namespace chaos::common::data;
 using namespace chaos::metadata_service_client;
 using namespace chaos::common::io;
 using namespace chaos::common::network;
-using namespace chaos;
 using namespace ::driver::misc;
 
 #define DBGET DBG_LOG(ChaosController) << "[" << getPath() << "]"
@@ -979,7 +978,7 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   std::string                                                     name  = "";                                                                            \
   std::string                                                     what  = "";                                                                            \
   bool                                                            alive = true;                                                                          \
-  chaos_data::CDataWrapper                                        p;                                                                                     \
+  chaos::common::data::CDataWrapper                                        p;                                                                                     \
   ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> names;                                                                                 \
   ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;                                                                             \
   ChaosUniquePtr<chaos::common::data::CDataWrapper>               json_value;                                                                            \
@@ -1541,26 +1540,26 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
       if (i->get()) {
         int alarmlevel = 0;
 
-        if ((*i)->hasKey(ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL)) {
-          alarmlevel = (*i)->getInt32Value(ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL);
+        if ((*i)->hasKey(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL)) {
+          alarmlevel = (*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL);
         }
-        if ((*i)->hasKey(ControlUnitDatapackSystemKey::CU_ALRM_LEVEL)) {
-          alarmlevel = (((*i)->getInt32Value(ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) > alarmlevel) ? (*i)->getInt32Value(ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) : alarmlevel);
+        if ((*i)->hasKey(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL)) {
+          alarmlevel = (((*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) > alarmlevel) ? (*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) : alarmlevel);
         }
-        if ((*i)->hasKey(NodeDefinitionKey::NODE_UNIQUE_ID)) {
+        if ((*i)->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
 
           if ((alarmlevel >= 2) && (state == "Error")) {
-            ret.push_back((*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID));
-            DBGET << "found : " << (*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID) << " Error level:" << alarmlevel;
+            ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
+            DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " Error level:" << alarmlevel;
 
           } else if ((alarmlevel == 1) && (state == "Warning")) {
-            DBGET << "found : " << (*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID) << " Warning level:" << alarmlevel;
+            DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " Warning level:" << alarmlevel;
 
-            ret.push_back((*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID));
+            ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
           } else if((alarmlevel == 0) && (state == "Ok")) {
-            DBGET << "found : " << (*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID) << " OK:" << alarmlevel;
+            DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " OK:" << alarmlevel;
 
-            ret.push_back((*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID));
+            ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
           }
         }
       }
@@ -1569,12 +1568,12 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
     chaos::common::data::VectorCDWShrdPtr chan = getLiveChannel(node_found, (int)KeyDataStorageDomainHealth);
     for (chaos::common::data::VectorCDWShrdPtr::iterator i = chan.begin(); i != chan.end(); i++) {
       if (i->get()) {
-        if ((*i)->hasKey(NodeHealtDefinitionKey::NODE_HEALT_STATUS)) {
-          if ((*i)->getStringValue(NodeHealtDefinitionKey::NODE_HEALT_STATUS) != "Start") {
-            if ((*i)->hasKey(NodeDefinitionKey::NODE_UNIQUE_ID)) {
-              DBGET << "found NOT STARTED: " << (*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID);
+        if ((*i)->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)) {
+          if ((*i)->getStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS) != "Start") {
+            if ((*i)->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
+              DBGET << "found NOT STARTED: " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
 
-              ret.push_back((*i)->getStringValue(NodeDefinitionKey::NODE_UNIQUE_ID));
+              ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
             }
           }
         }
@@ -1607,12 +1606,12 @@ int ChaosController::searchNode(const std::string& unique_id_filter,
             if(tmp.size()<page_length){
                 break;
             }
-        } while((size<tmp.size())&&(ret==ErrorCode::EC_NO_ERROR));
+        } while((size<tmp.size())&&(ret==chaos::ErrorCode::EC_NO_ERROR));
         num_of_page=(tmp.size())?(tmp.size()/page_length)+(((tmp.size()%page_length)==0)?0:1):0;
         for(int cnt=start_page*page_length;(cnt<tmp.size())&&(cnt<((start_page+1)*page_length));cnt++){
             node_found.push_back(tmp[cnt]);
         }
-        return ErrorCode::EC_NO_ERROR;
+        return chaos::ErrorCode::EC_NO_ERROR;
 }
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string& json_buf) {
