@@ -406,6 +406,11 @@ void ChaosDatasetIO::updateHealth() {
       output_ds_rate, true);
   HealtManager::getInstance()->addNodeMetricValue(
       uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL,
+      std::max(cu_alarm_lvl,dev_alarm_lvl), true);
+  
+  HealtManager::getInstance()->addNodeMetricValue(
+      uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
       output_ds_size, true);
   HealtManager::getInstance()->addNodeMetricValue(uid,
@@ -857,6 +862,10 @@ int ChaosDatasetIO::registerDataset() {
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
       chaos::DataType::TYPE_DOUBLE););
+  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
+      uid,
+      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL,
+      chaos::DataType::TYPE_INT32););
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
