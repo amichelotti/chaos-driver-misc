@@ -745,30 +745,10 @@ const std::string ChaosController::fetchJson(int channel) {
 chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
   //	boost::mutex::scoped_lock(iomutex);
 
-  chaos::common::data::CDWUniquePtr retdata(new CDataWrapper);
+  chaos::common::data::CDWUniquePtr retdata(new CDataWrapper());
   try {
     if (channel == -1) {
       chaos::common::data::VectorCDWShrdPtr res = getLiveAllChannels();
-#if 0       
-            chaos::common::data::CDataWrapper *idata = NULL, *odata = NULL;
-            chaos::common::data::CDataWrapper resdata;
-            std::stringstream out;
-            uint64_t ts = 0;
-            std::map<int, chaos::common::data::CDataWrapper *> set;
-            CDataWrapper ch[7];
-            if(res.size()>=7){
-                
-                set[KeyDataStorageDomainOutput] = res[0].get();         
-
-                set[KeyDataStorageDomainInput] = res[1].get();
-                set[KeyDataStorageDomainCustom] =res[2].get();         
-                set[KeyDataStorageDomainSystem] =res[3].get();         
-                set[KeyDataStorageDomainHealth] =res[4].get();         
-                set[KeyDataStorageDomainDevAlarm] =res[5].get();         
-                set[KeyDataStorageDomainCUAlarm] = res[6].get();         
-                retdata = combineDataSets(set);
-            }
-#else
       for (int cnt = 0; cnt < res.size(); cnt++) {
         if (res[cnt].get()) {
           retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
@@ -776,7 +756,6 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
         //            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
       }
 
-#endif
     } else if (channel == 128) {
       CDWShrdPtr custom = getLiveChannel(path, KeyDataStorageDomainCustom);
       CDWShrdPtr poiv   = getLiveChannel(path, KeyDataStorageDomainOutput);
@@ -834,43 +813,45 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
       return retdata;
     } else if (channel == 255) {
       std::vector<std::string> channels;
-
-      channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
+      channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
       channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainSystem));
       channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
-      channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
-      chaos::common::data::VectorCDWShrdPtr res = getLiveChannel(channels);
-#if 0
-         chaos::common::data::CDataWrapper *idata = NULL, *odata = NULL;
-            chaos::common::data::CDataWrapper resdata;
-            std::stringstream out;
-            uint64_t ts = 0;
-            std::map<int, chaos::common::data::CDataWrapper *> set;
-            CDataWrapper ch[7];
-            if(res.size()>=4){
-                set[KeyDataStorageDomainHealth] =res[0].get();         
-                set[KeyDataStorageDomainSystem] =res[1].get();         
-                set[KeyDataStorageDomainDevAlarm] =res[2].get();         
-                set[KeyDataStorageDomainCUAlarm] = res[3].get();        
-                retdata = combineDataSets(set);
-            }
-#else
-      if (res.size()) {
-        if (res[0].get()) {
-          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *(res[0].get()));
-        }
-        if (res[1].get()) {
-          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
-        }
-        if (res[2].get()) {
-          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
-        }
-        if (res[3].get()) {
-          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[3].get()));
-        }
-      }
+      channels.push_back(path + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
 
-#endif
+      chaos::common::data::VectorCDWShrdPtr res = getLiveChannel(channels);
+
+      
+      if (res.size()) {
+        if (res[0].get()/*&&res[0]->countKeys()*/) {
+
+          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainCUAlarm), *(res[0].get()));
+          //CTRLDBG_<<"CUAlarm:"<<res[0]->getCompliantJSONString()<<" retdata:"<<retdata->getCompliantJSONString();
+
+        } else {
+          CTRLERR_ << " cannot retrive CUALARM of:" << path;
+        }
+        if (res[1].get()/*&&res[1]->countKeys()*/) {
+        //  CTRLDBG_<<"System:"<<res[1]->getCompliantJSONString()<<" keys:"<<res[1]->countKeys() <<" size:"<<res[1]->getBSONRawSize();
+          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainSystem), *(res[1].get()));
+        } else {
+          CTRLERR_ << " cannot retrive SYSTEM of:" << path;
+        }
+        if (res[2].get()/*&&res[2]->countKeys()*/) {
+          retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainDevAlarm), *(res[2].get()));
+        } else {
+          CTRLERR_ << " cannot retrive DEVALARM of:" << path;
+        }
+        
+      if (res[3].get()) {
+
+        retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *res[3].get());
+      } else {
+        CTRLERR_ << " cannot retrive HEALTH of:" << path;
+      }
+      } else {
+        CTRLERR_ << " cannot retrive multiple keys of:" << path;
+      }
+      
     } else {
       CDataWrapper                                      data;
       ChaosSharedPtr<chaos::common::data::CDataWrapper> res = getLiveChannel(path, channel);
@@ -895,17 +876,6 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
     retdata->appendAllElement(*bundle_state.getData());
     return retdata;
   }
-#if 0
-    if (retdata.get())
-    {
-        retdata->appendAllElement(*bundle_state.getData());
-    }
-    else
-    {
-        retdata.reset(new CDataWrapper());
-        retdata->appendAllElement(*bundle_state.getData());
-    }
-#endif
   return retdata;
 }
 
@@ -978,7 +948,7 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   std::string                                                     name  = "";                                                                            \
   std::string                                                     what  = "";                                                                            \
   bool                                                            alive = true;                                                                          \
-  chaos::common::data::CDataWrapper                                        p;                                                                                     \
+  chaos::common::data::CDataWrapper                               p;                                                                                     \
   ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> names;                                                                                 \
   ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> node_list;                                                                             \
   ChaosUniquePtr<chaos::common::data::CDataWrapper>               json_value;                                                                            \
@@ -1534,7 +1504,7 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   std::vector<std::string> ret;
   DBGET << "filtering by: " << state << " CUs:" << node_found.size();
 
-  if ((state == "Error") || (state == "Warning")|| (state == "Ok")) {
+  if ((state == "Error") || (state == "Warning") || (state == "Ok")) {
     chaos::common::data::VectorCDWShrdPtr chan = getLiveChannel(node_found, (int)KeyDataStorageDomainSystem);
     for (chaos::common::data::VectorCDWShrdPtr::iterator i = chan.begin(); i != chan.end(); i++) {
       if (i->get()) {
@@ -1547,7 +1517,6 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
           alarmlevel = (((*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) > alarmlevel) ? (*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) : alarmlevel);
         }
         if ((*i)->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
-
           if ((alarmlevel >= 2) && (state == "Error")) {
             ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
             DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " Error level:" << alarmlevel;
@@ -1556,7 +1525,7 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
             DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " Warning level:" << alarmlevel;
 
             ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
-          } else if((alarmlevel == 0) && (state == "Ok")) {
+          } else if ((alarmlevel == 0) && (state == "Ok")) {
             DBGET << "found : " << (*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID) << " OK:" << alarmlevel;
 
             ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
@@ -1584,34 +1553,35 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   }
   return ret;
 }
-int ChaosController::searchNode(const std::string& unique_id_filter,
-                               chaos::NodeType::NodeSearchType node_type_filter,
-                               bool alive_only,
-                               unsigned int start_page,
-                               unsigned int page_length,
-                               unsigned int& num_of_page,
-                               ChaosStringVector& node_found,
-                               uint32_t millisec_to_wait,
-                               const std::string& impl,const std::string& state){
-        uint64_t lastid=0;
-        int ret;
-        num_of_page=0;
-        ChaosStringVector tmp;
-        int size;
-        do{
-            size=tmp.size();
-            ret=mdsChannel->searchNodeInt(unique_id_filter,node_type_filter,alive_only,lastid,100000/*page_length*/,lastid,tmp,millisec_to_wait,impl);
-           // MSG_DBG<<"searchNode start page:"<<start_page<<" page len:"<<page_length<<" lastid:"<<lastid<<"size:"<<tmp.size()<<" sizebefore:"<<size<<" ret:"<<ret;
-            tmp=filterByState(tmp,state);
-            if(tmp.size()<page_length){
-                break;
-            }
-        } while((size<tmp.size())&&(ret==chaos::ErrorCode::EC_NO_ERROR));
-        num_of_page=(tmp.size())?(tmp.size()/page_length)+(((tmp.size()%page_length)==0)?0:1):0;
-        for(int cnt=start_page*page_length;(cnt<tmp.size())&&(cnt<((start_page+1)*page_length));cnt++){
-            node_found.push_back(tmp[cnt]);
-        }
-        return chaos::ErrorCode::EC_NO_ERROR;
+int ChaosController::searchNode(const std::string&              unique_id_filter,
+                                chaos::NodeType::NodeSearchType node_type_filter,
+                                bool                            alive_only,
+                                unsigned int                    start_page,
+                                unsigned int                    page_length,
+                                unsigned int&                   num_of_page,
+                                ChaosStringVector&              node_found,
+                                uint32_t                        millisec_to_wait,
+                                const std::string&              impl,
+                                const std::string&              state) {
+  uint64_t lastid = 0;
+  int      ret;
+  num_of_page = 0;
+  ChaosStringVector tmp;
+  int               size;
+  do {
+    size = tmp.size();
+    ret  = mdsChannel->searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
+    // MSG_DBG<<"searchNode start page:"<<start_page<<" page len:"<<page_length<<" lastid:"<<lastid<<"size:"<<tmp.size()<<" sizebefore:"<<size<<" ret:"<<ret;
+    tmp = filterByState(tmp, state);
+    if (tmp.size() < page_length) {
+      break;
+    }
+  } while ((size < tmp.size()) && (ret == chaos::ErrorCode::EC_NO_ERROR));
+  num_of_page = (tmp.size()) ? (tmp.size() / page_length) + (((tmp.size() % page_length) == 0) ? 0 : 1) : 0;
+  for (int cnt = start_page * page_length; (cnt < tmp.size()) && (cnt < ((start_page + 1) * page_length)); cnt++) {
+    node_found.push_back(tmp[cnt]);
+  }
+  return chaos::ErrorCode::EC_NO_ERROR;
 }
 
 ChaosController::chaos_controller_error_t ChaosController::get(const std::string& cmd, char* args, int timeout, int prio, int sched, int submission_mode, int channel, std::string& json_buf) {
@@ -1667,13 +1637,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           for (int idx = 0; idx < names->size(); idx++) {
             const std::string domain = names->getStringElementAtIndex(idx);
             if (pageaccess) {
-              if (searchNode(domain, node_type, alive, page_start, maxpage, npages, node_tmp, MDS_TIMEOUT, impl,state) == 0) {
+              if (searchNode(domain, node_type, alive, page_start, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
                 std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
 
                 // node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
               }
             } else {
-              if (searchNode(domain, node_type, alive, 0, maxpage, npages,node_tmp, MDS_TIMEOUT, impl,state) == 0) {
+              if (searchNode(domain, node_type, alive, 0, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
                 //  node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                 std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
               }
@@ -1701,18 +1671,19 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           DBGET << "searching node \"" << name << "\" type:" << node_type << " (" << what << ")";
           if (pageaccess) {
             if ((err = searchNode(name,
-                                              node_type,
-                                              alive,
-                                              page_start,
-                                              maxpage,
-                                              npages,
-                                              node_tmp,
-                                              MDS_TIMEOUT,
-                                              impl,state)) == 0) {
+                                  node_type,
+                                  alive,
+                                  page_start,
+                                  maxpage,
+                                  npages,
+                                  node_tmp,
+                                  MDS_TIMEOUT,
+                                  impl,
+                                  state)) == 0) {
               std::stringstream ss;
               std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
 
-            /*  if (state.size()) {
+              /*  if (state.size()) {
                 node_found = filterByState(node_found, state);
                 // return just the required state
                 npages=(node_found.size())?(node_found.size()/maxpage)+(((node_found.size()%maxpage)==0)?0:1):0;
@@ -1728,14 +1699,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
           } else {
             if ((err = searchNode(name,
-                                              node_type,
-                                              alive,
-                                              0,
-                                              maxpage,
-                                              npages,
-                                              node_tmp,
-                                              MDS_TIMEOUT,
-                                              impl,state)) == 0) {
+                                  node_type,
+                                  alive,
+                                  0,
+                                  maxpage,
+                                  npages,
+                                  node_tmp,
+                                  MDS_TIMEOUT,
+                                  impl,
+                                  state)) == 0) {
               std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
               /*if (state.size()) {
                 node_found = filterByState(node_found, state);
@@ -2847,8 +2819,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       std::string ret = fetchJson(channel);
 
       if (ret.size() < 4) {
-        ret = fetch(channel)->getCompliantJSONString();
-        DBGET << "cache not valid retrieved :\"" << ret << "\"";
+        chaos::common::data::CDWUniquePtr a=fetch(channel);
+        uint32_t size=0;
+        if(a.get()){
+          ret = a->getCompliantJSONString();
+          if(ret.size()<4){
+                  ChaosSharedPtr<chaos::common::data::CDataWrapper> resh = fetch(KeyDataStorageDomainHealth);
+            if(resh.get()){
+              ret="{\""+std::string(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth))+"\":"+resh->getCompliantJSONString()+"}";
+            }
+          }
+          size=a->getBSONRawSize();
+        } else {
+                  DBGET << "error retrieving channel "<<channel;
+        }
+        DBGET << "cache not valid retrieved :\"" << ret << "\" size:"<<size;
       }
       json_buf = (ret.size() == 0) ? "{}" : ret;
       return CHAOS_DEV_OK;

@@ -309,6 +309,17 @@ try {
       UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
       UnitServerNodeDomainAndActionRPC::ACTION_UNIT_SERVER_LOAD_CONTROL_UNIT,
       "Attempt to load");
+  addActionDescritionInstance<ChaosDatasetIO>(
+      this, &ChaosDatasetIO::setProperty,
+      UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
+      NodeDomainAndActionRPC::ACTION_SET_PROPERTIES,
+      "method for set properties");
+  addActionDescritionInstance<ChaosDatasetIO>(
+      this, &ChaosDatasetIO::getProperty,
+      UnitServerNodeDomainAndActionRPC::RPC_DOMAIN,
+      NodeDomainAndActionRPC::ACTION_GET_PROPERTIES,
+      "method for get properties");
+
 
   addActionDescritionInstance<ChaosDatasetIO>(
       this, &ChaosDatasetIO::_unload,
@@ -317,7 +328,7 @@ try {
       "Unload");
 
   chaos::DeclareAction::addActionDescritionInstance<ChaosDatasetIO>(
-      this, &ChaosDatasetIO::updateConfiguration, uid,
+      this, &ChaosDatasetIO::_updateConfiguration, uid,
       chaos::NodeDomainAndActionRPC::ACTION_UPDATE_PROPERTY,
       "Update Dataset property");
 
@@ -788,7 +799,8 @@ int ChaosDatasetIO::registerDataset() {
   mds_registration_pack->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR,
                                         network_broker->getRPCUrl());
   mds_registration_pack->addStringValue("mds_control_key", "none");
-  
+ // mds_registration_pack->addStringValue(UnitServerNodeDomainAndActionRPC::PARAM_CONTROL_UNIT_TYPE,CUType::SEXUT);
+
   mds_registration_pack->addStringValue(
       chaos::NodeDefinitionKey::NODE_TYPE,
       chaos::NodeType::NODE_TYPE_ROOT);
@@ -927,8 +939,20 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_load(
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
   DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-  return execute(ACT_LOAD, MOVE(dataset_attribute_values));
-  ;
+  if(dataset_attribute_values->hasKey("cudk_load_param")){
+    std::string str=dataset_attribute_values->getStringValue("cudk_load_param");
+    try{
+      chaos::common::data::CDataWrapper wp;
+  
+      wp.setSerializedJsonData(str.c_str());
+      result=wp.clone();
+    return execute(ACT_LOAD, result);
+
+    }catch(...){
+
+    }
+  }  
+  return execute(ACT_LOAD, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_unload(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -939,7 +963,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_unload(
 
   DPD_LDBG << "UNLOAD: " << dataset_attribute_values->getJSONString();
   waitEU.notifyAll();
-  return execute(ACT_UNLOAD, MOVE(dataset_attribute_values));
+  return execute(ACT_UNLOAD, dataset_attribute_values);
   ;
 }
 
@@ -967,7 +991,7 @@ ChaosDatasetIO::_setDatasetAttribute(CDWUniquePtr dataset_attribute_values) {
   if (changed) {
     pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
   }
-  return execute(ACT_SET, MOVE(dataset_attribute_values));
+  return execute(ACT_SET, dataset_attribute_values);
 }
 
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_registrationAck(
@@ -988,7 +1012,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_start(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);
   waitEU.notifyAll();
-  return execute(ACT_START, MOVE(dataset_attribute_values));
+  return execute(ACT_START, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -1000,7 +1024,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP, true);
 
-  return execute(ACT_STOP, MOVE(dataset_attribute_values));
+  return execute(ACT_STOP, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -1012,7 +1036,7 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT, true);
 
-  return execute(ACT_DEINIT, MOVE(dataset_attribute_values));
+  return execute(ACT_DEINIT, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_getInfo(
     chaos::common::data::CDWUniquePtr dataset_attribute_values) {
@@ -1059,7 +1083,7 @@ ChaosDatasetIO::_submitStorageBurst(chaos::common::data::CDWUniquePtr data) {
       ControlUnitDatapackSystemKey::BURST_TAG, burst->tag);
 
   updateSystem();
-  return execute(ACT_BURST, MOVE(data));
+  return execute(ACT_BURST, data);
 }
 
 CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
@@ -1072,9 +1096,10 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
   if (!dataset_attribute_values->hasKey(
           ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)) {
     DPD_LERR << "NO DATASET PRESENT INPUT: ";
-      waitEU.notifyAll();
+    result=execute(ACT_INIT, dataset_attribute_values);
+    waitEU.notifyAll();
 
-    return execute(ACT_INIT, MOVE(dataset_attribute_values));
+    return result;
   }
   CDWUniquePtr desc = dataset_attribute_values->getCSDataValue(
       ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
@@ -1121,17 +1146,22 @@ CDWUniquePtr ChaosDatasetIO::_init(CDWUniquePtr dataset_attribute_values) {
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS,
       chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_INIT, true);
 
-  updateConfiguration(MOVE(dataset_attribute_values));
+  updateConfiguration(dataset_attribute_values);
   setCUAlarmLevel("packet_send_error",0);
   setCUAlarmLevel("packet_lost",0);
   if(datasets[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT].get()){
     pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
   }
+  result=execute(ACT_INIT, dataset_attribute_values);
+
   waitEU.notifyAll();
 
-  return execute(ACT_INIT, MOVE(dataset_attribute_values));
+  return result;
 }
-CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
+CDWUniquePtr ChaosDatasetIO::_updateConfiguration(CDWUniquePtr update_pack) {
+  return updateConfiguration(update_pack);
+}
+CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr& update_pack) {
   // check to see if the device can ben initialized
 
   // PropertyGroupVectorSDWrapper pg_sdw;
@@ -1147,7 +1177,7 @@ CDWUniquePtr ChaosDatasetIO::updateConfiguration(CDWUniquePtr update_pack) {
   // update the property
   // PropertyCollector::applyValue(pg_sdw());
 
-  return execute(ACT_UPDATE, MOVE(update_pack));
+  return execute(ACT_UPDATE, update_pack);
 }
 //////
 
@@ -1479,14 +1509,30 @@ void ChaosDatasetIO::_initPropertyGroup() {
                 ChaosBindPlaceholder(_1), ChaosBindPlaceholder(_2),
                 ChaosBindPlaceholder(_3), ChaosBindPlaceholder(_4)));
 }
+chaos::common::data::CDWUniquePtr ChaosDatasetIO::getProperty(chaos::common::data::CDWUniquePtr data) {
+  chaos::common::data::CDWUniquePtr ret=execute(ACT_GETPROP, data);
+  DPD_LDBG << "get properties:" << ((ret.get()) ? ret->getJSONString() : "");
 
+  return ret;
+
+}
+chaos::common::data::CDWUniquePtr ChaosDatasetIO::setProperty(chaos::common::data::CDWUniquePtr data) {
+  chaos::common::data::CDWUniquePtr ret=execute(ACT_SETPROP, data);
+  DPD_LDBG << "set properties:" << ((data.get()) ? data->getJSONString() : "");
+
+  return ret;
+}
 chaos::common::data::CDWUniquePtr
-ChaosDatasetIO::execute(ActionID r, chaos::common::data::CDWUniquePtr p) {
+ChaosDatasetIO::execute(ActionID r, chaos::common::data::CDWUniquePtr& p) {
   handler_t::iterator i = handlermap.find(r);
+    DPD_LDBG << "finding Action:" << r;
+
   if (i != handlermap.end()) {
     actionFunc_t handler = i->second;
-    return handler(MOVE(p), this);
+    return handler(p, this);
   }
+    DPD_LDBG << "No registered Action:" << r;
+
   return chaos::common::data::CDWUniquePtr();
 }
 
@@ -1508,6 +1554,8 @@ int ChaosDatasetIO::addHandler(chaos::common::message::msgHandler cb){
 int ChaosDatasetIO::registerAction(actionFunc_t func, ActionID id) {
   if (id < ACT_LOAD || id >= ACT_NONE)
     return -1;
+  DPD_LDBG << "register Action:" << id;
+
   handlermap[id] = func;
   return 0;
 }
