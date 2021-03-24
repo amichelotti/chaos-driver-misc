@@ -258,6 +258,7 @@ namespace driver{
              * return 0 if success
             */
             int allocateDEVAlarm(const std::string& name);
+            int setAlarmLevel(const std::string& name,uint8_t value,const unsigned channel=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM,const std::string msg="");
 
             /**
              * Set a preallocated CUalarm to a given level (0= no alarm,1=warning,2>=failure)
@@ -306,6 +307,9 @@ namespace driver{
              * @return int 0 on success
              */
             int addHandler(chaos::common::message::msgHandler cb);
+
+
+            int notifyAllClients(const std::string& msg,int errorLevel=0);
             
         };
     }}
