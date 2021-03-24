@@ -527,9 +527,6 @@ int ChaosDatasetIO::notifyAllClients(const std::string& msg,int errorLevel){
   ptr->addStringValue("username",uid);
 
   int err = ioLiveDataDriver->storeData("chaos_web_log", ptr, (chaos::DataServiceNodeDefinitionType::DSStorageType)0);
-  int32_t siz;
-  int32_t *bslen=(int32_t *)ptr->getBSONRawData(siz);
-  DPD_LDBG <<"NOTIFY:("<<ptr->getBSONRawSize()<<","<<*bslen<<","<<siz<<"):"<<ptr->getJSONString();
   return err;
 }
 
