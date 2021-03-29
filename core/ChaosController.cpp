@@ -176,7 +176,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState& stat, co
   stat                                 = chaos::CUStateKey::UNDEFINED;
   if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)) {
     cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH] = tmp;
-    std::string state                                                   = tmp->getCStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
+    std::string state                                                   = tmp->getStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
     if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
       stat = chaos::CUStateKey::START;
     else if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOPING))
