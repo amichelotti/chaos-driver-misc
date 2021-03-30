@@ -2073,19 +2073,31 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       int                      idx;
       chaos_controller_error_t ret = CHAOS_DEV_OK;
       PARSE_QUERY_PARMS(args, true, true);
-      if (node_type.empty() && (what != "health") && (what != "command") && (what != "deletenode")) {
+
+      if (node_type.empty()  && (what != "command") && (what != "deletenode")&& (!(what == chaos::DataPackID::HEALTH_DATASET_ID)||(what == chaos::DataPackID::OUTPUT_DATASET_ID)||(what == chaos::DataPackID::INPUT_DATASET_ID)||(what == chaos::DataPackID::SYSTEM_DATASETID)||(what == chaos::DataPackID::CU_ALARM_DATASET_ID)||(what == chaos::DataPackID::DEV_ALARM_DATASET_ID))) {
         serr << cmd << " parameters must specify 'type'";
 
         bundle_state.append_error(serr.str());
         json_buf = bundle_state.getData()->getCompliantJSONString();
         return CHAOS_DEV_CMD;
       }
-      if (((names.get()) && ((names->size()) > 0)) && (what == "health")) {
+      if (((names.get()) && ((names->size()) > 0)&&((what == chaos::DataPackID::HEALTH_DATASET_ID)||(what == chaos::DataPackID::OUTPUT_DATASET_ID)||(what == chaos::DataPackID::INPUT_DATASET_ID)||(what == chaos::DataPackID::SYSTEM_DATASETID)||(what == chaos::DataPackID::CU_ALARM_DATASET_ID)||(what == chaos::DataPackID::DEV_ALARM_DATASET_ID)))) {
         // multi get!
+        int cnt=0;
         res << "[";
-        chaos::common::data::VectorCDWShrdPtr dat = getLiveChannel(names.get());
-        for (chaos::common::data::VectorCDWShrdPtr::iterator i = dat.begin(); i != dat.end(); i++) {
-          res << "{\"health\":" << (*i)->getCompliantJSONString() << "}";
+        chaos::common::data::VectorCDWShrdPtr dat = getLiveChannel(names.get(),chaos::HumanTodatasetType(what));
+        if(dat.size()==0){
+          json_buf="[]";
+          return CHAOS_DEV_CMD;
+        }
+        for (chaos::common::data::VectorCDWShrdPtr::iterator i = dat.begin(); i != dat.end(); i++,cnt++) {
+          if(i->get()){
+            res << "{\""<<what<<"\":" << (*i)->getCompliantJSONString() << "}";
+          } else {
+            res << "{\""<<what<<"\":{\""<<std::string(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+            res <<"\":\""<<names->getStringElementAtIndex(cnt)<<"\"}}";
+
+          }
           if ((i + 1) != dat.end()) {
             res << ",";
           }
@@ -2849,6 +2861,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       chaos::common::data::CDWUniquePtr data     = fetch(KeyDataStorageDomainInput);
       json_buf                                   = dataset2Var(data.get(), var_name);
       return CHAOS_DEV_OK;
+    } else if (cmd == "querylast" && (args != 0)) {
+      chaos_data::CDataWrapper        p;
+
+      int  channel = 0;
+      p.setSerializedJsonData(args);
+      if (p.hasKey("channel")) {
+        if (p.isInt32Value("channel")) {
+          if ((p.getInt32Value("channel") >= 0) && (p.getInt32Value("channel") <= DPCK_LAST_DATASET_INDEX)) {
+            channel = p.getInt32Value("channel");
+          }
+        }
+        if (p.isStringValue("channel")) {
+          channel = chaos::HumanTodatasetType(p.getStringValue("channel"));
+        }
+      }
+
     } else if (cmd == "queryhst" && (args != 0)) {
       chaos_data::CDataWrapper        p;
       uint64_t                        start_ts = 0, end_ts = 0xffffffff;
