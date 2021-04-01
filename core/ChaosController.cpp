@@ -1554,7 +1554,7 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   return ret;
 }
 int ChaosController::searchNode(const std::string&              unique_id_filter,
-                                chaos::NodeType::NodeSearchType node_type_filter,
+                                const std::string&              nt,
                                 bool                            alive_only,
                                 unsigned int                    start_page,
                                 unsigned int                    page_length,
@@ -1568,6 +1568,8 @@ int ChaosController::searchNode(const std::string&              unique_id_filter
   num_of_page = 0;
   ChaosStringVector tmp;
   int               size;
+  chaos::NodeType::NodeSearchType node_type_filter=human2NodeType(nt);
+
   do {
     size = tmp.size();
     ret  = mdsChannel->searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
@@ -1632,18 +1634,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         ChaosStringVector node_tmp;
 
         if ((names.get()) && names->size()) {
-          DBGET << "list nodes of type:" << node_type << "(" << what << ")";
+          DBGET << "list nodes of type:" << what << ")";
 
           for (int idx = 0; idx < names->size(); idx++) {
             const std::string domain = names->getStringElementAtIndex(idx);
             if (pageaccess) {
-              if (searchNode(domain, node_type, alive, page_start, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
+              if (searchNode(domain, what, alive, page_start, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
                 std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
 
                 // node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
               }
             } else {
-              if (searchNode(domain, node_type, alive, 0, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
+              if (searchNode(domain, what, alive, 0, maxpage, npages, node_tmp, MDS_TIMEOUT, impl, state) == 0) {
                 //  node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
                 std::copy_if(node_tmp.begin(), node_tmp.end(), std::back_inserter(node_found), [](std::string& i) { return (i != ""); });
               }
@@ -1671,7 +1673,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           DBGET << "searching node \"" << name << "\" type:" << node_type << " (" << what << ")";
           if (pageaccess) {
             if ((err = searchNode(name,
-                                  node_type,
+                                  what,
                                   alive,
                                   page_start,
                                   maxpage,
@@ -1699,7 +1701,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
           } else {
             if ((err = searchNode(name,
-                                  node_type,
+                                  what,
                                   alive,
                                   0,
                                   maxpage,

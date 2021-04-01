@@ -235,7 +235,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      */
     //int waitCmd();
 int searchNode(const std::string& unique_id_filter,
-                               chaos::NodeType::NodeSearchType node_type_filter,
+                               const std::string& node_type_filter,
                                bool alive_only,
                                unsigned int start_page,
                                unsigned int page_length,
