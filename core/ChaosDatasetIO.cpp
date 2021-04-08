@@ -517,14 +517,14 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   }
   return err;
 }
-int ChaosDatasetIO::notifyAllClients(const std::string& msg,int errorLevel){
+int ChaosDatasetIO::notifyAllClients(const std::string &msg, int errorLevel) {
   chaos::common::data::CDWShrdPtr ptr(new chaos::common::data::CDataWrapper());
-  ptr->addStringValue("msg",msg);
-  ptr->addStringValue("date",chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp()));
-  ptr->addStringValue("type",((errorLevel==2)?"alarm":"system"));
-  ptr->addStringValue("dst","broadcast");
-  ptr->addStringValue("src",network_broker->getRPCUrl());
-  ptr->addStringValue("username",uid);
+  ptr->addStringValue("msg", msg);
+  ptr->addStringValue("date", chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp()));
+  ptr->addStringValue("type", ((errorLevel == 2) ? "alarm" : "system"));
+  ptr->addStringValue("dst", "broadcast");
+  ptr->addStringValue("src", network_broker->getRPCUrl());
+  ptr->addStringValue("username", uid);
 
   int err = ioLiveDataDriver->storeData("chaos_web_log", ptr, (chaos::DataServiceNodeDefinitionType::DSStorageType)0);
   return err;
@@ -960,7 +960,14 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_stop(
 
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STOP, true);
-
+  HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
+                                                  0.0,
+                                                  true);
+  HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                                  0,
+                                                  true);
   return execute(ACT_STOP, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
@@ -971,7 +978,14 @@ chaos::common::data::CDWUniquePtr ChaosDatasetIO::_deinit(
 
   HealtManager::getInstance()->addNodeMetricValue(
       uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_DEINIT, true);
-
+  HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
+                                                  0.0,
+                                                  true);
+  HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                  ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                                  0,
+                                                  true);
   return execute(ACT_DEINIT, dataset_attribute_values);
 }
 chaos::common::data::CDWUniquePtr ChaosDatasetIO::_getInfo(
