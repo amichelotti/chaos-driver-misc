@@ -308,8 +308,10 @@ namespace driver{
              */
             int addHandler(chaos::common::message::msgHandler cb);
 
+            int notifyAllClients(const std::string& msg,const std::string& type,const std::vector<std::string> emails={});
 
-            int notifyAllClients(const std::string& msg,int errorLevel=0);
+            int notifyAllClients(const std::string& msg,int errorLevel=0,const std::vector<std::string> emails={});
+
             
         };
     }}

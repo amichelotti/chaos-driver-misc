@@ -517,13 +517,30 @@ int ChaosDatasetIO::pushDataset(ChaosDataSet &new_dataset, int type) {
   }
   return err;
 }
-int ChaosDatasetIO::notifyAllClients(const std::string &msg, int errorLevel) {
+int ChaosDatasetIO::notifyAllClients(const std::string& msg,int errorLevel,const std::vector<std::string> emails){
+  return notifyAllClients( msg, ((errorLevel == 2) ? "alarm" : "system"),emails);
+}
+int ChaosDatasetIO::notifyAllClients(const std::string& msg,const std::string& errorLevel,const std::vector<std::string> emails){
+
   chaos::common::data::CDWShrdPtr ptr(new chaos::common::data::CDataWrapper());
   ptr->addStringValue("msg", msg);
   ptr->addStringValue("date", chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp()));
-  ptr->addStringValue("type", ((errorLevel == 2) ? "alarm" : "system"));
+  ptr->addStringValue("type", errorLevel);
   ptr->addStringValue("dst", "broadcast");
   ptr->addStringValue("src", network_broker->getRPCUrl());
+  if(emails.size()){
+    std::string comma;
+    for(std::vector<std::string>::const_iterator i=emails.begin();i!=emails.end();i++){
+      if(i+1!=emails.end()){
+        comma=comma+*i+",";
+      } else {
+        comma=comma+*i;
+      }
+    }
+
+  ptr->addStringValue("email", comma);
+
+  }
   ptr->addStringValue("username", uid);
 
   int err = ioLiveDataDriver->storeData("chaos_web_log", ptr, (chaos::DataServiceNodeDefinitionType::DSStorageType)0);
