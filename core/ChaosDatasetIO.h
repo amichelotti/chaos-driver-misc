@@ -31,12 +31,11 @@ namespace driver{
     namespace misc{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO;
-        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr,ChaosDatasetIO*);
+        typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr&,ChaosDatasetIO*);
 
         class ChaosDatasetIO             :        
         public chaos::DeclareAction,
         public chaos::common::property::PropertyCollector,
-
         protected chaos::common::async_central::TimerHandler{
             public:
             static std::string ownerApp;
@@ -50,6 +49,8 @@ namespace driver{
                 ACT_UPDATE,
                 ACT_SET,
                 ACT_BURST,
+                ACT_GETPROP,
+                ACT_SETPROP,
                 ACT_NONE
             };
             private:
@@ -117,7 +118,9 @@ namespace driver{
             int32_t findMax(ChaosDataSet&ds, std::vector<std::string>&);
             std::vector<std::string> cu_alarms,dev_alarms;
            // std::map<std::string,chaos::common::data::CDWUniquePtr> attr_desc;
-            chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
+            chaos::common::data::CDWUniquePtr updateConfiguration(chaos::common::data::CDWUniquePtr& update_pack);
+            chaos::common::data::CDWUniquePtr _updateConfiguration(chaos::common::data::CDWUniquePtr update_pack);
+
             chaos::common::data::CDWUniquePtr _setDatasetAttribute(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _init(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _registrationAck(chaos::common::data::CDWUniquePtr dataset_attribute_values);
@@ -129,10 +132,12 @@ namespace driver{
             chaos::common::data::CDWUniquePtr _deinit(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _getInfo(chaos::common::data::CDWUniquePtr dataset_attribute_values);
             chaos::common::data::CDWUniquePtr _submitStorageBurst(chaos::common::data::CDWUniquePtr dataset_attribute_values);
-
+             chaos::common::data::CDWUniquePtr getProperty(chaos::common::data::CDWUniquePtr);
+  // virtual set CU properties
+             chaos::common::data::CDWUniquePtr setProperty(chaos::common::data::CDWUniquePtr);
             typedef std::map<ActionID,actionFunc_t> handler_t; 
             handler_t handlermap;
-            chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr p);
+            chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr& p);
             bool check_presence;
 
             void _initDataset();
@@ -253,6 +258,7 @@ namespace driver{
              * return 0 if success
             */
             int allocateDEVAlarm(const std::string& name);
+            int setAlarmLevel(const std::string& name,uint8_t value,const unsigned channel=chaos::DataPackCommonKey::DPCK_DATASET_TYPE_CU_ALARM,const std::string msg="");
 
             /**
              * Set a preallocated CUalarm to a given level (0= no alarm,1=warning,2>=failure)
@@ -301,6 +307,11 @@ namespace driver{
              * @return int 0 on success
              */
             int addHandler(chaos::common::message::msgHandler cb);
+
+            int notifyAllClients(const std::string& msg,const std::string& type,const std::vector<std::string> emails={});
+
+            int notifyAllClients(const std::string& msg,int errorLevel=0,const std::vector<std::string> emails={});
+
             
         };
     }}

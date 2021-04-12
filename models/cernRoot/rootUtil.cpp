@@ -14,7 +14,7 @@ using namespace chaos::metadata_service_client;
 #include "TTree.h"
 #include <algorithm> // std::min
 #define ROOTERR ERR_LOG(rootUtil) 
-
+#define MAX_QUERY_ELEMENTS 10000
 #define ROOTDBG DBG_LOG(rootUtil)
 using namespace chaos::common::data;
 using namespace driver::misc;
@@ -910,6 +910,23 @@ TTree *getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper &src,
   ChaosToTree c2t(tr,brname);
   c2t.addData(src);
   return tr;
+}
+std::vector<std::string> chaosSearch(const std::string& name,bool alive,const std::string& type,const std::string& implementation,const std::string& state){
+      ChaosController *ctrl = NULL;
+      ctrl= new ChaosController();
+      ChaosStringVector node_tmp;
+
+      if(ctrl){
+                unsigned npages=0;
+                if(ctrl->searchNode(name, type, alive, 0, MAX_QUERY_ELEMENTS, npages, node_tmp, MDS_TIMEOUT, implementation, state) == 0) {
+                ROOTERR << "An error during search";
+
+              }
+              delete ctrl;
+      }
+      return node_tmp;
+
+
 }
 
 void initChaosRoot() { ROOTDBG << "initializing ChaosRoot"; }
