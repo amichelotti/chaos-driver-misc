@@ -523,6 +523,9 @@ int ChaosDatasetIO::notifyAllClients(const std::string& msg,int errorLevel,const
 int ChaosDatasetIO::notifyAllClients(const std::string& msg,const std::string& errorLevel,const std::vector<std::string> emails){
 
   chaos::common::data::CDWShrdPtr ptr(new chaos::common::data::CDataWrapper());
+  ptr->addStringValue("dashboard_ver",GlobalConfiguration::getInstance()->getBuildInfoRef().getCompliantJSONString());
+  ptr->addStringValue("clientid",uid);
+
   ptr->addStringValue("msg", msg);
   ptr->addStringValue("date", chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp()));
   ptr->addStringValue("type", errorLevel);
