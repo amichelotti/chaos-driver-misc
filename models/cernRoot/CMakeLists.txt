@@ -15,7 +15,7 @@ ADD_EXECUTABLE(chaos2tree chaos2tree.cpp)
 ADD_EXECUTABLE(histo2tree histo2tree.cpp)
 SET(ADDITIONAL_LIBS)
 IF(OPENCV)
-
+  ADD_DEFINITIONS(-DOPENCV)
   SET(ADDITIONAL_LIBS opencv_core  opencv_highgui opencv_imgproc opencv_imgcodecs)
 
 ENDIF()
