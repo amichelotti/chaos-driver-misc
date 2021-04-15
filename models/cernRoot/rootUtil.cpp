@@ -930,3 +930,19 @@ std::vector<std::string> chaosSearch(const std::string& name,bool alive,const st
 }
 
 void initChaosRoot() { ROOTDBG << "initializing ChaosRoot"; }
+#ifdef OPENCV
+
+ cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage){
+   if (chaosImage.hasKey("FRAMEBUFFER")) {
+
+      uint32_t size;
+
+      uint8_t* buf = (uint8_t *)chaosImage.getBinaryValue("FRAMEBUFFER", size);
+      std::vector<uchar> data = std::vector<uchar>(buf, buf + size);
+
+    return cv::imdecode(data, cv::IMREAD_UNCHANGED /*IMREAD_ANYCOLOR | IMREAD_ANYDEPTH*/);
+   }
+   return cv::Mat();
+
+ }
+#endif

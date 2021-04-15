@@ -631,6 +631,8 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveAllChannels(const 
   channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainHealth));
   channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainDevAlarm));
   channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainCUAlarm));
+  channels.push_back(CUNAME + chaos::datasetTypeToPostfix(KeyDataStorageDomainLOG));
+
   if (live_driver->retriveMultipleData(channels, results) != 0) {
     CTRLERR_ << "Error retriving multiple data for:" << CUNAME;
   }
