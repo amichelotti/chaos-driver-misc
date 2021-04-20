@@ -178,7 +178,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState& stat, co
   std::string                     name = (dev == "") ? path : dev;
   chaos::common::data::CDWShrdPtr tmp  = getLiveChannel(name, KeyDataStorageDomainHealth);
   stat                                 = chaos::CUStateKey::UNDEFINED;
-  if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)) {
+  if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)&&cached_channels.size()&&cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()) {
     cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH] = tmp;
     std::string state                                                   = tmp->getStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
     if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
