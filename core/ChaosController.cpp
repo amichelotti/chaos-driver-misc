@@ -511,6 +511,7 @@ void ChaosController::initializeClient() {
 
   if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)) {
     live_driver->updateConfiguration(best_available_da_ptr.get());
+#ifdef CDSLIB
     if (best_available_da_ptr->hasKey("cache")) {
       CDWUniquePtr cs = best_available_da_ptr->getCSDataValue("cache");
       if (cs->hasKey(OPT_CACHE_DRIVER)) {
@@ -548,6 +549,8 @@ void ChaosController::initializeClient() {
     }
       }
     }
+  
+#endif
   }
   cached_channels = getLiveAllChannels();
 }
