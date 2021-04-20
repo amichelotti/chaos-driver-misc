@@ -530,6 +530,24 @@ void ChaosController::initializeClient() {
         }
       }
     }
+    if(best_available_da_ptr->hasKey("persistence")){
+      CDWUniquePtr cs = best_available_da_ptr->getCSDataValue("persistence");
+      if (cs->hasKey(chaos::service_common::persistence::OPT_PERSITENCE_IMPL)) {
+        chaos::service_common::persistence::data_access::AbstractPersistenceDriver::settings.init(*cs.get());
+        const std::string persistence_impl_name = chaos::service_common::persistence::data_access::AbstractPersistenceDriver::settings.persistence_implementation+"PersistenceDriver";
+        persistence_driver.reset(chaos::common::utility::ObjectFactoryRegister<chaos::service_common::persistence::data_access::AbstractPersistenceDriver>::getInstance()->getNewInstanceByName(persistence_impl_name),
+                             persistence_impl_name);
+    if(persistence_driver.get() == NULL) {
+        DBGETERR << "Cannot use direct persistence  with parameters:" << cs->getJSONString();
+
+    } else {
+        DBGET << "Using direct persistence with parameters:" << cs->getJSONString();
+
+      persistence_driver.init(NULL, __PRETTY_FUNCTION__);
+
+    }
+      }
+    }
   }
   cached_channels = getLiveAllChannels();
 }

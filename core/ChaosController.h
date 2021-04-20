@@ -17,6 +17,7 @@
 #include <chaos/common/data/CDataWrapper.h>
 #include <chaos/common/io/IODataDriver.h>
 #include <chaos/common/caching_system/CacheDriver.h>
+#include <chaos_service_common/persistence/data_access/AbstractPersistenceDriver.h>
 #include <chaos/common/batch_command/BatchCommandTypes.h>
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
@@ -66,6 +67,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     chaos::common::data::DatasetDB datasetDB;
     chaos::common::data::VectorCDWShrdPtr cached_channels;
     chaos::common::utility::InizializableServiceContainer<chaos::common::cache_system::CacheDriver> cache_driver;
+    chaos::common::utility::InizializableServiceContainer<chaos::service_common::persistence::data_access::AbstractPersistenceDriver> persistence_driver;
 
     chaos::CUStateKey::ControlUnitState state, last_state, next_state;
     uint64_t timeo, schedule,update_all_channels_ts;
