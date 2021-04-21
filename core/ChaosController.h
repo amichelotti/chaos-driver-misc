@@ -16,8 +16,8 @@
 #include <common/misc/scheduler/SchedTimeElem.h>
 #include <chaos/common/data/CDataWrapper.h>
 #include <chaos/common/io/IODataDriver.h>
-#include <chaos/common/caching_system/CacheDriver.h>
-#include <chaos_service_common/persistence/data_access/AbstractPersistenceDriver.h>
+
+#include <chaos_service_common/ChaosManager.h>
 #include <chaos/common/batch_command/BatchCommandTypes.h>
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
@@ -60,14 +60,15 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
 
   private:
     chaos::common::message::MDSMessageChannel *mdsChannel;
+    chaos::service_common::ChaosManager*manager;
     chaos::metadata_service_client::ChaosMetadataServiceClient *mds_client;
     chaos::common::io::IODataDriverShrdPtr live_driver;
     std::vector<std::string> mds_server_l;
     std::string path;
     chaos::common::data::DatasetDB datasetDB;
     chaos::common::data::VectorCDWShrdPtr cached_channels;
-    chaos::common::utility::InizializableServiceContainer<chaos::common::cache_system::CacheDriver> cache_driver;
-    chaos::common::utility::InizializableServiceContainer<chaos::service_common::persistence::data_access::AbstractPersistenceDriver> persistence_driver;
+    chaos::common::cache_system::CacheDriver* cache_driver;
+    chaos::service_common::persistence::data_access::AbstractPersistenceDriver* persistence_driver;
 
     chaos::CUStateKey::ControlUnitState state, last_state, next_state;
     uint64_t timeo, schedule,update_all_channels_ts;
@@ -237,6 +238,16 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      * @return 0 on success
      */
     //int waitCmd();
+  int searchNodeInt(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive_only,
+                               unsigned int last_node_sequence_id,
+                               unsigned int page_length,
+                               uint64_t & lastid,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait,
+                               const std::string& impl);
+
 int searchNode(const std::string& unique_id_filter,
                                const std::string& node_type_filter,
                                bool alive_only,
