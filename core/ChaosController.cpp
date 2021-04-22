@@ -2518,18 +2518,34 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 par = parent;
               }
               {
-                if (json_value->hasKey("control_unit_implementation") && (sub_type != "nt_script_eu")) {
-                  EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
+                if(manager){
+                  manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"));
+                } else {
+                  if (json_value->hasKey("control_unit_implementation") && (sub_type != "nt_script_eu")) {
+                    EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
+                  }
                 }
               }
               {
-                EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription, MDS_TIMEOUT, name, *json_value);
+                if(manager){
+                  chaos::common::data::CDWUniquePtr msg  = manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"));
+               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+              res << json_buf;
+
+                } else {
+                  EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription, MDS_TIMEOUT, name, *json_value);
+                }
               }
 
               res << json_buf;
             }
           } else if (what == "del") {
             int ret = 0, ret1 = 0;
+            if(manager){
+              manager->deleteInstance(name,parent);
+              json_buf = "{}";
+
+            } else {
             if (!parent.empty()) {
               EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
             }
@@ -2547,6 +2563,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
             } else {
               json_buf = "{}";
+            }
             }
             res << json_buf;
           } else if (what == "get") {
