@@ -1259,8 +1259,9 @@ if(manager){
 int ChaosController::stopDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
+  DBGET<<" STOP DEVICE:"<<manager;
 if(manager){
-    manager->stopStart(dev,false);
+    manager->startStop(dev,false);
     ret =0 ;
   } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
@@ -1270,8 +1271,10 @@ if(manager){
 int ChaosController::startDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
+    DBGET<<" START DEVICE:"<<manager;
+
 if(manager){
-    manager->stopStart(dev,start);
+    manager->startStop(dev,true);
     ret =0 ;
   } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
@@ -1293,7 +1296,7 @@ int ChaosController::loadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
   if(manager){
-    manager->loadUnload(dev,true);
+    manager->loadUnloadControlUnit(dev,true);
     ret =0 ;
   } else {
     EXECUTE_CHAOS_RET_API(ret, api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
@@ -1304,7 +1307,7 @@ int ChaosController::unloadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
 if(manager){
-    manager->loadUnload(dev,false);
+    manager->loadUnloadControlUnit(dev,false);
     ret =0 ;
   } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
@@ -1910,7 +1913,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           serr << " missing name";
         }
       } else if (what == "script") {
-        EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name, 0, page);
+        if(manager){
+          CDWUniquePtr msg=manager->searchScript(name,0,page);
+          json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+          res << json_buf;
+          return CHAOS_DEV_OK;
+        }else {
+          EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SearchScript, MDS_TIMEOUT, name, 0, page);
+        }
         return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
       } else {
         serr << "unknown 'search' arg:" << args;
@@ -2364,7 +2374,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
           }
 
-          chaos::common::data::CDWUniquePtr msg = executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN, "setNodeDescription", p, err);
+          chaos::common::data::CDWUniquePtr msg;
+          if(manager){
+            msg=manager->setNodeDescription(*p);
+            err=0;
+          } else {
+            msg = executeAPI(chaos::NodeDomainAndActionRPC::RPC_DOMAIN, "setNodeDescription", p, err);
+          }
           if (err != 0) {
             execute_chaos_api_error++;
             std::stringstream ss;
@@ -2592,7 +2608,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             res << json_buf;
           } else if (what == "get") {
             if(manager){
-              chaos::common::data::CDWUniquePtr msg  = manager->getInstance(name);
+              chaos::common::data::CDWUniquePtr msg  = manager->getCUInstance(name);
                json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
             }else{
               EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance, MDS_TIMEOUT, name);
@@ -2635,22 +2651,26 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             res << json_buf;
           } else if (what == "start") {
+            startDevice(name);
+            /*
             if(manager){
               chaos::common::data::CDWUniquePtr msg  =manager->startStop(name,true);
               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
 
             } else {
               EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
-            }
+            }*/
             res << json_buf;
           } else if (what == "stop") {
-            if(manager){
+              stopDevice(name);
+
+           /* if(manager){
               chaos::common::data::CDWUniquePtr msg  =manager->startStop(name,false);
               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
 
             } else {
             EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
-            }
+            }*/
             res << json_buf;
           } else if (what == "clrcmdq") {
             EXECUTE_CHAOS_API(api_proxy::node::ClearCommandQueue, MDS_TIMEOUT, name);
