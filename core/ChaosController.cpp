@@ -1234,6 +1234,11 @@ int ChaosController::setAttributeToValue(const char* attributeName, const char* 
   std::string name = (cuname == "") ? path : cuname;
   int         ret;
   DBGET << "[" << name << "] Set attribute '" << attributeName << "'='" << attributeValue << "'";
+  if(manager){
+    manager->setInputDatasetAttributeValues(name,attributeName,attributeValue);
+    return 0;
+
+  }
   ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue>               att_obj(new chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue(attributeName, attributeValue));
   std::vector<ChaosSharedPtr<chaos::metadata_service_client::api_proxy::control_unit::InputDatasetAttributeChangeValue> > vc;
   vc.push_back(att_obj);
@@ -2767,12 +2772,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       PARSE_QUERY_PARMS(args, false, true);
       if (what == "save") {
         CHECK_VALUE_PARAM
-
-        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript, MDS_TIMEOUT, json_value);
+        if(manager){
+          manager->saveScript(*json_value);
+        } else {
+          CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::SaveScript, MDS_TIMEOUT, json_value);
+        }
         json_buf = "{}";
         return CHAOS_DEV_OK;
       } else if (what == "del") {
-        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript, MDS_TIMEOUT, json_value);
+        if(manager){
+          manager->removeScript(*json_value);
+
+        } else {
+          CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::RemoveScript, MDS_TIMEOUT, json_value);
+        }
         json_buf = "{}";
         return CHAOS_DEV_OK;
       } else if (what == "newInstance") {
@@ -2780,8 +2793,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         if (!json_value->hasKey("create")) {
           json_value->addBoolValue("create", true);
         }
+        if(manager){
+          manager->manageScriptInstance(*json_value);
 
-        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
+        } else {
+          CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
+        }
         json_buf = "{}";
         return CHAOS_DEV_OK;
       } else if (what == "rmInstance") {
@@ -2789,26 +2806,40 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         if (!json_value->hasKey("create")) {
           json_value->addBoolValue("create", false);
         }
+        if(manager){
+          manager->manageScriptInstance(*json_value);
 
-        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
+        } else {
+          CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::ManageScriptInstance, MDS_TIMEOUT, json_value);
+        }
         json_buf = "{}";
         return CHAOS_DEV_OK;
       } else if (what == "fload")  // fast load
       {
         chaos::common::data::CDWUniquePtr res;
-        if (mdsChannel->getScriptDesc(name, res, MDS_TIMEOUT) != 0) {
-          serr << cmd << " Error retriving script :" << name;
-          bundle_state.append_error(serr.str());
-          json_buf = bundle_state.getData()->getCompliantJSONString();
-          return CHAOS_DEV_CMD;
+        if(manager){
+          res=manager->loadFullDescription(name);
+        } else {
+          if (mdsChannel->getScriptDesc(name, res, MDS_TIMEOUT) != 0) {
+            serr << cmd << " Error retriving script :" << name;
+            bundle_state.append_error(serr.str());
+            json_buf = bundle_state.getData()->getCompliantJSONString();
+            return CHAOS_DEV_CMD;
+          }
         }
-        json_buf = res->getCompliantJSONString();
+        json_buf = ((res.get())?res->getCompliantJSONString():"{}");
 
         return CHAOS_DEV_OK;
       } else if (what == "load") {
         CHECK_VALUE_PARAM;
-        CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript, MDS_TIMEOUT, json_value);
-        chaos::common::data::CDWUniquePtr r = apires->detachResult();
+         chaos::common::data::CDWUniquePtr r;
+        if(manager){
+          r=manager->loadFullScript(*json_value);
+    
+        } else {
+          CALL_CHAOS_API(chaos::metadata_service_client::api_proxy::script::LoadFullScript, MDS_TIMEOUT, json_value);
+          r = apires->detachResult();
+        }
         if (r.get()) {
           json_buf = r->getCompliantJSONString();
         } else {
@@ -2818,6 +2849,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           json_buf = bundle_state.getData()->getCompliantJSONString();
           return CHAOS_DEV_CMD;
         }
+        
         return CHAOS_DEV_OK;
       } else if (what == "searchInstance") {
         CHECK_VALUE_PARAM;
