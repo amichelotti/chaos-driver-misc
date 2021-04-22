@@ -1248,43 +1248,67 @@ int ChaosController::setAttributeToValue(const char* attributeName, const char* 
 int ChaosController::initDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
+if(manager){
+    manager->initDeinit(dev,true);
+    ret =0 ;
+  } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
+  }
   return ret;
 }
 int ChaosController::stopDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
+if(manager){
+    manager->stopStart(dev,false);
+    ret =0 ;
+  } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
+  }
   return ret;
 }
 int ChaosController::startDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
+if(manager){
+    manager->stopStart(dev,start);
+    ret =0 ;
+  } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
+  }
   return ret;
 }
 int ChaosController::deinitDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
+if(manager){
+    manager->initDeinit(dev,false);
+    ret =0 ;
+  } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, false);
+  }
   return ret;
 }
 int ChaosController::loadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
-  EXECUTE_CHAOS_RET_API(ret, api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
+  if(manager){
+    manager->loadUnload(dev,true);
+    ret =0 ;
+  } else {
+    EXECUTE_CHAOS_RET_API(ret, api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
+  }
   return ret;
 }
 int ChaosController::unloadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-
+if(manager){
+    manager->loadUnload(dev,false);
+    ret =0 ;
+  } else {
   EXECUTE_CHAOS_RET_API(ret, api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
+  }
   return ret;
 }
 int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, int channel, std::vector<boost::shared_ptr<CDataWrapper> >& res, const ChaosStringSet& projection, int page) {
@@ -2567,28 +2591,66 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
             res << json_buf;
           } else if (what == "get") {
-            EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance, MDS_TIMEOUT, name);
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  = manager->getInstance(name);
+               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            }else{
+              EXECUTE_CHAOS_API(api_proxy::control_unit::GetInstance, MDS_TIMEOUT, name);
+            }
             res << json_buf;
 
           } else if (what == "load") {
+             if(manager){
+              chaos::common::data::CDWUniquePtr msg  = manager->loadUnloadControlUnit(name,true);
+               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            }else{
             EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, true);
-
+            }
             res << json_buf;
           } else if (what == "unload") {
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  = manager->loadUnloadControlUnit(name,false);
+               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            }else{
             EXECUTE_CHAOS_API(api_proxy::unit_server::LoadUnloadControlUnit, MDS_TIMEOUT, name, false);
-
+            }
             res << json_buf;
           } else if (what == "init") {
-            EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  =manager->initDeinit(name,true);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+            } else {
+
+             EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, true);
+            }
             res << json_buf;
           } else if (what == "deinit") {
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  =manager->initDeinit(name,false);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+            } else {
             EXECUTE_CHAOS_API(api_proxy::control_unit::InitDeinit, MDS_TIMEOUT, name, false);
+            }
             res << json_buf;
           } else if (what == "start") {
-            EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  =manager->startStop(name,true);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+            } else {
+              EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, true);
+            }
             res << json_buf;
           } else if (what == "stop") {
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg  =manager->startStop(name,false);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+            } else {
             EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, MDS_TIMEOUT, name, false);
+            }
             res << json_buf;
           } else if (what == "clrcmdq") {
             EXECUTE_CHAOS_API(api_proxy::node::ClearCommandQueue, MDS_TIMEOUT, name);
@@ -2666,10 +2728,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           domains.push_back("command");
         }
         domains.push_back(node_type);
+        if(manager){
+          chaos::common::data::CDWUniquePtr msg  =manager->searchLogEntry(name,domains,start_ts,end_ts,seq_id,page);
+          json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+        } else {
         EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::SearchLogEntry, MDS_TIMEOUT, name, domains, start_ts, end_ts, seq_id, page);
         //EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
         //chaos::common::data::CDWUniquePtr r = apires->detachResult();
-
+        }
         return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
       }
       serr << cmd << " bad command format";
