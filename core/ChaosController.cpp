@@ -2564,7 +2564,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               }
               {
                 if(manager){
-                  manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"));
+                  manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"),0);
                 } else {
                   if (json_value->hasKey("control_unit_implementation") && (sub_type != "nt_script_eu")) {
                     EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
