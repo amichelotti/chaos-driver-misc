@@ -185,8 +185,7 @@ uint64_t ChaosController::getState(chaos::CUStateKey::ControlUnitState& stat, co
   std::string                     name = (dev == "") ? path : dev;
   chaos::common::data::CDWShrdPtr tmp  = getLiveChannel(name, KeyDataStorageDomainHealth);
   stat                                 = chaos::CUStateKey::UNDEFINED;
-  if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS) && cached_channels.size() && cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH].get()) {
-    cached_channels[chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH] = tmp;
+  if (tmp.get() && tmp->hasKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS)) {
     std::string state                                                   = tmp->getStringValue(chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS);
     if ((state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START) || (state == chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_STARTING))
       stat = chaos::CUStateKey::START;
@@ -286,7 +285,7 @@ int ChaosController::init(const std::string& p, uint64_t timeo_) {
   timeo   = timeo_;
   wostate = 0;
 
-  setUid(path);
+  //setUid(path);
 
   /*  for (int cnt = 0; cnt <= DPCK_LAST_DATASET_INDEX; cnt++)
     {
@@ -480,7 +479,7 @@ void ChaosController::update() {
   initializeAttributeIndexMap();
 }
 ChaosController::ChaosController(std::string p, uint32_t timeo_)
-    : ::common::misc::scheduler::SchedTimeElem(p, 0), timeo(timeo_), datasetDB(true) {
+    : /*::common::misc::scheduler::SchedTimeElem(p, 0),*/ timeo(timeo_), datasetDB(true) {
   int ret;
   heart      = 0;
   mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
@@ -491,8 +490,6 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_)
   if ((ret = init(p, timeo_)) != 0) {
     throw chaos::CException(ret, "cannot allocate controller for:" + path + " check if exists", __FUNCTION__);
   }
-  cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX + 1);
-  cached_channels.resize(DPCK_LAST_DATASET_INDEX + 1);
   /*db = ::common::misc::data::DBbaseFactory::getInstance(DEFAULT_DBTYPE,DEFAULT_DBNAME);
      db->setDBParameters("replication",DEFAULT_DBREPLICATION);
 
@@ -534,7 +531,12 @@ void ChaosController::initializeClient() {
       DBGETERR << " Cannot use direct drivers";
     }
   }
-  cached_channels = getLiveAllChannels();
+  for(int cnt=0;cnt<8;cnt++){
+    fetchJson(0);
+  }
+  fetchJson(-1);
+
+
 }
 void ChaosController::deinitializeClient() {
   /*
@@ -549,7 +551,7 @@ void ChaosController::deinitializeClient() {
 #define CU_SYSTEM_UPDATE_US 2000 * 1000
 #define CU_HEALTH_UPDATE_US 2000 * 1000
 #define CU_FREQ_UPDATE_US 5 * 1000 * 1000
-
+#if 0
 uint64_t ChaosController::sched(uint64_t ts) {
   CDataWrapper all, common;
   // chaos::common::data::VectorCDWShrdPtr channels;
@@ -583,21 +585,7 @@ uint64_t ChaosController::sched(uint64_t ts) {
       }
     }
 
-    /*
-        *  if(!channels[cnt]->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
-            continue;
-        tss=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-        pckid=channels[cnt]->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-        if(pckid>last_pckid[cnt]){
-          delta_update=std::min(delta_update,(tss-last_ts[cnt])*1000/(2*(pckid-last_pckid[cnt])));
-          DBGET<<"reducing delta update to:"<<delta_update << " delta packets:"<<(pckid-last_pckid[cnt])<<" delta time:"<<(tss-last_ts[cnt]);
-          ;
-          last_pckid[cnt]= pckid;
-          last_ts[cnt]=ts;
-        } else{
-          delta_update+=50;
-        }
-          */
+    
   }
   all.appendAllElement(*bundle_state.getData());
   {
@@ -621,7 +609,7 @@ uint64_t ChaosController::sched(uint64_t ts) {
   //DBGET<<"SCHED STOP delta update:"<<delta_update;
   return delta_update;
 }
-
+#endif
 CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
   size_t      value_len = 0;
   char*       value;
@@ -629,7 +617,7 @@ CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
   std::string lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
 
   if (manager) {
-    return manager->getLiveChannel(CUNAME, domain);
+    return manager->getLiveChannel(lkey);
 
   } else {
     value = live_driver->retriveRawData(lkey, (size_t*)&value_len);
@@ -699,11 +687,10 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
 }
 
 ChaosController::ChaosController()
-    : ::common::misc::scheduler::SchedTimeElem("none", 0), state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER), datasetDB(true)
+    : /*::common::misc::scheduler::SchedTimeElem("none", 0),*/ state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER), datasetDB(true),max_cache_duration_ms(0)
 
 {
   mdsChannel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
-  cachedChannel_v.resize(DPCK_LAST_DATASET_INDEX + 1);
 
   if (!mdsChannel)
     throw chaos::CException(-1, "No MDS Channel created", "ChaosController()");
@@ -776,12 +763,32 @@ boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDat
 }
 const std::string ChaosController::fetchJson(int channel) {
   ChaosReadLock ll(iomutex);
-  std::string   ret = cachedJsonChannels[channel];
-  return ret;
+  uint64_t now=chaos::common::utility::TimingUtil::getTimeStamp();
+  int32_t check=max_cache_duration_ms;
+  if((channel==KeyDataStorageDomainHealth) || (channel==255) || (channel ==128)){
+    check=HALF_HEALT_REFRESH;
+  }
+  if((now - cachedJsonChannelsTS[channel])>check){
+    chaos::common::data::CDWUniquePtr r=fetch(channel);
+    if(r.get()){
+        DBGET << "update cache of channel :" << channel<<" "<<(now - cachedJsonChannelsTS[channel])<<" ms expiration:"<<check;
+
+      cachedJsonChannels[channel]=r->getCompliantJSONString();
+      cachedJsonChannelsTS[channel]=now;
+
+    }
+  }
+  return cachedJsonChannels[channel];
+}
+void ChaosController::updateCacheLive(const chaos::common::data::CDataWrapper&res){
+  if(res.hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)){
+              // 25 is the max refresh rate that can be shown
+              max_cache_duration_ms=(1000 / (2.0 * std::min(25.0,res.getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE))));
+    }
 }
 
 chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
-  //	boost::mutex::scoped_lock(iomutex);
+ // 	boost::mutex::scoped_lock(iomutex);
 
   chaos::common::data::CDWUniquePtr retdata(new CDataWrapper());
   try {
@@ -790,8 +797,15 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
       for (int cnt = 0; cnt < res.size(); cnt++) {
         if (res[cnt].get()) {
           retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+          if(cnt==KeyDataStorageDomainHealth){
+            updateCacheLive(*res[cnt]);
+          }
+        }else {
+             DBGET<<"MISSING CHANNEL:"<<cnt<<" "<<chaos::datasetTypeToHuman(cnt);
+
         }
-        //            DBGET<<"channel "<<chaos::datasetTypeToHuman(cnt)<<" :"<<res[cnt]->getCompliantJSONString();
+        
+        // DBGET<<res.size()<<" channel "<<chaos::datasetTypeToHuman(0)<<" :"<<res[0]->getCompliantJSONString();
       }
 
     } else if (channel == 128) {
@@ -880,6 +894,8 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
 
         if (res[3].get()) {
           retdata->addCSDataValue(chaos::datasetTypeToHuman(KeyDataStorageDomainHealth), *res[3].get());
+          updateCacheLive(*res[3]);
+
         } else {
           CTRLERR_ << " cannot retrive HEALTH of:" << path;
         }
@@ -1232,7 +1248,7 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
   DBGET << "[" << name << "] set schedule to:" << us << " us";
   EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
-  setQuantum(us);
+  //setQuantum(us);
   return ret;
 }
 
@@ -3031,10 +3047,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       //json_buf = data->getCompliantJSONString();
       int channel = atoi((char*)args);
       if (channel == 128) {
-        json_buf = fetch(channel)->getCompliantJSONString();
+        json_buf = fetchJson(channel);
         return CHAOS_DEV_OK;
       }
-      std::string ret = fetchJson(channel);
+      std::string ret =  fetchJson(channel);
 
       if (ret.size() < 4) {
         chaos::common::data::CDWUniquePtr a    = fetch(channel);
