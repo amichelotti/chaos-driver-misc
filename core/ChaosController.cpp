@@ -369,14 +369,20 @@ int ChaosController::sendMDSCmd(command_t& cmd) {
     */
   //err = deviceChannel->setAttributeValue(local_command_pack, false, millisecToWait);
   local_command_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, path);
-  CTRLDBG_ << "sending command through MDS \"" << cmd->alias << "\" params:" << cmd->param.getJSONString() << " full msg:" << local_command_pack->getJSONString();
+  if(manager){
+      CTRLDBG_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getJSONString() << " full msg:" << local_command_pack->getJSONString();
+      manager->commandTemplateSubmit(path, cmd->alias,local_command_pack, cmd->sub_rule, cmd->priority, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay);
+    
+  } else {
+      CTRLDBG_ << "sending command through MDS \"" << cmd->alias << "\" params:" << cmd->param.getJSONString() << " full msg:" << local_command_pack->getJSONString();
 
   //chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(local_command_pack);
-  chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(path, cmd->alias, cmd->sub_rule, cmd->priority, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, local_command_pack);
-  apires->setTimeout(5000);
-  apires->wait();
-  if (apires->getError()) {
-    return -1;
+    chaos::metadata_service_client::api_proxy::ApiProxyResult apires = GET_CHAOS_API_PTR(chaos::metadata_service_client::api_proxy::node::CommandTemplateSubmit)->execute(path, cmd->alias, cmd->sub_rule, cmd->priority, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay, local_command_pack);
+    apires->setTimeout(5000);
+    apires->wait();
+    if (apires->getError()) {
+      return -1;
+    }
   }
   return 0;
 }
@@ -1518,6 +1524,10 @@ int ChaosController::deleteSnapshot(const std::string& snapshot_tag) {
   return mdsChannel->deleteSnapshot(snapshot_tag);
 }
 int ChaosController::getSnapshotList(ChaosStringVector& snapshot_list) {
+  if(manager){
+    snapshot_list=manager->getSnapshotForNode(path);
+    return 0;
+  }
   CHAOS_ASSERT(mdsChannel)
   return mdsChannel->searchSnapshotForNode(path,
                                            snapshot_list,
@@ -2563,27 +2573,27 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 par = parent;
               }
               {
-                if(manager){
+               
+                if (json_value->hasKey("control_unit_implementation") && (sub_type != "nt_script_eu")) {
+                   if(manager){
                   manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"),0);
                 } else {
-                  if (json_value->hasKey("control_unit_implementation") && (sub_type != "nt_script_eu")) {
                     EXECUTE_CHAOS_API(api_proxy::unit_server::ManageCUType, MDS_TIMEOUT, par, json_value->getStringValue("control_unit_implementation"), 0);
                   }
                 }
               }
               {
                 if(manager){
-                  chaos::common::data::CDWUniquePtr msg  = manager->manageCUType(par,json_value->getStringValue("control_unit_implementation"));
+                  chaos::common::data::CDWUniquePtr msg  = manager->setInstanceDescription(name,*json_value);
                json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
-              res << json_buf;
 
                 } else {
                   EXECUTE_CHAOS_API(api_proxy::control_unit::SetInstanceDescription, MDS_TIMEOUT, name, *json_value);
                 }
               }
-
-              res << json_buf;
             }
+              res << json_buf;
+
           } else if (what == "del") {
             int ret = 0, ret1 = 0;
             if(manager){
