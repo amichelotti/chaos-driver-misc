@@ -771,7 +771,7 @@ const std::string ChaosController::fetchJson(int channel) {
   if((now - cachedJsonChannelsTS[channel])>check){
     chaos::common::data::CDWUniquePtr r=fetch(channel);
     if(r.get()){
-        DBGET << "update cache of channel :" << channel<<" "<<(now - cachedJsonChannelsTS[channel])<<" ms expiration:"<<check;
+  //      DBGET << "update cache of channel :" << channel<<" "<<(now - cachedJsonChannelsTS[channel])<<" ms expiration:"<<check;
 
       cachedJsonChannels[channel]=r->getCompliantJSONString();
       cachedJsonChannelsTS[channel]=now;
