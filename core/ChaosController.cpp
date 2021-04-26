@@ -1567,9 +1567,15 @@ CDataWrapper ChaosController::getSnapshotDataset(const std::string& snapname, co
 }
 std::vector<std::string> ChaosController::searchAlive(const std::string& name, const std::string& what) {
   ChaosStringVector               node_found;
-  chaos::NodeType::NodeSearchType node_type = human2NodeType(what);
-
-  mdsChannel->searchNode(name, node_type, true, 0, MAX_QUERY_ELEMENTS, node_found, MDS_TIMEOUT);
+  uint32_t idx=0;
+  searchNode(name, what, true, 0, MAX_QUERY_ELEMENTS,idx, node_found, MDS_TIMEOUT);
+/*
+  if(manager){
+    manager->searchNode(name, node_type, true, 0, MAX_QUERY_ELEMENTS, node_found, MDS_TIMEOUT);
+    
+  } else {
+    mdsChannel->searchNode(name, node_type, true, 0, MAX_QUERY_ELEMENTS, node_found, MDS_TIMEOUT);
+  }*/
   return node_found;
 }
 std::vector<std::string> ChaosController::filterByState(const std::vector<std::string>& node_found, const std::string& state) {
@@ -1625,8 +1631,38 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   }
   return ret;
 }
-
-int ChaosController::searchNode(const std::string& unique_id_filter,
+int ChaosController::searchNodeInt(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive,
+                               unsigned int last_node_sequence_id,
+                               unsigned int page_length,
+                               unsigned int& num_of_page,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait,
+                               const std::string& impl){
+  int ret=0;
+  if(manager){
+          ret= manager->nodeSearch(unique_id_filter,
+                                   node_type_filter,
+                                   alive,
+                                   last_node_sequence_id,
+                                   page_length,
+                                   num_of_page,
+                                   node_found,MDS_TIMEOUT,
+                                   impl); 
+        } else {
+          ret=mdsChannel->searchNode(unique_id_filter,
+                                   node_type_filter,
+                                   alive,
+                                   last_node_sequence_id,
+                                   page_length,
+                                   num_of_page,
+                                   node_found,
+                                   MDS_TIMEOUT,impl); 
+        }                                
+  return ret;                             
+  }
+  int ChaosController::searchNode(const std::string& unique_id_filter,
                                 const std::string& nt,
                                 bool               alive_only,
                                 unsigned int       start_page,
@@ -1636,21 +1672,37 @@ int ChaosController::searchNode(const std::string& unique_id_filter,
                                 uint32_t           millisec_to_wait,
                                 const std::string& impl,
                                 const std::string& state) {
-  uint64_t lastid = 0;
+return searchNode( unique_id_filter,
+                                human2NodeType(nt),
+                                 alive_only,
+                                    start_page,
+                                     page_length,
+                                   num_of_page,
+                                node_found,
+                                millisec_to_wait,
+                                impl,
+                                state);
+                                }
+int ChaosController::searchNode(const std::string& unique_id_filter,
+                                const chaos::NodeType::NodeSearchType node_type_filter,
+                                bool               alive_only,
+                                unsigned int       start_page,
+                                unsigned int       page_length,
+                                unsigned int&      num_of_page,
+                                ChaosStringVector& node_found,
+                                uint32_t           millisec_to_wait,
+                                const std::string& impl,
+                                const std::string& state) {
+  uint32_t lastid = 0;
   int      ret;
   num_of_page = 0;
   ChaosStringVector               tmp;
   int                             size;
-  chaos::NodeType::NodeSearchType node_type_filter = human2NodeType(nt);
 
   do {
     size = tmp.size();
-    if (manager) {
-      ret = manager->nodeSearch(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
-
-    } else {
-      ret = mdsChannel->searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
-    }
+    ret=searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
+    
     // MSG_DBG<<"searchNode start page:"<<start_page<<" page len:"<<page_length<<" lastid:"<<lastid<<"size:"<<tmp.size()<<" sizebefore:"<<size<<" ret:"<<ret;
     tmp = filterByState(tmp, state);
     if (tmp.size() < page_length) {
@@ -1804,15 +1856,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       } else if (what == "zone") {
         json_buf = "[]";
         DBGET << "searching ZONE";
-
         ChaosStringVector dev_zone;
-        if (mdsChannel->searchNode(name,
+        unsigned int npage=0;
+          searchNode(name,
                                    chaos::NodeType::NodeSearchType::node_type_cu,
                                    alive,
                                    0,
                                    MAX_QUERY_ELEMENTS,
+                                   npage,
                                    node_found,
-                                   MDS_TIMEOUT) == 0) {
+                                   MDS_TIMEOUT); 
+ 
+         
           parseClassZone(node_found);
           std::map<std::string, std::string>::iterator c;
           for (c = zone_to_cuname.begin(); c != zone_to_cuname.end(); c++) {
@@ -1822,20 +1877,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           json_buf = vector2Json(dev_zone);
           CALC_EXEC_TIME;
           return CHAOS_DEV_OK;
-        } else {
-          serr << "searching zone:" << name;
-        }
+       
       } else if (what == "class") {
         json_buf = "[]";
         ChaosStringVector dev_class;
-
+  unsigned int npage=0;
         if (names.get() && names->size()) {
           DBGET << "searching CLASS LIST";
 
           for (int idx = 0; idx < names->size(); idx++) {
             ChaosStringVector node_tmp;
             const std::string domain = names->getStringElementAtIndex(idx);
-            if (mdsChannel->searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, alive, 0, MAX_QUERY_ELEMENTS, node_tmp, MDS_TIMEOUT) == 0) {
+            if (searchNode(domain, chaos::NodeType::NodeSearchType::node_type_cu, alive, 0, MAX_QUERY_ELEMENTS, npage,node_tmp, MDS_TIMEOUT) == 0) {
               node_found.insert(node_found.end(), node_tmp.begin(), node_tmp.end());
             } else {
               serr << "searching class:" << domain;
@@ -1855,12 +1908,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           return CHAOS_DEV_OK;
         } else {
           DBGET << "searching CLASS inside:" << name;
+  unsigned int npage=0;
 
-          if (mdsChannel->searchNode(name,
+          if (searchNode(name,
                                      chaos::NodeType::NodeSearchType::node_type_cu,
                                      false,
                                      0,
                                      MAX_QUERY_ELEMENTS,
+                                     npage,
                                      node_found,
                                      MDS_TIMEOUT) == 0) {
             parseClassZone(node_found);
@@ -3926,7 +3981,7 @@ chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::
   int                                     reti;
   chaos::common::data::VectorCDWUniquePtr ret;
   chaos::NodeType::NodeSearchType         node_type = human2NodeType(what);
-  uint64_t                                lastid    = 0;
+  unsigned int                                lastid    = 0;
   DBGET << "search " << what << "(" << node_type << ") with key:" << search;
   if (manager) {
     manager->nodeSearch(search, node_type, alive, 0, MAX_QUERY_ELEMENTS, lastid, node_found);

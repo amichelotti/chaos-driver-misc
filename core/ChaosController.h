@@ -245,11 +245,18 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
                                bool alive_only,
                                unsigned int last_node_sequence_id,
                                unsigned int page_length,
-                               uint64_t & lastid,
+                               unsigned int& num_of_page,
                                ChaosStringVector& node_found,
                                uint32_t millisec_to_wait,
                                const std::string& impl);
-
+int searchNode(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive_only,
+                               unsigned int start_page,
+                               unsigned int page_length,
+                               unsigned int& num_of_page,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait=5000,const std::string& impl="",const std::string& state="");
 int searchNode(const std::string& unique_id_filter,
                                const std::string& node_type_filter,
                                bool alive_only,
