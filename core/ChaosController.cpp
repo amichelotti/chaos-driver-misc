@@ -308,8 +308,9 @@ int ChaosController::init(const std::string& p, uint64_t timeo_) {
     binaryToTranslate.insert(std::make_pair(i->name,i->valueType));
     DBGET << i->name<<" is of type64 :"<<i->valueType;
     }*/
+
   }
-  fetch(-1);
+  //fetch(-1);
   //  fetch(255);
 
   DBGET << "initalization ok";
@@ -783,7 +784,13 @@ const std::string ChaosController::fetchJson(int channel) {
 void ChaosController::updateCacheLive(const chaos::common::data::CDataWrapper&res){
   if(res.hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE)){
               // 25 is the max refresh rate that can be shown
-              max_cache_duration_ms=(1000 / (2.0 * std::min(25.0,res.getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE))));
+
+              double prate=res.getDoubleValue(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE);
+              prate=std::max(0.5,prate);
+              max_cache_duration_ms=(1000.0 / (2.0 * std::min(25.0,prate)));
+             
+    } else {
+      max_cache_duration_ms=1000.0;
     }
 }
 
@@ -1938,17 +1945,29 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         DBGET << "searching SNAPSHOTS";
 
         std::map<uint64_t, std::string> snap_l;
-        if (mdsChannel->searchSnapshot(name, snap_l, MDS_TIMEOUT) == 0) {
+        if(manager){
+          snap_l=manager->getAllSnapshot(name);
           json_buf = map2Json(snap_l);
-          CALC_EXEC_TIME;
-          return CHAOS_DEV_OK;
+            CALC_EXEC_TIME;
+            return CHAOS_DEV_OK;
         } else {
-          serr << " searching snapshot:" << name;
+          if (mdsChannel->searchSnapshot(name, snap_l, MDS_TIMEOUT) == 0) {
+            json_buf = map2Json(snap_l);
+            CALC_EXEC_TIME;
+            return CHAOS_DEV_OK;
+          } else {
+            serr << " searching snapshot:" << name;
+          }
         }
       } else if (what == "insnapshot") {
         json_buf = "[]";
         DBGET << "searching SNAPSHOT of the CU:" << name;
-
+        if(manager){
+          node_found=manager->getNodesForSnapshot(name);
+          json_buf = vector2Json(node_found);
+            CALC_EXEC_TIME;
+            return CHAOS_DEV_OK;
+        } else {
         if (mdsChannel->searchNodeForSnapshot(name, node_found, MDS_TIMEOUT) == 0) {
           json_buf = vector2Json(node_found);
           DBGET << "OK searchNodeForSnapshot snap:" << json_buf;
@@ -1958,6 +1977,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else {
           DBGET << "ERRORE searchNodeForSnapshot snap:" << name;
           serr << " searching insnapshot:" << name;
+        }
         }
       } else if (what == "snapshotsof") {
         json_buf = "[]";
