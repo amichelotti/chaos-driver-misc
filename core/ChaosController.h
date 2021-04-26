@@ -313,9 +313,11 @@ int searchNode(const std::string& unique_id_filter,
     //!return the snapshot list for device controlled by this isntance
     int getSnapshotList(ChaosStringVector &snapshot_list);
 
+    int searchNodeForSnapshot(const std::string &snapshot_tag,ChaosStringVector &snapshot_list);
+
     //!return the dataset of the specified cu associated to a given snapshot
     // 
-    chaos::common::data::CDataWrapper getSnapshotDataset(const std::string&snapname,const std::string& cuname);
+    chaos::common::data::CDWUniquePtr getSnapshotDataset(const std::string&snapname,const std::string& cuname);
     
     command_t prepareCommand(std::string alias);
     template <typename T>
