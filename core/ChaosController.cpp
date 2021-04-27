@@ -770,13 +770,16 @@ const std::string ChaosController::fetchJson(int channel) {
   if((channel==KeyDataStorageDomainHealth) || (channel==255) || (channel ==128)){
     check=HALF_HEALT_REFRESH;
   }
-  if((now - cachedJsonChannelsTS[channel])>check){
+  if((cachedJsonChannels[channel].size()<4)||((now - cachedJsonChannelsTS[channel])>check)){
     chaos::common::data::CDWUniquePtr r=fetch(channel);
     if(r.get()){
   //      DBGET << "update cache of channel :" << channel<<" "<<(now - cachedJsonChannelsTS[channel])<<" ms expiration:"<<check;
 
       cachedJsonChannels[channel]=r->getCompliantJSONString();
       cachedJsonChannelsTS[channel]=now;
+
+    } else {
+       DBGETERR << "Error fetching channel:"<<channel;
 
     }
   }
@@ -801,21 +804,32 @@ chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
   chaos::common::data::CDWUniquePtr retdata(new CDataWrapper());
   try {
     if (channel == -1) {
+        uint64_t now=chaos::common::utility::TimingUtil::getTimeStamp();
+
       chaos::common::data::VectorCDWShrdPtr res = getLiveAllChannels();
       for (int cnt = 0; cnt < res.size(); cnt++) {
         if (res[cnt].get()) {
-          retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+            std::string p=res[cnt]->getCompliantJSONString();
+            cachedJsonChannels[cnt]=p;
+            cachedJsonChannelsTS[cnt]=now;
+
+            if(p.size()>4){
+              retdata->addCSDataValue(chaos::datasetTypeToHuman(cnt), *(res[cnt].get()));
+            }
+
+         // DBGET<<chaos::datasetTypeToHuman(cnt)<<" channel "<<cnt<<" :"<<retdata->getCompliantJSONString()<< "added:"<<res[cnt]->getJSONString();
+
           if(cnt==KeyDataStorageDomainHealth){
             updateCacheLive(*res[cnt]);
           }
         }else {
              DBGET<<"MISSING CHANNEL:"<<cnt<<" "<<chaos::datasetTypeToHuman(cnt);
-
         }
         
         // DBGET<<res.size()<<" channel "<<chaos::datasetTypeToHuman(0)<<" :"<<res[0]->getCompliantJSONString();
       }
-
+     
+      return retdata;
     } else if (channel == 128) {
       CDWShrdPtr custom = getLiveChannel(path, KeyDataStorageDomainCustom);
       CDWShrdPtr poiv   = getLiveChannel(path, KeyDataStorageDomainOutput);
@@ -3214,7 +3228,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else {
           DBGET << "error retrieving channel " << channel;
         }
-        DBGET << "cache not valid retrieved :\"" << ret << "\" size:" << size;
+        DBGET << "cache "<<channel<<" not valid retrieved :\"" << ret << "\" size:" << size;
       }
       json_buf = (ret.size() == 0) ? "{}" : ret;
       return CHAOS_DEV_OK;

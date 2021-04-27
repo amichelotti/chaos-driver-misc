@@ -118,10 +118,10 @@ void ChaosRoot::start() throw(chaos::CException){
     for(int cnt=1;cnt<nroot_opts;cnt++){
       if(*root_opts[cnt]!='-'){
         std::string path=root_opts[cnt];
-        regex reg("([-\\.\\w]+)\\({0,1}[-,\\.\\w]*\\){0,1}$");
-        smatch m;
+        std::regex reg("([-\\.\\w]+)\\({0,1}[-,\\.\\w]*\\){0,1}$");
+        std::smatch m;
         uid=path;
-        if(regex_search(path,m,reg)){
+        if(std::regex_search(path,m,reg)){
           uid=m[1];
         }
       }

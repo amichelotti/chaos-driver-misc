@@ -49,8 +49,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  regex r("[\\[\\]\\(\\)\\{\\}]+");
-  if(regex_search(name,r)){
+  std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(std::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }
@@ -300,8 +300,8 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
       try {
-        regex r("[\\[\\]\\(\\)\\{\\}]+");
-        if(regex_match(*i,r)){
+        std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+        if(std::regex_match(*i,r)){
                   ROOTERR<<"Skipping creation of:"<<*i<<" contains invalid characters:";
           continue;
         } else {
