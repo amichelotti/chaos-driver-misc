@@ -27,6 +27,7 @@
 
 #include <chaos_service_common/ChaosManager.h>
 #include <common/debug/core/debug.h>
+#include <regex>
 
 #ifdef CDSLIB
 #include <ChaosMetadataService/api/node/NodeSearch.h>
@@ -990,12 +991,12 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
 }
 
 void ChaosController::parseClassZone(ChaosStringVector& v) {
-  const boost::regex e("^(.*)/(.*)/(.*)$");
-  boost::cmatch      what;
+  const std::regex e("^(.*)/(.*)/(.*)$");
+  std::cmatch      what;
   zone_to_cuname.clear();
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
-    if (boost::regex_match(i->c_str(), what, e)) {
+    if (std::regex_match(i->c_str(), what, e)) {
       zone_to_cuname[what[1]]  = *i;
       class_to_cuname[what[2]] = *i;
     }
@@ -1168,27 +1169,27 @@ static uint64_t getMSSince1970Until(const std::string& dateAndHour) {
 }
 
 uint64_t ChaosController::offsetToTimestamp(const std::string& off) {
-  boost::smatch what;
-  boost::regex  ts_ms("(^[0-9]+)$");
-  boost::regex  ts_data("^[0-9]{12}$");
+  std::smatch what;
+  std::regex  ts_ms("(^[0-9]+)$");
+  std::regex  ts_data("^[0-9]{12}$");
   if ((off == "NOW") || (off == "now")) {
     return chaos::common::utility::TimingUtil::getTimeStamp();
   }
-  if (boost::regex_match(off, what, ts_data)) {
+  if (std::regex_match(off, what, ts_data)) {
     return getMSSince1970Until(off);
   }
 
-  if (boost::regex_match(off, what, ts_ms)) {
+  if (std::regex_match(off, what, ts_ms)) {
     std::string dd = what[1];
 
     return strtoull(dd.c_str(), 0, 0);
   }
 
-  boost::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
+  std::regex mm("(\\-){0,1}([0-9]+d){0,1}([0-9]+h){0,1}([0-9]+m){0,1}([0-9]+s){0,1}([0-9]+ms){0,1}");
 
   //        std::string::const_iterator start = input.begin() ;
   //std::string::const_iterator end = input.end() ;
-  if (boost::regex_match(off, what, mm)) {
+  if (std::regex_match(off, what, mm)) {
     int64_t     toff = 0;
     std::string dd   = what[2];
     std::string h    = what[3];

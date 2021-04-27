@@ -7,6 +7,7 @@
 
 #include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <driver/misc/core/ChaosController.h>
+#include <regex>
 using namespace std;
 #include "ChaosRoot.h"
 #include "TROOT.h"
@@ -117,10 +118,10 @@ void ChaosRoot::start() throw(chaos::CException){
     for(int cnt=1;cnt<nroot_opts;cnt++){
       if(*root_opts[cnt]!='-'){
         std::string path=root_opts[cnt];
-        boost::regex reg("([-\\.\\w]+)\\({0,1}[-,\\.\\w]*\\){0,1}$");
-        boost::smatch m;
+        regex reg("([-\\.\\w]+)\\({0,1}[-,\\.\\w]*\\){0,1}$");
+        smatch m;
         uid=path;
-        if(boost::regex_search(path,m,reg)){
+        if(regex_search(path,m,reg)){
           uid=m[1];
         }
       }
