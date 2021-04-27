@@ -1544,12 +1544,26 @@ int ChaosDatasetIO::registerAction(actionFunc_t func, ActionID id) {
 
 void ChaosDatasetIO::deinit() {
   waitEU.notifyAll();
+  HealtManager::getInstance()->addNodeMetricValue(
+      uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_UNLOAD, true);
 
   if (deinitialized) {
     DEBUG_CODE(DPD_LDBG << "Already deinitialized");
     return;
   }
   DPD_LDBG << "deinit";
+  chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(
+      this);
+CHAOS_NOT_THROW(
+      StartableService::stopImplementation(
+          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+  DEBUG_CODE(DPD_LDBG << "Health stopped");
+
+  CHAOS_NOT_THROW(
+      StartableService::deinitImplementation(
+          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+  DEBUG_CODE(DPD_LDBG << "Health deinitialized");
+
   NetworkBroker::getInstance()->deregisterAction(this);
 
   /*{
@@ -1573,13 +1587,9 @@ void ChaosDatasetIO::deinit() {
         standard_logging_channel);
     standard_logging_channel = NULL;
   }
-  chaos::common::async_central::AsyncCentralManager::getInstance()->removeTimer(
-      this);
-
+  
   sleep(2);
-  HealtManager::getInstance()->addNodeMetricValue(
-      uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_UNLOAD, true);
-
+  
   for (std::map<int,
                 ChaosSharedPtr<chaos::common::data::CDataWrapper>>::iterator i =
            datasets.begin();
@@ -1611,15 +1621,7 @@ void ChaosDatasetIO::deinit() {
   deinitialized = true;
   DEBUG_CODE(DPD_LDBG << "Destroy all resources");
 
-  CHAOS_NOT_THROW(
-      StartableService::stopImplementation(
-          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-  DEBUG_CODE(DPD_LDBG << "Health stopped");
-
-  CHAOS_NOT_THROW(
-      StartableService::deinitImplementation(
-          HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
-  DEBUG_CODE(DPD_LDBG << "Health deinitialized");
+  
 }
 }  // namespace misc
 }  // namespace driver
