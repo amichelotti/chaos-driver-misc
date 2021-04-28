@@ -1795,7 +1795,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       }
       DBGET << "searching what " << what;
       ChaosStringVector node_found;
-      if (what == "cu" || what == "us" || what == "ceu" || what == "agent" || what == "mds" || what == "server" || what == "root" || what == "webui" || what == "variable" || what == "tag") {
+      if (what == "cu" || what == "all" || what == "us" || what == "ceu" || what == "agent" || what == "mds" || what == "server" || what == "root" || what == "webui" || what == "variable" || what == "tag") {
         json_buf                                   = "[]";
         chaos::NodeType::NodeSearchType node_type  = human2NodeType(what);
         uint32_t                        maxpage    = MAX_QUERY_ELEMENTS;
@@ -4081,7 +4081,7 @@ chaos::common::data::CDataWrapper* ChaosController::dev_info_status::getData() {
   return &data_wrapper;
 }
 chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what) {
-  chaos::NodeType::NodeSearchType node_type = chaos::NodeType::NodeSearchType::node_type_cu;
+  chaos::NodeType::NodeSearchType node_type = chaos::NodeType::NodeSearchType::node_type_all;
 
   if (what == "agent")
     node_type = chaos::NodeType::NodeSearchType::node_type_agent;
@@ -4101,6 +4101,8 @@ chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::strin
     node_type = chaos::NodeType::NodeSearchType::node_type_root;
   if (what == "ceu")
     node_type = chaos::NodeType::NodeSearchType::node_type_ceu;
+  if (what == "cu")
+    node_type = chaos::NodeType::NodeSearchType::node_type_cu;
 
   return node_type;
 }
