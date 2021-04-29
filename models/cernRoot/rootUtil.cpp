@@ -946,4 +946,20 @@ void initChaosRoot() { ROOTDBG << "initializing ChaosRoot"; }
    return cv::Mat();
 
  }
+ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDataWrapper&src){
+   chaos::common::data::CDWUniquePtr ret=src.clone();
+   if(ret.get()){
+     ret->removeKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_DATASET_TYPE);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+     ret->removeKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+     ret->removeKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
+      ret->removeKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
+
+   }
+   return ret;
+ }
+
 #endif

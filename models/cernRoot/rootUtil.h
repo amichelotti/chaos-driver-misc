@@ -128,6 +128,7 @@ void initChaosRoot();
 std::vector<std::string> chaosSearch(const std::string& name,bool alive,const std::string& type="ceu",const std::string& implementation="",const std::string& state="");
 struct branchAlloc;
 
+chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDataWrapper&src);
 #ifdef OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>

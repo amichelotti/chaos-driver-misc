@@ -545,6 +545,11 @@ int ChaosDatasetIO::notifyAllClients(const std::string& msg,const std::string& e
 
   }
   ptr->addStringValue("username", uid);
+  if(msg.size()){
+    log(uid,2, msg);
+  }
+
+  DPD_LDBG << "Notify Clients: "<<ptr->getCompliantJSONString();
 
   int err = ioLiveDataDriver->storeData("chaos_web_log", ptr, (chaos::DataServiceNodeDefinitionType::DSStorageType)0);
   return err;
