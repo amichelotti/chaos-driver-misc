@@ -105,7 +105,6 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     std::map<std::string, std::string> zone_to_cuname;
     std::map<std::string, std::string> class_to_cuname;
 
-    chaos::NodeType::NodeSearchType human2NodeType(const std::string& str);
     void parseClassZone(ChaosStringVector &v);
     std::string vector2Json(ChaosStringVector &v);
     std::string map2Json(std::map<uint64_t, std::string> &v);

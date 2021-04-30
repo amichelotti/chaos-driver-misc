@@ -1730,7 +1730,7 @@ int ChaosController::searchNode(const std::string& unique_id_filter,
                                 const std::string& impl,
                                 const std::string& state) {
   return searchNode(unique_id_filter,
-                    human2NodeType(nt),
+                    chaos::NodeType::human2NodeType(nt),
                     alive_only,
                     start_page,
                     page_length,
@@ -1797,7 +1797,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       ChaosStringVector node_found;
       if (what == "cu" || what == "all" || what == "us" || what == "ceu" || what == "agent" || what == "mds" || what == "server" || what == "root" || what == "webui" || what == "variable" || what == "tag") {
         json_buf                                   = "[]";
-        chaos::NodeType::NodeSearchType node_type  = human2NodeType(what);
+        chaos::NodeType::NodeSearchType node_type  = chaos::NodeType::human2NodeType(what);
         uint32_t                        maxpage    = MAX_QUERY_ELEMENTS;
         uint32_t                        page_start = 0;
         bool                            pageaccess = false;
@@ -2486,7 +2486,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
             }
             /*if(!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)){
-                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+                            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(chaos::NodeType::human2NodeType(node_type)));
 
                         }*/
             p->addBoolValue("reset", true);
@@ -2521,7 +2521,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             p->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, name);
           }
           if (!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)) {
-            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(chaos::NodeType::human2NodeType(node_type)));
           }
 
           chaos::common::data::CDWUniquePtr msg;
@@ -2552,7 +2552,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             json_value->copyAllTo(*p);
           }
           if (!p->hasKey(chaos::NodeDefinitionKey::NODE_TYPE)) {
-            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(human2NodeType(node_type)));
+            p->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, nodeTypeToString(chaos::NodeType::human2NodeType(node_type)));
           }
           if (manager) {
             chaos::common::data::CDWUniquePtr msg = manager->nodeNew(name, *p.get(), parent);
@@ -4080,37 +4080,12 @@ chaos::common::data::CDataWrapper* ChaosController::dev_info_status::getData() {
   error_status.str("");
   return &data_wrapper;
 }
-chaos::NodeType::NodeSearchType ChaosController::human2NodeType(const std::string& what) {
-  chaos::NodeType::NodeSearchType node_type = chaos::NodeType::NodeSearchType::node_type_all;
 
-  if (what == "agent")
-    node_type = chaos::NodeType::NodeSearchType::node_type_agent;
-  if (what == "us")
-    node_type = chaos::NodeType::NodeSearchType::node_type_us;
-  if (what == "webui")
-    node_type = chaos::NodeType::NodeSearchType::node_type_wan;
-  if (what == "mds")
-    node_type = chaos::NodeType::NodeSearchType::node_type_cds;
-  if (what == "variable")
-    node_type = chaos::NodeType::NodeSearchType::node_type_variable;
-  if (what == "tag")
-    node_type = chaos::NodeType::NodeSearchType::node_type_tag;
-  if (what == "server")
-    node_type = chaos::NodeType::NodeSearchType::node_type_all_server;
-  if (what == "root")
-    node_type = chaos::NodeType::NodeSearchType::node_type_root;
-  if (what == "ceu")
-    node_type = chaos::NodeType::NodeSearchType::node_type_ceu;
-  if (what == "cu")
-    node_type = chaos::NodeType::NodeSearchType::node_type_cu;
-
-  return node_type;
-}
 chaos::common::data::VectorCDWUniquePtr ChaosController::getNodeInfo(const std::string& search, const std::string& what, bool alive) {
   ChaosStringVector                       node_found;
   int                                     reti;
   chaos::common::data::VectorCDWUniquePtr ret;
-  chaos::NodeType::NodeSearchType         node_type = human2NodeType(what);
+  chaos::NodeType::NodeSearchType         node_type = chaos::NodeType::human2NodeType(what);
   unsigned int                            lastid    = 0;
   DBGET << "search " << what << "(" << node_type << ") with key:" << search;
   if (manager) {
