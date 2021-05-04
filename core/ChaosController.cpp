@@ -1638,17 +1638,11 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   DBGET << "filtering by: " << state << " CUs:" << node_found.size();
 
   if ((state == "Error") || (state == "Warning") || (state == "Ok")) {
-    chaos::common::data::VectorCDWShrdPtr chan = getLiveChannel(node_found, (int)KeyDataStorageDomainSystem);
+    chaos::common::data::VectorCDWShrdPtr chan = getLiveChannel(node_found, (int)KeyDataStorageDomainHealth);
     for (chaos::common::data::VectorCDWShrdPtr::iterator i = chan.begin(); i != chan.end(); i++) {
-      if (i->get()) {
-        int alarmlevel = 0;
+      if (i->get()&&(*i)->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL)) {
+        int alarmlevel = (*i)->getInt32Value(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL);
 
-        if ((*i)->hasKey(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL)) {
-          alarmlevel = (*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::DEV_ALRM_LEVEL);
-        }
-        if ((*i)->hasKey(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL)) {
-          alarmlevel = (((*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) > alarmlevel) ? (*i)->getInt32Value(chaos::ControlUnitDatapackSystemKey::CU_ALRM_LEVEL) : alarmlevel);
-        }
         if ((*i)->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
           if ((alarmlevel >= 2) && (state == "Error")) {
             ret.push_back((*i)->getStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID));
