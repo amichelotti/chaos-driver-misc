@@ -1024,6 +1024,8 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
     if (std::regex_match(i->c_str(), what, e)) {
+   //   LDBG_<<"NODE:"<<*i<<" class:"<<what[2]<<" zone:"<<what[1];
+
       zone_to_cuname[what[1]]  = *i;
       class_to_cuname[what[2]] = *i;
     }
@@ -1962,7 +1964,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
 
           if (searchNode(name,
                          chaos::NodeType::NodeSearchType::node_type_cu,
-                         false,
+                         alive,
                          0,
                          MAX_QUERY_ELEMENTS,
                          npage,
