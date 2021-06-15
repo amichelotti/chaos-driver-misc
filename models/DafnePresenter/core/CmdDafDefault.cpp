@@ -296,10 +296,10 @@ void own::CmdDafDefault::acquireHandler() {
 		{
 			*p_R1C_ele=DATO.R1C_ele.innerValue=CCALTLumiDataset->getDoubleValue("R1C_ele");
 			*p_R1C_pos=DATO.R1C_pos.innerValue=CCALTLumiDataset->getDoubleValue("R1C_pos");
-			*p_R2_CCAL=DATO.R2_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("R2_CCAL");
+			*p_R2_CCAL=DATO.R2_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("Rate_C2");
 			*p_R2_BKG=DATO.R2_BKG.innerValue=CCALTLumiDataset->getDoubleValue("R2_BKG");
-			*p_Dead_TC=DATO.Dead_TC.innerValue=CCALTLumiDataset->getDoubleValue("Dead_TC");
-			*p_lum_CCAL=DATO.lum_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("lum_CCAL");
+			*p_Dead_TC=DATO.Dead_TC.innerValue=CCALTLumiDataset->getDoubleValue("DeadTimeFactor");
+			*p_lum_CCAL=DATO.lum_CCAL.innerValue=CCALTLumiDataset->getDoubleValue("R2SectSelLumi");
 
 			int64_t readTS=CCALTLumiDataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
