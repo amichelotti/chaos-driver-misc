@@ -1776,8 +1776,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
   naccess++;
   bundle_state.reset();
   bundle_state.status(state);
-  DBGET << "cmd:" << cmd << " args:" << args << " last access:" << (reqtime - last_access) * 1.0 / 1000.0 << " ms ago"
+ /* DBGET << "cmd:" << cmd << " args:" << args << " last access:" << (reqtime - last_access) * 1.0 / 1000.0 << " ms ago"
         << " timeo:" << timeo << " ptr:0x" << std::hex << this << std::dec;
+        */
   json_buf = "[]";
 
   try {
@@ -2417,10 +2418,10 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             ret = CHAOS_DEV_CMD;
           }
         } else if (what == "desc") {
-          int                               rets;
+          int rets=0;
           chaos::common::data::CDWUniquePtr r = getNodeDesc(name, rets);
 
-          if (rets == 0) {
+          if (r.get()) {
             res << r->getCompliantJSONString();
 
           } else {
