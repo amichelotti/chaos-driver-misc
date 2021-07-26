@@ -48,8 +48,8 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 	this->loadedNewDafnePath="";
 	this->loadedVugName="";
 	this->loadedSiddPath="";
-	this->loadedBeamElectronPath="";
-	this->loadedBeamPositronPath="";
+	//this->loadedBeamElectronPath="";
+	//this->loadedBeamPositronPath="";
 	this->loadedCCALTLUMICUName="";
 	this->loadedGraphicServerAddress = "";
 	if (!json_reader.parse(_control_unit_param, json_parameter))
@@ -71,10 +71,11 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::dafnepresenter::SCDafnePresent
 			this->loadedVugName=vugName;
 			std::string siddPath= json_parameter["siddhartaFilesPath"].asString();
 			this->loadedSiddPath=siddPath;
-			std::string BeamEPath= json_parameter["BeamElectronFilePath"].asString();
+			/*std::string BeamEPath= json_parameter["BeamElectronFilePath"].asString();
 			this->loadedBeamElectronPath=BeamEPath;
 			std::string BeamPPath= json_parameter["BeamPositronFilePath"].asString();
 			this->loadedBeamPositronPath=BeamPPath;
+			*/
 			this->loadedCCALTLUMICUName=json_parameter["CCALTLumiName"].asString();
 			this->loadedGraphicServerAddress = json_parameter["GraphicServerAddress"].asString();
 		}
@@ -348,8 +349,7 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmDEV,"dafne_file_not_updated",
 		"raised when timestamp of dafne file is not updated (Storer problem)");
 	
-	addStateVariable(StateVariableTypeAlarmDEV,"beam_file_not_updated",
-		"raised when timestamp of beam files is not updated");
+	
 }
 void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttribute() {
 	char newdafnepath[256];
@@ -368,10 +368,10 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineCustomAttr
 	getAttributeCache()->addCustomAttribute("siddhartaPath", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("siddhartaPath",(char*) this->loadedSiddPath.c_str(), sizeof(char)*256);
 
-	getAttributeCache()->addCustomAttribute("beamFilePathP", sizeof(char)*256, chaos::DataType::TYPE_STRING);
+	/*getAttributeCache()->addCustomAttribute("beamFilePathP", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("beamFilePathP",(char*) this->loadedBeamPositronPath.c_str(), sizeof(char)*256);
 	getAttributeCache()->addCustomAttribute("beamFilePathE", sizeof(char)*256, chaos::DataType::TYPE_STRING);
-    getAttributeCache()->setCustomAttributeValue("beamFilePathE",(char*) this->loadedBeamElectronPath.c_str(), sizeof(char)*256);
+    getAttributeCache()->setCustomAttributeValue("beamFilePathE",(char*) this->loadedBeamElectronPath.c_str(), sizeof(char)*256);*/
 
 	getAttributeCache()->addCustomAttribute("CULuminometerCCALT", sizeof(char)*256, chaos::DataType::TYPE_STRING);
     getAttributeCache()->setCustomAttributeValue("CULuminometerCCALT",(char*) this->loadedCCALTLUMICUName.c_str(), sizeof(char)*256);
