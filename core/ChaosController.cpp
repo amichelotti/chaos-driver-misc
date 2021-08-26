@@ -2716,7 +2716,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               } else {
                 RETURN_ERROR("'properties' should be a vector of properties");
               }
-              res << json_buf;
             } else {
               std::string par;
               std::string sub_type;
