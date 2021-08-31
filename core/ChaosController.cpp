@@ -1750,11 +1750,12 @@ int ChaosController::searchNode(const std::string&                    unique_id_
   int      ret;
   num_of_page = 0;
   ChaosStringVector tmp;
-  int               size;
+  node_found.clear();
+ /* int               size;
 
   do {
     size = tmp.size();
-    ret  = searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000 /*page_length*/, lastid, tmp, millisec_to_wait, impl);
+    ret  = searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000, lastid, tmp, millisec_to_wait, impl);
 
     // MSG_DBG<<"searchNode start page:"<<start_page<<" page len:"<<page_length<<" lastid:"<<lastid<<"size:"<<tmp.size()<<" sizebefore:"<<size<<" ret:"<<ret;
     tmp = filterByState(tmp, state);
@@ -1762,10 +1763,18 @@ int ChaosController::searchNode(const std::string&                    unique_id_
       break;
     }
   } while ((size < tmp.size()) && (ret == chaos::ErrorCode::EC_NO_ERROR));
+  
+  */
+ if((ret  = searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000, lastid, tmp, millisec_to_wait, impl))==chaos::ErrorCode::EC_NO_ERROR){
   num_of_page = (tmp.size()) ? (tmp.size() / page_length) + (((tmp.size() % page_length) == 0) ? 0 : 1) : 0;
-  for (int cnt = start_page * page_length; (cnt < tmp.size()) && (cnt < ((start_page + 1) * page_length)); cnt++) {
+    for (int cnt = start_page * page_length; (cnt < tmp.size()) && (cnt < ((start_page + 1) * page_length)); cnt++) {
     node_found.push_back(tmp[cnt]);
   }
+ }
+
+
+
+  
   return chaos::ErrorCode::EC_NO_ERROR;
 }
 
