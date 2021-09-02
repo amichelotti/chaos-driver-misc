@@ -391,7 +391,7 @@ ChaosDataSet ChaosDatasetIO::allocateDataset(int type) {
       new_dataset->addInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_LIVE_TIME,
                                  0);
       new_dataset->addBoolValue(ControlUnitDatapackSystemKey::BURST_STATE, false);
-      new_dataset->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "");
+      new_dataset->addStringValue(ControlUnitDatapackSystemKey::BURST_TAG, "",80);
 
     }
     datasets[type] = new_dataset;

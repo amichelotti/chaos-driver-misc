@@ -2092,13 +2092,21 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       DBGET << "snapshot what " << what;
       if (what == "burst") {
         if (json_value.get() != NULL) {
+          if (manager) {
+          CDWUniquePtr msg = manager->sendStorageBurst(*json_value.get());
+          json_buf         = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+          res << json_buf;
+          return CHAOS_DEV_OK;
+        } else {
           CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst, MDS_TIMEOUT, json_value);
-
           json_buf = "{}";
           res << json_buf;
           CALC_EXEC_TIME;
-          return CHAOS_DEV_OK;
+          return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
         }
+      } else {
+        serr << "unknown 'search' arg:" << args;
+      }   
         serr << "error performing snapshot burst query" << name;
         bundle_state.append_error(serr.str());
         json_buf = bundle_state.getData()->getCompliantJSONString();
