@@ -63,10 +63,10 @@ using namespace chaos::service_common;
     CTRLDBG_ << " Profiling: N accesses:" << naccess << " response time:" << refresh << " us"; \
   }
 
-chaos::service_common::ChaosManager* ChaosController::manager = NULL;
-chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel=NULL;
-chaos::common::io::IODataDriverShrdPtr ChaosController::live_driver;
-    
+chaos::service_common::ChaosManager*       ChaosController::manager    = NULL;
+chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel = NULL;
+chaos::common::io::IODataDriverShrdPtr     ChaosController::live_driver;
+
 void ChaosController::setTimeout(uint64_t timeo_us) {
   timeo = timeo_us;
 }
@@ -493,7 +493,6 @@ ChaosController::ChaosController(std::string p, uint32_t timeo_)
   if ((ret = init(p, timeo_)) != 0) {
     throw chaos::CException(ret, "cannot allocate controller for:" + path + " check if exists", __FUNCTION__);
   }
- 
 }
 
 void ChaosController::initializeClient() {
@@ -503,7 +502,7 @@ void ChaosController::initializeClient() {
     LDBG_ << "Manager already allocated";
 
     return;
-  } 
+  }
 
   //mds_client         = ChaosMetadataServiceClient::getInstance();
   if (mdsChannel == NULL) {
@@ -524,29 +523,26 @@ void ChaosController::initializeClient() {
   if (!mdsChannel->getDataDriverBestConfiguration(best_available_da_ptr, timeo)) {
     //InizializableService::initImplementation(chaos::service_common::ChaosManager::getInstance(), (void*)best_available_da_ptr.get(), "ChaosManager", __PRETTY_FUNCTION__);
     try {
-      if(best_available_da_ptr.get()){
+      if (best_available_da_ptr.get()) {
         manager = chaos::service_common::ChaosManager::getInstance(*best_available_da_ptr);
       } else {
-              DBGETERR << " Cannot retrive configuration";
-
+        DBGETERR << " Cannot retrive configuration";
       }
 
     } catch (...) {
       DBGETERR << " Cannot use direct drivers";
     }
     if (live_driver == NULL) {
-        live_driver = ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
-      }
-      if (!live_driver) {
-        throw chaos::CException(-1, "No LIVE Channel created", "ChaosController()");
-      }
-      live_driver->updateConfiguration(best_available_da_ptr.get());
+      live_driver = ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
+    }
+    if (!live_driver) {
+      throw chaos::CException(-1, "No LIVE Channel created", "ChaosController()");
+    }
+    live_driver->updateConfiguration(best_available_da_ptr.get());
 
   } else {
-      throw chaos::CException(-100, "cannot retrieve Configuration", "ChaosController()");
-
+    throw chaos::CException(-100, "cannot retrieve Configuration", "ChaosController()");
   }
-
 
   for (int cnt = 0; cnt < 8; cnt++) {
     fetchJson(0);
@@ -701,17 +697,15 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
   return results;
 }
 
-ChaosController::ChaosController():state(chaos::CUStateKey::UNDEFINED), 
-queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), 
-naccess(0), refresh(0), update_all_channels_ts(0), 
-timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER), datasetDB(true), max_cache_duration_ms(0)
+ChaosController::ChaosController()
+    : state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER), datasetDB(true), max_cache_duration_ms(0)
 
 {
   initializeClient();
 }
 
 ChaosController::~ChaosController() {
-/*
+  /*
   if (mdsChannel) {
     NetworkBroker::getInstance()->disposeMessageChannel(mdsChannel);
     mdsChannel = NULL;
@@ -1024,7 +1018,7 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
     if (std::regex_match(i->c_str(), what, e)) {
-   //   LDBG_<<"NODE:"<<*i<<" class:"<<what[2]<<" zone:"<<what[1];
+      //   LDBG_<<"NODE:"<<*i<<" class:"<<what[2]<<" zone:"<<what[1];
 
       zone_to_cuname[what[1]]  = *i;
       class_to_cuname[what[2]] = *i;
@@ -1642,7 +1636,7 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   if ((state == "Error") || (state == "Warning") || (state == "Ok")) {
     chaos::common::data::VectorCDWShrdPtr chan = getLiveChannel(node_found, (int)KeyDataStorageDomainHealth);
     for (chaos::common::data::VectorCDWShrdPtr::iterator i = chan.begin(); i != chan.end(); i++) {
-      if (i->get()&&(*i)->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL)) {
+      if (i->get() && (*i)->hasKey(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL)) {
         int alarmlevel = (*i)->getInt32Value(chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL);
 
         if ((*i)->hasKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID)) {
@@ -1751,7 +1745,7 @@ int ChaosController::searchNode(const std::string&                    unique_id_
   num_of_page = 0;
   ChaosStringVector tmp;
   node_found.clear();
- /* int               size;
+  /* int               size;
 
   do {
     size = tmp.size();
@@ -1765,16 +1759,13 @@ int ChaosController::searchNode(const std::string&                    unique_id_
   } while ((size < tmp.size()) && (ret == chaos::ErrorCode::EC_NO_ERROR));
   
   */
- if((ret  = searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000, lastid, tmp, millisec_to_wait, impl))==chaos::ErrorCode::EC_NO_ERROR){
-  num_of_page = (tmp.size()) ? (tmp.size() / page_length) + (((tmp.size() % page_length) == 0) ? 0 : 1) : 0;
+  if ((ret = searchNodeInt(unique_id_filter, node_type_filter, alive_only, lastid, 100000, lastid, tmp, millisec_to_wait, impl)) == chaos::ErrorCode::EC_NO_ERROR) {
+    num_of_page = (tmp.size()) ? (tmp.size() / page_length) + (((tmp.size() % page_length) == 0) ? 0 : 1) : 0;
     for (int cnt = start_page * page_length; (cnt < tmp.size()) && (cnt < ((start_page + 1) * page_length)); cnt++) {
-    node_found.push_back(tmp[cnt]);
+      node_found.push_back(tmp[cnt]);
+    }
   }
- }
 
-
-
-  
   return chaos::ErrorCode::EC_NO_ERROR;
 }
 
@@ -1785,7 +1776,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
   naccess++;
   bundle_state.reset();
   bundle_state.status(state);
- /* DBGET << "cmd:" << cmd << " args:" << args << " last access:" << (reqtime - last_access) * 1.0 / 1000.0 << " ms ago"
+  /* DBGET << "cmd:" << cmd << " args:" << args << " last access:" << (reqtime - last_access) * 1.0 / 1000.0 << " ms ago"
         << " timeo:" << timeo << " ptr:0x" << std::hex << this << std::dec;
         */
   json_buf = "[]";
@@ -2093,20 +2084,20 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       if (what == "burst") {
         if (json_value.get() != NULL) {
           if (manager) {
-          CDWUniquePtr msg = manager->sendStorageBurst(*json_value.get());
-          json_buf         = (msg.get()) ? msg->getCompliantJSONString() : "{}";
-          res << json_buf;
-          return CHAOS_DEV_OK;
+            CDWUniquePtr msg = manager->sendStorageBurst(*json_value.get());
+            json_buf         = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            res << json_buf;
+            return CHAOS_DEV_OK;
+          } else {
+            CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst, MDS_TIMEOUT, json_value);
+            json_buf = "{}";
+            res << json_buf;
+            CALC_EXEC_TIME;
+            return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
+          }
         } else {
-          CALL_CHAOS_API(api_proxy::control_unit::SendStorageBurst, MDS_TIMEOUT, json_value);
-          json_buf = "{}";
-          res << json_buf;
-          CALC_EXEC_TIME;
-          return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
+          serr << "unknown 'search' arg:" << args;
         }
-      } else {
-        serr << "unknown 'search' arg:" << args;
-      }   
         serr << "error performing snapshot burst query" << name;
         bundle_state.append_error(serr.str());
         json_buf = bundle_state.getData()->getCompliantJSONString();
@@ -2209,7 +2200,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             }
           }
           if (!datasets.empty()) {
-            EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode, MDS_TIMEOUT, name, uid, datasets);
+            if (manager) {
+              manager->setSnapshotDatasetsForNode(name, uid, datasets);
+              json_buf = "{}";
+              CALC_EXEC_TIME;
+              return CHAOS_DEV_OK;
+            } else {
+              EXECUTE_CHAOS_API(api_proxy::service::SetSnapshotDatasetsForNode, MDS_TIMEOUT, name, uid, datasets);
+            }
           }
           CALC_EXEC_TIME
           return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
@@ -2435,8 +2433,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             ret = CHAOS_DEV_CMD;
           }
         } else if (what == "desc") {
-          int rets=0;
-          chaos::common::data::CDWUniquePtr r = getNodeDesc(name, rets);
+          int                               rets = 0;
+          chaos::common::data::CDWUniquePtr r    = getNodeDesc(name, rets);
 
           if (r.get()) {
             res << r->getCompliantJSONString();
