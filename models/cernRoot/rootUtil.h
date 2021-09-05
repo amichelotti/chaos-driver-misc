@@ -115,9 +115,26 @@ void treeToCDataWrapper(chaos::common::data::CDataWrapper& dst,const std::string
                  */
 TTree*getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper& src,const std::string& name,const std::string& branch_name);
 void initChaosRoot();
+/**
+ * @brief chaos search
+ * \param name substring to search
+ * \param alive search for alive (true) or all (false)
+ * \param type one of these:  "cu", "us","ceu","agent","mds","server","root","webui","variable",what == "tag"
+ * \param implementation search for a particular C++ implementation (valid for "ceu")
+ * \param state search for one of these states: ("ok","error","warning","")
+ * 
+ */
 
+std::vector<std::string> chaosSearch(const std::string& name,bool alive,const std::string& type="ceu",const std::string& implementation="",const std::string& state="");
 struct branchAlloc;
 
+chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDataWrapper&src);
+#ifdef OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+ cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage);
+#endif
 
 struct chaosBranch{
     std::string name;

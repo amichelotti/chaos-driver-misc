@@ -8,13 +8,14 @@
 #include "rootUtil.h"
 #include <driver/misc/core/ChaosController.h>
 #include <stdlib.h>
+#include <regex>
 using namespace std;
 using namespace chaos::metadata_service_client;
 #include "TROOT.h"
 #include "TTree.h"
 #include <algorithm> // std::min
 #define ROOTERR ERR_LOG(rootUtil) 
-
+#define MAX_QUERY_ELEMENTS 10000
 #define ROOTDBG DBG_LOG(rootUtil)
 using namespace chaos::common::data;
 using namespace driver::misc;
@@ -48,8 +49,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
-  if(boost::regex_search(name,r)){
+  std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(std::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }
@@ -299,8 +300,8 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
       try {
-        boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
-        if(boost::regex_match(*i,r)){
+        std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+        if(std::regex_match(*i,r)){
                   ROOTERR<<"Skipping creation of:"<<*i<<" contains invalid characters:";
           continue;
         } else {
@@ -911,5 +912,54 @@ TTree *getTreeFromCDataWrapper(const chaos::common::data::CDataWrapper &src,
   c2t.addData(src);
   return tr;
 }
+std::vector<std::string> chaosSearch(const std::string& name,bool alive,const std::string& type,const std::string& implementation,const std::string& state){
+      ChaosController *ctrl = NULL;
+      ctrl= new ChaosController();
+      ChaosStringVector node_tmp;
+
+      if(ctrl){
+                unsigned npages=0;
+                if(ctrl->searchNode(name, type, alive, 0, MAX_QUERY_ELEMENTS, npages, node_tmp, MDS_TIMEOUT, implementation, state) == 0) {
+                ROOTERR << "An error during search";
+
+              }
+              delete ctrl;
+      }
+      return node_tmp;
+
+
+}
 
 void initChaosRoot() { ROOTDBG << "initializing ChaosRoot"; }
+#ifdef OPENCV
+
+ cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage){
+   if (chaosImage.hasKey("FRAMEBUFFER")) {
+
+      uint32_t size;
+
+      uint8_t* buf = (uint8_t *)chaosImage.getBinaryValue("FRAMEBUFFER", size);
+      std::vector<uchar> data = std::vector<uchar>(buf, buf + size);
+
+    return cv::imdecode(data, cv::IMREAD_UNCHANGED /*IMREAD_ANYCOLOR | IMREAD_ANYDEPTH*/);
+   }
+   return cv::Mat();
+
+ }
+ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDataWrapper&src){
+   chaos::common::data::CDWUniquePtr ret=src.clone();
+   if(ret.get()){
+     ret->removeKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_DATASET_TYPE);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+     ret->removeKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+     ret->removeKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
+      ret->removeKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
+
+   }
+   return ret;
+ }
+
+#endif

@@ -17,8 +17,14 @@ ELSE ()
 ENDIF()
 INCLUDE_DIRECTORIES(./core)
 
+IF(CDSLIB)
+ADD_DEFINITIONS(-DCDSLIB)
+SET(ADDLIB chaos_cds)
+ELSE()
+SET(ADDLIB )
+ENDIF()
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_client chaos_common common_misc_data common_misc_scheduler ${optional_libs} common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_metadata_service_client ${ADDLIB} chaos_common common_misc_data common_misc_scheduler ${optional_libs} common_debug ${FrameworkLib})
 
 ADD_EXECUTABLE(testSumOperatorUI test/testSumOperatorUI.cpp)
 ADD_EXECUTABLE(testWriteAndRead test/testWriteAndRead.cpp)
