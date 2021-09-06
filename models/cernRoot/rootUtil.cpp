@@ -8,6 +8,7 @@
 #include "rootUtil.h"
 #include <driver/misc/core/ChaosController.h>
 #include <stdlib.h>
+#include <regex>
 using namespace std;
 using namespace chaos::metadata_service_client;
 #include "TROOT.h"
@@ -48,8 +49,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key,
   chaosType = chaos::DataType::TYPE_DOUBLE;
   parent = par;
   data_element_size = 0;
-  boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
-  if(boost::regex_search(name,r)){
+  std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+  if(std::regex_search(name,r)){
       throw chaos::CException(-1, "Skipping creation of:"+name+" contains invalid characters", __PRETTY_FUNCTION__);
  
    }
@@ -299,8 +300,8 @@ int ChaosToTree::addData(const chaos::common::data::CDataWrapper &cd) {
     for (std::vector<std::string>::iterator i = contained_key.begin();
          i != contained_key.end(); i++) {
       try {
-        boost::regex r("[\\[\\]\\(\\)\\{\\}]+");
-        if(boost::regex_match(*i,r)){
+        std::regex r("[\\[\\]\\(\\)\\{\\}]+");
+        if(std::regex_match(*i,r)){
                   ROOTERR<<"Skipping creation of:"<<*i<<" contains invalid characters:";
           continue;
         } else {
@@ -945,4 +946,20 @@ void initChaosRoot() { ROOTDBG << "initializing ChaosRoot"; }
    return cv::Mat();
 
  }
+ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDataWrapper&src){
+   chaos::common::data::CDWUniquePtr ret=src.clone();
+   if(ret.get()){
+     ret->removeKey(chaos::NodeDefinitionKey::NODE_UNIQUE_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_DATASET_TYPE);
+     ret->removeKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+     ret->removeKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
+     ret->removeKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
+      ret->removeKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
+
+
+   }
+   return ret;
+ }
+
 #endif

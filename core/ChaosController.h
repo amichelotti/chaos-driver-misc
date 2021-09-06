@@ -17,6 +17,7 @@
 #include <chaos/common/data/CDataWrapper.h>
 #include <chaos/common/io/IODataDriver.h>
 
+#include <chaos_service_common/ChaosManager.h>
 #include <chaos/common/batch_command/BatchCommandTypes.h>
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
@@ -35,6 +36,7 @@
 #define MAX_QUERY_ELEMENTS 10000
 #define QUERY_PAGE_MAX_TIME 1000 * 60 * 2 // 1 min
 #define CHECK_HB 10 * 1000 * 1000         //10 s
+#define HALF_HEALT_REFRESH 2500
 namespace chaos
 {
 namespace metadata_service_client
@@ -54,17 +56,20 @@ namespace driver
 
 namespace misc
 {
-class ChaosController : public ::common::misc::scheduler::SchedTimeElem
+class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
 {
 
   private:
-    chaos::common::message::MDSMessageChannel *mdsChannel;
-    chaos::metadata_service_client::ChaosMetadataServiceClient *mds_client;
-    chaos::common::io::IODataDriverShrdPtr live_driver;
+    static chaos::common::message::MDSMessageChannel *mdsChannel;
+    static chaos::service_common::ChaosManager*manager;
+    //chaos::metadata_service_client::ChaosMetadataServiceClient *mds_client;
+    static chaos::common::io::IODataDriverShrdPtr live_driver;
     std::vector<std::string> mds_server_l;
     std::string path;
     chaos::common::data::DatasetDB datasetDB;
-    chaos::common::data::VectorCDWShrdPtr cached_channels;
+  //  chaos::common::data::VectorCDWShrdPtr cached_channels;
+    chaos::common::cache_system::CacheDriver* cache_driver;
+    chaos::service_common::persistence::data_access::AbstractPersistenceDriver* persistence_driver;
 
     chaos::CUStateKey::ControlUnitState state, last_state, next_state;
     uint64_t timeo, schedule,update_all_channels_ts;
@@ -77,10 +82,12 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     //! Device MEssage channel to control via chaos rpc the device
     //chaos::common::message::DeviceMessageChannel *deviceChannel;
     //! The io driver for accessing live data of the device
-
+    void updateCacheLive(const chaos::common::data::CDataWrapper&);
     std::string json_dataset;
     chaos::common::data::CDataWrapper data_out;
+    int32_t max_cache_duration_ms;
     std::map<int, std::string> cachedJsonChannels;
+    std::map<int, int64_t> cachedJsonChannelsTS;
 
     uint32_t queryuid;
     ChaosSharedMutex iomutex;
@@ -98,8 +105,6 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     std::map<std::string, std::string> zone_to_cuname;
     std::map<std::string, std::string> class_to_cuname;
 
-    std::vector<std::string> cachedChannel_v;
-    chaos::NodeType::NodeSearchType human2NodeType(const std::string& str);
     void parseClassZone(ChaosStringVector &v);
     std::string vector2Json(ChaosStringVector &v);
     std::string map2Json(std::map<uint64_t, std::string> &v);
@@ -179,7 +184,7 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
     ChaosController();
     ChaosController(std::string path, uint32_t timeo = DEFAULT_TIMEOUT_FOR_CONTROLLER);
 
-    virtual uint64_t sched(uint64_t ts);
+    //virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
     std::vector<std::string> searchAlive(const std::string& name="",const std::string& what="cu");
     int initDevice(const std::string &dev = "");
@@ -234,6 +239,23 @@ class ChaosController : public ::common::misc::scheduler::SchedTimeElem
      * @return 0 on success
      */
     //int waitCmd();
+  int searchNodeInt(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive_only,
+                               unsigned int last_node_sequence_id,
+                               unsigned int page_length,
+                               unsigned int& num_of_page,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait,
+                               const std::string& impl);
+int searchNode(const std::string& unique_id_filter,
+                               chaos::NodeType::NodeSearchType node_type_filter,
+                               bool alive_only,
+                               unsigned int start_page,
+                               unsigned int page_length,
+                               unsigned int& num_of_page,
+                               ChaosStringVector& node_found,
+                               uint32_t millisec_to_wait=5000,const std::string& impl="",const std::string& state="");
 int searchNode(const std::string& unique_id_filter,
                                const std::string& node_type_filter,
                                bool alive_only,
@@ -290,9 +312,11 @@ int searchNode(const std::string& unique_id_filter,
     //!return the snapshot list for device controlled by this isntance
     int getSnapshotList(ChaosStringVector &snapshot_list);
 
+    int searchNodeForSnapshot(const std::string &snapshot_tag,ChaosStringVector &snapshot_list);
+
     //!return the dataset of the specified cu associated to a given snapshot
     // 
-    chaos::common::data::CDataWrapper getSnapshotDataset(const std::string&snapname,const std::string& cuname);
+    chaos::common::data::CDWUniquePtr getSnapshotDataset(const std::string&snapname,const std::string& cuname);
     
     command_t prepareCommand(std::string alias);
     template <typename T>

@@ -172,6 +172,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 incr++) {
     std::vector<double> val;
     ChaosUniquePtr<ChaosDatasetIO> test(new ChaosDatasetIO(name, false));
+    if(test.get()==NULL){
+            LOG(" cannot allocate TEST");
+            return -1;
+
+    }
     test->setAgeing(7200);
     ChaosDataSet my_input = test->allocateDataset(
         chaos::DataPackCommonKey::DPCK_DATASET_TYPE_INPUT);
@@ -186,6 +191,16 @@ int performTest(const std::string &name, testparam_t &tparam) {
     double buf[point_cnt];
     afreq = freq;
     aamp = amp;
+     if(my_input.get()==NULL){
+            LOG(" cannot allocate input dataset");
+            return -2;
+
+    }
+    if(my_ouput.get()==NULL){
+            LOG(" cannot allocate output dataset");
+            return -2;
+
+    }
     my_ouput->addInt64Value("counter64", (int64_t)0);
     my_ouput->addInt32Value("counttoper32", 0);
     my_ouput->addStringValue("stringa", "hello dataset");
@@ -411,7 +426,6 @@ int performTest(const std::string &name, testparam_t &tparam) {
     }
 
     {
-      test->deinit();
       if (++thread_done == nthreads) {
         // std::cout <<"["<<name<<"] restart all:" << thread_done<<"
         // points:"<<point_cnt<<std::endl;
@@ -557,7 +571,7 @@ int main(int argc, const char **argv) {
                   "Number of concurrent accesses");
 
   ChaosMetadataServiceClient::getInstance()->init(argc, argv);
-  ChaosMetadataServiceClient::getInstance()->start();
+  //ChaosMetadataServiceClient::getInstance()->start();
   if (pointmax == 0) {
     pointmax = npoints;
   }
@@ -576,13 +590,24 @@ int main(int argc, const char **argv) {
     workers[cnt] = new boost::thread(
         boost::bind(&performTest, ss.str(), boost::ref(params[cnt])));
   }
+  LOG(" Waiting for "<<nthreads<<" to end");
+
   sleep(5);
   for (int cnt = 0; cnt < nthreads; cnt++) {
     workers[cnt]->join();
     delete (workers[cnt]);
   }
   delete[] params;
-  ChaosMetadataServiceClient::getInstance()->stop();
-  //    ChaosMetadataServiceClient::getInstance()->deinit();
+  LOG(" Stopping services");
+
+  //ChaosMetadataServiceClient::getInstance()->stop();
+  ChaosMetadataServiceClient::getInstance()->deinit();
+  if(tot_error){
+      LOG("## exiting with "<<tot_error<<" errors");
+  } else {
+      LOG("* exiting with "<<tot_error<<" errors");
+
+  }
+
   return tot_error;
 }
