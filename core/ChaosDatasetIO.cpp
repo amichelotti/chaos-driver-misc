@@ -845,10 +845,7 @@ int ChaosDatasetIO::registerDataset() {
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
       chaos::DataType::TYPE_DOUBLE););
-  CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
-      uid,
-      chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_ALARM_LEVEL,
-      chaos::DataType::TYPE_INT32););
+  
   CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetric(
       uid,
       chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
