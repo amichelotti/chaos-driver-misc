@@ -2451,7 +2451,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         } else if (what == "nodeclralrm") {
           chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
           infos->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID,name);
-          sendRPCMsg(name, chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM, MOVE(infos), node_type);
+          chaos::common::data::CDWUniquePtr rett=sendRPCMsg(name, chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM, MOVE(infos), node_type);
+          if(rett.get()){
+              json_buf = rett->getCompliantJSONString();
+              CALC_EXEC_TIME;
+              return CHAOS_DEV_OK;
+          }
+          json_buf ="{}";
+          CALC_EXEC_TIME;
+          return CHAOS_DEV_CMD;
         } else if (what == "deletedata") {
           CHECK_VALUE_PARAM;
 
