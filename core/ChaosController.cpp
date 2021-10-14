@@ -2448,6 +2448,18 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
           infos->addBoolValue("kill", true);
           sendRPCMsg(name, chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN, MOVE(infos), node_type);
+        } else if (what == "nodeclralrm") {
+          chaos::common::data::CDWUniquePtr infos(new CDataWrapper());
+          infos->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID,name);
+          chaos::common::data::CDWUniquePtr rett=sendRPCMsg(name, chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM, MOVE(infos), node_type);
+          if(rett.get()){
+              json_buf = rett->getCompliantJSONString();
+              CALC_EXEC_TIME;
+              return CHAOS_DEV_OK;
+          }
+          json_buf ="{}";
+          CALC_EXEC_TIME;
+          return CHAOS_DEV_CMD;
         } else if (what == "deletedata") {
           CHECK_VALUE_PARAM;
 
@@ -4133,7 +4145,7 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                                                                                         domain,
                                                                                         rpcmsg,
                                                                                         MOVE(data_pack));
-      if (rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) {
+      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN)||(rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM)) {
         DBGET << "SENT IMMEDIATE \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id;
 
         return chaos::common::data::CDWUniquePtr();
@@ -4170,19 +4182,22 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                                                                                         chaos::NodeDomainAndActionRPC::RPC_DOMAIN,
                                                                                         rpcmsg,
                                                                                         MOVE(data_pack));
-      if (rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) {
+      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN)||(rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM)) {
         DBGET << "SENT IMMEDIATE \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id;
 
         return infos;
       }
       fut->wait(MDS_TIMEOUT);
       if (fut->getError() == 0) {
-        (*i)->addCSDataValue(node_id, *fut->detachResult().get());
+        if((*i).get()){
+          (*i)->addCSDataValue(node_id, *fut->detachResult().get());
+        }
       } else {
         DBGET << "Error sending command \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id << " error:" << fut->getError();
       }
-
-      infos->appendCDataWrapperToArray(*i->get());
+      if(i->get()){
+        infos->appendCDataWrapperToArray(*i->get());
+      }
     }
   }
   infos->finalizeArrayForKey("info");
