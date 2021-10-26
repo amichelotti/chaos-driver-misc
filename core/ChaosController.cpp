@@ -66,7 +66,6 @@ using namespace chaos::service_common;
 chaos::service_common::ChaosManager*       ChaosController::manager    = NULL;
 chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel = NULL;
 chaos::common::io::IODataDriverShrdPtr     ChaosController::live_driver;
-static std::map<std::string,chaos::common::data::CDWShrdPtr> cache_health;
 
 
 void ChaosController::setTimeout(uint64_t timeo_us) {
@@ -691,17 +690,10 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std:
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys, int domain) {
   chaos::common::data::VectorCDWShrdPtr results;
   std::vector<std::string>              channels;
-  //uint64_t          now = chaos::common::utility::TimingUtil::getTimeStamp();
 
   for (int cnt = 0; cnt < keys->size(); cnt++) {
     std::string name=keys->getStringElementAtIndex(cnt);
 
-   /* if(cache_health.count(name)&&cache_health[name].get()&&cache_health[name]->hasKey(DataPackCommonKey::DPCK_TIMESTAMP)&&(cache_health[name]->getInt64Value()>(now-chaos::common::constants::HBTimersTimeoutinMSec/2))){
-      cached.push(cache_health[name]);
-    } else {
-      channels.push_back(name + chaos::datasetTypeToPostfix(domain));
-
-    }*/
     channels.push_back(name + chaos::datasetTypeToPostfix(domain));
 
 
