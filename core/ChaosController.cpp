@@ -67,6 +67,7 @@ chaos::service_common::ChaosManager*       ChaosController::manager    = NULL;
 chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel = NULL;
 chaos::common::io::IODataDriverShrdPtr     ChaosController::live_driver;
 
+
 void ChaosController::setTimeout(uint64_t timeo_us) {
   timeo = timeo_us;
 }
@@ -689,11 +690,16 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std:
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::common::data::CMultiTypeDataArrayWrapper* keys, int domain) {
   chaos::common::data::VectorCDWShrdPtr results;
   std::vector<std::string>              channels;
+
   for (int cnt = 0; cnt < keys->size(); cnt++) {
-    channels.push_back(keys->getStringElementAtIndex(cnt) + chaos::datasetTypeToPostfix(domain));
+    std::string name=keys->getStringElementAtIndex(cnt);
+
+    channels.push_back(name + chaos::datasetTypeToPostfix(domain));
+
+
   }
   results = getLiveChannel(channels);
-
+ 
   return results;
 }
 
@@ -2419,9 +2425,33 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           //EXECUTE_CHAOS_API(api_proxy::unit_server::DeleteUS, MDS_TIMEOUT, name);
           res << json_buf;
 
+        } else if(what == "cache"){
+          int channel=4;
+          int32_t duration_ms=chaos::common::constants::HBTimersTimeoutinMSec/2;
+          if(json_value.get()&&json_value->hasKey("channel")){
+            channel=json_value->getInt32Value("channel");
+          }
+          if(json_value.get()&&json_value->hasKey("duration")){
+            duration_ms=json_value->getInt32Value("duration");
+          }
+          if (manager) {
+            if(manager->enableLiveCaching(name+chaos::datasetTypeToPostfix(channel), duration_ms)){
+              ret=CHAOS_DEV_CMD; 
+              DBGETERR<<"cannot access live driver";
+            }
+          } else {
+              DBGETERR<<"Operation not supported";
+
+
+          } 
+            json_buf  = "{}";
+            res << json_buf;
+
+           
+
         } else if (what == "health") {
           ChaosSharedPtr<chaos::common::data::CDataWrapper> dt;
-          dt = getLiveChannel(name);
+          dt = getLiveChannel(name,chaos::DataPackCommonKey::DPCK_DATASET_TYPE_HEALTH);
           if (dt.get()) {
             res << "{\"health\":" << dt->getCompliantJSONString() << "}";
           } else {
