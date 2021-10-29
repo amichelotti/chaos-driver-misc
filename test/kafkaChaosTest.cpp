@@ -102,7 +102,7 @@ stats_t readTest(chaos::common::message::consumer_uptr_t &k,
     for (int cnt = 0; cnt < loop; cnt++) {
             chaos::common::message::ele_uptr_t p = k->getMsg();
       if(p.get()){
-        chaos::common::data::CDWShrdPtr cd=p->cd;
+        chaos::common::data::CDWUniquePtr& cd=p->cd;
         if(cd.get()){
           uint32_t ts=0;
           if(cd->hasKey("ts")){
