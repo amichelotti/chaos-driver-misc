@@ -357,10 +357,11 @@ int searchNode(const std::string& unique_id_filter,
      *  @param[in]  page page len =o if full search
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
-    int32_t queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > &res,  const ChaosStringSet& projection=ChaosStringSet(),int page = 0);
-    int32_t queryHistory(const std::string &start, const std::string &end, uint64_t runid,uint64_t seqid,const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
+    int32_t queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page);
 
-    int32_t queryNext(int32_t id, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res);
+    int32_t queryHistory(const std::string &start, const std::string &end, int channel, chaos::common::data::VectorCDWShrdPtr &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
+
+    int32_t queryNext(int32_t id, chaos::common::data::VectorCDWShrdPtr &res);
     bool queryHasNext(int32_t id);
     int getSnapshotsofCU(const std::string &cuname, std::map<uint64_t, std::string> &res);
     /*void dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname);*/
@@ -401,9 +402,9 @@ chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& uid,const std::s
   protected:
     int sendCmd(command_t &cmd, bool wait, uint64_t perform_at = 0, uint64_t wait_for = 0);
     int sendMDSCmd(command_t &cmd);
-    boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper *src, std::map<std::string, int> &list);
+    chaos::common::data::CDWShrdPtr normalizeToJson(chaos::common::data::CDataWrapper *src, std::map<std::string, int> &list);
 
-    boost::shared_ptr<chaos::common::data::CDataWrapper> combineDataSets(std::map<int, chaos::common::data::CDataWrapper *>);
+    chaos::common::data::CDWShrdPtr combineDataSets(std::map<int, chaos::common::data::CDataWrapper *>);
 };
 } // namespace misc
 } // namespace driver

@@ -721,9 +721,9 @@ ChaosController::~ChaosController() {
   DBGET << "deleted ChaosController:" << getPath();
 }
 
-boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*> set) {
+chaos::common::data::CDWShrdPtr ChaosController::combineDataSets(std::map<int, chaos::common::data::CDataWrapper*> set) {
   std::map<int, chaos::common::data::CDataWrapper*>::iterator i;
-  boost::shared_ptr<chaos::common::data::CDataWrapper>        data;
+  chaos::common::data::CDWShrdPtr        data;
   chaos::common::data::CDataWrapper                           resdata;
   uint64_t                                                    time_stamp = boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds();
   resdata.addStringValue("name", getPath());
@@ -1377,7 +1377,7 @@ int ChaosController::unloadDevice(const std::string& dev) {
   }
   return ret;
 }
-int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, int channel, std::vector<boost::shared_ptr<CDataWrapper> >& res, const ChaosStringSet& projection, int page) {
+int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
   std::vector<std::string> tags;
   return queryHistory(start, end, 0, 0, tags, channel, res, projection, page);
 }
@@ -1450,29 +1450,32 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain              
   }
 }
 
-int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >& res, const ChaosStringSet& projection, int page) {
+int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
  uint64_t                        start_ts = offsetToTimestamp(start);
   uint64_t                      end_ts   = offsetToTimestamp(end);
- /* if ((domain >= 0) && (domain <= DPCK_LAST_DATASET_INDEX)) {
-    std::string n    = (name == "") ? path : name;
-    std::string lkey = n + chaos::datasetTypeToPostfix(domain);
+  int ret=-1;
+  if ((channel >= 0) && (channel <= DPCK_LAST_DATASET_INDEX)) {
+    std::string lkey = path + chaos::datasetTypeToPostfix(channel);
+    ChaosStringSet meta_tags(tags.begin(), tags.end());
     
    
-   
-  
-  int ret=manager->queryDataCloud(lkey,
-                                       const ChaosStringSet& meta_tags,
-                                       const ChaosStringSet& projection_keys,
-                                       const uint64_t start_ts,
-                                       const uint64_t end_ts,
-                                       const uint32_t page_dimension,
-                                       chaos::common::direct_io::channel::opcode_headers::SearchSequence& last_sequence,
-                                       chaos::common::direct_io::channel::opcode_headers::QueryResultPage& found_element_page,
-                                       int32_t millisec_to_wait=10000);
-  }*/
+   chaos::common::direct_io::channel::opcode_headers::SearchSequence last_sequence;
+   last_sequence.run_id=runid;
+   last_sequence.datapack_counter=seqid;
+    ret=manager->queryDataCloud(lkey,
+                                       meta_tags,
+                                       projection,
+                                       start_ts,
+                                       end_ts,
+                                       page,
+                                       last_sequence,
+                                       res);
+  }
+    return ret;
+  }
 
 
- 
+ /*
   int32_t                         ret = 0, err = 0;
   chaos::common::io::QueryCursor* query_cursor = NULL;
   if (page == 0) {
@@ -1520,7 +1523,7 @@ int32_t ChaosController::queryHistory(const std::string& start, const std::strin
   }
   return 0;
 
-}
+}*/
 bool ChaosController::queryHasNext(int32_t uid) {
   chaos::common::io::QueryCursor* query_cursor = NULL;
   if (query_cursor_map.find(uid) != query_cursor_map.end()) {
@@ -1533,7 +1536,7 @@ bool ChaosController::queryHasNext(int32_t uid) {
   return false;
 }
 
-int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CDataWrapper> >& res) {
+int32_t ChaosController::queryNext(int32_t uid, chaos::common::data::VectorCDWShrdPtr& res) {
   chaos::common::io::QueryCursor* query_cursor = NULL;
   int                             cnt, err;
   if (query_cursor_map.find(uid) != query_cursor_map.end()) {
@@ -1549,7 +1552,7 @@ int32_t ChaosController::queryNext(int32_t uid, std::vector<boost::shared_ptr<CD
           releaseQuery(query_cursor);
           return -abs(err);
         } else {
-          boost::shared_ptr<CDataWrapper> cd = normalizeToJson(q_result.get(), binaryToTranslate);
+          chaos::common::data::CDWShrdPtr cd = normalizeToJson(q_result.get(), binaryToTranslate);
           res.push_back(cd);
           if (!query_cursor->hasNext()) {
             query_cursor_map.erase(query_cursor_map.find(uid));
@@ -3451,7 +3454,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             // all the elements into a tgz.
           }
           res << "{\"data\":[";
-          boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+          chaos::common::data::CDWShrdPtr data;
           uint32_t                                             reduction_factor = 1;
           uint32_t                                             count_items      = 0;
           if (p.hasKey("reduction")) {
@@ -3520,7 +3523,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             cnt    = 0;
             bool n = query_cursor->hasNext();
             res << "{\"data\":[";
-            boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+            chaos::common::data::CDWShrdPtr data;
             DBGET << "paged query start:" << std::dec << start_ts << " end:" << end_ts << " page uid " << queryuid << " has next:" << n;
             current_query = queryuid;
 
@@ -3581,7 +3584,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         json_buf = res.str();
         return CHAOS_DEV_OK;
       } else {
-        boost::shared_ptr<chaos::common::data::CDataWrapper> data;
+        chaos::common::data::CDWShrdPtr data;
         DBGET << "START QUERY :" << std::dec << start_ts << " end:" << end_ts << " page size " << page;
 
         executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, &query_cursor);
@@ -3651,7 +3654,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
     } else if (cmd == "queryhstnext") {
       chaos::common::io::QueryCursor* query_cursor = NULL;
       chaos_data::CDataWrapper        p;
-      boost::shared_ptr<CDataWrapper> data;
+      chaos::common::data::CDWShrdPtr data;
       p.setSerializedJsonData(args);
       std::stringstream res;
       bool              clear_req = false;
@@ -4014,8 +4017,8 @@ int ChaosController::updateState() {
   return (int)state;
 }
 
-boost::shared_ptr<chaos::common::data::CDataWrapper> ChaosController::normalizeToJson(chaos::common::data::CDataWrapper* src, std::map<std::string, int>& list) {
-  boost::shared_ptr<chaos::common::data::CDataWrapper> data_res(new CDataWrapper());
+chaos::common::data::CDWShrdPtr ChaosController::normalizeToJson(chaos::common::data::CDataWrapper* src, std::map<std::string, int>& list) {
+  chaos::common::data::CDWShrdPtr data_res(new CDataWrapper());
 
   if (list.empty()) {
     data_res->appendAllElement(*src);
