@@ -1451,8 +1451,28 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain              
 }
 
 int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> >& res, const ChaosStringSet& projection, int page) {
-  uint64_t                        start_ts = offsetToTimestamp(start);
-  uint64_t                        end_ts   = offsetToTimestamp(end);
+ uint64_t                        start_ts = offsetToTimestamp(start);
+  uint64_t                      end_ts   = offsetToTimestamp(end);
+ /* if ((domain >= 0) && (domain <= DPCK_LAST_DATASET_INDEX)) {
+    std::string n    = (name == "") ? path : name;
+    std::string lkey = n + chaos::datasetTypeToPostfix(domain);
+    
+   
+   
+  
+  int ret=manager->queryDataCloud(lkey,
+                                       const ChaosStringSet& meta_tags,
+                                       const ChaosStringSet& projection_keys,
+                                       const uint64_t start_ts,
+                                       const uint64_t end_ts,
+                                       const uint32_t page_dimension,
+                                       chaos::common::direct_io::channel::opcode_headers::SearchSequence& last_sequence,
+                                       chaos::common::direct_io::channel::opcode_headers::QueryResultPage& found_element_page,
+                                       int32_t millisec_to_wait=10000);
+  }*/
+
+
+ 
   int32_t                         ret = 0, err = 0;
   chaos::common::io::QueryCursor* query_cursor = NULL;
   if (page == 0) {
@@ -1499,6 +1519,7 @@ int32_t ChaosController::queryHistory(const std::string& start, const std::strin
     releaseQuery(query_cursor);
   }
   return 0;
+
 }
 bool ChaosController::queryHasNext(int32_t uid) {
   chaos::common::io::QueryCursor* query_cursor = NULL;
