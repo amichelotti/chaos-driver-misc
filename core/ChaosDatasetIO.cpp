@@ -568,11 +568,9 @@ ChaosDataSet ChaosDatasetIO::getLiveDataset(const std::string &dsname,
                                             int                type) {
   size_t       dim;
   ChaosDataSet tmp;
-  char *       ptr = ioLiveDataDriver->retriveRawData(
-      dsname + chaos::datasetTypeToPostfix(type), &dim);
-  if (ptr) {
-    tmp.reset(new chaos::common::data::CDataWrapper(ptr));
-    free(ptr);
+  CDWUniquePtr   ptr = ioLiveDataDriver->retrieveData(dsname + chaos::datasetTypeToPostfix(type));
+  if (ptr.get()) {
+    tmp.reset(ptr.release());
   }
 
   return tmp;
@@ -581,11 +579,9 @@ ChaosDataSet ChaosDatasetIO::getLiveDataset(const std::string &dsname,
 ChaosDataSet ChaosDatasetIO::getLiveDataset(int type) {
   size_t       dim;
   ChaosDataSet tmp;
-  char *       ptr = ioLiveDataDriver->retriveRawData(
-      uid + chaos::datasetTypeToPostfix(type), &dim);
-  if (ptr) {
-    tmp.reset(new chaos::common::data::CDataWrapper(ptr));
-    free(ptr);
+  CDWUniquePtr   ptr = ioLiveDataDriver->retrieveData(uid + chaos::datasetTypeToPostfix(type));
+  if (ptr.get()) {
+    tmp.reset(ptr.release());
   }
 
   return tmp;
