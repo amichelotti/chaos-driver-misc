@@ -7,10 +7,9 @@ namespace driver {
 namespace misc {
 namespace root {
 
-class ChaosRoot :public chaos::DeclareAction{
+class ChaosRoot :public chaos::ChaosCommon<ChaosRoot>{
   
   TRint *rootApp;
-  std::string rootopts;
 //  const char** rootopts;
  // int rootargs;
 
@@ -18,10 +17,11 @@ class ChaosRoot :public chaos::DeclareAction{
   chaos::common::data::CDWUniquePtr _load(chaos::common::data::CDWUniquePtr dataset_attribute_values);
 
 public:
+  std::string rootopts;
+
   ChaosRoot();
   ~ChaosRoot();
 
-  std::string uid;
 
   //! C and C++ attribute parser
   /*!
