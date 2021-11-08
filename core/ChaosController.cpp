@@ -624,7 +624,7 @@ uint64_t ChaosController::sched(uint64_t ts) {
 #endif
 CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
   size_t      value_len = 0;
-  char*       value;
+  CDWUniquePtr       value;
   std::string CUNAME = (key == "") ? path : key;
   std::string lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
 
@@ -632,20 +632,12 @@ CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
     return manager->getLiveChannel(lkey);
 
   } else {
-    value = live_driver->retriveRawData(lkey, (size_t*)&value_len);
+    value = live_driver->retrieveData(lkey);
   }
   ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
-
-  if (value) {
-    chaos::common::data::CDataWrapper* tmp = new CDataWrapper(value);
-    ret.reset(tmp);
-    delete[] value;
-    return ret;
-  } else {
-    DBGETERR << "error fetching data from \"" << lkey;
-    ;
-  }
+  ret.reset(value.release());
   return ret;
+  
 }
 
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<std::string>& channels) {
