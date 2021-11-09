@@ -112,7 +112,7 @@ namespace driver
 
     std::string ChaosDatasetIO::ownerApp;
     ChaosDatasetIO::ChaosDatasetIO(const std::string &dataset_name, bool check)
-        : check_presence(check), datasetName(dataset_name), groupName(""), ageing(3600), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(5000), entry_created(false), query_index(0), defaultPage(30), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT)
+        : check_presence(check), datasetName(dataset_name), groupName(""), ageing(3600), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(5000), entry_created(false), query_index(0), defaultPage(1000), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT)
     {
       if (ownerApp.size())
       {
