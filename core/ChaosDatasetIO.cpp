@@ -564,13 +564,14 @@ namespace driver
         }
         last_push_ts = ts;
       }
-      else if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT)
-      {
-        DPD_LDBG << "STOPPED ";
-        cout << "==== STOP====" << std::endl;
-        waitEU.wait();
+      else if (type == (int)chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT){
+        if((state == chaos::CUStateKey::STOP)){
+          DPD_LDBG << "STOPPED ";
+          cout << "==== STOP====" << std::endl;
+          waitEU.wait();
         DPD_LDBG << "RESTARTED ";
-        cout << "==== START ====" << std::endl;
+        }
+        
       }
       return err;
     }
