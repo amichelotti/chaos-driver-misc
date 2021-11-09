@@ -3,7 +3,6 @@
 #include <chaos/common/direct_io/DirectIOClientConnection.h>
 #include <chaos/common/healt_system/HealtManager.h>
 #include <chaos/common/metadata_logging/metadata_logging.h>
-#include <chaos/cu_toolkit/data_manager/DataManager.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/DeleteInstance.h>
 #include <chaos_metadata_service_client/api_proxy/control_unit/SetInstanceDescription.h>
 #include <chaos_metadata_service_client/api_proxy/unit_server/ManageCUType.h>
@@ -162,8 +161,9 @@ namespace driver
         ChaosWriteLock l(iomutex);
         network_broker = NetworkBroker::getInstance();
 
-        // pool
-        ioLiveDataDriver = DataManager::getInstance()->getDataLiveDriverNewInstance();
+      	std::string impl_name =  boost::str( boost::format("%1%") % GlobalConfiguration::getInstance()->getOption<std::string>(InitOption::OPT_DATA_IO_IMPL));
+	
+	      ioLiveDataDriver = common::utility::ObjectFactoryRegister<chaos::common::io::IODataDriver>::getInstance()->getNewInstanceByName(impl_name);        // pool
         DPD_LDBG << "retrieved iodata driver";
       }
 

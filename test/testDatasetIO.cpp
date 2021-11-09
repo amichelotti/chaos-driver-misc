@@ -5,13 +5,11 @@
  * Created on September 10, 2015, 11:24 AM
  */
 
-#include <chaos_metadata_service_client/ChaosMetadataServiceClient.h>
 #include <cstdlib>
-
+#include <chaos_service_common/ChaosServiceToolkit.h>
 #include <driver/misc/core/ChaosDatasetIO.h>
 using namespace std;
 using namespace ::driver::misc;
-using namespace chaos::metadata_service_client;
 #include <boost/thread.hpp>
 #include <math.h>
 static int tot_error = 0;
@@ -492,86 +490,86 @@ int main(int argc, const char **argv) {
 
   std::string reportName(argv[0]);
   reportName = reportName + ".csv";
-  ChaosMetadataServiceClient::getInstance()
+  chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("nerror",
                   po::value<int32_t>(&exit_after_nerror)
                       ->default_value(exit_after_nerror),
                   "Exit after an amout of errors (0=not exit)");
 
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("page", po::value<uint32_t>(&pagelen)->default_value(0),
                   "Page len to recover data");
 
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption(
           "dsname",
           po::value<std::string>(&name)->default_value("PERFORMANCE_MESURE"),
           "name of the dataset (CU)");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("dsgroup",
                   po::value<std::string>(&group)->default_value("DATASETIO"),
                   "name of the group (US)");
 
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("loops", po::value<uint32_t>(&loops)->default_value(1000),
                   "number of push/loop");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("waitloop", po::value<uint32_t>(&waitloops)->default_value(0),
                   "us waits bewteen loops");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("wait", po::value<uint32_t>(&wait_retrive)->default_value(5),
                   "seconds to wait to retrive data after pushing");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("points",
                   po::value<uint32_t>(&npoints)->default_value(npoints),
                   "Number of sin points, 0 = no wave");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("freqshift",
                   po::value<double>(&freqshift)->default_value(0.001),
                   "Modify freq Hz every loop, 0= no modify");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("ampshift",
                   po::value<double>(&ampshift)->default_value(0.9999),
                   "Modify amplitude every loop, 0= no modify");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("binary", po::value<bool>(&binary)->default_value(false),
                   "The wave is in binary");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption(
           "report",
           po::value<std::string>(&reportName)->default_value(reportName),
           "The report file name");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("pointincr",
                   po::value<uint32_t>(&pointincr)->default_value(pointincr),
                   "Increment points by 2^number, from points to pointmaz");
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("pointmax",
                   po::value<uint32_t>(&pointmax)->default_value(pointmax),
                   "Max point");
 
-  ChaosMetadataServiceClient::getInstance()
+   chaos::service_common::ChaosServiceToolkit::getInstance()
       ->getGlobalConfigurationInstance()
       ->addOption("nthreads",
                   po::value<uint32_t>(&nthreads)->default_value(nthreads),
                   "Number of concurrent accesses");
 
-  ChaosMetadataServiceClient::getInstance()->init(argc, argv);
-  //ChaosMetadataServiceClient::getInstance()->start();
+  // chaos::service_common::ChaosServiceToolkit::getInstance()->start();
+  chaos::service_common::ChaosServiceToolkit::getInstance()->init(argc, argv);
   if (pointmax == 0) {
     pointmax = npoints;
   }
@@ -600,8 +598,8 @@ int main(int argc, const char **argv) {
   delete[] params;
   LOG(" Stopping services");
 
-  //ChaosMetadataServiceClient::getInstance()->stop();
-  ChaosMetadataServiceClient::getInstance()->deinit();
+  // chaos::service_common::ChaosServiceToolkit::getInstance()->stop();
+   chaos::service_common::ChaosServiceToolkit::getInstance()->deinit();
   if(tot_error){
       LOG("## exiting with "<<tot_error<<" errors");
   } else {

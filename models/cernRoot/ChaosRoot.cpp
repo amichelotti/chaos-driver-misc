@@ -13,7 +13,7 @@ using namespace std;
 #include "TRint.h"
 #include <chaos/common/healt_system/HealtManager.h>
 #include <chaos/common/io/SharedManagedDirecIoDataDriver.h>
-#include <chaos/cu_toolkit/data_manager/DataManager.h>
+//#include <chaos/cu_toolkit/data_manager/DataManager.h>
 #include <chaos/common/metadata_logging/metadata_logging.h>
 
 #include <driver/misc/models/cernRoot/rootUtil.h>
@@ -123,7 +123,7 @@ namespace driver
         // rootapp->start();
         //chaos::ChaosCommon<ChaosRoot>::start();
 
-        StartableService::startImplementation(DataManager::getInstance(), "DataManager", "ChaosCUToolkit::start");
+      //  StartableService::startImplementation(DataManager::getInstance(), "DataManager", "ChaosCUToolkit::start");
 
         rootApp->SetPrompt("chaosRoot[%d]>");
         rootApp->Run();
@@ -156,7 +156,7 @@ namespace driver
       {
         chaos::ChaosCommon<ChaosRoot>::init(init_data);
         InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
-        StartableService::initImplementation(DataManager::getInstance(), NULL, "DataManager", "ChaosRoot::init");
+       // StartableService::initImplementation(DataManager::getInstance(), NULL, "DataManager", "ChaosRoot::init");
         StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
         InizializableService::initImplementation(chaos::common::metadata_logging::MetadataLoggingManager::getInstance(),
                                                  NULL,

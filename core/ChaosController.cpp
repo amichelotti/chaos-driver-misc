@@ -2932,7 +2932,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             res << json_buf;
           } else if (what == "del") {
             CHECK_PARENT;
-            EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation, MDS_TIMEOUT, name, parent);
+            if (manager) {
+              CDWUniquePtr msg = manager->removeNodeAssociation(name, parent);
+              json_buf         = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            } else {
+              EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation, MDS_TIMEOUT, name, parent);
+            }
             res << json_buf;
           } else if (what == "get") {
             CHECK_PARENT;
