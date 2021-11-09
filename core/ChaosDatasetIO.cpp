@@ -973,6 +973,7 @@ namespace driver
     //  DPD_LAPP << "Waiting start ";
 
     //  waitEU.wait();
+      state = chaos::CUStateKey::START;
 
       return 0;
     }
