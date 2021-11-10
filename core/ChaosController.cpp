@@ -1016,10 +1016,14 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
     if (std::regex_match(i->c_str(), what, e)) {
-      //   LDBG_<<"NODE:"<<*i<<" class:"<<what[2]<<" zone:"<<what[1];
-
-      zone_to_cuname[what[1]]  = *i;
-      class_to_cuname[what[2]] = *i;
+      std::string zm=what[1];
+      std::string cm=what[2];
+      if(zm.size()){
+        zone_to_cuname[zm]  = *i;
+      }
+      if(cm.size()){
+        class_to_cuname[cm] = *i;
+      }
     }
   }
 }
@@ -3754,13 +3758,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       int                      ret;
       chaos_data::CDataWrapper p;
       std::string              snapname = args;
-      try {
-        p.setSerializedJsonData(args);
-        if (p.hasKey("snapname")) {
-          snapname = p.getStringValue("snapname");
-        }
-      } catch (std::exception ee) {
-      }
+      
       ret = deleteSnapshot(snapname);
       if (ret == 0) {
         DBGET << "DELETE snapshot " << snapname << " ret:" << ret;

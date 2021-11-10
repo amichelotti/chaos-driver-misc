@@ -598,7 +598,7 @@ int main(int argc, const char **argv) {
   delete[] params;
   LOG(" Stopping services");
 
-  // chaos::service_common::ChaosServiceToolkit::getInstance()->stop();
+   chaos::service_common::ChaosServiceToolkit::getInstance()->stop();
    chaos::service_common::ChaosServiceToolkit::getInstance()->deinit();
   if(tot_error){
       LOG("## exiting with "<<tot_error<<" errors");

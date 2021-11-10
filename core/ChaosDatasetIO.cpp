@@ -948,9 +948,10 @@ namespace driver
 
       CHAOS_NOT_THROW(HealtManager::getInstance()->addNodeMetricValue(
           uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_START, true);)
-      CHAOS_NOT_THROW(
+      
+   /* CHAOS_NOT_THROW(
           StartableService::startImplementation(
-              HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+              HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););*/
 
       pushDataset(chaos::DataPackCommonKey::DPCK_DATASET_TYPE_SYSTEM);
       /*
@@ -1740,10 +1741,10 @@ namespace driver
                       groupName);
   }*/
       DEBUG_CODE(DPD_LDBG << "Timer removed");
-      CHAOS_NOT_THROW(InizializableService::deinitImplementation(
+   /*   CHAOS_NOT_THROW(InizializableService::deinitImplementation(
                           MetadataLoggingManager::getInstance(),
                           "MetadataLoggingManager",
-                          __PRETTY_FUNCTION__););
+                          __PRETTY_FUNCTION__););*/
 
       if (alarm_logging_channel)
       {

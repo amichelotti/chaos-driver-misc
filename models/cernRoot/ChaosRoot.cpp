@@ -124,6 +124,7 @@ namespace driver
         //chaos::ChaosCommon<ChaosRoot>::start();
 
       //  StartableService::startImplementation(DataManager::getInstance(), "DataManager", "ChaosCUToolkit::start");
+      StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__);
 
         rootApp->SetPrompt("chaosRoot[%d]>");
         rootApp->Run();
@@ -142,6 +143,10 @@ namespace driver
         InizializableService::deinitImplementation(
             SharedManagedDirecIoDataDriver::getInstance(),
             "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+            CHAOS_NOT_THROW(InizializableService::deinitImplementation(
+                          chaos::common::metadata_logging::MetadataLoggingManager::getInstance(),
+                          "MetadataLoggingManager",
+                          __PRETTY_FUNCTION__););
 
         chaos::ChaosCommon<ChaosRoot>::deinit();
       }
