@@ -318,8 +318,9 @@ int performTest(const std::string &name, testparam_t &tparam) {
                 << " loops:" << loops << " is:" << push_avg
                 << " push/s, tot us: " << push_time << " points:" << point_cnt
                 << " bandwith (MB/s):" << bandwithMB
+                << " Total transferred (KB):"<<(loops*payloadKB*1.0)/1024.0
                 << " overhead:" << overhead_tot
-                << " Total time:" << dursec.count() << " s");
+                << " Total time:" << dursec.count()/1000.0 << " s");
       if (wait_retrive) {
         LOG( " waiting " << wait_retrive << " s before retrive data");
         sleep(wait_retrive);
@@ -479,10 +480,11 @@ int performTest(const std::string &name, testparam_t &tparam) {
         // points:"<<point_cnt<<std::endl;
       }
     }
+      tot_error += countErr;
+
   }
   cond.notify_all();
 
-  tot_error += countErr;
   return countErr;
 }
 int main(int argc, const char **argv) {
@@ -599,9 +601,11 @@ int main(int argc, const char **argv) {
   LOG(" Stopping services");
 
    chaos::service_common::ChaosServiceToolkit::getInstance()->stop();
+     LOG(" Deinit services");
+
    chaos::service_common::ChaosServiceToolkit::getInstance()->deinit();
   if(tot_error){
-      LOG("## exiting with "<<tot_error<<" errors");
+      LOG("## exiting with "<<exit_after_nerror<<",  tot errors:"<<tot_error);
   } else {
       LOG("* exiting with "<<tot_error<<" errors");
 

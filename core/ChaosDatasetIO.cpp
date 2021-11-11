@@ -12,7 +12,7 @@
 
 #define DPD_LOG_HEAD "[ChaosDatasetIO-" << uid << "] - "
 #define DPD_LAPP LAPP_ << DPD_LOG_HEAD
-#define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
+#define DPD_LDBG LDBG_ << DPD_LOG_HEAD 
 #define DPD_LERR \
   LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "
 
@@ -890,7 +890,7 @@ namespace driver
           RpcActionDefinitionKey::CS_CMDM_ACTION_DESC);
       PropertyCollector::fillDescription("property", *mds_registration_pack.get());
 
-      DPD_LDBG << " REGISTRATION PACK: " << mds_registration_pack->getJSONString();
+   //   DPD_LDBG << " REGISTRATION PACK: " << mds_registration_pack->getJSONString();
 
       if ((ret = mds_message_channel->sendNodeRegistration(
                MOVE(mds_registration_pack), true, 10000)) == 0)
