@@ -2813,8 +2813,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int ret = 0, ret1 = 0;
             if (manager) {
               manager->deleteInstance(name, parent);
+              manager->nodeDelete(name, parent);
               json_buf = "{}";
-
+              
             } else {
               if (!parent.empty()) {
                 EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
