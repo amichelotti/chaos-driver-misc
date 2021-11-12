@@ -2648,8 +2648,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           }
 
           else if (what == "create") {
-            EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);
-            res << json_buf;
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg = manager->newUS(name);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+              res << json_buf;
+            } else {
+              EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);
+              res << json_buf;
+            }
           } else if (what == "get") {
             if (manager) {
               chaos::common::data::CDWUniquePtr msg = manager->getFullUnitServer(name);
