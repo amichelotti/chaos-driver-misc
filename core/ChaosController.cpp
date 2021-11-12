@@ -622,22 +622,21 @@ uint64_t ChaosController::sched(uint64_t ts) {
 }
 #endif
 CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
+  size_t      value_len = 0;
+  CDWUniquePtr       value;
   std::string CUNAME = (key == "") ? path : key;
   std::string lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
 
   if (manager) {
     return manager->getLiveChannel(lkey);
-  }
 
-  CDWShrdPtr   ret;
-  CDWUniquePtr value = live_driver->retrieveData(lkey);
-  if (value.get()) {
-    ret.reset(value.release());
   } else {
-    DBGETERR << "error fetching data from \"" << lkey;
+    value = live_driver->retrieveData(lkey);
   }
-
+  ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
+  ret.reset(value.release());
   return ret;
+  
 }
 
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<std::string>& channels) {
@@ -1014,10 +1013,14 @@ void ChaosController::parseClassZone(ChaosStringVector& v) {
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
     if (std::regex_match(i->c_str(), what, e)) {
-      //   LDBG_<<"NODE:"<<*i<<" class:"<<what[2]<<" zone:"<<what[1];
-
-      zone_to_cuname[what[1]]  = *i;
-      class_to_cuname[what[2]] = *i;
+      std::string zm=what[1];
+      std::string cm=what[2];
+      if(zm.size()){
+        zone_to_cuname[zm]  = *i;
+      }
+      if(cm.size()){
+        class_to_cuname[cm] = *i;
+      }
     }
   }
 }
@@ -2660,8 +2663,14 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           }
 
           else if (what == "create") {
-            EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);
-            res << json_buf;
+            if(manager){
+              chaos::common::data::CDWUniquePtr msg = manager->newUS(name);
+              json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+              res << json_buf;
+            } else {
+              EXECUTE_CHAOS_API(api_proxy::unit_server::NewUS, MDS_TIMEOUT, name);
+              res << json_buf;
+            }
           } else if (what == "get") {
             if (manager) {
               chaos::common::data::CDWUniquePtr msg = manager->getFullUnitServer(name);
@@ -2819,8 +2828,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             int ret = 0, ret1 = 0;
             if (manager) {
               manager->deleteInstance(name, parent);
+              manager->nodeDelete(name, parent);
               json_buf = "{}";
-
+              
             } else {
               if (!parent.empty()) {
                 EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
@@ -2948,7 +2958,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             res << json_buf;
           } else if (what == "del") {
             CHECK_PARENT;
-            EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation, MDS_TIMEOUT, name, parent);
+            if (manager) {
+              CDWUniquePtr msg = manager->removeNodeAssociation(name, parent);
+              json_buf         = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+            } else {
+              EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::agent::RemoveNodeAssociation, MDS_TIMEOUT, name, parent);
+            }
             res << json_buf;
           } else if (what == "get") {
             CHECK_PARENT;
@@ -3765,13 +3780,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       int                      ret;
       chaos_data::CDataWrapper p;
       std::string              snapname = args;
-      try {
-        p.setSerializedJsonData(args);
-        if (p.hasKey("snapname")) {
-          snapname = p.getStringValue("snapname");
-        }
-      } catch (std::exception ee) {
-      }
+      
       ret = deleteSnapshot(snapname);
       if (ret == 0) {
         DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
