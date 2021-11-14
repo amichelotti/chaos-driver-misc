@@ -54,10 +54,11 @@ namespace driver{
                 ACT_NONE
             };
             private:
-             chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            // chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            chaos::common::io::IODataDriver*ioLiveDataDriver;
              static ChaosSharedMutex iomutex;
 
-            ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
+          //  ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
              //!logging channel

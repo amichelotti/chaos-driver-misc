@@ -676,7 +676,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     q.treeAllocated = false;
 
     ChaosController *ctrl = NULL;
-    std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> res;
+    chaos::common::data::VectorCDWShrdPtr res;
   
     ctrl = new ChaosController(chaosNode);
 
@@ -700,7 +700,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
       q.tree = tree_ret;
 
       std::vector<std::string> contained_key;
-      boost::shared_ptr<chaos::common::data::CDataWrapper> cd = res[0];
+      CDWShrdPtr cd = res[0];
       if(cd.get()){
         branch = new ChaosToTree(tree_ret,brname);
         if (branch == NULL) {
@@ -737,8 +737,7 @@ query_int(TTree *tree_ret, const std::string &chaosNode,
     q.ctrl = ctrl;
     q.channel = channel;
     queries[tree_ret] = q;
-    for (std::vector<
-             boost::shared_ptr<chaos::common::data::CDataWrapper>>::iterator i =
+    for (chaos::common::data::VectorCDWShrdPtr::iterator i =
              res.begin()+1;
          i != res.end(); i++) {
       //addTree(q, i->get());
@@ -831,7 +830,7 @@ bool queryNextChaosTree(TTree *tree) {
     // ROOTDBG<<"ROOT retriving uid:"<<uid<<" pagelen:"<<pagelen;
     if (ctrl) {
       do {
-        std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> res;
+        chaos::common::data::VectorCDWShrdPtr res;
 
         uid = ctrl->queryNext(uid, res);
         last_size = res.size();
@@ -839,7 +838,7 @@ bool queryNextChaosTree(TTree *tree) {
         // ROOTDBG<<"ROOT querynext uid:"<<uid<<" returned:"<<last_size<<"
         // tot:"<<totcnt;
 
-        for (std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>>::
+        for (chaos::common::data::VectorCDWShrdPtr::
                  iterator i = res.begin();
              i != res.end(); i++) {
                  queries[tree].branch->addData(*(i->get()));
