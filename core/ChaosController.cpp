@@ -2784,9 +2784,12 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                   }
                 }
                 //	property_list.push_back(cu_property_group);
-
                 // GET_CHAOS_API_PTR((chaos::metadata_service_client::api_proxy::node::UpdateProperty)->execute(name,property_list)));
-                EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+                if (manager) {
+                  manager->updateProperty(name,pg);
+                } else {
+                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+                }
               } else {
                 RETURN_ERROR("'properties' should be a vector of properties");
               }
