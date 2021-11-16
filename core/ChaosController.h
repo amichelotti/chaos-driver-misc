@@ -62,7 +62,7 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     static chaos::common::message::MDSMessageChannel *mdsChannel;
     static chaos::service_common::ChaosManager*manager;
     //chaos::metadata_service_client::ChaosMetadataServiceClient *mds_client;
-    static chaos::common::io::IODataDriverShrdPtr live_driver;
+    static chaos::common::io::IODataDriver* live_driver;
     std::vector<std::string> mds_server_l;
     std::string path;
     chaos::common::data::DatasetDB datasetDB;

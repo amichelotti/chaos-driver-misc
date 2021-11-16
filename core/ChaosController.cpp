@@ -65,7 +65,7 @@ using namespace chaos::service_common;
 
 chaos::service_common::ChaosManager*       ChaosController::manager    = NULL;
 chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel = NULL;
-chaos::common::io::IODataDriverShrdPtr     ChaosController::live_driver;
+chaos::common::io::IODataDriver*     ChaosController::live_driver = NULL;
 
 void ChaosController::setTimeout(uint64_t timeo_us) {
   timeo = timeo_us;
@@ -533,7 +533,14 @@ void ChaosController::initializeClient() {
       DBGETERR << " Cannot use direct drivers";
     }
     if (live_driver == NULL) {
-      live_driver = ChaosMetadataServiceClient::getInstance()->getDataProxyChannelNewInstance();
+       
+        ChaosWriteLock l(iomutex);
+
+      	std::string impl_name =  boost::str( boost::format("%1%") % chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_DATA_IO_IMPL));
+	
+	      live_driver = chaos::common::utility::ObjectFactoryRegister<chaos::common::io::IODataDriver>::getInstance()->getNewInstanceByName(impl_name);        // pool
+        LDBG_ << "retrieved iodata driver";
+      
     }
     if (!live_driver) {
       throw chaos::CException(-1, "No LIVE Channel created", "ChaosController()");
@@ -750,6 +757,9 @@ const std::string ChaosController::fetchJson(int channel) {
   ChaosReadLock ll(iomutex);
   uint64_t      now   = chaos::common::utility::TimingUtil::getTimeStamp();
   int32_t       check = max_cache_duration_ms;
+  if(path.size()==0){
+    return "";
+  }
   if ((channel == KeyDataStorageDomainHealth) || (channel == 255) || (channel == 128)) {
     check = HALF_HEALT_REFRESH;
   }
@@ -783,7 +793,9 @@ void ChaosController::updateCacheLive(const chaos::common::data::CDataWrapper& r
 chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
   // 	boost::mutex::scoped_lock(iomutex);
   uint64_t now = chaos::common::utility::TimingUtil::getTimeStamp();
-
+  if(path.size()==0){
+    return chaos::common::data::CDWUniquePtr();
+  }
   chaos::common::data::CDWUniquePtr retdata(new CDataWrapper());
   try {
     if (channel == -1) {
