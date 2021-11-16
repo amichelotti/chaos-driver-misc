@@ -54,26 +54,26 @@ void chaos::driver::gibcontrol::SimGibDD::driverInit(const char* initParameter) 
 }
 
 int chaos::driver::gibcontrol::SimGibDD::setPulse(int32_t channel,int32_t amplitude,int32_t width,int32_t state){
-	return 0;
+	return devicedriver->setPulse( channel, amplitude, width, state);
 }
 			 int chaos::driver::gibcontrol::SimGibDD::setChannelVoltage(int32_t channel,double Voltage){
-				 return 0;
+				 return devicedriver->setChannelVoltage(channel,Voltage);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::PowerOn(int32_t on_state){
-				 return 0;
+				 return devicedriver->PowerOn(on_state);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::getState(int32_t* state,std::string& desc){
-				 return 0;
+				 return devicedriver->getState(state,desc);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::getVoltages(std::vector<double>& voltages){
-				 return 0;
+				 return devicedriver->getVoltages(voltages);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::getNumOfChannels(int32_t* numOfChannels){
-				 return 0;
+				 return devicedriver->getNumOfChannels(numOfChannels);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::getPulsingState(std::vector<int32_t>& amplitudes,std::vector<int32_t>& widthChannels){
-				 return 0;
+				 return devicedriver->getPulsingState(amplitudes,widthChannels);
 			 }
 			 int chaos::driver::gibcontrol::SimGibDD::getSupplyVoltages(double* HVSupply,double* P5V,double* N5V){
-				 return 0;
+				return devicedriver->getSupplyVoltages(HVSupply,P5V,N5V);
 			 }
