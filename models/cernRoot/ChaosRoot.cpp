@@ -61,10 +61,7 @@ namespace driver
       {
         chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
 
-        /*InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL,"SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
-  StartableService::initImplementation(HealtManager::getInstance(), NULL,
-                                       "HealthManager", __PRETTY_FUNCTION__);
-  */
+ 
       }
       void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException)
       {
