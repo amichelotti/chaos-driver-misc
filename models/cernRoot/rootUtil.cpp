@@ -918,7 +918,7 @@ std::vector<std::string> chaosSearch(const std::string& name,bool alive,const st
 
       if(ctrl){
                 unsigned npages=0;
-                if(ctrl->searchNode(name, type, alive, 0, MAX_QUERY_ELEMENTS, npages, node_tmp, MDS_TIMEOUT, implementation, state) == 0) {
+                if(ctrl->searchNode(name, type, alive, 0, MAX_QUERY_ELEMENTS, npages, node_tmp, MDS_TIMEOUT, implementation, state) != 0) {
                 ROOTERR << "An error during search";
 
               }
