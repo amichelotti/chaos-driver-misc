@@ -22,7 +22,6 @@
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
-#define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 10000
 #define MDS_STEP_TIMEOUT 1000
 #define MDS_RETRY 3
@@ -182,7 +181,7 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     typedef boost::shared_ptr<command> command_t;
     dev_info_status bundle_state;
     ChaosController();
-    ChaosController(std::string path, uint32_t timeo = DEFAULT_TIMEOUT_FOR_CONTROLLER);
+    ChaosController(std::string path, uint32_t timeo = chaos::RpcConfigurationKey::GlobalRPCTimeoutinMSec);
 
     //virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();

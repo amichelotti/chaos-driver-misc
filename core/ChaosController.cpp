@@ -693,7 +693,7 @@ chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(chaos::com
 }
 
 ChaosController::ChaosController()
-    : state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), update_all_channels_ts(0), timeo(DEFAULT_TIMEOUT_FOR_CONTROLLER), datasetDB(true), max_cache_duration_ms(0)
+    : state(chaos::CUStateKey::UNDEFINED), queryuid(0), last_access(0), heart(0), reqtime(0), tot_us(0), naccess(0), refresh(0), update_all_channels_ts(0), timeo(chaos::RpcConfigurationKey::GlobalRPCTimeoutinMSec), datasetDB(true), max_cache_duration_ms(0)
 
 {
   initializeClient();
