@@ -1784,15 +1784,7 @@ namespace driver
         query_cursor_map.erase(i++);
       }
       // RIMANE APPESO SU UN LOCK
-      /* 
- if (ioLiveShDataDriver.use_count() == 1) {
-    CHAOS_NOT_THROW(InizializableService::deinitImplementation(
-                        ioLiveShDataDriver.get(),
-                        "SharedManagedDirecIoDataDriver",
-                        __PRETTY_FUNCTION__););
-  }
-  DEBUG_CODE(DPD_LDBG << "Shared Manager deinitialized");
-*/
+   
       DEBUG_CODE(DPD_LDBG << "Deinitialized");
 
       deinitialized = true;
