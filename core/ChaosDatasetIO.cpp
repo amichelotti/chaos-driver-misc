@@ -423,7 +423,7 @@ namespace driver
         }
         datasets[type] = new_dataset;
 
-        DPD_LDBG << "Allocated dataset:" << type << " val=" << new_dataset->getJSONString();
+      //  DPD_LDBG << "Allocated dataset:" << type << " val=" << new_dataset->getJSONString();
 
         return new_dataset;
       }
@@ -1194,7 +1194,7 @@ namespace driver
         {
           CDWUniquePtr elementDescription =
               elementsDescriptions->getCDataWrapperElementAtIndex(idx);
-          DPD_LDBG << "LOOKING " << elementDescription->getJSONString();
+         // DPD_LDBG << "LOOKING " << elementDescription->getJSONString();
           // attribute name
           if (!elementDescription->hasKey(
                   ControlUnitNodeDefinitionKey::
@@ -1785,8 +1785,20 @@ namespace driver
       }
       // RIMANE APPESO SU UN LOCK
    
+      if(ioLiveDataDriver){ 
+        DPD_LDBG << "Delete ioLiveDataDriver";
+        delete ioLiveDataDriver;
+      }
       DEBUG_CODE(DPD_LDBG << "Deinitialized");
 
+      ioLiveDataDriver=NULL;
+
+      if(mds_message_channel){
+
+        DPD_LDBG << "Delete mds_message_channel";
+        network_broker->disposeMessageChannel(mds_message_channel);
+        mds_message_channel=NULL;
+      }
       deinitialized = true;
       DEBUG_CODE(DPD_LDBG << "Destroy all resources");
     }

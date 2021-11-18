@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <chaos/common/global.h>
+#include <chaos/common/utility/TimingUtil.h>
 using namespace std;
 using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
