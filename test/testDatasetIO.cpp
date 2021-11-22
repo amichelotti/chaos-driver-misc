@@ -599,9 +599,10 @@ int main(int argc, const char **argv) {
   }
   delete[] params;
   LOG(" Stopping services");
+  sleep(5);
 
    chaos::service_common::ChaosServiceToolkit::getInstance()->stop();
-     LOG(" Deinit services");
+  //   LOG(" Deinit services");
 
    chaos::service_common::ChaosServiceToolkit::getInstance()->deinit();
   if(tot_error){

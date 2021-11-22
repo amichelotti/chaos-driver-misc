@@ -1,9 +1,11 @@
 #ifndef CHAOSDATASETIO_H
 #define CHAOSDATASETIO_H
 
-#include <chaos/common/io/ManagedDirectIODataDriver.h>
 #include <chaos/common/property/property.h>
 #include <chaos/common/thread/WaitSemaphore.h>
+#include <chaos/common/async_central/TimerHandler.h>
+#include <chaos/common/message/MessagePublishSubscribeBase.h>
+#include <chaos/common/action/DeclareAction.h>
 
 namespace chaos{
     namespace common{
@@ -12,6 +14,7 @@ namespace chaos{
         }
         namespace io{
             class QueryCursor;
+            class IODataDriver;
         };
         namespace network{
             class NetworkBroker;
@@ -58,7 +61,6 @@ namespace driver{
             chaos::common::io::IODataDriver*ioLiveDataDriver;
              static ChaosSharedMutex iomutex;
 
-          //  ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
              //!logging channel
