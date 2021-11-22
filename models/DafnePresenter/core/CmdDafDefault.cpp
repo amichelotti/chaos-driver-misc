@@ -249,7 +249,7 @@ void own::CmdDafDefault::acquireHandler() {
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 			
 			*p_i_ele = DATO.i_ele.innerValue=VUGImporterDataset->getDoubleValue("e_current");
-		    *p_i_pos = DATO.i_pos.innerValue=DATO.i_ele.innerValue=VUGImporterDataset->getDoubleValue("p_current");
+		    *p_i_pos = DATO.i_pos.innerValue=VUGImporterDataset->getDoubleValue("p_current");
 
 			*p_VUGEL102=DATO.VUGEL102.innerValue=VUGImporterDataset->getDoubleValue("VUGEL102_press");
 			*p_VUGEL103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGEL103_press");
