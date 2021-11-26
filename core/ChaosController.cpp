@@ -775,6 +775,10 @@ const std::string ChaosController::fetchJson(int channel) {
       DBGETERR << "Error fetching channel:" << channel;
     }
   }
+  if(cachedJsonChannels.count(channel)==0){
+    return "";
+
+  }
   return cachedJsonChannels[channel];
 }
 void ChaosController::updateCacheLive(const chaos::common::data::CDataWrapper& res) {
