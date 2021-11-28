@@ -89,8 +89,8 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     std::map<int, int64_t> cachedJsonChannelsTS;
 
     uint32_t queryuid;
-    ChaosSharedMutex iomutex;
-    ChaosSharedMutex ioctrl;
+    ChaosMutex iomutex;
+    ChaosMutex ioctrl;
 
     typedef struct
     {

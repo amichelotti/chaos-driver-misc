@@ -120,7 +120,7 @@ private:
     static std::map< std::string,datinfo_psh > paramToDataset;
     static std::map<std::string,ctrl_t> controllers;
     ctrl_t controller;
-    boost::mutex data_access;
+    ChaosMutex data_access;
     int allocateController(std::string name);
 public:
     int set(void*buf,int size);

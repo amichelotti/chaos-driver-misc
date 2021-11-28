@@ -155,10 +155,10 @@ static const double PI = 3.141592653589793238463;
 static int thread_done = 0;
 static uint32_t nthreads = 1;
 static ofstream fs;
-static boost::mutex mutex_sync;
+static ChaosMutex mutex_sync;
 
-static boost::mutex mutex_thread;
-static boost::condition_variable_any cond;
+static ChaosMutex mutex_thread;
+static ChaosConditionVariableAny cond;
 
 int performTest(const std::string &name, testparam_t &tparam) {
   int countErr = 0;
