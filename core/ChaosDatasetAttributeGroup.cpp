@@ -59,7 +59,7 @@ void ChaosDatasetAttributeGroup::add(ChaosDatasetAttribute* d){
 
 ChaosDatasetAttribute* ChaosDatasetAttributeGroup::add(std::string path){
     ChaosDatasetAttribute*ret=NULL;
-    boost::mutex::scoped_lock sl(lock_sync);
+    ChaosLockGuard sl(lock_sync);
         
 
     if(id2attr.find(path)==id2attr.end()){
@@ -81,7 +81,7 @@ std::vector<ChaosDatasetAttribute*> ChaosDatasetAttributeGroup::getAttributes(){
 
 }
 void ChaosDatasetAttributeGroup::remove(std::string path){
-    boost::mutex::scoped_lock sl(lock_sync);
+    ChaosLockGuard sl(lock_sync);
     std::map<std::string,ChaosDatasetAttribute* >::iterator i=id2attr.find(path);
    
     if(i!=id2attr.end()){

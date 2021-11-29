@@ -146,8 +146,8 @@ static boost::atomic<int> thread_done;
 static uint32_t nthreads = 1;
 static ofstream fs;
 
-static boost::mutex mutex_thread;
-static boost::condition_variable_any cond;
+static ChaosMutex mutex_thread;
+static ChaosConditionVariableAny cond;
 
 int performTest(const std::string &name, testparam_t &tparam) {
   double freq = 1, phase = 0, amp = 1, afreq, aamp;
@@ -470,10 +470,10 @@ int performTest(const std::string &name, testparam_t &tparam) {
 
       } else {
 
-        boost::mutex::scoped_lock lock(mutex_thread);
+        ChaosUniqueLock lock(mutex_thread);
         LOG( "[" << name << "] waiting:" << thread_done
                   << " points:" << point_cnt);
-        cond.wait_for(mutex_thread,boost::chrono::seconds(120));
+        CHAOS_WAIT(cond,mutex_thread,120000);
         LOG( "[" << name << "] done");
         
         // std::cout <<"["<<name<<"] restart:" << thread_done<<"
