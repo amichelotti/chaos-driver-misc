@@ -1387,7 +1387,8 @@ int ChaosController::unloadDevice(const std::string& dev) {
 }
 int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
   std::vector<std::string> tags;
-  return queryHistory(start, end, 0, 0, tags, channel, res, projection, page);
+  uint64_t runid=0,seqid=0;
+  return queryHistory(start, end, runid, seqid, tags, channel, res, projection, page);
 }
 
 void ChaosController::executeTimeIntervalQuery(DatasetDomain      domain,
@@ -1458,7 +1459,7 @@ void ChaosController::executeTimeIntervalQuery(const DatasetDomain              
   }
 }
 
-int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
+int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, uint64_t& runid, uint64_t& seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
   uint64_t start_ts = offsetToTimestamp(start);
   uint64_t end_ts   = offsetToTimestamp(end);
   int      ret      = -1;
@@ -1477,6 +1478,8 @@ int32_t ChaosController::queryHistory(const std::string& start, const std::strin
                                   page,
                                   last_sequence,
                                   res);
+    runid=last_sequence.run_id;
+    seqid=last_sequence.datapack_counter;
   }
   return ret;
 }
