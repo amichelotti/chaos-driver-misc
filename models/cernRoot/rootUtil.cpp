@@ -108,7 +108,10 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
       //  //ROOTDBG<<" BELE "<<*it<< " ele size:"<<cd->getValueSize(*it)<<" tot
       //  size:"<<query[branch_counter].size;
     }
-
+    if(((unsigned)chaosType)&chaos::DataType::TYPE_ACCESS_ARRAY){
+        varname << name;
+        is_vector = true; 
+    }
     switch (chaosType) {
       case chaos::DataType::TYPE_BOOLEAN:
 
@@ -126,6 +129,64 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
         varname << name << "/D";
 
         break;
+      case chaos::DataType::TYPE_VECTOR_BOOL:
+            varname << "[__" << name << "__]/O";
+            vector_size       = size / sizeof(bool);
+            data_element_size = sizeof(bool);
+        
+      break;
+      case chaos::DataType::TYPE_VECTOR_INT8:
+            varname << "[__" << name << "__]/B";
+            vector_size       = size / sizeof(int8_t);
+            data_element_size = sizeof(int8_t);
+        
+      break;
+      case chaos::DataType::TYPE_VECTOR_UINT8:
+            varname << "[__" << name << "__]/b";
+            vector_size       = size / sizeof(uint8_t);
+            data_element_size = sizeof(uint8_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_INT16:
+            varname << "[__" << name << "__]/S";
+            vector_size       = size / sizeof(int16_t);
+            data_element_size = sizeof(int16_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_UINT16:
+            varname << "[__" << name << "__]/s";
+            vector_size       = size / sizeof(uint16_t);
+            data_element_size = sizeof(uint16_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_INT32:
+            varname << "[__" << name << "__]/I";
+            vector_size       = size / sizeof(int32_t);
+            data_element_size = sizeof(int32_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_UINT32:
+            varname << "[__" << name << "__]/i";
+            vector_size       = size / sizeof(uint32_t);
+            data_element_size = sizeof(uint32_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_INT64:
+          varname << "[__" << name << "__]/L";
+            vector_size       = size / sizeof(int64_t);
+            data_element_size = sizeof(int64_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_UINT64:
+          varname << "[__" << name << "__]/l";
+            vector_size       = size / sizeof(uint64_t);
+            data_element_size = sizeof(uint64_t);
+      break;
+      case chaos::DataType::TYPE_VECTOR_DOUBLE:
+            varname << "[__" << name << "__]/D";
+            vector_size       = size / sizeof(double);
+            data_element_size = sizeof(double);
+      break;
+      case chaos::DataType::TYPE_VECTOR_FLOAT:
+       varname << "[__" << name << "__]/F";
+            vector_size       = size / sizeof(float);
+            data_element_size = sizeof(float);
+      break;
+
       case chaos::DataType::TYPE_BYTEARRAY: {
         varname << name;
         is_vector = true;
@@ -145,6 +206,12 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
             break;
             //! Integer 8 bit length
           case chaos::DataType::SUB_TYPE_INT8:
+            varname << "[__" << name << "__]/B";
+            vector_size       = size / sizeof(int8_t);
+            data_element_size = sizeof(int8_t);
+
+            break;
+          case chaos::DataType::SUB_TYPE_UINT8:
             varname << "[__" << name << "__]/b";
             vector_size       = size / sizeof(int8_t);
             data_element_size = sizeof(int8_t);
@@ -152,7 +219,7 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
             break;
             //! Integer 16 bit length
           case chaos::DataType::SUB_TYPE_INT16:
-            varname << "[__" << name << "__]/s";
+            varname << "[__" << name << "__]/S";
             vector_size       = size / sizeof(int16_t);
             data_element_size = sizeof(int16_t);
 
@@ -164,7 +231,16 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
             data_element_size = sizeof(int32_t);
 
             break;
-          case chaos::DataType::SUB_TYPE_UNSIGNED:
+          case chaos::DataType::SUB_TYPE_UINT16:
+            varname << "[__" << name << "__]/s";
+            vector_size       = size / sizeof(int16_t);
+            data_element_size = sizeof(int16_t);
+
+            break;
+            //! Integer 32 bit length
+          case chaos::DataType::SUB_TYPE_UINT32:
+           case chaos::DataType::SUB_TYPE_UNSIGNED:
+
             varname << "[__" << name << "__]/i";
             vector_size       = size / sizeof(int32_t);
             data_element_size = sizeof(int32_t);
@@ -172,8 +248,8 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
             break;
 
             //! Integer 64 bit length
-          case chaos::DataType::SUB_TYPE_INT64:
-            varname << "[__" << name << "__]/L";
+          case chaos::DataType::SUB_TYPE_UINT64:
+            varname << "[__" << name << "__]/l";
             vector_size       = size / sizeof(int64_t);
             data_element_size = sizeof(int64_t);
 
@@ -183,6 +259,12 @@ chaosBranch::chaosBranch(TTree *par, const std::string &key, const chaos::common
             varname << "[__" << name << "__]/D";
             vector_size       = size / sizeof(double);
             data_element_size = sizeof(double);
+
+            break;
+           case chaos::DataType::SUB_TYPE_FLOAT:
+            varname << "[__" << name << "__]/F";
+            vector_size       = size / sizeof(float);
+            data_element_size = sizeof(float);
 
             break;
         }
