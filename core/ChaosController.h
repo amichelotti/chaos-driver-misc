@@ -356,7 +356,7 @@ int searchNode(const std::string& unique_id_filter,
      *  @param[in]  page page len =o if full search
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
-    int32_t queryHistory(const std::string& start, const std::string& end, uint64_t runid, uint64_t seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page);
+    int32_t queryHistory(const std::string& start, const std::string& end, uint64_t& runid, uint64_t& seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page);
 
     int32_t queryHistory(const std::string &start, const std::string &end, int channel, chaos::common::data::VectorCDWShrdPtr &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
 
