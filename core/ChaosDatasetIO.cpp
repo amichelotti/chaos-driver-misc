@@ -584,9 +584,10 @@ namespace driver
       chaos::common::data::CDWShrdPtr ptr(new chaos::common::data::CDataWrapper());
       ptr->addStringValue("dashboard_ver", GlobalConfiguration::getInstance()->getBuildInfoRef().getCompliantJSONString());
       ptr->addStringValue("clientid", uid);
-
+      std::string tim=chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp());
+      ptr->addInt64Value("hash",std::hash<std::string>()(msg+uid+tim));
       ptr->addStringValue("msg", msg);
-      ptr->addStringValue("date", chaos::common::utility::TimingUtil::toString(chaos::common::utility::TimingUtil::getTimeCorStamp()));
+      ptr->addStringValue("date", tim);
       ptr->addStringValue("type", errorLevel);
       ptr->addStringValue("dst", "broadcast");
       ptr->addStringValue("src", network_broker->getRPCUrl());
