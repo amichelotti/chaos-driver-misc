@@ -3038,15 +3038,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       PARSE_QUERY_PARMS(args, false, false);
       if (what == "search") {
         std::vector<std::string> domains;
-        if (node_type == "all") {
+        if ((node_type.size()) && (node_type != "all")) {
+          domains.push_back(node_type);
+          /*
           domains.push_back("error");
           domains.push_back("warning");
           domains.push_back("Info");
           domains.push_back("log");
           domains.push_back("alarm");
-          domains.push_back("command");
+          domains.push_back("command");*/
+          
         }
-        domains.push_back(node_type);
         if (manager) {
           chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page);
           json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
