@@ -531,6 +531,10 @@ void ChaosController::initializeClient() {
 
     } catch (...) {
       DBGETERR << " Cannot use direct drivers";
+      ChaosMetadataServiceClient::getInstance()->init();
+      ChaosMetadataServiceClient::getInstance()->start();
+
+
     }
     if (live_driver == NULL) {
        
@@ -1292,7 +1296,11 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::P_GROUP_NAME);
   pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
   DBGET << "[" << name << "] set schedule to:" << us << " us";
-  EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+   if (manager) {
+      manager->updateProperty(name,pg);
+  } else {
+    EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+  }
   // setQuantum(us);
   return ret;
 }
