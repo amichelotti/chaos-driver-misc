@@ -4223,10 +4223,12 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                                                                                         domain,
                                                                                         rpcmsg,
                                                                                         MOVE(data_pack));
-      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) || (rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM)) {
+      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) ) {
         DBGET << "SENT IMMEDIATE \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id;
-
-        return chaos::common::data::CDWUniquePtr();
+        chaos::common::data::CDWUniquePtr ret(new CDataWrapper());
+          ret->addInt32Value(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_SUBMISSION_ERROR_CODE,0);
+      
+          return ret;
       }
       fut->wait(MDS_TIMEOUT);
       if (fut->getError() == 0) {
