@@ -101,10 +101,9 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     typedef std::map<uint64_t, qc_t> query_cursor_map_t;
     query_cursor_map_t query_cursor_map;
     int forceState(int dstState);
-    std::map<std::string, std::string> zone_to_cuname;
-    std::map<std::string, std::string> class_to_cuname;
-
-    void parseClassZone(ChaosStringVector &v);
+    typedef std::map<std::string, std::string> kv_t;
+   
+    void parseClassZone(ChaosStringVector &v,kv_t& zone,kv_t& classe);
     std::string vector2Json(ChaosStringVector &v);
     std::string map2Json(std::map<uint64_t, std::string> &v);
     std::string dataset2Var(chaos::common::data::CDataWrapper *c, std::string &name);

@@ -1025,7 +1025,7 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
   return ss.str();
 }
 
-void ChaosController::parseClassZone(ChaosStringVector& v) {
+  void ChaosController::parseClassZone(ChaosStringVector &v,kv_t& zone_to_cuname,kv_t& class_to_cuname){
   const std::regex e("^(.*)/(.*)/(.*)$");
   std::cmatch      what;
   zone_to_cuname.clear();
@@ -1959,6 +1959,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         DBGET << "searching ZONE";
         ChaosStringVector dev_zone;
         unsigned int      npage = 0;
+        kv_t zone_to_cuname,class_to_cuname;
+
         searchNode(name,
                    chaos::NodeType::NodeSearchType::node_type_cu,
                    alive,
@@ -1968,7 +1970,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                    node_found,
                    MDS_TIMEOUT);
 
-        parseClassZone(node_found);
+        parseClassZone(node_found,zone_to_cuname,class_to_cuname);
         std::map<std::string, std::string>::iterator c;
         for (c = zone_to_cuname.begin(); c != zone_to_cuname.end(); c++) {
           dev_zone.push_back(c->first);
@@ -1997,7 +1999,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               return CHAOS_DEV_CMD;
             }
           }
-          parseClassZone(node_found);
+          kv_t zone_to_cuname,class_to_cuname;
+
+          parseClassZone(node_found,zone_to_cuname,class_to_cuname);
           std::map<std::string, std::string>::iterator c;
           for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
             dev_class.push_back(c->first);
@@ -2018,7 +2022,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                          npage,
                          node_found,
                          MDS_TIMEOUT) == 0) {
-            parseClassZone(node_found);
+            kv_t zone_to_cuname,class_to_cuname;
+            parseClassZone(node_found,zone_to_cuname,class_to_cuname);
             std::map<std::string, std::string>::iterator c;
             for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
               dev_class.push_back(c->first);
