@@ -1023,8 +1023,8 @@ namespace driver
       HealtManager::getInstance()->addNodeMetricValue(
           uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
-      DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-      if (dataset_attribute_values->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_LOAD_PARAM))
+      DPD_LDBG << "LOAD ";
+      if (dataset_attribute_values.get()&&dataset_attribute_values->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_LOAD_PARAM))
       {
         std::string str = dataset_attribute_values->getStringValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_LOAD_PARAM);
         try
