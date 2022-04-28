@@ -531,6 +531,10 @@ void ChaosController::initializeClient() {
 
     } catch (...) {
       DBGETERR << " Cannot use direct drivers";
+      ChaosMetadataServiceClient::getInstance()->init();
+      ChaosMetadataServiceClient::getInstance()->start();
+
+
     }
     if (live_driver == NULL) {
        
@@ -1021,7 +1025,7 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
   return ss.str();
 }
 
-void ChaosController::parseClassZone(ChaosStringVector& v) {
+  void ChaosController::parseClassZone(ChaosStringVector &v,kv_t& zone_to_cuname,kv_t& class_to_cuname){
   const std::regex e("^(.*)/(.*)/(.*)$");
   std::cmatch      what;
   zone_to_cuname.clear();
@@ -1292,7 +1296,11 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::P_GROUP_NAME);
   pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
   DBGET << "[" << name << "] set schedule to:" << us << " us";
-  EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+   if (manager) {
+      manager->updateProperty(name,pg);
+  } else {
+    EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+  }
   // setQuantum(us);
   return ret;
 }
@@ -1951,6 +1959,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         DBGET << "searching ZONE";
         ChaosStringVector dev_zone;
         unsigned int      npage = 0;
+        kv_t zone_to_cuname,class_to_cuname;
+
         searchNode(name,
                    chaos::NodeType::NodeSearchType::node_type_cu,
                    alive,
@@ -1960,7 +1970,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                    node_found,
                    MDS_TIMEOUT);
 
-        parseClassZone(node_found);
+        parseClassZone(node_found,zone_to_cuname,class_to_cuname);
         std::map<std::string, std::string>::iterator c;
         for (c = zone_to_cuname.begin(); c != zone_to_cuname.end(); c++) {
           dev_zone.push_back(c->first);
@@ -1989,7 +1999,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               return CHAOS_DEV_CMD;
             }
           }
-          parseClassZone(node_found);
+          kv_t zone_to_cuname,class_to_cuname;
+
+          parseClassZone(node_found,zone_to_cuname,class_to_cuname);
           std::map<std::string, std::string>::iterator c;
           for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
             dev_class.push_back(c->first);
@@ -2010,7 +2022,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                          npage,
                          node_found,
                          MDS_TIMEOUT) == 0) {
-            parseClassZone(node_found);
+            kv_t zone_to_cuname,class_to_cuname;
+            parseClassZone(node_found,zone_to_cuname,class_to_cuname);
             std::map<std::string, std::string>::iterator c;
             for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
               dev_class.push_back(c->first);
@@ -3038,15 +3051,17 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       PARSE_QUERY_PARMS(args, false, false);
       if (what == "search") {
         std::vector<std::string> domains;
-        if (node_type == "all") {
+        if ((node_type.size()) && (node_type != "all")) {
+          domains.push_back(node_type);
+          /*
           domains.push_back("error");
           domains.push_back("warning");
           domains.push_back("Info");
           domains.push_back("log");
           domains.push_back("alarm");
-          domains.push_back("command");
+          domains.push_back("command");*/
+          
         }
-        domains.push_back(node_type);
         if (manager) {
           chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page);
           json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
@@ -4213,10 +4228,12 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                                                                                         domain,
                                                                                         rpcmsg,
                                                                                         MOVE(data_pack));
-      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) || (rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_CLRALRM)) {
+      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) ) {
         DBGET << "SENT IMMEDIATE \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id;
-
-        return chaos::common::data::CDWUniquePtr();
+        chaos::common::data::CDWUniquePtr ret(new CDataWrapper());
+          ret->addInt32Value(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_SUBMISSION_ERROR_CODE,0);
+      
+          return ret;
       }
       fut->wait(MDS_TIMEOUT);
       if (fut->getError() == 0) {

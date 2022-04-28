@@ -132,7 +132,7 @@ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDa
 #ifdef OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
  cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage);
 #endif
 

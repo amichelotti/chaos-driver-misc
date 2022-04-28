@@ -112,7 +112,7 @@ namespace driver
 
     std::string ChaosDatasetIO::ownerApp;
     ChaosDatasetIO::ChaosDatasetIO(const std::string &dataset_name, bool check)
-        : check_presence(check), datasetName(dataset_name), groupName(""), ageing(3600), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(10000), entry_created(false), query_index(0), defaultPage(1000), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT)
+        : check_presence(check), datasetName(dataset_name), groupName(""), onEventHandler(NULL),ageing(3600), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(10000), entry_created(false), query_index(0), defaultPage(1000), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT)
     {
       if (ownerApp.size())
       {
@@ -132,9 +132,47 @@ namespace driver
       _initDataset();
     }
 
+    std::string ChaosDatasetIO::eventToString(ActionID event){
+      switch (event){
+        case ACT_REGISTERED:
+          return "REGISTERED";
+        case ACT_LOAD:
+          return "LOAD";
+        case ACT_INIT:
+          return "INIT";
+        case ACT_START:
+          return "START";
+        case ACT_STOP:
+          return "STOP";
+        case ACT_DEINIT:
+          return "DEINIT";
+        case ACT_UNLOAD:
+          return "UNLOAD";
+        case ACT_UPDATE:
+          return "UPDATE";
+        case ACT_SET:
+          return "SET";
+        case ACT_BURST:
+          return "BURST";
+        case ACT_GETPROP:
+          return "GETPROP";
+        case ACT_SETPROP:
+          return "SETPROP"; 
+        default:
+          return "UNDEFINED";   
+      }
+      return "UNDEFINED";
+    }
+
+    std::string ChaosDatasetIO::eventToString(int event){
+      return eventToString((ActionID)event);
+    }
+
+
+
     ChaosDatasetIO::ChaosDatasetIO(const std::string &name,
                                    const std::string &group_name)
-        : datasetName(name), groupName(group_name), ageing(3600), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(10000), entry_created(false), query_index(0), defaultPage(30), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT), check_presence(true)
+        : datasetName(name), groupName(group_name), ageing(3600), onEventHandler(NULL), storageType((int)chaos::DataServiceNodeDefinitionType::DSStorageTypeLiveHistory), timeo(10000), entry_created(false), query_index(0), defaultPage(30), last_seq(0), packet_size(0), cu_alarm_lvl(0), dev_alarm_lvl(0), alarm_logging_channel(NULL), standard_logging_channel(NULL), last_push_rate_grap_ts(0), deinitialized(false), implementation("datasetIO"), sched_time(0), last_push_ts(0), push_errors(0), packet_lost(0), packet_tot_size(0), burst_cycles(0), burst_time_ts(0), state(chaos::CUStateKey::DEINIT), check_presence(true)
     {
       runid = time(NULL);
       if (ownerApp.size())
@@ -966,12 +1004,6 @@ namespace driver
 
       waitEU.wait();
 
-      /*{
-    EXECUTE_CHAOS_API(api_proxy::control_unit::StartStop, timeo, uid, true);
-    if (apires->getError()) {
-      return apires->getError();
-    }
-  }*/
     //  DPD_LAPP << "Waiting start ";
 
     //  waitEU.wait();
@@ -991,10 +1023,10 @@ namespace driver
       HealtManager::getInstance()->addNodeMetricValue(
           uid, chaos::NodeHealtDefinitionKey::NODE_HEALT_STATUS, chaos::NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD, true);
 
-      DPD_LDBG << "LOAD: " << dataset_attribute_values->getJSONString();
-      if (dataset_attribute_values->hasKey("cudk_load_param"))
+      DPD_LDBG << "LOAD ";
+      if (dataset_attribute_values.get()&&dataset_attribute_values->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_LOAD_PARAM))
       {
-        std::string str = dataset_attribute_values->getStringValue("cudk_load_param");
+        std::string str = dataset_attribute_values->getStringValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_LOAD_PARAM);
         try
         {
           chaos::common::data::CDataWrapper wp;
@@ -1060,7 +1092,8 @@ namespace driver
 
       DPD_LDBG << "REGISTRATION ACK: " << dataset_attribute_values->getJSONString();
 
-      return result;
+      return execute(ACT_REGISTERED, dataset_attribute_values);
+
     }
     chaos::common::data::CDWUniquePtr ChaosDatasetIO::_start(
         chaos::common::data::CDWUniquePtr dataset_attribute_values)
@@ -1686,20 +1719,26 @@ namespace driver
     {
       handler_t::iterator i = handlermap.find(r);
       DPD_LDBG << "finding Action:" << r;
-
+      if(onEventHandler){
+        onEventHandler(p,this,(int)r);
+      }
       if (i != handlermap.end())
       {
         actionFunc_t handler = i->second;
         return handler(p, this);
       }
-      DPD_LDBG << "No registered Action:" << r;
+     // DPD_LDBG << "No registered Action:" << r;
 
       return chaos::common::data::CDWUniquePtr();
     }
 
-    int ChaosDatasetIO::subscribe(const std::string &key)
+    int ChaosDatasetIO::subscribe(const std::string &key,bool sub)
     {
-      ioLiveDataDriver->subscribe(key);
+      return ioLiveDataDriver->subscribe(key,sub);
+      
+    }
+    int ChaosDatasetIO::onEvent(actionEvent_t func){
+      onEventHandler=func;
       return 0;
     }
 
@@ -1714,7 +1753,7 @@ namespace driver
 
     int ChaosDatasetIO::registerAction(actionFunc_t func, ActionID id)
     {
-      if (id < ACT_LOAD || id >= ACT_NONE)
+      if (id < ACT_REGISTERED || id >= ACT_NONE)
         return -1;
       DPD_LDBG << "register Action:" << id;
 
