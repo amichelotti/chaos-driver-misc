@@ -1016,6 +1016,7 @@ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDa
     ret->removeKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
     ret->removeKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID);
     ret->removeKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
+    ret->removeKey(chaos::DataPackCommonKey::NODE_MDS_TIMEDIFF);
     ret->removeKey(chaos::NodeHealtDefinitionKey::NODE_HEALT_MDS_TIMESTAMP);
   }
   return ret;
