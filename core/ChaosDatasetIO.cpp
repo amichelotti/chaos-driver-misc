@@ -617,7 +617,12 @@ namespace driver
     {
       return notifyAllClients(msg, ((errorLevel == 2) ? "alarm" : "system"), emails);
     }
-    int ChaosDatasetIO::notifyAllClients(const std::string &msg, const std::string &errorLevel, const std::vector<std::string> emails)
+    int ChaosDatasetIO::notifyAllClients(const std::string &msg, const std::string &errorLevel, const std::vector<std::string> emails){
+      return notifyAllClients(msg, uid,errorLevel, emails);
+
+    }
+
+    int ChaosDatasetIO::notifyAllClients(const std::string &msg, const std::string& subj,const std::string &errorLevel, const std::vector<std::string> emails)
     {
       chaos::common::data::CDWShrdPtr ptr(new chaos::common::data::CDataWrapper());
       ptr->addStringValue("dashboard_ver", GlobalConfiguration::getInstance()->getBuildInfoRef().getCompliantJSONString());
@@ -627,6 +632,7 @@ namespace driver
       ptr->addStringValue("msg", msg);
       ptr->addStringValue("date", tim);
       ptr->addStringValue("type", errorLevel);
+      ptr->addStringValue("subj", subj);
       ptr->addStringValue("dst", "broadcast");
       ptr->addStringValue("src", network_broker->getRPCUrl());
       if (emails.size())
