@@ -22,7 +22,6 @@
 #define CTRLAPP_ LAPP_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLDBG_ LDBG_ << "[ " << __FUNCTION__ << "]"
 //#define CTRLERR_ LERR_ << "[ " << __PRETTY_FUNCTION__ << "]"
-#define DEFAULT_TIMEOUT_FOR_CONTROLLER 10000000
 #define MDS_TIMEOUT 10000
 #define MDS_STEP_TIMEOUT 1000
 #define MDS_RETRY 3
@@ -63,7 +62,7 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     static chaos::common::message::MDSMessageChannel *mdsChannel;
     static chaos::service_common::ChaosManager*manager;
     //chaos::metadata_service_client::ChaosMetadataServiceClient *mds_client;
-    static chaos::common::io::IODataDriverShrdPtr live_driver;
+    static chaos::common::io::IODataDriver* live_driver;
     std::vector<std::string> mds_server_l;
     std::string path;
     chaos::common::data::DatasetDB datasetDB;
@@ -90,8 +89,8 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     std::map<int, int64_t> cachedJsonChannelsTS;
 
     uint32_t queryuid;
-    ChaosSharedMutex iomutex;
-    ChaosSharedMutex ioctrl;
+    ChaosMutex iomutex;
+    ChaosMutex ioctrl;
 
     typedef struct
     {
@@ -102,10 +101,9 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     typedef std::map<uint64_t, qc_t> query_cursor_map_t;
     query_cursor_map_t query_cursor_map;
     int forceState(int dstState);
-    std::map<std::string, std::string> zone_to_cuname;
-    std::map<std::string, std::string> class_to_cuname;
-
-    void parseClassZone(ChaosStringVector &v);
+    typedef std::map<std::string, std::string> kv_t;
+   
+    void parseClassZone(ChaosStringVector &v,kv_t& zone,kv_t& classe);
     std::string vector2Json(ChaosStringVector &v);
     std::string map2Json(std::map<uint64_t, std::string> &v);
     std::string dataset2Var(chaos::common::data::CDataWrapper *c, std::string &name);
@@ -182,7 +180,7 @@ class ChaosController /*: public ::common::misc::scheduler::SchedTimeElem*/
     typedef boost::shared_ptr<command> command_t;
     dev_info_status bundle_state;
     ChaosController();
-    ChaosController(std::string path, uint32_t timeo = DEFAULT_TIMEOUT_FOR_CONTROLLER);
+    ChaosController(std::string path, uint32_t timeo = chaos::RpcConfigurationKey::GlobalRPCTimeoutinMSec);
 
     //virtual uint64_t sched(uint64_t ts);
     virtual ~ChaosController();
@@ -357,10 +355,11 @@ int searchNode(const std::string& unique_id_filter,
      *  @param[in]  page page len =o if full search
      *  @return 0 if success and end search, >0 is an uid to be use with next to get remaining results, <0 an error occurred
      * */
-    int32_t queryHistory(const std::string &start, const std::string &end, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper> > &res,  const ChaosStringSet& projection=ChaosStringSet(),int page = 0);
-    int32_t queryHistory(const std::string &start, const std::string &end, uint64_t runid,uint64_t seqid,const std::vector<std::string> &tags, int channel, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
+    int32_t queryHistory(const std::string& start, const std::string& end, uint64_t& runid, uint64_t& seqid, const std::vector<std::string>& tags, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page);
 
-    int32_t queryNext(int32_t id, std::vector<boost::shared_ptr<chaos::common::data::CDataWrapper>> &res);
+    int32_t queryHistory(const std::string &start, const std::string &end, int channel, chaos::common::data::VectorCDWShrdPtr &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
+
+    int32_t queryNext(int32_t id, chaos::common::data::VectorCDWShrdPtr &res);
     bool queryHasNext(int32_t id);
     int getSnapshotsofCU(const std::string &cuname, std::map<uint64_t, std::string> &res);
     /*void dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname);*/
@@ -401,9 +400,9 @@ chaos::common::data::CDWUniquePtr sendRPCMsg(const std::string& uid,const std::s
   protected:
     int sendCmd(command_t &cmd, bool wait, uint64_t perform_at = 0, uint64_t wait_for = 0);
     int sendMDSCmd(command_t &cmd);
-    boost::shared_ptr<chaos::common::data::CDataWrapper> normalizeToJson(chaos::common::data::CDataWrapper *src, std::map<std::string, int> &list);
+    chaos::common::data::CDWShrdPtr normalizeToJson(chaos::common::data::CDataWrapper *src, std::map<std::string, int> &list);
 
-    boost::shared_ptr<chaos::common::data::CDataWrapper> combineDataSets(std::map<int, chaos::common::data::CDataWrapper *>);
+    chaos::common::data::CDWShrdPtr combineDataSets(std::map<int, chaos::common::data::CDataWrapper *>);
 };
 } // namespace misc
 } // namespace driver

@@ -247,7 +247,7 @@ int ChaosDatasetAttribute::set(void* buf, int size){
 
 void* ChaosDatasetAttribute::get(uint32_t*size){
     void*tmp=NULL;
-    boost::mutex::scoped_lock l(data_access);
+    ChaosLockGuard l(data_access);
 
     boost::posix_time::ptime pt=boost::posix_time::microsec_clock::local_time();
     uint64_t tget=pt.time_of_day().total_microseconds();

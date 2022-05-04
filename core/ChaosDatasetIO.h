@@ -1,9 +1,11 @@
 #ifndef CHAOSDATASETIO_H
 #define CHAOSDATASETIO_H
 
-#include <chaos/common/io/ManagedDirectIODataDriver.h>
 #include <chaos/common/property/property.h>
 #include <chaos/common/thread/WaitSemaphore.h>
+#include <chaos/common/async_central/TimerHandler.h>
+#include <chaos/common/message/MessagePublishSubscribeBase.h>
+#include <chaos/common/action/DeclareAction.h>
 
 namespace chaos{
     namespace common{
@@ -12,6 +14,7 @@ namespace chaos{
         }
         namespace io{
             class QueryCursor;
+            class IODataDriver;
         };
         namespace network{
             class NetworkBroker;
@@ -32,6 +35,7 @@ namespace driver{
         typedef ChaosSharedPtr<chaos::common::data::CDataWrapper> ChaosDataSet;
         class ChaosDatasetIO;
         typedef chaos::common::data::CDWUniquePtr (*actionFunc_t)(chaos::common::data::CDWUniquePtr&,ChaosDatasetIO*);
+        typedef void (*actionEvent_t)(chaos::common::data::CDWUniquePtr&,ChaosDatasetIO*,int action_id);
 
         class ChaosDatasetIO             :        
         public chaos::DeclareAction,
@@ -40,6 +44,7 @@ namespace driver{
             public:
             static std::string ownerApp;
             enum ActionID{
+                ACT_REGISTERED,
                 ACT_LOAD,
                 ACT_INIT,
                 ACT_START,
@@ -54,10 +59,10 @@ namespace driver{
                 ACT_NONE
             };
             private:
-             chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            // chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
+            chaos::common::io::IODataDriver*ioLiveDataDriver;
              static ChaosSharedMutex iomutex;
 
-            ChaosSharedPtr<chaos::common::io::ManagedDirectIODataDriver> ioLiveShDataDriver;
             chaos::common::network::NetworkBroker        *network_broker;
             chaos::common::message::MDSMessageChannel    *mds_message_channel;
              //!logging channel
@@ -135,7 +140,9 @@ namespace driver{
              chaos::common::data::CDWUniquePtr getProperty(chaos::common::data::CDWUniquePtr);
   // virtual set CU properties
              chaos::common::data::CDWUniquePtr setProperty(chaos::common::data::CDWUniquePtr);
-            typedef std::map<ActionID,actionFunc_t> handler_t; 
+            typedef std::map<ActionID,actionFunc_t> handler_t;
+            actionEvent_t onEventHandler;
+
             handler_t handlermap;
             chaos::common::data::CDWUniquePtr execute(ActionID r,chaos::common::data::CDWUniquePtr& p);
             bool check_presence;
@@ -156,6 +163,9 @@ namespace driver{
              * @return int 0 if ok
              */
             int registerAction(actionFunc_t func,ActionID id=ACT_UNLOAD);
+            int onEvent(actionEvent_t func);
+            static std::string eventToString(int);
+            static std::string eventToString(ActionID);
 
             /**
              * @brief Set the ageing time of the datasets
@@ -290,7 +300,7 @@ namespace driver{
              * @param key key to subscribe
              * @return int 0 on success
              */
-            int subscribe(const std::string& key);
+            int subscribe(const std::string& key,bool sub=true);
             /**
              * @brief add a handler to a subscribed key
              * 
@@ -311,6 +321,8 @@ namespace driver{
             int notifyAllClients(const std::string& msg,const std::string& type,const std::vector<std::string> emails={});
 
             int notifyAllClients(const std::string& msg,int errorLevel=0,const std::vector<std::string> emails={});
+            int notifyAllClients(const std::string& msg,const std::string& subj,const std::string& type,const std::vector<std::string> emails={});
+
 
             
         };

@@ -67,8 +67,8 @@ void own::CmdDafDefault::setHandler(c_data::CDataWrapper *data) {
 	SCLAPP_ << "Set Handler Default ";
 	pastTimestamp=0;
 	lastTimeUpdated=0;
-	beamFileElectronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathE");
-	beamFilePositronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathP");
+	//beamFileElectronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathE");
+	//beamFilePositronPathPointer=getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"beamFilePathP");
 	dafnestatPathPointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"newdafnepath");
 	outfilePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"outFileName");
 	vugNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CUvugImportName");
@@ -165,16 +165,27 @@ void own::CmdDafDefault::acquireHandler() {
 	DafneData::DafneDataToShow  DATO;
 	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
-	bool ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
+	int count,retries=4;
+	bool ret, validData;
+	for ( count=0; count < retries; count++)
+	{
+		ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
+		if (!ret)
+		{
+			usleep(20000);
+		}
+		else 
+		    break;
+	}
+	validData=ret;
 	if (!ret)
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	else
 	{
-		*p_timestamp=DATO.timestamp.innerValue;
-		*p_i_ele = DATO.i_ele.innerValue;
-		*p_i_pos = DATO.i_pos.innerValue;
+		
+		
 		*p_dafne_status=DATO.dafne_status.innerValue;
 		*p_nbunch_ele= DATO.nbunch_ele;
 		*p_nbunch_pos=DATO.nbunch_pos;
@@ -236,6 +247,10 @@ void own::CmdDafDefault::acquireHandler() {
 		{
 			
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+			
+			*p_i_ele = DATO.i_ele.innerValue=VUGImporterDataset->getDoubleValue("e_current");
+		    *p_i_pos = DATO.i_pos.innerValue=VUGImporterDataset->getDoubleValue("p_current");
+
 			*p_VUGEL102=DATO.VUGEL102.innerValue=VUGImporterDataset->getDoubleValue("VUGEL102_press");
 			*p_VUGEL103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGEL103_press");
 			*p_VUGEL202=DATO.VUGEL202.innerValue=VUGImporterDataset->getDoubleValue("VUGEL202_press");
@@ -271,17 +286,20 @@ void own::CmdDafDefault::acquireHandler() {
 
 			int64_t readTS=VUGImporterDataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
+			*p_timestamp=DATO.timestamp.innerValue=now;
 			//SCLDBG_ << "read TS "<< readTS << " now "<< now ;
 			readTS/=1000;
 			if ((now - readTS) > 30)
 			{
 				setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+				validData=false;
 			}
-
+            
 		}
 		catch (chaos::CException)
 		{
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			validData=false;
 		}
 	}
 	CCALTLumiDataset=CCALT->getLiveChannel(CalLumiNamePointer,0);
@@ -332,6 +350,7 @@ void own::CmdDafDefault::acquireHandler() {
 		}
 
 	}
+
 	int32_t sigmaret;
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
@@ -393,16 +412,18 @@ void own::CmdDafDefault::acquireHandler() {
 
 		}
 	}
-	ret=DATO.AppendSiddhartaFile(siddhartaPathPointer);
-	if (!ret)
+	if (validData)
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		ret=DATO.AppendSiddhartaFile(siddhartaPathPointer);
+		if (!ret)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		}
+		else
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		}
 	}
-	else
-	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"failed_to_write_output_file",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-	}
-	
 	
 	getAttributeCache()->setOutputDomainAsChanged();
 }

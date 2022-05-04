@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <chaos/common/global.h>
+#include <chaos/common/utility/TimingUtil.h>
 using namespace std;
 using namespace ::driver::misc;
 using namespace chaos::metadata_service_client;
@@ -239,7 +240,7 @@ int main(int argc, const char **argv) {
 
       chaos::common::message::ele_uptr_t p = cons->getMsg();
       if (p.get()) {
-        chaos::common::data::CDWShrdPtr q_result = p->cd;
+        chaos::common::data::CDWUniquePtr& q_result = p->cd;
         if (q_result.get()) {
           if (q_result->hasKey(
                   chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID) &&

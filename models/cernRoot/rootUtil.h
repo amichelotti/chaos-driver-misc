@@ -6,7 +6,7 @@
 #include "TTree.h"
 #include <driver/misc/core/ChaosDatasetAttribute.h>
 #include <driver/misc/core/ChaosDatasetIO.h>
-
+#include <chaos/common/utility/TimingUtil.h>
 /**
  * Create a new Tree with default name of the chaosNode, it  creates a unique branch for a dataset
  * performs a time interval search of data
@@ -132,7 +132,7 @@ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDa
 #ifdef OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
  cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage);
 #endif
 

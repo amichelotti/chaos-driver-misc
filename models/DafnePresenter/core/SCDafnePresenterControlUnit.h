@@ -55,8 +55,8 @@ namespace driver {
 			std::string loadedVugName;
 			std::string loadedCCALTLUMICUName;
 			std::string loadedSiddPath;
-			std::string loadedBeamElectronPath;
-			std::string loadedBeamPositronPath;
+			//std::string loadedBeamElectronPath;
+			//std::string loadedBeamPositronPath;
 			std::string loadedGraphicServerAddress;
 		};
 	}

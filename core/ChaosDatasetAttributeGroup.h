@@ -16,7 +16,7 @@ namespace driver{
     namespace misc{
 class ChaosDatasetAttributeGroup{
     
-     boost::mutex lock_sync;
+     ChaosMutex lock_sync;
 
     /**
      * map a full path to an attribute
