@@ -354,7 +354,8 @@ void own::CmdDafDefault::acquireHandler() {
 
 	}
 	*/
-	::general::utility::HTTPResponse resp;
+	/*not useful anymore*/
+	/*::general::utility::HTTPResponse resp;
 	
 	::general::utility::HTTPClient   Sender(GraphicsAddress, GraphicsPort);
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
@@ -370,7 +371,8 @@ void own::CmdDafDefault::acquireHandler() {
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	}
-
+	*/
+	* graphicsServerAnswer = 0;
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
 	switch (*kindOfPrint)
