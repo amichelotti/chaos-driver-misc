@@ -350,8 +350,31 @@ void own::CmdDafDefault::acquireHandler() {
 		}
 
 	}
-	
-	::general::utility::HTTPResponse resp;
+
+	int32_t sigmaret;
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	/*sigmaret=DATO.ReadSigmas(beamFileElectronPathPointer,true);
+	switch (sigmaret)
+	{
+		case -1 : setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh); break;
+		case -2 : setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		default : *p_sx_ele=DATO.sx_ele.innerValue;
+				  *p_sy_ele=DATO.sy_ele.innerValue;
+
+	}
+	sigmaret=DATO.ReadSigmas(beamFilePositronPathPointer,false);
+	switch (sigmaret)
+	{
+		case -1 : setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelHigh); break;
+		case -2 : setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		default : *p_sx_pos=DATO.sx_pos.innerValue;
+				  *p_sy_pos=DATO.sy_pos.innerValue;
+
+	}
+	*/
+	/*not useful anymore*/
+	/*::general::utility::HTTPResponse resp;
 	
 	::general::utility::HTTPClient   Sender(GraphicsAddress, GraphicsPort);
 	resp=Sender.SendHttpPost("/dsdata/api/pushDafneData","application/json;",DATO.AsJsonStr());
@@ -367,7 +390,8 @@ void own::CmdDafDefault::acquireHandler() {
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"push_data_graphics_failed",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	}
-
+	*/
+	* graphicsServerAnswer = 0;
 	kindOfPrint= getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "printFile");
 	ret=true;
 	switch (*kindOfPrint)
