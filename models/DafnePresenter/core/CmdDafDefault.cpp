@@ -165,14 +165,14 @@ void own::CmdDafDefault::acquireHandler() {
 	DafneData::DafneDataToShow  DATO;
 	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
-	int count,retries=4;
+	int count,retries=8;
 	bool ret, validData;
 	for ( count=0; count < retries; count++)
 	{
 		ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
 		if (!ret)
 		{
-			usleep(20000);
+			usleep(10000);
 		}
 		else 
 		    break;
