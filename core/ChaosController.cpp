@@ -3480,7 +3480,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
           projection                                    = *dw;
         }
-        DBGET << "START SEQ QUERY :" << std::dec << start_ts << " end:" << end_ts << "seq id " << seqid << " run id:" << runid << " page:" << page;
+        DBGET << "START SEQ QUERY :" << std::dec << start_ts <<" ("<<chaos::common::utility::TimingUtil::toString(start_ts)<< ") end:" << end_ts<<" ("<<chaos::common::utility::TimingUtil::toString(end_ts) << ") seq id " << seqid << " run id:" << runid << " page:" << page;
 
         executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags, &query_cursor, projection, path, page);
         if (query_cursor) {
