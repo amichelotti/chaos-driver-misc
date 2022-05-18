@@ -63,9 +63,9 @@ using namespace chaos::service_common;
     CTRLDBG_ << " Profiling: N accesses:" << naccess << " response time:" << refresh << " us"; \
   }
 
-chaos::service_common::ChaosManager*       ChaosController::manager    = NULL;
-chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel = NULL;
-chaos::common::io::IODataDriver*     ChaosController::live_driver = NULL;
+chaos::service_common::ChaosManager*       ChaosController::manager     = NULL;
+chaos::common::message::MDSMessageChannel* ChaosController::mdsChannel  = NULL;
+chaos::common::io::IODataDriver*           ChaosController::live_driver = NULL;
 
 void ChaosController::setTimeout(uint64_t timeo_us) {
   timeo = timeo_us;
@@ -533,18 +533,14 @@ void ChaosController::initializeClient() {
       DBGETERR << " Cannot use direct drivers";
       ChaosMetadataServiceClient::getInstance()->init();
       ChaosMetadataServiceClient::getInstance()->start();
-
-
     }
     if (live_driver == NULL) {
-       
-        ChaosLockGuard l(iomutex);
+      ChaosLockGuard l(iomutex);
 
-      	std::string impl_name =  boost::str( boost::format("%1%") % chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_DATA_IO_IMPL));
-	
-	      live_driver = chaos::common::utility::ObjectFactoryRegister<chaos::common::io::IODataDriver>::getInstance()->getNewInstanceByName(impl_name);        // pool
-        LDBG_ << "retrieved iodata driver";
-      
+      std::string impl_name = boost::str(boost::format("%1%") % chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_DATA_IO_IMPL));
+
+      live_driver = chaos::common::utility::ObjectFactoryRegister<chaos::common::io::IODataDriver>::getInstance()->getNewInstanceByName(impl_name);  // pool
+      LDBG_ << "retrieved iodata driver";
     }
     if (!live_driver) {
       throw chaos::CException(-1, "No LIVE Channel created", "ChaosController()");
@@ -633,10 +629,10 @@ uint64_t ChaosController::sched(uint64_t ts) {
 }
 #endif
 CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
-  size_t      value_len = 0;
-  CDWUniquePtr       value;
-  std::string CUNAME = (key == "") ? path : key;
-  std::string lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
+  size_t       value_len = 0;
+  CDWUniquePtr value;
+  std::string  CUNAME = (key == "") ? path : key;
+  std::string  lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
 
   if (manager) {
     return manager->getLiveChannel(lkey);
@@ -647,7 +643,6 @@ CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
   ChaosSharedPtr<chaos::common::data::CDataWrapper> ret;
   ret.reset(value.release());
   return ret;
-  
 }
 
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<std::string>& channels) {
@@ -759,9 +754,9 @@ chaos::common::data::CDWShrdPtr ChaosController::combineDataSets(std::map<int, c
 }
 const std::string ChaosController::fetchJson(int channel) {
   ChaosLockGuard ll(iomutex);
-  uint64_t      now   = chaos::common::utility::TimingUtil::getTimeStamp();
-  int32_t       check = max_cache_duration_ms;
-  if(path.size()==0){
+  uint64_t       now   = chaos::common::utility::TimingUtil::getTimeStamp();
+  int32_t        check = max_cache_duration_ms;
+  if (path.size() == 0) {
     return "";
   }
   if ((channel == KeyDataStorageDomainHealth) || (channel == 255) || (channel == 128)) {
@@ -779,9 +774,8 @@ const std::string ChaosController::fetchJson(int channel) {
       DBGETERR << "Error fetching channel:" << channel;
     }
   }
-  if(cachedJsonChannels.count(channel)==0){
+  if (cachedJsonChannels.count(channel) == 0) {
     return "";
-
   }
   return cachedJsonChannels[channel];
 }
@@ -800,7 +794,7 @@ void ChaosController::updateCacheLive(const chaos::common::data::CDataWrapper& r
 
 chaos::common::data::CDWUniquePtr ChaosController::fetch(int channel) {
   uint64_t now = chaos::common::utility::TimingUtil::getTimeStamp();
-  if(path.size()==0){
+  if (path.size() == 0) {
     return chaos::common::data::CDWUniquePtr();
   }
   chaos::common::data::CDWUniquePtr retdata(new CDataWrapper());
@@ -1025,19 +1019,19 @@ std::string ChaosController::vector2Json(ChaosStringVector& node_found) {
   return ss.str();
 }
 
-  void ChaosController::parseClassZone(ChaosStringVector &v,kv_t& zone_to_cuname,kv_t& class_to_cuname){
+void ChaosController::parseClassZone(ChaosStringVector& v, kv_t& zone_to_cuname, kv_t& class_to_cuname) {
   const std::regex e("^(.*)/(.*)/(.*)$");
   std::cmatch      what;
   zone_to_cuname.clear();
   class_to_cuname.clear();
   for (ChaosStringVector::iterator i = v.begin(); i != v.end(); i++) {
     if (std::regex_match(i->c_str(), what, e)) {
-      std::string zm=what[1];
-      std::string cm=what[2];
-      if(zm.size()){
-        zone_to_cuname[zm]  = *i;
+      std::string zm = what[1];
+      std::string cm = what[2];
+      if (zm.size()) {
+        zone_to_cuname[zm] = *i;
       }
-      if(cm.size()){
+      if (cm.size()) {
         class_to_cuname[cm] = *i;
       }
     }
@@ -1268,27 +1262,6 @@ uint64_t ChaosController::offsetToTimestamp(const std::string& off) {
   bt::time_duration diff = pt - timet_start;
   return (diff.ticks() / bt::time_duration::rep_type::ticks_per_second) * 1000;
 }
-/*
-void ChaosController::dumpHistoryToTgz(const std::string& fname,const std::string& start,const std::string& end,int channel,std::string tagname){
-    std::ofstream f(fname);
-    std::string mpath=path;
-    mpath.replace(mpath.begin(),mpath.end(),"/","_");
-    uint64_t start_ts = offsetToTimestamp(start);
-    uint64_t end_ts = offsetToTimestamp(end);
-    chaos::common::io::QueryCursor *query_cursor = NULL;
-    ChaosStringSet tagv;
-    if(tagname.size()>0){
-        tagv.insert(tagname);
-    }
-    controller->executeTimeIntervallQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts,tagv, &query_cursor);
-    while ((query_cursor->hasNext())){
-            ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-            boost::shared_ptr<CDataWrapper> cd = normalizeToJson(q_result.get(), binaryToTranslate);
-
-    }
-
-}
-*/
 
 int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   int                                    ret;
@@ -1296,8 +1269,8 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::P_GROUP_NAME);
   pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
   DBGET << "[" << name << "] set schedule to:" << us << " us";
-   if (manager) {
-      manager->updateProperty(name,pg);
+  if (manager) {
+    manager->updateProperty(name, pg);
   } else {
     EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
   }
@@ -1395,7 +1368,7 @@ int ChaosController::unloadDevice(const std::string& dev) {
 }
 int32_t ChaosController::queryHistory(const std::string& start, const std::string& end, int channel, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page) {
   std::vector<std::string> tags;
-  uint64_t runid=0,seqid=0;
+  uint64_t                 runid = 0, seqid = 0;
   return queryHistory(start, end, runid, seqid, tags, channel, res, projection, page);
 }
 
@@ -1486,61 +1459,12 @@ int32_t ChaosController::queryHistory(const std::string& start, const std::strin
                                   page,
                                   last_sequence,
                                   res);
-    runid=last_sequence.run_id;
-    seqid=last_sequence.datapack_counter;
+    runid                          = last_sequence.run_id;
+    seqid                          = last_sequence.datapack_counter;
   }
   return ret;
 }
 
-/*
- int32_t                         ret = 0, err = 0;
- chaos::common::io::QueryCursor* query_cursor = NULL;
- if (page == 0) {
-   std::set<std::string> tagsv(tags.begin(), tags.end());
-   executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tagsv, &query_cursor, projection);
-   if (query_cursor == NULL) {
-     CTRLERR_ << " error during intervall query, no cursor available";
-     return -1;
-   }
-   while ((query_cursor->hasNext())) {
-     ChaosSharedPtr<CDataWrapper>    q_result(query_cursor->next());
-     boost::shared_ptr<CDataWrapper> cd = normalizeToJson(q_result.get(), binaryToTranslate);
-     res.push_back(cd);
-   }
- } else {
-   int cnt = 0;
-   executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, ChaosStringSet(), &query_cursor, projection, path, page);
-   if (query_cursor == NULL) {
-     CTRLERR_ << " error during intervall query, no cursor available";
-     return -1;
-   }
-   if (query_cursor->hasNext()) {
-     uint32_t elems = query_cursor->size();
-     while (cnt < elems) {
-       ChaosSharedPtr<CDataWrapper>    q_result(query_cursor->next());
-       boost::shared_ptr<CDataWrapper> cd = normalizeToJson(q_result.get(), binaryToTranslate);
-       res.push_back(cd);
-       cnt++;
-     }
-   }
-
-   if ((query_cursor->hasNext())) {
-     qc_t q_nfo;
-     q_nfo.qt                     = reqtime / 1000;
-     q_nfo.qc                     = query_cursor;
-     query_cursor_map[++queryuid] = q_nfo;
-     return queryuid;
-   }
- }
- if (query_cursor && (err = query_cursor->getError())) {
-   releaseQuery(query_cursor);
-   return -abs(err);
- } else {
-   releaseQuery(query_cursor);
- }
- return 0;
-
-}*/
 bool ChaosController::queryHasNext(int32_t uid) {
   chaos::common::io::QueryCursor* query_cursor = NULL;
   if (query_cursor_map.find(uid) != query_cursor_map.end()) {
@@ -1959,7 +1883,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         DBGET << "searching ZONE";
         ChaosStringVector dev_zone;
         unsigned int      npage = 0;
-        kv_t zone_to_cuname,class_to_cuname;
+        kv_t              zone_to_cuname, class_to_cuname;
 
         searchNode(name,
                    chaos::NodeType::NodeSearchType::node_type_cu,
@@ -1970,7 +1894,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                    node_found,
                    MDS_TIMEOUT);
 
-        parseClassZone(node_found,zone_to_cuname,class_to_cuname);
+        parseClassZone(node_found, zone_to_cuname, class_to_cuname);
         std::map<std::string, std::string>::iterator c;
         for (c = zone_to_cuname.begin(); c != zone_to_cuname.end(); c++) {
           dev_zone.push_back(c->first);
@@ -1999,9 +1923,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               return CHAOS_DEV_CMD;
             }
           }
-          kv_t zone_to_cuname,class_to_cuname;
+          kv_t zone_to_cuname, class_to_cuname;
 
-          parseClassZone(node_found,zone_to_cuname,class_to_cuname);
+          parseClassZone(node_found, zone_to_cuname, class_to_cuname);
           std::map<std::string, std::string>::iterator c;
           for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
             dev_class.push_back(c->first);
@@ -2022,8 +1946,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                          npage,
                          node_found,
                          MDS_TIMEOUT) == 0) {
-            kv_t zone_to_cuname,class_to_cuname;
-            parseClassZone(node_found,zone_to_cuname,class_to_cuname);
+            kv_t zone_to_cuname, class_to_cuname;
+            parseClassZone(node_found, zone_to_cuname, class_to_cuname);
             std::map<std::string, std::string>::iterator c;
             for (c = class_to_cuname.begin(); c != class_to_cuname.end(); c++) {
               dev_class.push_back(c->first);
@@ -2694,7 +2618,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           }
 
           else if (what == "create") {
-            if(manager){
+            if (manager) {
               chaos::common::data::CDWUniquePtr msg = manager->newUS(name);
               json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
               res << json_buf;
@@ -2817,9 +2741,9 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 //	property_list.push_back(cu_property_group);
                 // GET_CHAOS_API_PTR((chaos::metadata_service_client::api_proxy::node::UpdateProperty)->execute(name,property_list)));
                 if (manager) {
-                  manager->updateProperty(name,pg);
+                  manager->updateProperty(name, pg);
                 } else {
-                 EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
+                  EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
                 }
               } else {
                 RETURN_ERROR("'properties' should be a vector of properties");
@@ -2864,7 +2788,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               manager->deleteInstance(name, parent);
               manager->nodeDelete(name, parent);
               json_buf = "{}";
-              
+
             } else {
               if (!parent.empty()) {
                 EXECUTE_CHAOS_RET_API(ret, api_proxy::control_unit::DeleteInstance, MDS_TIMEOUT, parent, name);
@@ -3060,7 +2984,6 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           domains.push_back("log");
           domains.push_back("alarm");
           domains.push_back("command");*/
-          
         }
         if (manager) {
           chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page);
@@ -3463,6 +3386,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         // perform a query without cursor.
         uint64_t              seqid = p.getInt64Value("seq");
         uint64_t              runid = 0;
+        uint64_t              ts    = start_ts;
         std::set<std::string> tags, projection;
         if (p.hasKey("runid")) {
           runid = p.getInt64Value("runid");
@@ -3480,16 +3404,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           ChaosSharedPtr<CMultiTypeDataArrayWrapper> dw = p.getVectorValue("projection");
           projection                                    = *dw;
         }
-        DBGET << "START SEQ QUERY :" << std::dec << start_ts <<" ("<<chaos::common::utility::TimingUtil::toString(start_ts)<< ") end:" << end_ts<<" ("<<chaos::common::utility::TimingUtil::toString(end_ts) << ") seq id " << seqid << " run id:" << runid << " page:" << page;
-
+        DBGET << "START SEQ QUERY :" << std::dec << start_ts << " (" << chaos::common::utility::TimingUtil::toString(start_ts) << ") end:" << end_ts << " (" << chaos::common::utility::TimingUtil::toString(end_ts) << ") seq id " << seqid << " run id:" << runid << " page:" << page;
+        ChaosLockGuard l(iomutex);
+        std::stringstream ress;
         executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags, &query_cursor, projection, path, page);
         if (query_cursor) {
           cnt = 0;
           if (fmtType == "tgz") {
             // all the elements into a tgz.
           }
-          res << "{\"data\":[";
-          chaos::common::data::CDWShrdPtr data;
+          ress << "{\"data\":[";
           uint32_t                        reduction_factor = 1;
           uint32_t                        count_items      = 0;
           if (p.hasKey("reduction")) {
@@ -3506,35 +3430,48 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           if (query_cursor->hasNext()) {
             uint32_t elems = query_cursor->size();
             int      cntt  = 0;
+            DBGET << "ELEMENTS " << elems << " items:" << count_items;
+
             while (cnt < elems) {
               ChaosSharedPtr<CDataWrapper> q_result(query_cursor->next());
-              data = normalizeToJson(q_result.get(), binaryToTranslate);
-              if (/*((cnt+1)==elems) || */ (reduction_factor == 1) || ((count_items % reduction_factor) == 0)) {
-                if (cntt > 0) {
-                  res << ",";
-                }
-                cntt++;
-                if (var_name.size() && data->hasKey(var_name)) {
-                  res << dataset2Var(data.get(), var_name);
-                } else {
-                  if (keys.size()) {
-                    res << (data->getCSProjection(keys))->getCompliantJSONString();
+
+              if (q_result.get()) {
+               
+                chaos::common::data::CDWShrdPtr  data = normalizeToJson(q_result.get(), binaryToTranslate);
+                if ((reduction_factor == 1) || ((count_items % reduction_factor) == 0)) {
+                  if (cntt > 0) {
+                    ress << ",";
+                  }
+                  cntt++;
+                  if (var_name.size() && data->hasKey(var_name)) {
+                    ress << dataset2Var(data.get(), var_name);
                   } else {
-                    res << data->getCompliantJSONString();
+                    if (keys.size()) {
+                      ress << (data->getCSProjection(keys))->getCompliantJSONString();
+                    } else {
+                      ress << data->getCompliantJSONString();
+                    }
                   }
                 }
+                count_items++;
+              //  DBGET << cnt << "] data, elems:" << count_items;
+
+              } else {
+                CTRLERR_ << cnt << "] empty data, elems:" << count_items;
               }
               cnt++;
-              count_items++;
             }
           }
-          res << "]";
+          ress << "]";
 
-          query_cursor->getIndexes(runid, seqid);
-          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"count\":" << count_items << ",\"end\":" << ((query_cursor->hasNext()) ? 0 : 1) << "}";
-          // DBGET <<" returned:"<<res.str();
+          query_cursor->getIndexes(runid, seqid, ts);
+
+          ress << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"end\":" << ((elems<page) ? 1 : 0) << "}";
+
           releaseQuery(query_cursor);
-          json_buf = res.str();
+
+          json_buf = ress.str();
+
           return CHAOS_DEV_OK;
         } else {
           bundle_state.append_error("cannot perform specified query, no data? " + getPath());
@@ -3816,7 +3753,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       int                      ret;
       chaos_data::CDataWrapper p;
       std::string              snapname = args;
-      
+
       ret = deleteSnapshot(snapname);
       if (ret == 0) {
         DBGET << "DELETE snapshot " << snapname << " ret:" << ret;
@@ -4228,12 +4165,12 @@ chaos::common::data::CDWUniquePtr ChaosController::sendRPCMsg(const std::string&
                                                                                         domain,
                                                                                         rpcmsg,
                                                                                         MOVE(data_pack));
-      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN) ) {
+      if ((rpcmsg == chaos::NodeDomainAndActionRPC::ACTION_NODE_SHUTDOWN)) {
         DBGET << "SENT IMMEDIATE \"" << rpcmsg << "\" to:" << remote_host << " uid:" << node_id;
         chaos::common::data::CDWUniquePtr ret(new CDataWrapper());
-          ret->addInt32Value(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_SUBMISSION_ERROR_CODE,0);
-      
-          return ret;
+        ret->addInt32Value(chaos::RpcActionDefinitionKey::CS_CMDM_ACTION_SUBMISSION_ERROR_CODE, 0);
+
+        return ret;
       }
       fut->wait(MDS_TIMEOUT);
       if (fut->getError() == 0) {
