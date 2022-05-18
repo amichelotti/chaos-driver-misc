@@ -179,7 +179,7 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 	if (count > 1)
 	{
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning, boost::str(boost::format("retried %1% times while reading newdafne file") % count)));
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning, boost::str(boost::format("retried %1% times while reading newdafne file") % count));
 	}
 		
 	validData=ret;
