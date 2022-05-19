@@ -3405,15 +3405,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           projection                                    = *dw;
         }
         DBGET << "START SEQ QUERY :" << std::dec << start_ts << " (" << chaos::common::utility::TimingUtil::toString(start_ts) << ") end:" << end_ts << " (" << chaos::common::utility::TimingUtil::toString(end_ts) << ") seq id " << seqid << " run id:" << runid << " page:" << page;
-        ChaosLockGuard l(iomutex);
-        std::stringstream ress;
         executeTimeIntervalQuery((chaos::metadata_service_client::node_controller::DatasetDomain)channel, start_ts, end_ts, seqid, runid, tags, &query_cursor, projection, path, page);
         if (query_cursor) {
           cnt = 0;
           if (fmtType == "tgz") {
             // all the elements into a tgz.
           }
-          ress << "{\"data\":[";
+          res << "{\"data\":[";
           uint32_t                        reduction_factor = 1;
           uint32_t                        count_items      = 0;
           if (p.hasKey("reduction")) {
@@ -3440,16 +3438,16 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
                 chaos::common::data::CDWShrdPtr  data = normalizeToJson(q_result.get(), binaryToTranslate);
                 if ((reduction_factor == 1) || ((count_items % reduction_factor) == 0)) {
                   if (cntt > 0) {
-                    ress << ",";
+                    res << ",";
                   }
                   cntt++;
                   if (var_name.size() && data->hasKey(var_name)) {
-                    ress << dataset2Var(data.get(), var_name);
+                    res << dataset2Var(data.get(), var_name);
                   } else {
                     if (keys.size()) {
-                      ress << (data->getCSProjection(keys))->getCompliantJSONString();
+                      res << (data->getCSProjection(keys))->getCompliantJSONString();
                     } else {
-                      ress << data->getCompliantJSONString();
+                      res << data->getCompliantJSONString();
                     }
                   }
                 }
@@ -3462,15 +3460,15 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
               cnt++;
             }
           }
-          ress << "]";
+          res << "]";
 
           query_cursor->getIndexes(runid, seqid, ts);
 
-          ress << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
+          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
 
           releaseQuery(query_cursor);
 
-          json_buf = ress.str();
+          json_buf = res.str();
 
           return CHAOS_DEV_OK;
         } else {
