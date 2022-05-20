@@ -335,13 +335,13 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_file_incorrect",
 		"raised when file with dafne data has format not recognized");
 	addStateVariable(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",
-		"raised when fails to retrieve CCALT data");
+		"raised when fails to retrieve CCALT data",60000);
 
 	addStateVariable(StateVariableTypeAlarmCU,"push_data_graphics_failed",
-		"raised when the post call for updating data for graphics fails");
+		"raised when the post call for updating data for graphics fails",60000);
 	
 	addStateVariable(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",
-		"raised when fails to retrieve VUG Dataset");
+		"raised when fails to retrieve VUG Dataset",60000);
 		
 	addStateVariable(StateVariableTypeAlarmCU,"failed_to_write_output_file",
 		"raised when fails to write output file");

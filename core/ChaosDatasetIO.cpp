@@ -441,7 +441,6 @@ namespace driver
         ChaosDataSet new_dataset(new chaos::common::data::CDataWrapper);
         DPD_LDBG << " allocated dataset:" << type;
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, (int64_t)0);
-        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP, (int64_t)0);
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID, (int64_t)0);
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID, (int64_t)runid);
         new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, uid);
@@ -479,8 +478,8 @@ namespace driver
       int err = 0;
 
       uint64_t ts = chaos::common::utility::TimingUtil::getTimeCorStamp();
-      uint64_t tsh =
-          chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();
+  /*    uint64_t tsh =
+          chaos::common::utility::TimingUtil::getTimeStampInMicroseconds();*/
       if (new_dataset.get() == NULL)
       {
         DPD_LERR << "attempting to psuh a non valid dataset";
@@ -496,18 +495,7 @@ namespace driver
         new_dataset->setValue(chaos::DataPackCommonKey::DPCK_TIMESTAMP,
                               (int64_t)ts);
       }
-      if (!new_dataset->hasKey(
-              (chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP)))
-      {
-        // add timestamp of the datapack
-        new_dataset->addInt64Value(
-            chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP, tsh);
-      }
-      else
-      {
-        new_dataset->setValue(
-            chaos::DataPackCommonKey::DPCK_HIGH_RESOLUTION_TIMESTAMP, (int64_t)tsh);
-      }
+   
       if (!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID))
       {
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,

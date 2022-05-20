@@ -165,18 +165,23 @@ void own::CmdDafDefault::acquireHandler() {
 	DafneData::DafneDataToShow  DATO;
 	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
-	int count,retries=4;
+	int count,retries=100;
 	bool ret, validData;
 	for ( count=0; count < retries; count++)
 	{
 		ret= DATO.ReadFromNewDafne(dafnestatPathPointer);
 		if (!ret)
 		{
-			usleep(20000);
+			usleep(10000);
 		}
 		else 
 		    break;
 	}
+	if (count > 1)
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelWarning, boost::str(boost::format("retried %1% times while reading newdafne file") % count));
+	}
+		
 	validData=ret;
 	if (!ret)
 	{
@@ -309,7 +314,7 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 	else
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		
 		try 
 		{
 			int errs=0;
@@ -342,6 +347,10 @@ void own::CmdDafDefault::acquireHandler() {
 			else if (errs > 0)
 			{
 				setStateVariableSeverity(StateVariableTypeAlarmCU,"CCALT_data_not_retrieved",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+			}
+			else
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU, "CCALT_data_not_retrieved", chaos::common::alarm::MultiSeverityAlarmLevelClear);
 			}
 		}
 		catch (chaos::CException)
