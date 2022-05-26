@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9)
 project(chaos_driver_gibcontrol)
 find_package(chaos MODULE REQUIRED)
 include_directories(../../../ ${chaos_INCLUDE_DIRS})
