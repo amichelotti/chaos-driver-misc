@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9)
 project(chaos_driver_misc_benchmark)
 
 SET(messlib ChaosMESS.cpp DefaultCommand.cpp DummyDriver.cpp CmdCalcTrxDelay.cpp CmdCalcBandwidth.cpp)

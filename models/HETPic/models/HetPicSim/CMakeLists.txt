@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9)
 project(chaos_driver_hetpic_HetPicSim)
 FILE(GLOB src *.cpp)
 ADD_LIBRARY(${PROJECT_NAME} ${src})
