@@ -3465,8 +3465,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           res << "]";
 
           query_cursor->getIndexes(runid, seqid, ts);
-
-          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
+          int error=query_cursor->getError();
+          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"error\":"<<error<<",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
 
           releaseQuery(query_cursor);
 
