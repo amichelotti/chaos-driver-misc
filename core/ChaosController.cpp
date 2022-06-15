@@ -2987,8 +2987,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           domains.push_back("alarm");
           domains.push_back("command");*/
         }
+        int sort=-1;
+          if(p.hasKey("sort")&&p.isInt32Value("sort")){
+            sort=p.getInt32Value("sort");
+          }
         if (manager) {
-          chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page);
+          
+          chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page,sort);
           json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
 
         } else {
