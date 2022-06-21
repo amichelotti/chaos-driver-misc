@@ -535,7 +535,7 @@ void ChaosController::initializeClient() {
       ChaosMetadataServiceClient::getInstance()->start();
     }
     if (live_driver == NULL) {
-      ChaosLockGuard l(iomutex);
+      std::lock_guard<std::recursive_mutex> l(iomutex);
 
       std::string impl_name = boost::str(boost::format("%1%") % chaos::GlobalConfiguration::getInstance()->getOption<std::string>(chaos::InitOption::OPT_DATA_IO_IMPL));
 
@@ -584,7 +584,7 @@ uint64_t ChaosController::sched(uint64_t ts) {
   }
   delta_update = CU_HEALTH_UPDATE_US;
   for (int cnt = 0; cnt < cached_channels.size(); cnt++) {
-    ChaosLockGuard l(iomutex);
+    std::lock_guard<std::recursive_mutex> l(iomutex);
 
     //if(channels[cnt]->hasKey("ndk_uid")&&(channels[cnt]->getString("ndk_uid")!=controller->)
     if (cached_channels[cnt].get()) {
@@ -607,7 +607,7 @@ uint64_t ChaosController::sched(uint64_t ts) {
   }
   all.appendAllElement(*bundle_state.getData());
   {
-    ChaosLockGuard l(iomutex);
+    std::lock_guard<std::recursive_mutex> l(iomutex);
     cachedJsonChannels[-1]  = all.getCompliantJSONString();
     cachedJsonChannels[255] = common.getCompliantJSONString();
   }
@@ -753,7 +753,9 @@ chaos::common::data::CDWShrdPtr ChaosController::combineDataSets(std::map<int, c
   return data;
 }
 const std::string ChaosController::fetchJson(int channel) {
-  ChaosLockGuard ll(iomutex);
+   
+
+   std::lock_guard<std::recursive_mutex> ll(iomutex);
   uint64_t       now   = chaos::common::utility::TimingUtil::getTimeStamp();
   int32_t        check = max_cache_duration_ms;
   if (path.size() == 0) {
@@ -2985,8 +2987,13 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           domains.push_back("alarm");
           domains.push_back("command");*/
         }
+        int sort=-1;
+          if(p.hasKey("sort")&&p.isInt32Value("sort")){
+            sort=p.getInt32Value("sort");
+          }
         if (manager) {
-          chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page);
+          
+          chaos::common::data::CDWUniquePtr msg = manager->searchLogEntry(name, domains, start_ts, end_ts, seq_id, page,sort);
           json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
 
         } else {
@@ -3463,8 +3470,8 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           res << "]";
 
           query_cursor->getIndexes(runid, seqid, ts);
-
-          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
+          int error=query_cursor->getError();
+          res << ",\"seqid\":" << seqid << ",\"runid\":" << runid << ",\"ts\":" << ts << ",\"count\":" << count_items << ",\"error\":"<<error<<",\"end\":" << ((query_cursor->size()<page) ? 1 : 0) << "}";
 
           releaseQuery(query_cursor);
 
