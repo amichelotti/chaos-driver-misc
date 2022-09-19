@@ -2337,6 +2337,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       if ((names.get()) && ((names->size()) > 0)) {
         res << "[";
       }
+      /// START DO
       do {
         if ((names.get()) && ((names->size()) > 0)) {
           name = names->getStringElementAtIndex(idx);
@@ -2964,6 +2965,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           res << ",";
         }
       } while (names.get() && (++idx < names->size()));
+      /// END DO
       if (names.get() && (names->size() > 0)) {
         res << "]";
         ret      = (execute_chaos_api_error < names->size()) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
@@ -2972,7 +2974,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       }
       json_buf = res.str();
       return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
-      ;
+    //////// END NODE
     } else if (cmd == "log") {
       PARSE_QUERY_PARMS(args, false, false);
       if (what == "search") {
