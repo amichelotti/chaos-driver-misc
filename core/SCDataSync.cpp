@@ -68,7 +68,7 @@ SCDataSync::~SCDataSync() {
 /*
  Return the default configuration
  */
-void SCDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
+void SCDataSync::unitDefineActionAndDataset()  {
    driver=new remoteGroupAccessInterface(getAccessoInstanceByIndex(0));
      if((driver == NULL) || (driver->connect()!=0)){
          throw chaos::CException(-1,"cannot connect with driver",__PRETTY_FUNCTION__);
@@ -97,23 +97,23 @@ void SCDataSync::unitDefineCustomAttribute() {
 }
 
 // Abstract method for the initialization of the control unit
-void SCDataSync::unitInit() throw(CException) {
+void SCDataSync::unitInit() {
     driver->init(1);
 }
 
 // Abstract method for the start of the control unit
-void SCDataSync::unitStart() throw(CException) {
+void SCDataSync::unitStart() {
     driver->start(1);
 
 }
 
 // Abstract method for the stop of the control unit
-void SCDataSync::unitStop() throw(CException) {
+void SCDataSync::unitStop() {
 	 driver->stop(1);
 }
 
 // Abstract method for the deinit of the control unit
-void SCDataSync::unitDeinit() throw(CException) {
+void SCDataSync::unitDeinit() {
     driver->deinit(1);
 	
 }

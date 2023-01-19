@@ -32,7 +32,7 @@ chaos::driver::gibcontrol::SimGibDD::SimGibDD() {
 chaos::driver::gibcontrol::SimGibDD::~SimGibDD() {
 }
 #ifdef CHAOS
-void chaos::driver::gibcontrol::SimGibDD::driverInit(const chaos::common::data::CDataWrapper& json) throw(chaos::CException) {
+void chaos::driver::gibcontrol::SimGibDD::driverInit(const chaos::common::data::CDataWrapper& json)  {
 	DRLAPP<< "Initializing SimGibDD HL Driver with CDataWrapper "<<std::endl;
 	devicedriver= new ::common::gibcontrol::models::SimGib(json);
 	if (devicedriver==NULL)
@@ -41,7 +41,7 @@ void chaos::driver::gibcontrol::SimGibDD::driverInit(const chaos::common::data::
 	}
 }
 #endif
-void chaos::driver::gibcontrol::SimGibDD::driverInit(const char* initParameter) throw(chaos::CException) {
+void chaos::driver::gibcontrol::SimGibDD::driverInit(const char* initParameter)  {
 	DRLAPP<< "Initializing SimGibDD HL Driver with string "<< initParameter <<std::endl;
 	if (devicedriver) {
 		throw chaos::CException(1,"Already Initialized ","SimGibDD::driverInit");

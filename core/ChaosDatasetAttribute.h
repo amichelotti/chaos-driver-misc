@@ -140,11 +140,11 @@ public:
     uint32_t getSize(){return attr_size;}
 
     template<typename T>
-    operator T()  throw (chaos::CException){
+    operator T()  {
             
         return *reinterpret_cast<T*>(get(NULL));
     }
-    template <typename T> operator T*()  throw (chaos::CException){
+    template <typename T> operator T*()  {
             
         return reinterpret_cast<T*>(get(NULL));
     }
@@ -169,7 +169,7 @@ public:
 
     }
     template<class T>
-     operator const std::vector<T> () throw (chaos::CException){
+     operator const std::vector<T> () {
         std::vector<T> tmp;
         get(tmp);
 
@@ -189,7 +189,7 @@ public:
     int query(uint64_t ms_start,uint64_t ms_end,std::vector<std::vector<bool> > &v);
 
     template<typename T>
-    ChaosDatasetAttribute& operator=(const T& d) throw (chaos::CException) {
+    ChaosDatasetAttribute& operator=(const T& d)  {
         if(set((void*)&d,sizeof(T))==0)
             return *this;
         throw chaos::CException(-1,"cannot assign to remote variable:"+attr_path,__FUNCTION__);

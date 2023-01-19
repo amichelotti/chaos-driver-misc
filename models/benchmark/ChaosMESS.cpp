@@ -40,7 +40,7 @@ ChaosMESS::~ChaosMESS() {}
 /*
  Return the default configuration
  */
-void ChaosMESS::unitDefineActionAndDataset() throw(CException) {
+void ChaosMESS::unitDefineActionAndDataset() {
     //create the mess virtual device identifier
 	//_deviceID = boost::str( boost::format("%1%_mess_monitor") % GlobalConfiguration::getInstance()->getLocalServerAddress());
 	
@@ -89,11 +89,11 @@ void ChaosMESS::unitDefineCustomAttribute() {
 }
 
 // Abstract method for the initialization of the control unit
-void ChaosMESS::unitInit() throw(CException) {
+void ChaosMESS::unitInit() {
 }
 
 // Abstract method for the start of the control unit
-void ChaosMESS::unitStart() throw(CException) {
+void ChaosMESS::unitStart() {
 	o_lct_ts = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "trx_ts");
 	o_lct_delay = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "trx_delay");
 	//o_lct_ts = getVariableValue(chaos_batch::IOCAttributeSharedCache::SVD_OUTPUT, "trx_ts")->getCurrentValue<uint64_t>();;
@@ -101,12 +101,12 @@ void ChaosMESS::unitStart() throw(CException) {
 }
 
 // Abstract method for the stop of the control unit
-void ChaosMESS::unitStop() throw(CException) {
+void ChaosMESS::unitStop() {
 	
 }
 
 // Abstract method for the deinit of the control unit
-void ChaosMESS::unitDeinit() throw(CException) {
+void ChaosMESS::unitDeinit() {
 	
 }
 

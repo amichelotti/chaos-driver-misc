@@ -40,7 +40,7 @@ protected:
     /*
      Define the Control Unit Dataset and Actions
      */
-    void unitDefineActionAndDataset()throw(CException);
+    void unitDefineActionAndDataset();
 	
 	//!
 	void defineSharedVariable();
@@ -51,19 +51,19 @@ protected:
     /*(Optional)
      Initialize the Control Unit and all driver, with received param from MetadataServer
      */
-    void unitInit() throw(CException);
+    void unitInit() ;
     /*(Optional)
      Execute the work, this is called with a determinated delay, it must be as fast as possible
      */
-    void unitStart() throw(CException);
+    void unitStart() ;
     /*(Optional)
      The Control Unit will be stopped
      */
-    void unitStop() throw(CException);
+    void unitStop() ;
     /*(Optional)
      The Control Unit will be deinitialized and disposed
      */
-    void unitDeinit() throw(CException);
+    void unitDeinit() ;
 	
 	/*!
 	 return last transmision delay appende

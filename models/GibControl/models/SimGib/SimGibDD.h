@@ -29,8 +29,8 @@ namespace chaos {
 	namespace driver {
 		namespace gibcontrol{
 			class SimGibDD: public ChaosGibControlDD{
-				void driverInit(const char *initParameter) throw(chaos::CException);
-				void driverInit(const chaos::common::data::CDataWrapper& json) throw(chaos::CException);
+				void driverInit(const char *initParameter) ;
+				void driverInit(const chaos::common::data::CDataWrapper& json) ;
 			public:
 				SimGibDD();
 				~SimGibDD();

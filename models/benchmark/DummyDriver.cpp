@@ -54,11 +54,11 @@ DummyDriver::~DummyDriver() {
 	
 }
 
-void DummyDriver::driverInit(const char *initParameter) throw(chaos::CException) {
+void DummyDriver::driverInit(const char *initParameter)  {
 	SL7DRVLAPP_ << "Init dummy driver";
 }
 
-void DummyDriver::driverDeinit() throw(chaos::CException) {
+void DummyDriver::driverDeinit()  {
 	SL7DRVLAPP_ << "Deinit dummy driver";
 
 }
