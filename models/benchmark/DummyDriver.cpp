@@ -23,7 +23,7 @@
 
 #include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>
 
-#include <boost/regex.hpp>
+#include <regex>
 
 namespace cu_driver = chaos::cu::driver_manager::driver;
 

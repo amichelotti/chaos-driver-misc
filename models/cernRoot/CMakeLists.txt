@@ -13,9 +13,12 @@ LINK_DIRECTORIES(${CERN_ROOT_PREFIX}/lib)
 ADD_EXECUTABLE(chaosRoot chaosRootapp.cpp)
 ADD_EXECUTABLE(chaos2tree chaos2tree.cpp)
 ADD_EXECUTABLE(histo2tree histo2tree.cpp)
-SET (src rootUtil.cpp ChaosRoot.cpp)
+SET (src rootUtil.cpp ChaosRoot.cpp )
 IF(OPENCV)
+        ADD_DEFINITIONS(-DOPENCV)
+
         SET(ADDITIONAL_LIBS opencv_world)
+        SET(src ${src} rootGaussianImage2dFit.cpp)
 ENDIF()
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})

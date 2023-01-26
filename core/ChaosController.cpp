@@ -1101,13 +1101,13 @@ void ChaosController::parseClassZone(ChaosStringVector& v, kv_t& zone_to_cuname,
       node_list = p.getVectorValue("node_list");                                                                                                         \
     }                                                                                                                                                    \
     if ((names.get() == NULL) && name.empty() && check_name) {                                                                                           \
-      serr << "missing 'name' or 'names' in command:\"" << cmd << "\"";                                                                                  \
+      serr << "missing 'name' or 'names' in command:\"" << cmd << "\" args:"<<args;                                                                                  \
       bundle_state.append_error(serr.str());                                                                                                             \
       json_buf = bundle_state.getData()->getCompliantJSONString();                                                                                       \
       return CHAOS_DEV_CMD;                                                                                                                              \
     }                                                                                                                                                    \
     if (check_what && what.empty()) {                                                                                                                    \
-      serr << "missing operation 'what'" << cmd;                                                                                                         \
+      serr << "missing operation 'what' in \"" << cmd<<"\""<<" args:"<<args;                                                                                                         \
       bundle_state.append_error(serr.str());                                                                                                             \
       json_buf = bundle_state.getData()->getCompliantJSONString();                                                                                       \
       return CHAOS_DEV_CMD;                                                                                                                              \
@@ -2241,7 +2241,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             DBGET << "no variable name:\"" << name << "\":";
           } else {
             json_buf = res->getCompliantJSONString();
-            DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
+            //DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
           }
           return CHAOS_DEV_OK;
 
@@ -2251,7 +2251,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             DBGET << "no variable name:\"" << name << "\":";
           } else {
             json_buf = res->getCompliantJSONString();
-            DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
+           // DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
           }
           return CHAOS_DEV_OK;
 
