@@ -1679,7 +1679,7 @@ namespace driver
       //    DataServiceNodeDefinitionType::DSStorageBurstTypeUndefined);
       //    pg_abstract_cu.addProperty(DataServiceNodeDefinitionKey::DS_HISTORY_BURST,
       //    "Specify if the restore operation need to be done as real operation or
-      //    not", DataType::TYPE_CLUSTER,0,
+      //    not", DataType::TYPE_JSON,0,
       //    CDataVariant(burst_type_desc.release()));
 
       pg_abstract_cu.addProperty(
