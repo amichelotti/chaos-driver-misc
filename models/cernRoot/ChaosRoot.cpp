@@ -57,13 +57,13 @@ namespace driver
           delete rootApp;
         }
       }
-      void ChaosRoot::init(int argc, const char *argv[]) throw(chaos::CException)
+      void ChaosRoot::init(int argc, const char *argv[]) 
       {
         chaos::ChaosCommon<ChaosRoot>::init(argc, argv);
 
  
       }
-      void ChaosRoot::init(istringstream &initStringStream) throw(chaos::CException)
+      void ChaosRoot::init(istringstream &initStringStream) 
       {
         chaos::ChaosCommon<ChaosRoot>::init(initStringStream);
       }
@@ -74,7 +74,7 @@ namespace driver
         return chaos::common::data::CDWUniquePtr();
       }
 
-      void ChaosRoot::start() throw(chaos::CException)
+      void ChaosRoot::start() 
       {
 
         ChaosUniquePtr<chaos::common::data::CDataWrapper> result(
@@ -131,7 +131,7 @@ namespace driver
         rootopts = opts;
       }
 
-      void ChaosRoot::deinit() throw(chaos::CException)
+      void ChaosRoot::deinit() 
       {
         CHAOS_NOT_THROW(
             StartableService::deinitImplementation(
@@ -147,14 +147,14 @@ namespace driver
 
         chaos::ChaosCommon<ChaosRoot>::deinit();
       }
-      void ChaosRoot::stop() throw(chaos::CException)
+      void ChaosRoot::stop() 
       {
         CHAOS_NOT_THROW(StartableService::stopImplementation(
                             HealtManager::getInstance(), "HealthManager",
                             __PRETTY_FUNCTION__););
         chaos::ChaosCommon<ChaosRoot>::stop();
       }
-      void ChaosRoot::init(void *init_data) throw(chaos::CException)
+      void ChaosRoot::init(void *init_data) 
       {
         chaos::ChaosCommon<ChaosRoot>::init(init_data);
         InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);

@@ -134,6 +134,7 @@ chaos::common::data::CDWUniquePtr removeSystemKey(const chaos::common::data::CDa
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
  cv::Mat chaosImage2cv(const chaos::common::data::CDataWrapper&chaosImage);
+
 #endif
 
 struct chaosBranch{

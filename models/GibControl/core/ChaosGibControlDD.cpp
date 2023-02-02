@@ -18,7 +18,7 @@ limitations under the License.
 */
 #include "ChaosGibControlDD.h"
 #include <string>
-#include <boost/regex.hpp>
+#include <regex>
 #include <chaos/cu_toolkit/driver_manager/driver/AbstractDriverPlugin.h>
 // including interface
 #include "driver/misc/models/GibControl/core/ChaosGibControlInterface.h"

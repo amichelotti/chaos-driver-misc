@@ -78,7 +78,7 @@ RTAbstractControlUnit(_control_unit_id,
   
     
 }
-void RTDataSync::unitDefineActionAndDataset() throw(chaos::CException) {
+void RTDataSync::unitDefineActionAndDataset()  {
     //insert your definition code here
      std::vector<ChaosDatasetAttribute*> rattrs=data_group->getAttributes();
     for (std::vector<ChaosDatasetAttribute*>::iterator i=rattrs.begin();i!=rattrs.end();i++){

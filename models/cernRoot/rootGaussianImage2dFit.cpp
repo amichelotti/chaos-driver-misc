@@ -24,7 +24,6 @@ namespace root
             return result;
         }
         using namespace cv;
-
         int rootGaussianImage2dFit(cv::Mat &image, int thrshold,int fit_level, double &Amplitude, double &X_m, double &Y_m, double &S_x, double &S_y, double &rho){
             TH2F *h;
             TF2 *g2d;
@@ -37,12 +36,12 @@ namespace root
                 if (image.channels() >= 3)
                 {
                     cv::Mat imagec;
-                    cvtColor(image, imagec, COLOR_BGR2GRAY);
-                    threshold(imagec, thr, thrshold, 255, THRESH_TOZERO);
+                    cvtColor(image, imagec, cv::COLOR_BGR2GRAY);
+                    threshold(imagec, thr, thrshold, 255, cv::THRESH_TOZERO);
                 }
                 else
                 {
-                    threshold(image, thr, thrshold, 255, THRESH_BINARY);
+                    threshold(image, thr, thrshold, 255, cv::THRESH_BINARY);
                 }
 
                 h = new TH2F("slm", " ", thr.cols, 0, thr.cols, thr.rows, 0,

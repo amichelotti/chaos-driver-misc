@@ -473,7 +473,7 @@ int performTest(const std::string &name, testparam_t &tparam) {
         ChaosUniqueLock lock(mutex_thread);
         LOG( "[" << name << "] waiting:" << thread_done
                   << " points:" << point_cnt);
-        CHAOS_WAIT(cond,mutex_thread,120000);
+        CHAOS_WAIT_MS(cond,mutex_thread,120000);
         LOG( "[" << name << "] done");
         
         // std::cout <<"["<<name<<"] restart:" << thread_done<<"

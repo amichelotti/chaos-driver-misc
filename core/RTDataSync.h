@@ -47,13 +47,13 @@ protected:
         ChaosDatasetAttributeSinchronizer* data_group;
         std::vector<std::string> cu_names;
 public:
-    void unitDefineActionAndDataset() throw(chaos::CException);
-    void unitInit() throw(chaos::CException){}
+    void unitDefineActionAndDataset() ;
+    void unitInit() {}
 
-    void unitStart() throw(chaos::CException){}
-    void unitStop() throw(chaos::CException){}
-	void unitDeinit() throw(chaos::CException){}
-	void unitRun() throw(chaos::CException){}
+    void unitStart() {}
+    void unitStop() {}
+	void unitDeinit() {}
+	void unitRun() {}
 
 };
             }}

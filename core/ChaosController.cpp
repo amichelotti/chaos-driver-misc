@@ -1101,13 +1101,13 @@ void ChaosController::parseClassZone(ChaosStringVector& v, kv_t& zone_to_cuname,
       node_list = p.getVectorValue("node_list");                                                                                                         \
     }                                                                                                                                                    \
     if ((names.get() == NULL) && name.empty() && check_name) {                                                                                           \
-      serr << "missing 'name' or 'names' in command:\"" << cmd << "\"";                                                                                  \
+      serr << "missing 'name' or 'names' in command:\"" << cmd << "\" args:"<<args;                                                                                  \
       bundle_state.append_error(serr.str());                                                                                                             \
       json_buf = bundle_state.getData()->getCompliantJSONString();                                                                                       \
       return CHAOS_DEV_CMD;                                                                                                                              \
     }                                                                                                                                                    \
     if (check_what && what.empty()) {                                                                                                                    \
-      serr << "missing operation 'what'" << cmd;                                                                                                         \
+      serr << "missing operation 'what' in \"" << cmd<<"\""<<" args:"<<args;                                                                                                         \
       bundle_state.append_error(serr.str());                                                                                                             \
       json_buf = bundle_state.getData()->getCompliantJSONString();                                                                                       \
       return CHAOS_DEV_CMD;                                                                                                                              \
@@ -2241,7 +2241,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             DBGET << "no variable name:\"" << name << "\":";
           } else {
             json_buf = res->getCompliantJSONString();
-            DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
+            //DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
           }
           return CHAOS_DEV_OK;
 
@@ -2251,7 +2251,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
             DBGET << "no variable name:\"" << name << "\":";
           } else {
             json_buf = res->getCompliantJSONString();
-            DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
+           // DBGET << "Retrieved  variable name:\"" << name << "\":" << json_buf;
           }
           return CHAOS_DEV_OK;
 
@@ -2337,6 +2337,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       if ((names.get()) && ((names->size()) > 0)) {
         res << "[";
       }
+      /// START DO
       do {
         if ((names.get()) && ((names->size()) > 0)) {
           name = names->getStringElementAtIndex(idx);
@@ -2964,6 +2965,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           res << ",";
         }
       } while (names.get() && (++idx < names->size()));
+      /// END DO
       if (names.get() && (names->size() > 0)) {
         res << "]";
         ret      = (execute_chaos_api_error < names->size()) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
@@ -2972,7 +2974,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
       }
       json_buf = res.str();
       return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
-      ;
+    //////// END NODE
     } else if (cmd == "log") {
       PARSE_QUERY_PARMS(args, false, false);
       if (what == "search") {
