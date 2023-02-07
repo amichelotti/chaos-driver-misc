@@ -21,6 +21,11 @@ IF(OPENCV)
         SET(src ${src} rootGaussianImage2dFit.cpp)
 ENDIF()
 
+IF(ENABLE_MEMCACHE)
+
+        SET(ADDITIONAL_LIBS ${ADDITIONAL_LIBS} chaos_driver_data_import_memcache)
+ENDIF()
+
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${src})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}  chaos_driver_misc chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Imt Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ${ADDITIONAL_LIBS}) 
 #TARGET_LINK_LIBRARIES(chaosRoot ${PROJECT_NAME} chaos_metadata_service_client chaos_common  common_misc_data common_misc_scheduler common_debug Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix MathCore Thread MultiProc ${FrameworkLib} ) 
