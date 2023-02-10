@@ -239,11 +239,11 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 	VUGImporterName=vugNamePointer;
 	
-	VUGImporterDataset=VUGImporter->getLiveChannel(VUGImporterName,0);
-	if ((VUGImporterDataset == NULL) || (VUGImporterDataset->isEmpty()) )
+	DAFNESTATImporterDataset=VUGImporter->getLiveChannel(VUGImporterName,0);
+	if ((DAFNESTATImporterDataset == NULL) || (DAFNESTATImporterDataset->isEmpty()) )
 	{
-		SCLERR_ << "VUGImporterDataset null";
-		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset VUGImporterDataset");
+		SCLERR_ << "DAFNESTATImporterDataset null";
+		//metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve dataset DAFNESTATImporterDataset");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	else
@@ -253,57 +253,59 @@ void own::CmdDafDefault::acquireHandler() {
 			
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 			
-			*p_i_ele = DATO.i_ele.innerValue=VUGImporterDataset->getDoubleValue("e_current");
-		    *p_i_pos = DATO.i_pos.innerValue=VUGImporterDataset->getDoubleValue("p_current");
+			*p_i_ele = DATO.i_ele.innerValue=DAFNESTATImporterDataset->getDoubleValue("e_current");
+		    *p_i_pos = DATO.i_pos.innerValue=DAFNESTATImporterDataset->getDoubleValue("p_current");
+			*p_sx_ele = DATO.sx_ele.innerValue = DAFNESTATImporterDataset->getDoubleValue("sigmax_e");
+			*p_sy_ele = DATO.sy_ele.innerValue = DAFNESTATImporterDataset->getDoubleValue("sigmay_e");
 
-			*p_VUGEL102=DATO.VUGEL102.innerValue=VUGImporterDataset->getDoubleValue("VUGEL102_press");
-			*p_VUGEL103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGEL103_press");
-			*p_VUGEL202=DATO.VUGEL202.innerValue=VUGImporterDataset->getDoubleValue("VUGEL202_press");
-			*p_VUGES102=DATO.VUGES102.innerValue=VUGImporterDataset->getDoubleValue("VUGES102_press");
-			*p_VUGES103=DATO.VUGEL103.innerValue=VUGImporterDataset->getDoubleValue("VUGES103_press");
-			*p_VUGES202=DATO.VUGES202.innerValue=VUGImporterDataset->getDoubleValue("VUGES202_press");
+			*p_sx_pos = DATO.sx_pos.innerValue = DAFNESTATImporterDataset->getDoubleValue("sigmax_p");
+			*p_sy_pos = DATO.sy_pos.innerValue = DAFNESTATImporterDataset->getDoubleValue("sigmay_p");
 
-			*p_VUGPL102=DATO.VUGPL102.innerValue=VUGImporterDataset->getDoubleValue("VUGPL102_press");
-			*p_VUGPL103=DATO.VUGPL103.innerValue=VUGImporterDataset->getDoubleValue("VUGPL103_press");
-			*p_VUGPL202=DATO.VUGPL202.innerValue=VUGImporterDataset->getDoubleValue("VUGPL202_press");
-			*p_VUGPS102=DATO.VUGPS102.innerValue=VUGImporterDataset->getDoubleValue("VUGPS102_press");
-			*p_VUGPS103=DATO.VUGPS103.innerValue=VUGImporterDataset->getDoubleValue("VUGPS103_press");
-			*p_VUGPS202=DATO.VUGPS202.innerValue=VUGImporterDataset->getDoubleValue("VUGPS202_press");
 
-			*p_VUGPL101=DATO.VUGPL101.innerValue=VUGImporterDataset->getDoubleValue("VUGPL101_press");
-			*p_VUGPS101=DATO.VUGPS101.innerValue=VUGImporterDataset->getDoubleValue("VUGPS101_press");
-			*p_VUGPS201=DATO.VUGPS201.innerValue=VUGImporterDataset->getDoubleValue("VUGPS201_press");
-			*p_VUGPS203=DATO.VUGPS203.innerValue=VUGImporterDataset->getDoubleValue("VUGPS203_press");
-			*p_VUGPL201=DATO.VUGPL201.innerValue=VUGImporterDataset->getDoubleValue("VUGPL201_press");
-			*p_VUGEL101=DATO.VUGEL101.innerValue=VUGImporterDataset->getDoubleValue("VUGEL101_press");
-			*p_VUGES101=DATO.VUGES101.innerValue=VUGImporterDataset->getDoubleValue("VUGES101_press");
-			*p_VUGES201=DATO.VUGES201.innerValue=VUGImporterDataset->getDoubleValue("VUGES201_press");
-			*p_VUGES203=DATO.VUGES203.innerValue=VUGImporterDataset->getDoubleValue("VUGES203_press");
-			*p_VUGEL201=DATO.VUGEL201.innerValue=VUGImporterDataset->getDoubleValue("VUGEL201_press");
-			*p_VUGPL203=DATO.VUGPL203.innerValue=VUGImporterDataset->getDoubleValue("VUGPL203_press");
-			*p_VUGEL203=DATO.VUGEL203.innerValue=VUGImporterDataset->getDoubleValue("VUGEL203_press");
+			*p_VUGEL102=DATO.VUGEL102.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL102_press")*/ = -1;
+			*p_VUGEL103=DATO.VUGEL103.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL103_press")*/ =-1;
+			*p_VUGEL202=DATO.VUGEL202.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL202_press")*/=-1;
+			*p_VUGES102=DATO.VUGES102.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES102_press")*/ = -1;
+			*p_VUGES103=DATO.VUGEL103.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES103_press")*/ = -1;
+			*p_VUGES202=DATO.VUGES202.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES202_press")*/ = -1;
 
-			*p_sx_ele=DATO.sx_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmax_e");
-			*p_sy_ele=DATO.sy_ele.innerValue=VUGImporterDataset->getDoubleValue("sigmay_e");
+			*p_VUGPL102=DATO.VUGPL102.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL102_press")*/ = -1;
+			*p_VUGPL103=DATO.VUGPL103.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL103_press")*/ = -1;
+			*p_VUGPL202=DATO.VUGPL202.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL202_press") */= -1;
+			*p_VUGPS102=DATO.VUGPS102.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS102_press")*/ = -1;
+			*p_VUGPS103=DATO.VUGPS103.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS103_press")*/ = -1;
+			*p_VUGPS202=DATO.VUGPS202.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS202_press")*/ = -1;
 
-			*p_sx_pos=DATO.sx_pos.innerValue=VUGImporterDataset->getDoubleValue("sigmax_p");
-			*p_sy_pos=DATO.sy_pos.innerValue=VUGImporterDataset->getDoubleValue("sigmay_p");
+			*p_VUGPL101=DATO.VUGPL101.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL101_press")*/ = -1;
+			*p_VUGPS101=DATO.VUGPS101.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS101_press")*/ = -1;
+			*p_VUGPS201=DATO.VUGPS201.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS201_press")*/ = -1;
+			*p_VUGPS203=DATO.VUGPS203.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPS203_press")*/ = -1;
+			*p_VUGPL201=DATO.VUGPL201.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL201_press")*/ = -1;
+			*p_VUGEL101=DATO.VUGEL101.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL101_press")*/ = -1;
+			*p_VUGES101=DATO.VUGES101.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES101_press")*/ = -1;
+			*p_VUGES201=DATO.VUGES201.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES201_press")*/ = -1;
+			*p_VUGES203=DATO.VUGES203.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGES203_press")*/ = -1;
+			*p_VUGEL201=DATO.VUGEL201.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL201_press")*/ = -1;
+			*p_VUGPL203=DATO.VUGPL203.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGPL203_press")*/ = -1;
+			*p_VUGEL203=DATO.VUGEL203.innerValue/*=DAFNESTATImporterDataset->getDoubleValue("VUGEL203_press") */= -1;
 
-			int64_t readTS=VUGImporterDataset->getInt64Value("dpck_ats");
+			
+
+			int64_t readTS=DAFNESTATImporterDataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
 			*p_timestamp=DATO.timestamp.innerValue=now;
 			//SCLDBG_ << "read TS "<< readTS << " now "<< now ;
 			readTS/=1000;
 			if ((now - readTS) > 30)
 			{
-				setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"DAFNE_STAT_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 				validData=false;
 			}
             
 		}
 		catch (chaos::CException)
 		{
-			setStateVariableSeverity(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"DAFNE_STAT_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			validData=false;
 		}
 	}
@@ -361,8 +363,8 @@ void own::CmdDafDefault::acquireHandler() {
 	}
 
 	int32_t sigmaret;
-	setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-	setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	//setStateVariableSeverity(StateVariableTypeAlarmCU,"beam_file_not_found",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+	//setStateVariableSeverity(StateVariableTypeAlarmDEV,"beam_file_not_updated",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	/*sigmaret=DATO.ReadSigmas(beamFileElectronPathPointer,true);
 	switch (sigmaret)
 	{

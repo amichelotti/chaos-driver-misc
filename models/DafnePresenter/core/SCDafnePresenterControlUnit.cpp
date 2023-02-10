@@ -340,8 +340,8 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmCU,"push_data_graphics_failed",
 		"raised when the post call for updating data for graphics fails",60000);
 	
-	addStateVariable(StateVariableTypeAlarmCU,"VUG_dataset_invalid_or_null",
-		"raised when fails to retrieve VUG Dataset",60000);
+	addStateVariable(StateVariableTypeAlarmCU,"DAFNE_STAT_dataset_invalid_or_null",
+		"raised when fails to retrieve DAFNE_STAT Dataset",60000);
 		
 	addStateVariable(StateVariableTypeAlarmCU,"failed_to_write_output_file",
 		"raised when fails to write output file");
