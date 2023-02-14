@@ -37,6 +37,12 @@ AbstractDafnePresenterCommand::~AbstractDafnePresenterCommand() {
 	if (VUGImporter)
 		delete(this->VUGImporter);
 	this->VUGImporter=NULL;
+	if (this->DAFNE_ELAB)
+		delete(this->DAFNE_ELAB);
+		this->DAFNE_ELAB=NULL;
+	if (this->RFImporter)
+		delete(this->RFImporter);
+		this->RFImporter=NULL;
 }
 void AbstractDafnePresenterCommand::setHandler(c_data::CDataWrapper *data) {
 	CMDCUDBG_ << "loading pointer for output channel"; 
@@ -46,7 +52,9 @@ void AbstractDafnePresenterCommand::setHandler(c_data::CDataWrapper *data) {
 	const char*vugNamePointer= getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CUvugImportName");
 	const char*lumiNamePointer = getAttributeCache()->getROPtr<char>(DOMAIN_CUSTOM,"CULuminometerCCALT");
 	this->CCALT= new  ::driver::misc::ChaosController(lumiNamePointer);
+	this->DAFNE_ELAB= new   ::driver::misc::ChaosController("DAFNE/ELAB/DAFNE_STATE");
 	this->VUGImporter= new  ::driver::misc::ChaosController(vugNamePointer);
+	this->RFImporter= new   ::driver::misc::ChaosController("DAFNE/IMPORT/DAFNE_RFE");
 	//setting default timeout (usec) 
 	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
 	if (*userTimeout > 0)

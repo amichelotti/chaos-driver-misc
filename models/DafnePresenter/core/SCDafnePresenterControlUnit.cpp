@@ -346,8 +346,14 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmCU,"failed_to_write_output_file",
 		"raised when fails to write output file");
 	
-	addStateVariable(StateVariableTypeAlarmDEV,"dafne_file_not_updated",
-		"raised when timestamp of dafne file is not updated (Storer problem)");
+	addStateVariable(StateVariableTypeAlarmCU,"DAFNE_STAT_dataset_not_updated",
+		"raised when timestamp from DAFNE_STAT is too old");
+	
+	addStateVariable(StateVariableTypeAlarmCU,"dafne_elab_dataset_invalid_or_null",
+		"raised when fails to retrieve EU DAFNE STATE Dataset");
+
+	addStateVariable(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",
+		"raised when fails to retrieve RF Dataset");
 	
 	
 }
