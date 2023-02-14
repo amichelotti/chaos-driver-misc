@@ -37,6 +37,8 @@ namespace driver {
 			uint64_t	*o_alarms;
 			::driver::misc::ChaosController *CCALT;
 			::driver::misc::ChaosController *VUGImporter;
+			::driver::misc::ChaosController *DAFNE_ELAB;
+			::driver::misc::ChaosController *RFImporter;
 			std::string VUGImporterName="DAFNE/IMPORT/VUG";
 			//reference of the chaos abstraction of driver
 			chaos::driver::dafnepresenter::ChaosDafnePresenterInterface *dafnepresenter_drv;

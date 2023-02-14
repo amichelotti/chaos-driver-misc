@@ -45,8 +45,10 @@ namespace driver {
 			private:
 			std::string GraphicsAddress;
 			std::string GraphicsPort;
-			chaos::common::data::CDWShrdPtr  VUGImporterDataset;
+			chaos::common::data::CDWShrdPtr  DAFNESTATImporterDataset;
 			chaos::common::data::CDWShrdPtr  CCALTLumiDataset;
+			chaos::common::data::CDWShrdPtr  DAFNE_ELAB_Dataset;
+			chaos::common::data::CDWShrdPtr  DAFNE_RF_Dataset;
 			uint64_t pastTimestamp;
 			uint64_t lastTimeUpdated;
 			const int32_t  *kindOfPrint;
