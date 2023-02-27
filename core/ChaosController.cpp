@@ -2981,13 +2981,7 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
         std::vector<std::string> domains;
         if ((node_type.size()) && (node_type != "all")) {
           domains.push_back(node_type);
-          /*
-          domains.push_back("error");
-          domains.push_back("warning");
-          domains.push_back("Info");
-          domains.push_back("log");
-          domains.push_back("alarm");
-          domains.push_back("command");*/
+          
         }
         int sort=-1;
           if(p.hasKey("sort")&&p.isInt32Value("sort")){
@@ -3004,8 +2998,22 @@ ChaosController::chaos_controller_error_t ChaosController::get(const std::string
           // chaos::common::data::CDWUniquePtr r = apires->detachResult();
         }
         return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
+      } else if(what=="delete"){
+
+        
+        if (manager) {
+          
+          chaos::common::data::CDWUniquePtr msg = manager->deleteLog(name, node_type, start_ts);
+          json_buf                              = (msg.get()) ? msg->getCompliantJSONString() : "{}";
+
+        } else {
+          EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::DeleteLog, MDS_TIMEOUT, name, node_type, start_ts);
+          // EXECUTE_CHAOS_API(chaos::metadata_service_client::api_proxy::logging::GetLogForSourceUID,MDS_TIMEOUT,name,domains,seq_id,page);
+          // chaos::common::data::CDWUniquePtr r = apires->detachResult();
+        }
+        return (execute_chaos_api_error == 0) ? CHAOS_DEV_OK : CHAOS_DEV_CMD;
       }
-      serr << cmd << " bad command format";
+      serr << "cmd:'"<<cmd << "', what:'"<<what<<"', bad command format "<<p.getJSONString();
       bundle_state.append_error(serr.str());
       json_buf = bundle_state.getData()->getCompliantJSONString();
       return CHAOS_DEV_CMD;
