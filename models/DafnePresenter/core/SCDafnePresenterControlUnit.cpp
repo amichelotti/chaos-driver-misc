@@ -352,8 +352,8 @@ void ::driver::dafnepresenter::SCDafnePresenterControlUnit::unitDefineActionAndD
 	addStateVariable(StateVariableTypeAlarmCU,"dafne_elab_dataset_invalid_or_null",
 		"raised when fails to retrieve EU DAFNE STATE Dataset");
 
-	addStateVariable(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",
-		"raised when fails to retrieve RF Dataset");
+	addStateVariable(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",
+		"raised when fails to retrieve Temperature Dataset");
 	
 	
 }

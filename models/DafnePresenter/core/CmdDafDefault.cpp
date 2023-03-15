@@ -350,7 +350,9 @@ void own::CmdDafDefault::acquireHandler() {
 			if (DAFNE_ELAB_Dataset->hasKey("e_nbunch"))
 				*p_nbunch_ele=DATO.nbunch_ele=DAFNE_ELAB_Dataset->getInt32Value("e_nbunch");
 			else errs++;
-
+			if (DAFNE_ELAB_Dataset->hasKey("rf"))
+				*p_rf=DAFNE_ELAB_Dataset->getDoubleValue("rf");
+			else errs++;
 			int64_t readTS=DAFNE_ELAB_Dataset->getInt64Value("dpck_ats");
 			int64_t now=time(0);
 			readTS/=1000;
@@ -381,40 +383,60 @@ void own::CmdDafDefault::acquireHandler() {
 		}
 	}
     //Fine lettura DAFNE_ELAB
-	strncpy(p_dafne_status_readable,getNameForDafneStatus(*p_dafne_status).c_str(),256);
-	//Lettura RF
-	DAFNE_RF_Dataset=this->RFImporter->getLiveChannel("DAFNE/IMPORT/DAFNE_RFE",0);
-	if ((DAFNE_RF_Dataset == NULL) || DAFNE_RF_Dataset->isEmpty() )
+	//Lettura temperature
+	DAFNE_TEMPERATURE_Dataset=this->TEMPImporter->getLiveChannel("DAFNE/MAINRING/TEMP/ALL",0);
+	if ((DAFNE_TEMPERATURE_Dataset == NULL)   || (DAFNE_TEMPERATURE_Dataset->isEmpty()))
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-		SCLERR_ << "DAFNE_RF_dataset invalid or null";
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		SCLERR_ << "DAFNE_TEMPERATURE_dataset invalid or null";
 	}
 	else
 	{
-		
-		int64_t readTS=DAFNE_RF_Dataset->getInt64Value("dpck_ats");
-		int64_t now=time(0);
-		readTS/=1000;
-		if ((now - readTS) > 30)
+		try 
 		{
-			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-			SCLERR_ << "DAFNE_RF_dataset old: " << now  << " read " << readTS ;
-		}
-		if (DAFNE_RF_Dataset->hasKey("RFLevel"))
-		{
-			*p_rf=DAFNE_RF_Dataset->getDoubleValue("RFLevel");
-			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
-		}
-		else
-		{
-			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_RF_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-			SCLERR_ << "DAFNE_RF_dataset without RFLevel key";
-		}
+			int errs=0;
+			if (DAFNE_TEMPERATURE_Dataset->hasKey("I1003"))
+				*p_ty_pos=DATO.Ty_pos=DAFNE_TEMPERATURE_Dataset->getDoubleValue("I1003");
+			else
+				errs++;
+			if (DAFNE_TEMPERATURE_Dataset->hasKey("I1004"))
+				*p_ty_ele=DATO.Ty_ele=DAFNE_TEMPERATURE_Dataset->getDoubleValue("I1004");
+			else
+				errs++;
+			int64_t readTS=DAFNE_TEMPERATURE_Dataset->getInt64Value("dpck_ats");
+			int64_t now=time(0);
+			readTS/=1000;
+			if ((now - readTS) > 70)
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+				SCLERR_ << "DAFNE_TEMPERATURE_dataset old";
+			}
+			else if (errs >0)
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+				SCLERR_ << "DAFNE_ELAB_dataset  errors reading";
+			}
+			else
+			{
+				setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+				
+			}
 
+
+		}
+		catch (chaos::CException)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"dafne_temperature_dataset_invalid_or_null",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			SCLERR_ << "DAFNE_TEMPERATURE_dataset generated a exception";
+		}
 	}
 
 
-	//Fine lettura RF
+
+	strncpy(p_dafne_status_readable,getNameForDafneStatus(*p_dafne_status).c_str(),256);
+	
+
+	 
 	CCALTLumiDataset=CCALT->getLiveChannel(CalLumiNamePointer,0);
 	if ((CCALTLumiDataset == NULL)  ||  CCALTLumiDataset->isEmpty())
 	{
