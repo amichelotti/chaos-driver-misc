@@ -38,7 +38,7 @@ namespace driver {
 			::driver::misc::ChaosController *CCALT;
 			::driver::misc::ChaosController *VUGImporter;
 			::driver::misc::ChaosController *DAFNE_ELAB;
-			::driver::misc::ChaosController *RFImporter;
+			::driver::misc::ChaosController *TEMPImporter;
 			std::string VUGImporterName="DAFNE/IMPORT/VUG";
 			//reference of the chaos abstraction of driver
 			chaos::driver::dafnepresenter::ChaosDafnePresenterInterface *dafnepresenter_drv;
