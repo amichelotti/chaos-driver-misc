@@ -166,7 +166,7 @@ void own::CmdDafDefault::acquireHandler() {
 	//std::string where= dafnestatPathPointer;
 	std::string outf=outfilePointer;
 	int count,retries=100;
-	bool ret, validData;
+	bool ret, validData=true;
 	/*
 	for ( count=0; count < retries; count++)
 	{
