@@ -452,6 +452,19 @@ int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, 
   return ret;
 }
 
+
+int32_t ChaosController::queryTS(const std::string& key,const std::string& start, const std::string& end, const ChaosStringSet& tags, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page){
+  if (manager) {
+    uint64_t start_ts = offsetToTimestamp(start);
+    uint64_t end_ts   = offsetToTimestamp(end);
+    return manager->queryTS(key,tags,projection,start_ts,end_ts,page,res);
+  }
+
+  CTRLERR_<<" missing manager cannot perform query";
+  return -1;
+
+}
+
 void ChaosController::releaseQuery(QueryCursor* query_cursor) {
   live_driver->releaseQuery(query_cursor);
 }
@@ -1649,6 +1662,7 @@ std::vector<std::string> ChaosController::filterByState(const std::vector<std::s
   }
   return ret;
 }
+
 int ChaosController::searchNodeInt(const std::string&              unique_id_filter,
                                    chaos::NodeType::NodeSearchType node_type_filter,
                                    bool                            alive,

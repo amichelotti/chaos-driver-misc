@@ -82,6 +82,8 @@ TTree* queryChaosTree(const std::string&chaosNode,const std::vector<std::string>
 TTree* queryChaosTree(TTree* tree,const std::string&chaosNode,const std::string& start,const std::string&end,const int channel,const std::string branchid="",int pageLen=0 );
 
 
+TTree* queryDBTree(const std::string&chaosNode,const std::string& start,const std::string&end,const ChaosStringSet& vars=ChaosStringSet(),const ChaosStringSet& tags=ChaosStringSet(),int pageLen=1024 );
+
 /**
  * Retrive next pages of a queryChaosTree
  * @param tree[in] is the tree that has been created or appended of a queryChaosTree

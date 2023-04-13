@@ -876,6 +876,16 @@ TTree *queryChaosTreeSB(const std::string &chaosNode, const std::string &start, 
   return query_int(NULL, chaosNode, start, end, channel, treeid, desc, pageLen, false);
 }
 
+TTree* queryDBTree(const std::string&chaosNode,const std::string& start,const std::string&end,const ChaosStringSet& vars,const ChaosStringSet& tags,int pageLen ){
+  ChaosController *ctrl = NULL;
+  ctrl                  = new ChaosController();
+  ChaosStringVector node_tmp;
+  chaos::common::data::VectorCDWShrdPtr res;
+  int ret=ctrl->queryTS(chaosNode,start, end, tags, res, vars, pageLen);
+
+return NULL;
+}
+
 bool queryNextChaosTree(TTree *tree) {
   std::map<TTree *, treeQuery_t>::iterator page = queries.find(tree);
   // ROOTDBG<<"ROOT check next tree:0x"<<std::hex<<tree<<std::dec;
