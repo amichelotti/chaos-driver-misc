@@ -82,7 +82,18 @@ TTree* queryChaosTree(const std::string&chaosNode,const std::vector<std::string>
 TTree* queryChaosTree(TTree* tree,const std::string&chaosNode,const std::string& start,const std::string&end,const int channel,const std::string branchid="",int pageLen=0 );
 
 
-TTree* queryDBTree(const std::string&chaosNode,const std::string& start,const std::string&end,const ChaosStringSet& vars=ChaosStringSet(),const ChaosStringSet& tags=ChaosStringSet(),int pageLen=1024 );
+TTree* queryDBTree(const std::string&chaosNode,const std::string& start,const std::string&end,const ChaosStringSet& vars=ChaosStringSet(),const ChaosStringSet& tags=ChaosStringSet(),int pageLen=0 );
+/**
+ * @brief Return the number of object of the give time
+ * 
+ * @param chaosNode[in] chaos node we want retrive historical data
+ * @param start[in] epoch in ms of the start of the search, or time offset relative to now (i.e -10d5h4m22mm 10 days, 5 hours and 4 minutes 22 milliseconds before now), absolute time one of the following formats: %Y-%m-%d %H:%M:%S,%Y/%m/%d %H:%M:%S,%d.%m.%Y %H:%M:%S)
+ * @param end 
+ * @param vars string set of the interesting variable
+ * @param tags tags to search
+ * @return int32_t 0 if success
+ */
+int32_t queryDBCount(const std::string&chaosNode,const std::string& start,const std::string&end,const ChaosStringSet& vars=ChaosStringSet(),const ChaosStringSet& tags=ChaosStringSet());
 
 /**
  * Retrive next pages of a queryChaosTree

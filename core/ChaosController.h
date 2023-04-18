@@ -370,6 +370,8 @@ int searchNode(const std::string& unique_id_filter,
      */
     int32_t queryTS(const std::string& key,const std::string& start, const std::string& end, const ChaosStringSet& tags, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page);
 
+    int32_t queryTSCount(const std::string& key,const std::string& start, const std::string& end, const ChaosStringSet& tags=ChaosStringSet(), const ChaosStringSet&vars=ChaosStringSet());
+
     int32_t queryHistory(const std::string &start, const std::string &end, int channel, chaos::common::data::VectorCDWShrdPtr &res,  const ChaosStringSet& projection=ChaosStringSet(), int page = 0);
 
     int32_t queryNext(int32_t id, chaos::common::data::VectorCDWShrdPtr &res);

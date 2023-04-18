@@ -373,7 +373,7 @@ int ChaosController::sendMDSCmd(command_t& cmd) {
     */
   // err = deviceChannel->setAttributeValue(local_command_pack, false, millisecToWait);
   local_command_pack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, path);
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     CTRLDBG_ << "sending command \"" << cmd->alias << "\" params:" << cmd->param.getJSONString() << " full msg:" << local_command_pack->getJSONString();
     manager->commandTemplateSubmit(path, cmd->alias, local_command_pack, cmd->sub_rule, cmd->priority, cmd->scheduler_steps_delay, cmd->submission_checker_steps_delay);
 
@@ -454,10 +454,23 @@ int ChaosController::executeCmd(command_t& cmd, bool wait, uint64_t perform_at, 
 
 
 int32_t ChaosController::queryTS(const std::string& key,const std::string& start, const std::string& end, const ChaosStringSet& tags, chaos::common::data::VectorCDWShrdPtr& res, const ChaosStringSet& projection, int page){
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     uint64_t start_ts = offsetToTimestamp(start);
     uint64_t end_ts   = offsetToTimestamp(end);
     return manager->queryTS(key,tags,projection,start_ts,end_ts,page,res);
+  }
+
+  CTRLERR_<<" missing manager cannot perform query";
+  return -1;
+
+}
+int32_t ChaosController::queryTSCount(const std::string& key,const std::string& start, const std::string& end, const ChaosStringSet& tags, const ChaosStringSet&vars){
+    DBGET << key << " count start:" << start << " end "<<end;
+
+  if (manager && manager->hasDirectPersistence()) {
+    uint64_t start_ts = offsetToTimestamp(start);
+    uint64_t end_ts   = offsetToTimestamp(end);
+    return manager->queryTSCount(key,start_ts,end_ts,tags,vars);
   }
 
   CTRLERR_<<" missing manager cannot perform query";
@@ -647,7 +660,7 @@ CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
   std::string  CUNAME = (key == "") ? path : key;
   std::string  lkey   = CUNAME + chaos::datasetTypeToPostfix(domain);
 
-  if (manager) {
+  if (manager && manager->hasDirectCache()) {
     return manager->getLiveChannel(lkey);
 
   } else {
@@ -660,7 +673,7 @@ CDWShrdPtr ChaosController::getLiveChannel(const std::string& key, int domain) {
 
 chaos::common::data::VectorCDWShrdPtr ChaosController::getLiveChannel(const std::vector<std::string>& channels) {
   chaos::common::data::VectorCDWShrdPtr results;
-  if (manager) {
+  if (manager && manager->hasDirectCache()) {
     results = manager->getLiveChannel(channels);
     return results;
   }
@@ -1284,7 +1297,7 @@ int ChaosController::setSchedule(uint64_t us, const std::string& cuname) {
   chaos::common::property::PropertyGroup pg(chaos::ControlUnitPropertyKey::P_GROUP_NAME);
   pg.addProperty(chaos::ControlUnitDatapackSystemKey::THREAD_SCHEDULE_DELAY, CDataVariant(static_cast<uint64_t>(us)));
   DBGET << "[" << name << "] set schedule to:" << us << " us";
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     manager->updateProperty(name, pg);
   } else {
     EXECUTE_CHAOS_RET_API(ret, chaos::metadata_service_client::api_proxy::node::UpdateProperty, MDS_TIMEOUT, name, pg);
@@ -1297,7 +1310,7 @@ int ChaosController::setAttributeToValue(const char* attributeName, const char* 
   std::string name = (cuname == "") ? path : cuname;
   int         ret;
   DBGET << "[" << name << "] Set attribute '" << attributeName << "'='" << attributeValue << "'";
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     manager->setInputDatasetAttributeValues(name, attributeName, attributeValue);
     return 0;
   }
@@ -1315,7 +1328,7 @@ int ChaosController::setAttributeToValue(const char* attributeName, const char* 
 int ChaosController::initDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     manager->initDeinit(dev, true);
     ret = 0;
   } else {
@@ -1327,7 +1340,7 @@ int ChaosController::stopDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
   DBGET << " STOP DEVICE:" << manager;
-  if (manager) {
+  if (manager && manager->hasDirectPersistence()) {
     manager->startStop(dev, false);
     ret = 0;
   } else {
@@ -1340,7 +1353,7 @@ int ChaosController::startDevice(const std::string& dev) {
   std::string name = (dev == "") ? path : dev;
   DBGET << " START DEVICE:" << manager;
 
-  if (manager) {
+  if (manager&& manager->hasDirectPersistence()) {
     manager->startStop(dev, true);
     ret = 0;
   } else {
@@ -1351,7 +1364,7 @@ int ChaosController::startDevice(const std::string& dev) {
 int ChaosController::deinitDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-  if (manager) {
+  if (manager&& manager->hasDirectPersistence()) {
     manager->initDeinit(dev, false);
     ret = 0;
   } else {
@@ -1362,7 +1375,7 @@ int ChaosController::deinitDevice(const std::string& dev) {
 int ChaosController::loadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-  if (manager) {
+  if (manager&& manager->hasDirectPersistence()) {
     manager->loadUnloadControlUnit(dev, true);
     ret = 0;
   } else {
@@ -1373,7 +1386,7 @@ int ChaosController::loadDevice(const std::string& dev) {
 int ChaosController::unloadDevice(const std::string& dev) {
   int         ret;
   std::string name = (dev == "") ? path : dev;
-  if (manager) {
+  if (manager&& manager->hasDirectPersistence()) {
     manager->loadUnloadControlUnit(dev, false);
     ret = 0;
   } else {
