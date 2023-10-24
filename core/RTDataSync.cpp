@@ -20,7 +20,8 @@
 
 #include "RTDataSync.h"
 //#include "RTDataSyncDriver.h"
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
+#include <chaos/common/ChaosCommon.h>
 #include <chaos/cu_toolkit/command_manager/CommandManager.h>
 #include <common/debug/core/debug.h>
 #include <chaos/common/utility/TimingUtil.h>
@@ -49,7 +50,9 @@ RTAbstractControlUnit(_control_unit_id,
     int cnt=0;
     std::vector<std::string>::iterator i;
    rem_variables=0;
-     boost::split(cu_names,_control_unit_param,boost::is_any_of(" \n"));
+
+   //  boost::split(cu_names,_control_unit_param,boost::is_any_of(" \n"));
+   cu_names=chaos::split(_control_unit_param," \n");
      rem_variables=cu_names.size();
      DPRINT("Variables :%d",rem_variables);
      if(rem_variables>0){

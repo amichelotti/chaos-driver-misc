@@ -6,7 +6,8 @@
  */
 
 #include "remoteGroupAccessDriver.h"
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
+#include <chaos/common/ChaosCommon.h>
 using namespace ::driver::misc;
 OPEN_CU_DRIVER_PLUGIN_CLASS_DEFINITION(remoteGroupAccessDriver, 1.0.0, ::driver::misc::remoteGroupAccessDriver)
 
@@ -57,7 +58,8 @@ int remoteGroupAccessDriver::initIO(void *buffer, int sizeb){
    
    ctrl_vars.assign((const char*)buffer); 
     
-   boost::split(vars,ctrl_vars,boost::is_any_of(" \n"));
+   //boost::split(vars,ctrl_vars,boost::is_any_of(" \n"));
+   vars=chaos::split(ctrl_vars," \n");
    if(vars.size()==0){
        CTRLERR_ <<" no vars to connect";
        return -2;
